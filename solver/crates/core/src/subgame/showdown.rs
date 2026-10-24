@@ -6,6 +6,7 @@ pub struct Board {
     pub cards: Vec<Card>,
     pub live: Vec<usize>,
     pub hands: Vec<[Card; 2]>,
+    rows: Vec<(usize, usize, usize)>,
 }
 
 impl Board {
@@ -14,33 +15,72 @@ impl Board {
         let live: Vec<usize> = (0..COMBOS)
             .filter(|&c| card_mask(&combo_cards(c)) & mask == 0)
             .collect();
-        let hands = live.iter().map(|&c| combo_cards(c)).collect();
+        let hands: Vec<[Card; 2]> = live.iter().map(|&c| combo_cards(c)).collect();
+        let mut rows = Vec::new();
+        let mut start = 0;
+        for k in 0..hands.len() {
+            if k + 1 == hands.len() || hands[k][1] != hands[k + 1][1] {
+                rows.push((hands[k][1] as usize, start, k + 1));
+                start = k + 1;
+            }
+        }
         Board {
             cards: cards.to_vec(),
             live,
             hands,
+            rows,
         }
     }
+}
+
+fn lane_sum(xs: &[f32]) -> f32 {
+    let (chunks, rest) = xs.as_chunks::<8>();
+    let mut acc = [0.0f32; 8];
+    for chunk in chunks {
+        for (a, &x) in acc.iter_mut().zip(chunk) {
+            *a += x;
+        }
+    }
+    acc.iter().sum::<f32>() + rest.iter().sum::<f32>()
 }
 
 pub fn fold_values(board: &Board, opp: &[f32], payoff: f32, out: &mut [f32]) {
     let mut per_card = [0.0f32; 52];
     let mut total = 0.0f32;
-    for (h, &w) in board.hands.iter().zip(opp) {
-        total += w;
-        per_card[h[0] as usize] += w;
-        per_card[h[1] as usize] += w;
+    for &(hi, start, end) in &board.rows {
+        let row = &opp[start..end];
+        let sum = lane_sum(row);
+        per_card[hi] += sum;
+        total += sum;
+        for (h, &w) in board.hands[start..end].iter().zip(row) {
+            per_card[h[0] as usize] += w;
+        }
     }
-    for (i, h) in board.hands.iter().enumerate() {
-        let free = total - per_card[h[0] as usize] - per_card[h[1] as usize] + opp[i];
-        out[i] = payoff * free;
+    for &(hi, start, end) in &board.rows {
+        let base = total - per_card[hi];
+        let cells = out[start..end].iter_mut().zip(&board.hands[start..end]);
+        for ((o, h), &w) in cells.zip(&opp[start..end]) {
+            *o = payoff * (base - per_card[h[0] as usize] + w);
+        }
+    }
+}
+
+fn spread(group: &mut [u32], hands: &[[Card; 2]]) {
+    let mask = |p: u32| card_mask(&hands[p as usize]);
+    for k in 1..group.len() {
+        let recent = group[k.saturating_sub(2)..k]
+            .iter()
+            .fold(0, |m, &p| m | mask(p));
+        if let Some(j) = (k..group.len()).find(|&j| mask(group[j]) & recent == 0) {
+            group.swap(k, j);
+        }
     }
 }
 
 pub struct Ranking {
     order: Vec<u32>,
-    hands: Vec<[Card; 2]>,
-    group_ends: Vec<usize>,
+    hands: Vec<[u8; 2]>,
+    groups: Vec<(usize, usize)>,
 }
 
 impl Ranking {
@@ -56,49 +96,54 @@ impl Ranking {
             .collect();
         let mut order: Vec<u32> = (0..board.hands.len() as u32).collect();
         order.sort_by_key(|&p| ranks[p as usize]);
-        let hands = order.iter().map(|&p| board.hands[p as usize]).collect();
-        let mut group_ends = Vec::new();
+        let mut groups = Vec::new();
+        let mut start = 0;
         for k in 0..order.len() {
             let last = k + 1 == order.len();
             if last || ranks[order[k] as usize] != ranks[order[k + 1] as usize] {
-                group_ends.push(k + 1);
+                groups.push((start, k + 1));
+                start = k + 1;
             }
         }
+        for &(start, end) in &groups {
+            spread(&mut order[start..end], &board.hands);
+        }
+        let hands = order.iter().map(|&p| board.hands[p as usize]).collect();
         Ranking {
             order,
             hands,
-            group_ends,
+            groups,
         }
     }
 
-    pub fn values(&self, opp: &[f32], payoff: f32, out: &mut [f32]) {
-        let mut all = [0.0f32; 52];
-        let mut all_total = 0.0f32;
-        for (&p, h) in self.order.iter().zip(&self.hands) {
-            let w = opp[p as usize];
-            all_total += w;
-            all[h[0] as usize] += w;
-            all[h[1] as usize] += w;
+    pub fn remapped(mut self, positions: &[usize]) -> Ranking {
+        for p in &mut self.order {
+            *p = positions[*p as usize] as u32;
         }
-        let mut weak = [0.0f32; 52];
-        let mut weak_total = 0.0f32;
-        let mut start = 0;
-        for &end in &self.group_ends {
-            let lower = weak_total;
-            let lower_cards = weak;
-            for k in start..end {
-                let w = opp[self.order[k] as usize];
-                weak_total += w;
-                weak[self.hands[k][0] as usize] += w;
-                weak[self.hands[k][1] as usize] += w;
+        self
+    }
+
+    pub fn values(&self, opp: &[f32], payoff: f32, out: &mut [f32]) {
+        let mut cards = [0.0f32; 256];
+        let mut total = 0.0f32;
+        for &(start, end) in &self.groups {
+            let group = self.order[start..end].iter().zip(&self.hands[start..end]);
+            for (&p, &[a, b]) in group.clone() {
+                out[p as usize] = total - cards[a as usize] - cards[b as usize];
             }
-            for k in start..end {
-                let [a, b] = self.hands[k].map(|c| c as usize);
-                let below = lower - lower_cards[a] - lower_cards[b];
-                let above = (all_total - weak_total) - (all[a] - weak[a]) - (all[b] - weak[b]);
-                out[self.order[k] as usize] = payoff * (below - above);
+            for (&p, &[a, b]) in group.clone() {
+                let w = opp[p as usize];
+                total += w;
+                cards[a as usize] += w;
+                cards[b as usize] += w;
             }
-            start = end;
+            for (&p, &[a, b]) in group {
+                out[p as usize] += total - cards[a as usize] - cards[b as usize];
+            }
+        }
+        for (&p, &[a, b]) in self.order.iter().zip(&self.hands) {
+            let o = &mut out[p as usize];
+            *o = payoff * (*o - (total - cards[a as usize] - cards[b as usize]));
         }
     }
 }
