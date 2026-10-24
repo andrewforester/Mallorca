@@ -209,6 +209,12 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   turns on the subgame solver of `mallorca-core::subgame` (the `bot_solver` export): preflop and flop stay on the
   blueprint; the bot's first decision on the turn or the river solves that street with that many iterations over
   both ranges, and its later decisions on the street reuse the solve while the hand stays inside its tree.
+  A turn tree plays its river with the coarser `river_in_turn` sizes (one pot-sized bet, no raise, at most two
+  aggressive actions, and all-in), while a real river decision is solved with the full river sizes. The ranges at
+  the turn root are the blueprint's at the end of the flop; the river starts from the turn solve's ranges at that
+  point, or, with the turn solver off and the river on, from the end of the flop again. The solve's `action_evs`
+  (`Bot::last_evs`) are chips measured from the start of the hand, so a fold is minus the folder's whole
+  contribution to the pot.
   `BROWSER_SOLVER` (`solver.ts`, `{ turn: 12, river: 200 }`) is the game's setting. Measured in Node on an Apple M3
   Pro, a turn decision takes 854 ms at the 95th percentile with 12 iterations and 1208 ms with 15; river 200 was
   not varied (about 70 ms a decision). The slowest browser turn decision in the e2e game is about 1.1 s, so a phone
