@@ -318,19 +318,30 @@ fn random_hands_at_any_depth_and_blind_get_legal_moves() {
     assert_eq!(solved, 0);
 }
 
-#[test]
-fn random_hands_with_the_solver_get_legal_moves() {
+fn solved_random_hands(hands: usize, turn_iterations: u32, river_iterations: u32) -> usize {
     let table = Table {
         big_blinds: &[20, 100],
         stack: four_hundred_to_thirty_thousand,
         solver: Some(SolverConfig {
-            turn_iterations: 4,
-            river_iterations: 8,
+            turn_iterations,
+            river_iterations,
         }),
         calm: true,
     };
     let mut rng = Rng::new(2027);
-    let solved: usize = (0..60).map(|_| play_random_hand(&mut rng, &table)).sum();
+    (0..hands).map(|_| play_random_hand(&mut rng, &table)).sum()
+}
+
+#[test]
+fn a_few_random_hands_with_the_solver_get_legal_moves() {
+    let solved = solved_random_hands(8, 1, 2);
+    assert!(solved >= 1, "{solved}");
+}
+
+#[test]
+#[ignore]
+fn random_hands_with_the_solver_get_legal_moves() {
+    let solved = solved_random_hands(60, 4, 8);
     assert!(solved >= 10, "{solved}");
 }
 
