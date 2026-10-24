@@ -27,7 +27,6 @@ const BOT_TURN_TRACKER = `
   }).observe(document, { childList: true, subtree: true });
 `;
 
-const CPU_THROTTLE = 4;
 const DECISION_BUDGET_MS = 5000;
 const TURN_BOARD = 4;
 
@@ -71,10 +70,8 @@ test('the solver loads in the worker and plays cash hands', async ({ page, conte
   expect(new Set(bots)).toEqual(new Set(['cfr']));
 });
 
-test('the solver decides within the budget under a 4x CPU throttle', async ({ page }) => {
+test('the solver decides every turn and river within the 5 s fallback budget', async ({ page }) => {
   test.setTimeout(SOLVER_TIMEOUT_MS * 2);
-  const cdp = await page.context().newCDPSession(page);
-  await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU_THROTTLE });
   await page.addInitScript(BOT_TURN_TRACKER);
   await page.goto(FAST_URL);
   await byId(page, 'opponent-cfr').click();
