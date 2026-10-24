@@ -3,6 +3,7 @@ use crate::measure::fixtures::trained;
 use crate::rng::Rng;
 use crate::subgame::combos::COMBOS;
 use crate::subgame::range::Range;
+use crate::subgame::tree::{build, Root, Sizes, SubAction, SubNode};
 use crate::tree::{ActionKind, Node};
 use std::sync::OnceLock;
 
@@ -235,10 +236,32 @@ fn random_move(legal: &Legal, rng: &mut Rng) -> Move {
     options[rng.below(options.len() as u32) as usize]
 }
 
-fn play_random_hand(rng: &mut Rng) {
-    let bb = [20, 50, 100][rng.below(3) as usize];
+struct Table {
+    big_blinds: &'static [u32],
+    stack: fn(&mut Rng, u32) -> u32,
+    solver: Option<SolverConfig>,
+    calm: bool,
+}
+
+fn deep_in_blinds(rng: &mut Rng, bb: u32) -> u32 {
+    bb * (5 + rng.below(200))
+}
+
+fn four_hundred_to_thirty_thousand(rng: &mut Rng, _: u32) -> u32 {
+    400 + rng.below(29_601)
+}
+
+const BLUEPRINT: Table = Table {
+    big_blinds: &[20, 50, 100],
+    stack: deep_in_blinds,
+    solver: None,
+    calm: false,
+};
+
+fn play_random_hand(rng: &mut Rng, table: &Table) -> usize {
+    let bb = table.big_blinds[rng.below(table.big_blinds.len() as u32) as usize];
     let hero = rng.below(2) as usize;
-    let stacks = [bb * (5 + rng.below(200)), bb * (5 + rng.below(200))];
+    let stacks = [(table.stack)(rng, bb), (table.stack)(rng, bb)];
     let mut deck: Vec<Card> = (0..52).collect();
     rng.shuffle(&mut deck);
     let mut bot = started(
@@ -247,6 +270,7 @@ fn play_random_hand(rng: &mut Rng) {
         [bb / 2, bb],
         [deck[0], deck[1]],
     );
+    bot.set_solver(table.solver);
     let blinds = [(bb / 2).min(stacks[0]), bb.min(stacks[1])];
     let mut sim = Sim {
         behind: [stacks[0] - blinds[0], stacks[1] - blinds[1]],
@@ -257,6 +281,7 @@ fn play_random_hand(rng: &mut Rng) {
         to_act: 0,
         over: false,
     };
+    let mut solved = 0;
     for board_len in [0usize, 3, 4, 5] {
         if board_len > 0 {
             sim.next_street();
@@ -267,7 +292,10 @@ fn play_random_hand(rng: &mut Rng) {
             let mv = if sim.to_act == hero {
                 let mv = bot.decide(model(), &legal, rng.next_f64());
                 assert!(is_legal(mv, &legal), "{mv:?} under {legal:?}");
+                solved += usize::from(bot.last_evs().is_some());
                 mv
+            } else if table.calm && rng.below(4) != 0 {
+                passive(&legal)
             } else {
                 random_move(&legal, rng)
             };
@@ -275,17 +303,35 @@ fn play_random_hand(rng: &mut Rng) {
             sim.apply(mv);
         }
         if sim.over {
-            return;
+            return solved;
         }
     }
+    solved
 }
 
 #[test]
 fn random_hands_at_any_depth_and_blind_get_legal_moves() {
     let mut rng = Rng::new(2026);
-    for _ in 0..400 {
-        play_random_hand(&mut rng);
-    }
+    let solved: usize = (0..400)
+        .map(|_| play_random_hand(&mut rng, &BLUEPRINT))
+        .sum();
+    assert_eq!(solved, 0);
+}
+
+#[test]
+fn random_hands_with_the_solver_get_legal_moves() {
+    let table = Table {
+        big_blinds: &[20, 100],
+        stack: four_hundred_to_thirty_thousand,
+        solver: Some(SolverConfig {
+            turn_iterations: 4,
+            river_iterations: 8,
+        }),
+        calm: true,
+    };
+    let mut rng = Rng::new(2027);
+    let solved: usize = (0..60).map(|_| play_random_hand(&mut rng, &table)).sum();
+    assert!(solved >= 10, "{solved}");
 }
 
 fn expected_after(id: NodeId, kind: ActionKind, street: Street, board: &[Card]) -> Range {
@@ -392,4 +438,161 @@ fn a_flop_action_reweights_by_the_flop_bucket() {
         f32::from(model().file.probabilities(id, bucket)[i].max(1)) / 255.0
     });
     assert_eq!(after[1], expected);
+}
+
+const QUICK: SolverConfig = SolverConfig {
+    turn_iterations: 2,
+    river_iterations: 4,
+};
+
+const TURN: [Card; 4] = [10, 20, 30, 40];
+
+fn limped_to_the_turn(hero_button: bool, stacks: [u32; 2], solver: Option<SolverConfig>) -> Bot {
+    let bot = solver.map_or_else(Bot::new, Bot::with_solver);
+    limp(bot, hero_button, stacks)
+}
+
+fn limp(mut bot: Bot, hero_button: bool, stacks: [u32; 2]) -> Bot {
+    bot.hand_started(model(), hero_button, stacks, [10, 20]);
+    bot.hole_cards([0, 5]);
+    bot.acted(model(), hero_button, Move::Call, 0.3);
+    bot.acted(model(), !hero_button, Move::Check, 0.3);
+    bot.street(model(), &TURN[..3]);
+    bot.acted(model(), !hero_button, Move::Check, 0.3);
+    bot.acted(model(), hero_button, Move::Check, 0.3);
+    bot.street(model(), &TURN);
+    bot
+}
+
+fn first_to_act() -> Legal {
+    Legal {
+        fold: false,
+        check: true,
+        call: None,
+        raise: Some((20, 380)),
+    }
+}
+
+fn root_actions(root: Root, path: &[SubAction]) -> Vec<SubAction> {
+    let tree = build(root, &Sizes::default(), path);
+    let node = tree.locate(path).unwrap();
+    let SubNode::Decision { actions, .. } = &tree.nodes[node] else {
+        panic!("not a decision");
+    };
+    actions.iter().map(|a| a.0).collect()
+}
+
+fn turn_root(behind: u32) -> Root {
+    Root {
+        street: Street::Turn,
+        pot: 40,
+        behind,
+        big_blind: 20,
+    }
+}
+
+#[test]
+fn a_turn_decision_goes_through_the_solver() {
+    let mut bot = limped_to_the_turn(false, [400, 400], Some(QUICK));
+    let legal = first_to_act();
+    let mv = bot.decide(model(), &legal, 0.5);
+    assert!(is_legal(mv, &legal), "{mv:?}");
+    let evs = bot.last_evs().expect("a solved decision");
+    assert_eq!(evs.len(), root_actions(turn_root(380), &[]).len());
+    assert!(evs.iter().all(|v| v.is_finite()));
+}
+
+#[test]
+fn an_off_tree_turn_bet_is_answered_legally() {
+    let mut bot = limped_to_the_turn(true, [400, 400], Some(QUICK));
+    bot.acted(model(), false, Move::RaiseTo(20), 0.3);
+    let legal = Legal {
+        fold: true,
+        check: false,
+        call: Some(20),
+        raise: Some((40, 380)),
+    };
+    let mv = bot.decide(model(), &legal, 0.5);
+    assert!(is_legal(mv, &legal), "{mv:?}");
+    let actions = root_actions(turn_root(380), &[SubAction::RaiseTo(20)]);
+    assert!(actions.contains(&SubAction::Fold));
+    assert!(actions.contains(&SubAction::Call));
+    assert!(actions.iter().any(|a| matches!(a, SubAction::RaiseTo(_))));
+    assert_eq!(
+        bot.last_evs().expect("a solved decision").len(),
+        actions.len()
+    );
+}
+
+#[test]
+fn a_short_stack_turn_still_answers() {
+    let legal = Legal {
+        fold: true,
+        check: false,
+        call: Some(60),
+        raise: None,
+    };
+    for draw in [0.01, 0.5, 0.99] {
+        let mut bot = limped_to_the_turn(true, [80, 80], Some(QUICK));
+        bot.acted(model(), false, Move::RaiseTo(60), 0.3);
+        let mv = bot.decide(model(), &legal, draw);
+        assert!(matches!(mv, Move::Fold | Move::Call), "{mv:?}");
+        assert_eq!(bot.last_evs().expect("a solved decision").len(), 2);
+    }
+}
+
+#[test]
+fn no_solver_means_no_evs() {
+    let mut bot = limped_to_the_turn(false, [400, 400], None);
+    assert_eq!(
+        bot.decide(model(), &first_to_act(), 0.9),
+        Move::RaiseTo(380)
+    );
+    assert_eq!(bot.last_evs(), None);
+}
+
+#[test]
+fn a_zero_config_is_off() {
+    let off = SolverConfig {
+        turn_iterations: 0,
+        river_iterations: 0,
+    };
+    let mut bot = limp(Bot::with_solver(off), false, [400, 400]);
+    assert_eq!(
+        bot.decide(model(), &first_to_act(), 0.9),
+        Move::RaiseTo(380)
+    );
+    assert_eq!(bot.last_evs(), None);
+}
+
+#[test]
+fn a_new_hand_clears_the_evs() {
+    let mut bot = limped_to_the_turn(false, [400, 400], Some(QUICK));
+    bot.decide(model(), &first_to_act(), 0.5);
+    assert!(bot.last_evs().is_some());
+    bot.hand_started(model(), false, [400, 400], [10, 20]);
+    assert_eq!(bot.last_evs(), None);
+}
+
+#[test]
+fn the_river_starts_from_the_turn_solve() {
+    let mut bot = limped_to_the_turn(false, [400, 400], Some(QUICK));
+    bot.decide(model(), &first_to_act(), 0.5);
+    bot.acted(model(), true, Move::Check, 0.3);
+    bot.acted(model(), false, Move::Check, 0.3);
+    let hand = bot.hand.as_ref().unwrap();
+    let solve = hand.sub.solve.as_ref().expect("a turn solve");
+    let chance = solve.tree().locate(&hand.sub.path).unwrap();
+    assert!(matches!(solve.tree().nodes[chance], SubNode::Chance { .. }));
+    let river = [10, 20, 30, 40, 50];
+    let expected = solve
+        .ranges_at(chance, None)
+        .map(|r| r.without(&river).or_uniform(&river));
+    let tracked = hand.ranges.clone().map(|r| r.without(&river));
+    bot.street(model(), &river);
+    let sub = &bot.hand.as_ref().unwrap().sub;
+    assert_eq!(sub.ranges, expected);
+    assert_ne!(sub.ranges[1], tracked[1]);
+    assert!(sub.solve.is_none());
+    assert!(sub.path.is_empty());
 }

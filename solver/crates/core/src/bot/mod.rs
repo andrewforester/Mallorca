@@ -1,5 +1,8 @@
 mod ranges;
+mod solve;
 mod translate;
+
+pub use solve::SolverConfig;
 
 use crate::abstraction::Abstraction;
 use crate::cards::Card;
@@ -125,6 +128,8 @@ struct Hand {
     node: Option<NodeId>,
     pending: Option<NodeId>,
     ranges: [Range; 2],
+    big_blind: u32,
+    sub: solve::Subgame,
 }
 
 impl Hand {
@@ -151,11 +156,27 @@ impl Hand {
 #[derive(Default)]
 pub struct Bot {
     hand: Option<Hand>,
+    solver: Option<SolverConfig>,
+    last_evs: Option<Vec<f32>>,
 }
 
 impl Bot {
     pub fn new() -> Bot {
-        Bot { hand: None }
+        Bot::default()
+    }
+
+    pub fn with_solver(config: SolverConfig) -> Bot {
+        let mut bot = Bot::new();
+        bot.set_solver(Some(config));
+        bot
+    }
+
+    pub fn set_solver(&mut self, config: Option<SolverConfig>) {
+        self.solver = config.filter(SolverConfig::is_on);
+    }
+
+    pub fn last_evs(&self) -> Option<&[f32]> {
+        self.last_evs.as_deref()
     }
 
     pub fn cursor(&self) -> Option<NodeId> {
@@ -187,7 +208,10 @@ impl Bot {
             node: Some(model.file.tree.root()),
             pending: None,
             ranges: [Range::uniform(), Range::uniform()],
+            big_blind: blinds[1],
+            sub: solve::Subgame::new(),
         });
+        self.last_evs = None;
     }
 
     pub fn ranges(&self) -> Option<&[Range; 2]> {
@@ -223,6 +247,7 @@ impl Bot {
         if !on_street {
             hand.node = None;
         }
+        solve::street_started(hand);
     }
 
     pub fn acted(&mut self, model: &Model, hero: bool, mv: Move, draw: f64) {
@@ -243,33 +268,50 @@ impl Bot {
             &hand.board,
             seat,
         );
+        solve::record(hand, seat, mv);
         hand.apply(seat, mv);
         hand.node = next;
     }
 
     pub fn decide(&mut self, model: &Model, legal: &Legal, draw: f64) -> Move {
+        self.last_evs = None;
         let Some(hand) = self.hand.as_mut() else {
             return passive(legal);
         };
-        let Some(hole) = hand.hole else {
-            return passive(legal);
+        let blueprint = blueprint(model, hand, legal, draw);
+        let Some(config) = self.solver else {
+            return blueprint;
         };
-        let facing = legal.call.is_some();
-        let valid = hand.node.and_then(|id| model.spot(id)).is_some_and(|s| {
-            s.seat == hand.hero && s.street == hand.street && (s.to_call() > 0) == facing
-        });
-        if !valid {
-            hand.node = resync(model, hand, facing);
+        match solve::decide(hand, config, legal, draw) {
+            Some(solved) => {
+                hand.pending = None;
+                self.last_evs = Some(solved.evs);
+                solved.mv
+            }
+            None => blueprint,
         }
-        let Some(id) = hand.node else {
-            return passive(legal);
-        };
-        let spot = model.spot(id).expect("a decision node");
-        let bucket = model.abstraction.bucket(hand.street, hole, &hand.board);
-        let chosen = spot.actions[sample(model.file.probabilities(id, bucket), draw)];
-        hand.pending = Some(chosen.1);
-        to_real(model, &spot, hand, chosen.0, legal)
     }
+}
+
+fn blueprint(model: &Model, hand: &mut Hand, legal: &Legal, draw: f64) -> Move {
+    let Some(hole) = hand.hole else {
+        return passive(legal);
+    };
+    let facing = legal.call.is_some();
+    let valid = hand.node.and_then(|id| model.spot(id)).is_some_and(|s| {
+        s.seat == hand.hero && s.street == hand.street && (s.to_call() > 0) == facing
+    });
+    if !valid {
+        hand.node = resync(model, hand, facing);
+    }
+    let Some(id) = hand.node else {
+        return passive(legal);
+    };
+    let spot = model.spot(id).expect("a decision node");
+    let bucket = model.abstraction.bucket(hand.street, hole, &hand.board);
+    let chosen = spot.actions[sample(model.file.probabilities(id, bucket), draw)];
+    hand.pending = Some(chosen.1);
+    to_real(model, &spot, hand, chosen.0, legal)
 }
 
 fn follow(model: &Model, hand: &Hand, seat: usize, mv: Move, draw: f64) -> Option<NodeId> {
