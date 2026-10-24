@@ -1,6 +1,6 @@
 import { createMathBrain, randomVillainModel } from '../brains/index.ts';
 import { mulberry32 } from '../cards/index.ts';
-import { createCfrBrain, createCfrModel, inflate } from '../cfr/index.ts';
+import { BROWSER_SOLVER, createCfrBrain, createCfrModel, inflate } from '../cfr/index.ts';
 import type { CfrModel } from '../cfr/index.ts';
 import type { WorkerReply, WorkerRequest } from './workerProtocol.ts';
 import type { OpponentLoader } from './workerHandler.ts';
@@ -39,7 +39,7 @@ function cfrModel(): Promise<CfrModel> {
 const loadOpponent: OpponentLoader = async (_opponent, seed) => {
   const loaded = await cfrModel();
   const rng = mulberry32(seed);
-  return () => createCfrBrain(loaded, rng);
+  return () => createCfrBrain(loaded, rng, { solver: BROWSER_SOLVER });
 };
 
 const handle = createWorkerHandler(
