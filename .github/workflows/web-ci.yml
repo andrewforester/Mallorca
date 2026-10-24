@@ -8,6 +8,7 @@ on:
       - 'solver/crates/wasm/**'
       - 'solver/Cargo.*'
       - 'solver/rust-toolchain.toml'
+      - 'solver/.cargo/**'
       - '.github/workflows/web-*.yml'
   workflow_dispatch:
 
