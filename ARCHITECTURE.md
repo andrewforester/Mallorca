@@ -204,8 +204,15 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   `solver/crates/wasm`, a plain `extern "C"` ABI over `mallorca-core::bot`; it imports nothing.
 - `inflate(bytes)` gunzips with `DecompressionStream` when the bytes start with the gzip magic and returns other
   bytes as they are. `createCfrModel(wasm, strategy)` instantiates the module and loads the strategy; a bad file
-  rejects with the reader's reason. `model.newBot()` returns a `CfrBot` handle, freed with `free()`.
-- `createCfrBrain(model, rng)` is a `Brain` with `dispose()`. It forwards every `Observation` to the bot and draws
+  rejects with the reader's reason. `model.newBot(options?)` returns a `CfrBot` handle, freed with `free()`.
+  Without options the bot plays every street from the blueprint. `{ solver: { turn, river } }` (`SolverOptions`)
+  turns on the subgame solver of `mallorca-core::subgame` (the `bot_solver` export): preflop and flop stay on the
+  blueprint; the bot's first decision on the turn or the river solves that street with that many iterations over
+  both ranges, and its later decisions on the street reuse the solve while the hand stays inside its tree.
+  `BROWSER_SOLVER` (`solver.ts`, `{ turn: 12, river: 200 }`) is the game's setting: the largest counts whose 95th
+  percentile turn decision is under 1 s in Node on an Apple M3 Pro, so a phone four times slower stays inside the
+  5 s fallback budget. The module is built with `+simd128` (`solver/.cargo/config.toml`).
+- `createCfrBrain(model, rng, options?)` is a `Brain` with `dispose()`; `options` goes to `model.newBot`. It forwards every `Observation` to the bot and draws
   one `rng.next()` per observed action (the off-tree raise mapping) and one per decision (sampling the strategy),
   so a seed fixes its play. `solverChoice` is the kind of the action; `evByAction` is `NaN` for every class.
 - Translation lives in Rust (`mallorca-core::bot`): chips scale by the big blind, an opponent raise maps to one of
@@ -248,7 +255,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   worker's message handling as a plain function. A `select` request queues every later request until the
   opponent's brain factory is ready, then replies `{ id, opponent }` or `{ id, error }` and keeps the old brain on
   an error. The worker loads the CFR model once (`fetch` of the two `new URL(..., import.meta.url)` assets) and
-  seeds its brains with `mulberry32(seed)`. Replacing a brain disposes it. `inProcessBot()` runs the math brain on
+  seeds its brains with `mulberry32(seed)`; the `cfr` opponent is `createCfrBrain` with `{ solver: BROWSER_SOLVER }`. Replacing a brain disposes it. `inProcessBot()` runs the math brain on
   the main thread and rejects `select('cfr')`.
 - `withFallback` wraps a client: when `decide` rejects or takes longer than 5 s, it disposes the primary, replays
   the observations of the hand into an in-process bot and uses it from then on. It falls back once, and a failure
@@ -350,7 +357,8 @@ files directly, including in workers. `tools/` may use the clock and Node APIs.
 
 - `bots.ts`: `BOTS`, the `BotFactory` (`(rng) => ArenaBot` with `observe`, `decide` and an optional `dispose`)
   of each name: `math` (`createMathBrain` with `randomVillainModel`), `cfr` (`createCfrBrain` over the model that
-  `prepareBots` loads from `src/cfr` once per process or worker; it throws before that), `always-call` (checks or calls), `always-raise` (raises to
+  `prepareBots` loads from `src/cfr` once per process or worker; it throws before that), `cfr-solve` (the same
+  model with `{ solver: ARENA_SOLVER }`, `{ turn: 50, river: 200 }`), `always-call` (checks or calls), `always-raise` (raises to
   `legal.raise.min` when it can, else checks or calls) and `random` (uniform over the legal kinds, a raise to the
   minimum, from its seeded `Rng`).
 - `match.ts`: `playPair(a, b, seed, index)` plays one deck twice with the seats swapped: the deck is shuffled by
