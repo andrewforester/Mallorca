@@ -596,3 +596,38 @@ fn the_river_starts_from_the_turn_solve() {
     assert!(sub.solve.is_none());
     assert!(sub.path.is_empty());
 }
+
+fn first_raise(actions: &[SubAction]) -> u32 {
+    actions
+        .iter()
+        .find_map(|a| match a {
+            SubAction::RaiseTo(to) => Some(*to),
+            _ => None,
+        })
+        .expect("an on-tree raise")
+}
+
+#[test]
+fn an_on_tree_second_decision_reuses_the_street_solve() {
+    let mut bot = limped_to_the_turn(false, [400, 400], Some(QUICK));
+    bot.decide(model(), &first_to_act(), 0.5);
+    let bet = first_raise(&root_actions(turn_root(380), &[]));
+    let raise = first_raise(&root_actions(turn_root(380), &[SubAction::RaiseTo(bet)]));
+    bot.acted(model(), true, Move::RaiseTo(bet), 0.3);
+    bot.acted(model(), false, Move::RaiseTo(raise), 0.3);
+    let marked = QUICK.turn_iterations + 1;
+    let sub = &mut bot.hand.as_mut().unwrap().sub;
+    sub.solve.as_mut().expect("a turn solve").run(1);
+    assert_eq!(sub.solve.as_ref().unwrap().iterations(), marked);
+    let legal = Legal {
+        fold: true,
+        check: false,
+        call: Some(raise - bet),
+        raise: Some((2 * raise - bet, 380)),
+    };
+    let mv = bot.decide(model(), &legal, 0.5);
+    assert!(is_legal(mv, &legal), "{mv:?}");
+    assert!(bot.last_evs().is_some());
+    let solve = bot.hand.as_ref().unwrap().sub.solve.as_ref().unwrap();
+    assert_eq!(solve.iterations(), marked);
+}
