@@ -2,7 +2,7 @@ use super::combos::{card_mask, combo_index, COMBOS};
 use super::range::Range;
 use super::showdown::{card_filter, fold_values, Board, Ranking};
 use super::traverse::{normalise, Game, Pool, River, Tables, Walk};
-use super::tree::{SubNode, SubTree};
+use super::tree::{SubAction, SubNode, SubTree};
 use crate::cards::Card;
 use crate::tree::Street;
 
@@ -38,10 +38,12 @@ fn river(base: &Board, card: Card) -> River {
 fn split_nodes(tree: &SubTree, parents: &[Option<(usize, usize)>]) -> Vec<bool> {
     let turn = tree.root.street == Street::Turn;
     let mut split = vec![false; tree.nodes.len()];
-    for i in 0..tree.nodes.len() {
-        if let Some((p, _)) = parents[i] {
-            split[i] = turn && (split[p] || matches!(tree.nodes[p], SubNode::Chance { .. }));
-        }
+    for (i, node) in tree.nodes.iter().enumerate() {
+        split[i] = turn
+            && match node {
+                SubNode::Decision { river, .. } => *river,
+                _ => parents[i].is_some_and(|(p, _)| split[p]),
+            };
     }
     split
 }
@@ -53,7 +55,11 @@ fn dot(a: &[f32], b: &[f32]) -> f64 {
 impl Solver {
     pub fn new(tree: SubTree, board: &[Card], ranges: [Range; 2]) -> Solver {
         let turn = tree.root.street == Street::Turn;
-        assert_eq!(board.len(), if turn { 4 } else { 5 }, "board size");
+        if turn {
+            assert!(board.len() == 4, "a turn tree needs a 4-card board");
+        } else {
+            assert!(board.len() == 5, "a river tree needs a 5-card board");
+        }
         let base = Board::new(board);
         let mask = card_mask(board);
         let rivers: Vec<River> = if turn {
@@ -176,19 +182,22 @@ impl Solver {
         self.game.board.live.binary_search(&c).ok()
     }
 
-    fn river_index(&self, node: usize, river: Option<Card>) -> Option<usize> {
+    fn slot(&self, node: usize, river: Option<Card>) -> Option<Option<usize>> {
         if !self.game.split[node] {
-            return None;
+            return Some(None);
         }
-        let card = river.expect("a river card is required on a river node");
-        let found = self.game.rivers.iter().position(|r| r.card == card);
-        Some(found.expect("the river card is not on the board"))
+        let card = river?;
+        self.game
+            .rivers
+            .iter()
+            .position(|r| r.card == card)
+            .map(Some)
     }
 
-    fn decision(&self, node: usize) -> (u8, usize) {
-        match &self.game.tree.nodes[node] {
-            SubNode::Decision { seat, actions, .. } => (*seat, actions.len()),
-            _ => panic!("node {node} is not a decision"),
+    fn decision(&self, node: usize) -> Option<(u8, &[(SubAction, usize)])> {
+        match self.game.tree.nodes.get(node)? {
+            SubNode::Decision { seat, actions, .. } => Some((*seat, actions)),
+            _ => None,
         }
     }
 
@@ -205,9 +214,14 @@ impl Solver {
     }
 
     pub fn strategy(&self, node: usize, river: Option<Card>, hole: [Card; 2]) -> Vec<f32> {
-        let (_, k) = self.decision(node);
+        let Some((_, actions)) = self.decision(node) else {
+            return Vec::new();
+        };
+        let k = actions.len();
         let uniform = vec![1.0 / k as f32; k];
-        let r = self.river_index(node, river);
+        let Some(r) = self.slot(node, river) else {
+            return uniform;
+        };
         let Some(pos) = self.position(hole).filter(|_| !self.blocked(r, hole)) else {
             return uniform;
         };
@@ -247,7 +261,13 @@ impl Solver {
     }
 
     pub fn ranges_at(&self, node: usize, river: Option<Card>) -> [Range; 2] {
-        let reach = self.reach(node, self.river_index(node, river));
+        let slot = (node < self.game.tree.nodes.len())
+            .then(|| self.slot(node, river))
+            .flatten();
+        let reach = match slot {
+            Some(r) => self.reach(node, r),
+            None => self.ranges.clone(),
+        };
         reach.map(|side| {
             let mut weights = vec![0.0; COMBOS];
             for (&c, &w) in self.game.board.live.iter().zip(&side) {
@@ -258,9 +278,13 @@ impl Solver {
     }
 
     pub fn action_evs(&self, node: usize, river: Option<Card>, hole: [Card; 2]) -> Vec<f32> {
-        let (seat, k) = self.decision(node);
-        let r = self.river_index(node, river);
-        let zeros = vec![0.0; k];
+        let Some((seat, actions)) = self.decision(node) else {
+            return Vec::new();
+        };
+        let zeros = vec![0.0; actions.len()];
+        let Some(r) = self.slot(node, river) else {
+            return zeros;
+        };
         let Some(pos) = self.position(hole).filter(|_| !self.blocked(r, hole)) else {
             return zeros;
         };
@@ -279,9 +303,6 @@ impl Solver {
         if mass <= 0.0 {
             return zeros;
         }
-        let SubNode::Decision { actions, .. } = &self.game.tree.nodes[node] else {
-            return zeros;
-        };
         let mut pool = Pool::default();
         let mut out = vec![0.0; self.game.board.live.len()];
         let mut walk = self.walk(&mut pool, seat, false);

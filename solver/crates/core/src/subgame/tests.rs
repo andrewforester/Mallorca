@@ -64,6 +64,15 @@ fn polarised_ranges() -> [Range; 2] {
     [catcher, bettor]
 }
 
+fn narrow() -> StreetSizes {
+    StreetSizes {
+        bets: vec![1.0],
+        raises: vec![],
+        max_aggressive: 1,
+        all_in_threshold: 2.0 / 3.0,
+    }
+}
+
 fn polarised() -> Solver {
     let root = Root {
         street: Street::River,
@@ -72,13 +81,8 @@ fn polarised() -> Solver {
         big_blind: 20,
     };
     let sizes = Sizes {
-        turn: StreetSizes::standard(),
-        river: StreetSizes {
-            bets: vec![1.0],
-            raises: vec![],
-            max_aggressive: 1,
-            all_in_threshold: 2.0 / 3.0,
-        },
+        river: narrow(),
+        ..Sizes::default()
     };
     let tree = build(root, &sizes, &[]);
     Solver::new(tree, &cards("2c 3d 7h 8s Ks"), polarised_ranges())
@@ -113,6 +117,36 @@ fn solver(street: Street, board: &str, behind: u32, ranges: [Range; 2]) -> Solve
     };
     let tree = build(root, &Sizes::default(), &[]);
     Solver::new(tree, &cards(board), ranges)
+}
+
+fn sized(street: Street, board: &str, behind: u32, sizes: &Sizes) -> Solver {
+    let root = Root {
+        street,
+        pot: 400,
+        behind,
+        big_blind: 20,
+    };
+    let tree = build(root, sizes, &[]);
+    Solver::new(tree, &cards(board), [Range::uniform(), Range::uniform()])
+}
+
+fn narrow_sizes() -> Sizes {
+    Sizes {
+        turn: narrow(),
+        river: narrow(),
+        river_in_turn: narrow(),
+    }
+}
+
+fn river_child(s: &Solver) -> usize {
+    let checked = s
+        .tree()
+        .node_at(&[SubAction::Check, SubAction::Check])
+        .unwrap();
+    let SubNode::Chance { child } = s.tree().nodes[checked] else {
+        panic!("expected chance");
+    };
+    child
 }
 
 fn random_range(rng: &mut Rng) -> Range {
@@ -200,8 +234,7 @@ fn river_exploitability_falls_below_half_a_percent() {
 
 #[test]
 fn turn_exploitability_falls_on_a_short_stack() {
-    let ranges = [Range::uniform(), Range::uniform()];
-    let mut s = solver(Street::Turn, "Ah 9c 6d 4s", 300, ranges);
+    let mut s = sized(Street::Turn, "Ah 9c 6d 4s", 300, &narrow_sizes());
     s.run(5);
     let e5 = s.exploitability();
     s.run(35);
@@ -210,17 +243,84 @@ fn turn_exploitability_falls_on_a_short_stack() {
 }
 
 #[test]
-fn turn_queries_take_a_river_card() {
-    let ranges = [Range::uniform(), Range::uniform()];
-    let mut s = solver(Street::Turn, "Ah 9c 6d 4s", 300, ranges);
-    s.run(3);
-    let checked = s
-        .tree()
-        .node_at(&[SubAction::Check, SubAction::Check])
-        .unwrap();
-    let SubNode::Chance { child } = s.tree().nodes[checked] else {
-        panic!("expected chance");
+fn split_queries_without_a_valid_river_return_defaults() {
+    let mut s = sized(Street::Turn, "Ah 9c 6d 4s", 300, &narrow_sizes());
+    s.run(2);
+    let child = river_child(&s);
+    let k = match &s.tree().nodes[child] {
+        SubNode::Decision { actions, .. } => actions.len(),
+        _ => panic!("expected decision"),
     };
+    let root = s.ranges_at(0, None);
+    for river in [None, Some(cards("Ah")[0]), Some(60)] {
+        let p = s.strategy(child, river, hole("Qc Jc"));
+        assert_eq!(p.len(), k);
+        assert!(
+            p.iter().all(|&x| (x - 1.0 / k as f32).abs() < 1e-6),
+            "{p:?}"
+        );
+        assert_eq!(s.action_evs(child, river, hole("Qc Jc")), vec![0.0; k]);
+        assert_eq!(s.ranges_at(child, river), root);
+    }
+}
+
+#[test]
+fn non_decision_and_missing_nodes_return_defaults() {
+    let mut s = polarised();
+    s.run(2);
+    let (_, facing) = action_slot(&s, 0, is_bet);
+    let (_, called) = action_slot(&s, facing, is_call);
+    let missing = s.tree().nodes.len() + 5;
+    for node in [called, missing] {
+        assert!(s.strategy(node, None, hole("Kc Qd")).is_empty());
+        assert!(s.action_evs(node, None, hole("Kc Qd")).is_empty());
+    }
+    assert_eq!(s.ranges_at(missing, None), polarised_ranges());
+}
+
+#[test]
+#[should_panic(expected = "a turn tree needs a 4-card board")]
+fn a_turn_tree_rejects_a_river_board() {
+    sized(Street::Turn, "Ah 9c 6d 4s 2h", 300, &narrow_sizes());
+}
+
+#[test]
+#[should_panic(expected = "a river tree needs a 5-card board")]
+fn a_river_tree_rejects_a_turn_board() {
+    sized(Street::River, "Ah 9c 6d 4s", 300, &narrow_sizes());
+}
+
+#[test]
+fn exploitability_of_the_uniform_strategy_matches_the_closed_form() {
+    let s = polarised();
+    let (value, air) = (3.0, 3.0);
+    let (value_checks, air_checks) = (value / 2.0, air / 2.0);
+    let (value_bets, air_bets) = (value / 2.0, air / 2.0);
+    let catcher_checks = value_checks * -100.0 + air_checks * 100.0;
+    let catcher_bets =
+        value_checks * (0.5 * 100.0 + 0.5 * -300.0) + air_checks * (0.5 * 100.0 + 0.5 * 300.0);
+    let catcher_folds = (value_bets + air_bets) * -100.0;
+    let catcher_calls = value_bets * -300.0 + air_bets * 300.0;
+    let br0 =
+        12.0 * (f64::max(catcher_checks, catcher_bets) + f64::max(catcher_folds, catcher_calls));
+    let value_checks_down = 0.5 * 100.0 + 0.5 * f64::max(-100.0, 300.0);
+    let value_bets_out = 0.5 * 100.0 + 0.5 * 300.0;
+    let air_checks_down = 0.5 * -100.0 + 0.5 * f64::max(-100.0, -300.0);
+    let air_bets_out = 0.5 * 100.0 + 0.5 * -300.0;
+    let br1 = 12.0
+        * (value * f64::max(value_checks_down, value_bets_out)
+            + air * f64::max(air_checks_down, air_bets_out));
+    let total = 6.0 * 12.0;
+    let want = (br0 + br1) / 2.0 / total;
+    let got = s.exploitability();
+    assert!((got - want).abs() < 1e-3 * want, "{got} vs {want}");
+}
+
+#[test]
+fn turn_queries_take_a_river_card() {
+    let mut s = sized(Street::Turn, "Ah 9c 6d 4s", 300, &narrow_sizes());
+    s.run(3);
+    let child = river_child(&s);
     let river = cards("Kd")[0];
     let p = s.strategy(child, Some(river), hole("Qc Jc"));
     assert!(sums_to_one(&p), "{p:?}");

@@ -23,6 +23,7 @@ impl StreetSizes {
 pub struct Sizes {
     pub turn: StreetSizes,
     pub river: StreetSizes,
+    pub river_in_turn: StreetSizes,
 }
 
 impl Default for Sizes {
@@ -30,6 +31,12 @@ impl Default for Sizes {
         Sizes {
             turn: StreetSizes::standard(),
             river: StreetSizes::standard(),
+            river_in_turn: StreetSizes {
+                bets: vec![1.0],
+                raises: vec![],
+                max_aggressive: 2,
+                all_in_threshold: 2.0 / 3.0,
+            },
         }
     }
 }
@@ -82,6 +89,7 @@ struct Round {
     stack: u32,
     river: bool,
     turn_tree: bool,
+    nested: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -140,6 +148,7 @@ pub fn build(root: Root, sizes: &Sizes, path: &[SubAction]) -> SubTree {
         stack: root.behind,
         river: root.street == Street::River,
         turn_tree: root.street == Street::Turn,
+        nested: false,
     };
     builder.decision(round, State::opening(0));
     SubTree {
@@ -239,7 +248,9 @@ impl SubTree {
 
 impl Builder<'_> {
     fn street_sizes(&self, round: &Round) -> &StreetSizes {
-        if round.river {
+        if round.nested {
+            &self.sizes.river_in_turn
+        } else if round.river {
             &self.sizes.river
         } else {
             &self.sizes.turn
@@ -359,6 +370,7 @@ impl Builder<'_> {
             stack: round.stack - bet,
             river: true,
             turn_tree: false,
+            nested: true,
         };
         let child = self.decision(next, State::opening(self.path.len()));
         self.nodes[index] = SubNode::Chance { child };
@@ -478,9 +490,50 @@ mod tests {
         let SubNode::Chance { child: river } = t.nodes[end] else {
             panic!("expected chance");
         };
+        assert_eq!(actions(&t, river), vec![Check, RaiseTo(800), RaiseTo(1600)]);
+        let bet = child(&t, river, RaiseTo(800));
+        assert_eq!(actions(&t, bet), vec![Fold, Call, RaiseTo(1600)]);
+        let jam = child(&t, bet, RaiseTo(1600));
+        assert_eq!(actions(&t, jam), vec![Fold, Call]);
+    }
+
+    #[test]
+    fn river_in_turn_defaults_to_one_pot_bet() {
+        let sizes = Sizes::default();
+        assert_eq!(sizes.river_in_turn.bets, vec![1.0]);
+        assert!(sizes.river_in_turn.raises.is_empty());
+        assert_eq!(sizes.river_in_turn.max_aggressive, 2);
+        assert_eq!(sizes.river_in_turn.all_in_threshold, 2.0 / 3.0);
+    }
+
+    #[test]
+    fn river_in_turn_sizes_shape_only_the_river_of_a_turn_tree() {
+        let sizes = Sizes {
+            river_in_turn: StreetSizes {
+                bets: vec![0.5],
+                raises: vec![],
+                max_aggressive: 1,
+                all_in_threshold: 2.0 / 3.0,
+            },
+            ..Sizes::default()
+        };
+        let r = root(Street::Turn, 400, 1800);
+        let t = build(r, &sizes, &[]);
         assert_eq!(
-            actions(&t, river),
-            vec![Check, RaiseTo(400), RaiseTo(800), RaiseTo(1600)]
+            actions(&t, 0),
+            vec![Check, RaiseTo(200), RaiseTo(400), RaiseTo(1800)]
+        );
+        let c = child(&t, 0, Check);
+        let end = child(&t, c, Check);
+        let SubNode::Chance { child: river } = t.nodes[end] else {
+            panic!("expected chance");
+        };
+        assert_eq!(actions(&t, river), vec![Check, RaiseTo(200), RaiseTo(1800)]);
+        let r = root(Street::River, 400, 1800);
+        let t = build(r, &sizes, &[]);
+        assert_eq!(
+            actions(&t, 0),
+            vec![Check, RaiseTo(200), RaiseTo(400), RaiseTo(1800)]
         );
     }
 
