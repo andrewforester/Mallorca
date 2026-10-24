@@ -50,7 +50,7 @@ const random: BotFactory = (rng) => ({
 
 let cfrModel: CfrModel | null = null;
 
-export const ARENA_SOLVER: SolverOptions = { turn: 100, river: 200 };
+export const ARENA_SOLVER: SolverOptions = { turn: 50, river: 200 };
 
 function cfrFactory(options?: BotOptions): BotFactory {
   return (rng) => {
