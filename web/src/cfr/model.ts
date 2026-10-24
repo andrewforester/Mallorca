@@ -83,6 +83,10 @@ export async function inflate(bytes: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
+export function iterationCount(n: number): number {
+  return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+}
+
 function kindOf(action: Action): number {
   return KINDS.indexOf(action.kind);
 }
@@ -151,7 +155,8 @@ export async function createCfrModel(wasm: BufferSource, strategy: Uint8Array): 
     newBot(options) {
       const handle = e.bot_new(model);
       if (options?.solver) {
-        e.bot_solver(handle, options.solver.turn, options.solver.river);
+        const { turn, river } = options.solver;
+        e.bot_solver(handle, iterationCount(turn), iterationCount(river));
       }
       return bot(e, handle);
     },
