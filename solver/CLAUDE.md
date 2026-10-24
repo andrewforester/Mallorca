@@ -1,6 +1,6 @@
 # Working in this package
 
-- Rust toolchain is pinned in `rust-toolchain.toml`. Run every command from `solver/`.
+- Rust toolchain is pinned in `rust-toolchain.toml`. Run every command from `solver/`, so `.cargo/config.toml` (SIMD for the wasm target) applies.
 - Before every commit: `cargo fmt --all`, `cargo clippy --all-targets -- -D warnings`, `cargo test`. Also `cargo build -p mallorca-core --target wasm32-unknown-unknown` and
   `cargo build --release -p mallorca-wasm --target wasm32-unknown-unknown`.
 - TDD: the failing test comes first. Fix the code, not the rule: never loosen a tolerance, add an `#[allow]` or delete an assertion.

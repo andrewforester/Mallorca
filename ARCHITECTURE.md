@@ -209,12 +209,16 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   turns on the subgame solver of `mallorca-core::subgame` (the `bot_solver` export): preflop and flop stay on the
   blueprint; the bot's first decision on the turn or the river solves that street with that many iterations over
   both ranges, and its later decisions on the street reuse the solve while the hand stays inside its tree.
-  `BROWSER_SOLVER` (`solver.ts`, `{ turn: 12, river: 200 }`) is the game's setting: the largest counts whose 95th
-  percentile turn decision is under 1 s in Node on an Apple M3 Pro, so a phone four times slower stays inside the
-  5 s fallback budget. The module is built with `+simd128` (`solver/.cargo/config.toml`).
-- `createCfrBrain(model, rng, options?)` is a `Brain` with `dispose()`; `options` goes to `model.newBot`. It forwards every `Observation` to the bot and draws
-  one `rng.next()` per observed action (the off-tree raise mapping) and one per decision (sampling the strategy),
-  so a seed fixes its play. `solverChoice` is the kind of the action; `evByAction` is `NaN` for every class.
+  `BROWSER_SOLVER` (`solver.ts`, `{ turn: 12, river: 200 }`) is the game's setting. Measured in Node on an Apple M3
+  Pro, a turn decision takes 854 ms at the 95th percentile with 12 iterations and 1208 ms with 15; river 200 was
+  not varied (about 70 ms a decision). The slowest browser turn decision in the e2e game is about 1.1 s, so a phone
+  four times slower needs about 3.4 to 4.4 s, a thin margin under the 5 s fallback budget. The module is built with
+  `+simd128` (`solver/.cargo/config.toml`) and needs WASM SIMD: a browser without it fails to load the module and
+  the game falls back to the math bot.
+- `createCfrBrain(model, rng, options?)` is a `Brain` with `dispose()`; `options` goes to `model.newBot`. It
+  forwards every `Observation` to the bot and draws one `rng.next()` per observed action (the off-tree raise
+  mapping) and one per decision (sampling the strategy), so a seed fixes its play. `solverChoice` is the kind of
+  the action; `evByAction` is `NaN` for every class.
 - Translation lives in Rust (`mallorca-core::bot`): chips scale by the big blind, an opponent raise maps to one of
   the two neighbouring tree sizes by the pseudo-harmonic mapping on pot fractions, the bot's own raise keeps the
   tree's pot fraction and is clamped into `legal.raise`, and a hand that leaves the tree resyncs to the nearest
@@ -252,11 +256,12 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - `BotClient` has `observe(observations)`, `decide(legal)`, `reset()`, an optional `select(opponent, seed)` and an
   optional `dispose()`. `workerBot()` runs the brain in `bot.worker.ts` over the `WorkerRequest` and `WorkerReply`
   messages in `workerProtocol.ts`; `createWorkerHandler(newBrain, post, load?)` in `workerHandler.ts` is the
-  worker's message handling as a plain function. A `select` request queues every later request until the
-  opponent's brain factory is ready, then replies `{ id, opponent }` or `{ id, error }` and keeps the old brain on
-  an error. The worker loads the CFR model once (`fetch` of the two `new URL(..., import.meta.url)` assets) and
-  seeds its brains with `mulberry32(seed)`; the `cfr` opponent is `createCfrBrain` with `{ solver: BROWSER_SOLVER }`. Replacing a brain disposes it. `inProcessBot()` runs the math brain on
-  the main thread and rejects `select('cfr')`.
+  worker's message handling as a plain function. A `select` request queues every later request until the opponent's
+  brain factory is ready, then replies `{ id, opponent }` or `{ id, error }` and keeps the old brain on an error.
+  The worker loads the CFR model once (`fetch` of the two `new URL(..., import.meta.url)` assets) and seeds its
+  brains with `mulberry32(seed)`; the `cfr` opponent is `createCfrBrain` with `{ solver: BROWSER_SOLVER }`.
+  Replacing a brain disposes it. `inProcessBot()` runs the math brain on the main thread and rejects
+  `select('cfr')`.
 - `withFallback` wraps a client: when `decide` rejects or takes longer than 5 s, it disposes the primary, replays
   the observations of the hand into an in-process bot and uses it from then on. It falls back once, and a failure
   from before `reset` or `dispose` does not trigger it. The session drops a decision that arrives after `start`
@@ -355,12 +360,12 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 imports `engine`, `brains`, `cards` and `game/records/record.ts` and nothing from `ui`; Node 24 runs the `.ts`
 files directly, including in workers. `tools/` may use the clock and Node APIs.
 
-- `bots.ts`: `BOTS`, the `BotFactory` (`(rng) => ArenaBot` with `observe`, `decide` and an optional `dispose`)
-  of each name: `math` (`createMathBrain` with `randomVillainModel`), `cfr` (`createCfrBrain` over the model that
+- `bots.ts`: `BOTS`, the `BotFactory` (`(rng) => ArenaBot` with `observe`, `decide` and an optional `dispose`) of
+  each name: `math` (`createMathBrain` with `randomVillainModel`), `cfr` (`createCfrBrain` over the model that
   `prepareBots` loads from `src/cfr` once per process or worker; it throws before that), `cfr-solve` (the same
-  model with `{ solver: ARENA_SOLVER }`, `{ turn: 50, river: 200 }`), `always-call` (checks or calls), `always-raise` (raises to
-  `legal.raise.min` when it can, else checks or calls) and `random` (uniform over the legal kinds, a raise to the
-  minimum, from its seeded `Rng`).
+  model with `{ solver: ARENA_SOLVER }`, `{ turn: 50, river: 200 }`), `always-call` (checks or calls),
+  `always-raise` (raises to `legal.raise.min` when it can, else checks or calls) and `random` (uniform over the
+  legal kinds, a raise to the minimum, from its seeded `Rng`).
 - `match.ts`: `playPair(a, b, seed, index)` plays one deck twice with the seats swapped: the deck is shuffled by
   `mulberry32((Math.imul(seed, 0x9e3779b1) + index) >>> 0)`; hand `k` (0, 1) starts both seats at 2000, button
   seat 0, blinds 10/20, `handNumber = index * 2 + k + 1`, with `a` on seat 0 in hand 0 and `b` in hand 1. Each hand
