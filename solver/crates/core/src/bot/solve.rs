@@ -153,8 +153,8 @@ fn to_move(action: SubAction, legal: &Legal) -> Move {
     match action {
         SubAction::Fold if legal.fold && !legal.check => Move::Fold,
         SubAction::RaiseTo(to) => match legal.raise {
-            Some((min, max)) => Move::RaiseTo(to.clamp(min, max)),
-            None => passive(legal),
+            Some((min, max)) if min <= max => Move::RaiseTo(to.clamp(min, max)),
+            _ => passive(legal),
         },
         _ => passive(legal),
     }
@@ -192,6 +192,12 @@ mod tests {
         assert_eq!(to_move(SubAction::RaiseTo(500), &legal), Move::RaiseTo(300));
         assert_eq!(to_move(SubAction::RaiseTo(120), &legal), Move::RaiseTo(120));
         assert_eq!(to_move(SubAction::RaiseTo(120), &facing(None)), Move::Call);
+    }
+
+    #[test]
+    fn an_inverted_raise_range_is_passive() {
+        let legal = facing(Some((300, 80)));
+        assert_eq!(to_move(SubAction::RaiseTo(120), &legal), Move::Call);
     }
 
     #[test]
