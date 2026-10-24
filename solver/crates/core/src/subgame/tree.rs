@@ -125,6 +125,10 @@ struct Builder<'a> {
 }
 
 pub fn build(root: Root, sizes: &Sizes, path: &[SubAction]) -> SubTree {
+    assert!(
+        matches!(root.street, Street::Turn | Street::River),
+        "subgame roots are turn or river"
+    );
     let mut builder = Builder {
         root,
         sizes,
@@ -144,7 +148,65 @@ pub fn build(root: Root, sizes: &Sizes, path: &[SubAction]) -> SubTree {
     }
 }
 
+fn room(big_blind: u32, stack: u32, state: &State) -> Option<(u32, u32)> {
+    if stack <= state.theirs() {
+        return None;
+    }
+    let step = state.increment.max(big_blind).max(1);
+    Some(((state.theirs() + step).min(stack), stack))
+}
+
+fn normalise(big_blind: u32, stack: u32, state: &State, action: SubAction) -> SubAction {
+    let owed = state.owed() > 0;
+    match action {
+        SubAction::Fold if !owed => SubAction::Check,
+        SubAction::Check if owed => SubAction::Call,
+        SubAction::Call if !owed => SubAction::Check,
+        SubAction::RaiseTo(x) => match room(big_blind, stack, state) {
+            Some((min, all_in)) => SubAction::RaiseTo(x.clamp(min, all_in)),
+            None if owed => SubAction::Call,
+            None => SubAction::Check,
+        },
+        other => other,
+    }
+}
+
+fn advance(state: State, action: SubAction) -> State {
+    let next = State {
+        seat: 1 - state.seat,
+        ..state
+    };
+    match action {
+        SubAction::RaiseTo(x) => {
+            let mut bets = state.bets;
+            bets[state.seat as usize] = x;
+            State {
+                bets,
+                increment: state.increment.max(x - state.theirs()),
+                aggressive: state.aggressive + 1,
+                ..next
+            }
+        }
+        _ => next,
+    }
+}
+
 impl SubTree {
+    pub fn locate(&self, path: &[SubAction]) -> Option<usize> {
+        let stack = self.root.behind;
+        let mut state = State::opening(0);
+        let mut at = 0;
+        for action in path {
+            let SubNode::Decision { actions, .. } = self.nodes.get(at)? else {
+                return None;
+            };
+            let step = normalise(self.root.big_blind, stack, &state, *action);
+            at = actions.iter().find(|(a, _)| *a == step)?.1;
+            state = advance(state, step);
+        }
+        Some(at)
+    }
+
     pub fn node_at(&self, path: &[SubAction]) -> Option<usize> {
         let mut at = 0;
         for action in path {
@@ -185,13 +247,10 @@ impl Builder<'_> {
     }
 
     fn bounds(&self, round: &Round, state: &State) -> Option<(u32, u32)> {
-        let all_in = round.stack;
-        let max_aggressive = self.street_sizes(round).max_aggressive;
-        if state.aggressive >= max_aggressive || all_in <= state.theirs() {
+        if state.aggressive >= self.street_sizes(round).max_aggressive {
             return None;
         }
-        let step = state.increment.max(self.root.big_blind);
-        Some(((state.theirs() + step).min(all_in), all_in))
+        room(self.root.big_blind, round.stack, state)
     }
 
     fn raise_targets(&self, round: &Round, state: &State) -> Vec<u32> {
@@ -221,14 +280,7 @@ impl Builder<'_> {
 
     fn path_action(&self, round: &Round, state: &State) -> Option<SubAction> {
         let action = *self.path.get(state.cursor)?;
-        match action {
-            SubAction::RaiseTo(x) => match self.bounds(round, state) {
-                Some((min, all_in)) => Some(SubAction::RaiseTo(x.clamp(min, all_in))),
-                None if state.owed() > 0 => Some(SubAction::Call),
-                None => Some(SubAction::Check),
-            },
-            other => Some(other),
-        }
+        Some(normalise(self.root.big_blind, round.stack, state, action))
     }
 
     fn legal(&self, round: &Round, state: &State) -> Vec<SubAction> {
@@ -272,10 +324,7 @@ impl Builder<'_> {
     }
 
     fn apply(&mut self, round: Round, state: State, action: SubAction) -> usize {
-        let next = State {
-            seat: 1 - state.seat,
-            ..state
-        };
+        let next = advance(state, action);
         match action {
             SubAction::Fold => self.push(SubNode::Fold {
                 folder: state.seat,
@@ -286,20 +335,7 @@ impl Builder<'_> {
                 self.finish(round, State { bets, ..state })
             }
             SubAction::Check if state.seat == 0 => self.finish(round, state),
-            SubAction::Check => self.decision(round, next),
-            SubAction::RaiseTo(x) => {
-                let mut bets = state.bets;
-                bets[state.seat as usize] = x;
-                let increment = state.increment.max(x - state.theirs());
-                let aggressive = state.aggressive + 1;
-                let raised = State {
-                    bets,
-                    increment,
-                    aggressive,
-                    ..next
-                };
-                self.decision(round, raised)
-            }
+            _ => self.decision(round, next),
         }
     }
 
@@ -542,5 +578,57 @@ mod tests {
             }
         }
         assert_eq!(edges.iter().filter(|e| e.is_none()).count(), 1);
+    }
+
+    #[test]
+    fn a_fourth_raise_on_the_path_is_in_the_tree() {
+        let path = [RaiseTo(200), RaiseTo(1000), RaiseTo(3400), RaiseTo(9000)];
+        let t = tree(Street::River, 400, 100_000, &path);
+        let at = t.locate(&path).unwrap();
+        assert!(matches!(t.nodes[at], SubNode::Decision { seat: 1, .. }));
+        assert_eq!(t.node_at(&path), Some(at));
+    }
+
+    #[test]
+    fn an_over_stack_raise_locates_to_all_in() {
+        let t = tree(Street::River, 400, 1800, &[]);
+        let at = t.locate(&[RaiseTo(2300)]).unwrap();
+        assert_eq!(Some(at), t.node_at(&[RaiseTo(1800)]));
+        let t = tree(Street::River, 400, 1800, &[RaiseTo(2300)]);
+        assert_eq!(t.locate(&[RaiseTo(2300)]), t.node_at(&[RaiseTo(1800)]));
+    }
+
+    #[test]
+    fn locate_swaps_check_and_call() {
+        let t = tree(Street::River, 400, 1800, &[]);
+        let call = t.locate(&[RaiseTo(200), Call]);
+        assert!(call.is_some());
+        assert_eq!(t.locate(&[RaiseTo(200), Check]), call);
+    }
+
+    #[test]
+    fn build_clamps_illegal_non_raise_path_actions() {
+        let t = tree(Street::River, 400, 1800, &[RaiseTo(200), Check]);
+        assert!(t.node_at(&[RaiseTo(200), Call]).is_some());
+        let t = tree(Street::River, 400, 1800, &[Call]);
+        assert!(t.node_at(&[Check]).is_some());
+    }
+
+    #[test]
+    fn a_zero_big_blind_still_builds() {
+        let r = Root {
+            street: Street::River,
+            pot: 400,
+            behind: 100,
+            big_blind: 0,
+        };
+        let t = build(r, &Sizes::default(), &[]);
+        assert!(t.nodes.len() > 1);
+    }
+
+    #[test]
+    #[should_panic]
+    fn a_flop_root_is_rejected() {
+        tree(Street::Flop, 400, 1800, &[]);
     }
 }
