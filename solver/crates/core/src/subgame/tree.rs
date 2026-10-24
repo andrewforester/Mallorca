@@ -1,0 +1,546 @@
+use crate::tree::Street;
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct StreetSizes {
+    pub bets: Vec<f64>,
+    pub raises: Vec<f64>,
+    pub max_aggressive: u8,
+    pub all_in_threshold: f64,
+}
+
+impl StreetSizes {
+    pub fn standard() -> StreetSizes {
+        StreetSizes {
+            bets: vec![0.5, 1.0],
+            raises: vec![1.0],
+            max_aggressive: 3,
+            all_in_threshold: 2.0 / 3.0,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Sizes {
+    pub turn: StreetSizes,
+    pub river: StreetSizes,
+}
+
+impl Default for Sizes {
+    fn default() -> Sizes {
+        Sizes {
+            turn: StreetSizes::standard(),
+            river: StreetSizes::standard(),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Root {
+    pub street: Street,
+    pub pot: u32,
+    pub behind: u32,
+    pub big_blind: u32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum SubAction {
+    Fold,
+    Check,
+    Call,
+    RaiseTo(u32),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum SubNode {
+    Decision {
+        seat: u8,
+        river: bool,
+        actions: Vec<(SubAction, usize)>,
+    },
+    Chance {
+        child: usize,
+    },
+    Fold {
+        folder: u8,
+        contributed: [u32; 2],
+    },
+    Showdown {
+        river: bool,
+        contributed: u32,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SubTree {
+    pub root: Root,
+    pub nodes: Vec<SubNode>,
+}
+
+#[derive(Clone, Copy)]
+struct Round {
+    base: u32,
+    stack: u32,
+    river: bool,
+    turn_tree: bool,
+}
+
+#[derive(Clone, Copy)]
+struct State {
+    seat: u8,
+    bets: [u32; 2],
+    increment: u32,
+    aggressive: u8,
+    cursor: usize,
+}
+
+impl State {
+    fn opening(cursor: usize) -> State {
+        State {
+            seat: 1,
+            bets: [0, 0],
+            increment: 0,
+            aggressive: 0,
+            cursor,
+        }
+    }
+
+    fn mine(&self) -> u32 {
+        self.bets[self.seat as usize]
+    }
+
+    fn theirs(&self) -> u32 {
+        self.bets[1 - self.seat as usize]
+    }
+
+    fn owed(&self) -> u32 {
+        self.theirs().saturating_sub(self.mine())
+    }
+}
+
+struct Builder<'a> {
+    root: Root,
+    sizes: &'a Sizes,
+    path: &'a [SubAction],
+    nodes: Vec<SubNode>,
+}
+
+pub fn build(root: Root, sizes: &Sizes, path: &[SubAction]) -> SubTree {
+    let mut builder = Builder {
+        root,
+        sizes,
+        path,
+        nodes: Vec::new(),
+    };
+    let round = Round {
+        base: root.pot / 2,
+        stack: root.behind,
+        river: root.street == Street::River,
+        turn_tree: root.street == Street::Turn,
+    };
+    builder.decision(round, State::opening(0));
+    SubTree {
+        root,
+        nodes: builder.nodes,
+    }
+}
+
+impl SubTree {
+    pub fn node_at(&self, path: &[SubAction]) -> Option<usize> {
+        let mut at = 0;
+        for action in path {
+            match self.nodes.get(at)? {
+                SubNode::Decision { actions, .. } => {
+                    at = actions.iter().find(|(a, _)| a == action)?.1;
+                }
+                _ => return None,
+            }
+        }
+        Some(at)
+    }
+
+    pub fn parent_edges(&self) -> Vec<Option<(usize, usize)>> {
+        let mut edges = vec![None; self.nodes.len()];
+        for (index, node) in self.nodes.iter().enumerate() {
+            match node {
+                SubNode::Decision { actions, .. } => {
+                    for (slot, (_, child)) in actions.iter().enumerate() {
+                        edges[*child] = Some((index, slot));
+                    }
+                }
+                SubNode::Chance { child } => edges[*child] = Some((index, 0)),
+                _ => {}
+            }
+        }
+        edges
+    }
+}
+
+impl Builder<'_> {
+    fn street_sizes(&self, round: &Round) -> &StreetSizes {
+        if round.river {
+            &self.sizes.river
+        } else {
+            &self.sizes.turn
+        }
+    }
+
+    fn bounds(&self, round: &Round, state: &State) -> Option<(u32, u32)> {
+        let all_in = round.stack;
+        let max_aggressive = self.street_sizes(round).max_aggressive;
+        if state.aggressive >= max_aggressive || all_in <= state.theirs() {
+            return None;
+        }
+        let step = state.increment.max(self.root.big_blind);
+        Some(((state.theirs() + step).min(all_in), all_in))
+    }
+
+    fn raise_targets(&self, round: &Round, state: &State) -> Vec<u32> {
+        let Some((min, all_in)) = self.bounds(round, state) else {
+            return Vec::new();
+        };
+        let sizes = self.street_sizes(round);
+        let fractions = if state.owed() > 0 {
+            &sizes.raises
+        } else {
+            &sizes.bets
+        };
+        let pot = f64::from(2 * round.base + state.bets[0] + state.bets[1] + state.owed());
+        let limit = sizes.all_in_threshold * f64::from(round.stack);
+        let mut targets = vec![all_in];
+        for fraction in fractions {
+            let raw = f64::from(state.theirs()) + fraction * pot;
+            let target = if raw > limit || raw >= f64::from(all_in) {
+                all_in
+            } else {
+                (raw.round() as u32).max(min)
+            };
+            targets.push(target);
+        }
+        targets
+    }
+
+    fn path_action(&self, round: &Round, state: &State) -> Option<SubAction> {
+        let action = *self.path.get(state.cursor)?;
+        match action {
+            SubAction::RaiseTo(x) => match self.bounds(round, state) {
+                Some((min, all_in)) => Some(SubAction::RaiseTo(x.clamp(min, all_in))),
+                None if state.owed() > 0 => Some(SubAction::Call),
+                None => Some(SubAction::Check),
+            },
+            other => Some(other),
+        }
+    }
+
+    fn legal(&self, round: &Round, state: &State) -> Vec<SubAction> {
+        let mut actions = Vec::new();
+        if state.owed() > 0 {
+            actions.push(SubAction::Fold);
+            actions.push(SubAction::Call);
+        } else {
+            actions.push(SubAction::Check);
+        }
+        let mut targets = self.raise_targets(round, state);
+        if let Some(SubAction::RaiseTo(x)) = self.path_action(round, state) {
+            targets.push(x);
+        }
+        targets.sort_unstable();
+        targets.dedup();
+        actions.extend(targets.into_iter().map(SubAction::RaiseTo));
+        actions
+    }
+
+    fn decision(&mut self, round: Round, state: State) -> usize {
+        let index = self.nodes.len();
+        self.nodes.push(SubNode::Chance { child: 0 });
+        let followed = self.path_action(&round, &state);
+        let mut actions = Vec::new();
+        for action in self.legal(&round, &state) {
+            let cursor = if Some(action) == followed {
+                state.cursor + 1
+            } else {
+                self.path.len()
+            };
+            let child = self.apply(round, State { cursor, ..state }, action);
+            actions.push((action, child));
+        }
+        self.nodes[index] = SubNode::Decision {
+            seat: state.seat,
+            river: round.river,
+            actions,
+        };
+        index
+    }
+
+    fn apply(&mut self, round: Round, state: State, action: SubAction) -> usize {
+        let next = State {
+            seat: 1 - state.seat,
+            ..state
+        };
+        match action {
+            SubAction::Fold => self.push(SubNode::Fold {
+                folder: state.seat,
+                contributed: [round.base + state.bets[0], round.base + state.bets[1]],
+            }),
+            SubAction::Call => {
+                let bets = [state.theirs(), state.theirs()];
+                self.finish(round, State { bets, ..state })
+            }
+            SubAction::Check if state.seat == 0 => self.finish(round, state),
+            SubAction::Check => self.decision(round, next),
+            SubAction::RaiseTo(x) => {
+                let mut bets = state.bets;
+                bets[state.seat as usize] = x;
+                let increment = state.increment.max(x - state.theirs());
+                let aggressive = state.aggressive + 1;
+                let raised = State {
+                    bets,
+                    increment,
+                    aggressive,
+                    ..next
+                };
+                self.decision(round, raised)
+            }
+        }
+    }
+
+    fn push(&mut self, node: SubNode) -> usize {
+        self.nodes.push(node);
+        self.nodes.len() - 1
+    }
+
+    fn finish(&mut self, round: Round, state: State) -> usize {
+        let bet = state.bets[0];
+        let all_in = bet >= round.stack;
+        if round.river || (round.turn_tree && all_in) {
+            return self.push(SubNode::Showdown {
+                river: round.river,
+                contributed: round.base + bet,
+            });
+        }
+        let index = self.push(SubNode::Chance { child: 0 });
+        let next = Round {
+            base: round.base + bet,
+            stack: round.stack - bet,
+            river: true,
+            turn_tree: false,
+        };
+        let child = self.decision(next, State::opening(self.path.len()));
+        self.nodes[index] = SubNode::Chance { child };
+        index
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn root(street: Street, pot: u32, behind: u32) -> Root {
+        Root {
+            street,
+            pot,
+            behind,
+            big_blind: 20,
+        }
+    }
+
+    fn tree(street: Street, pot: u32, behind: u32, path: &[SubAction]) -> SubTree {
+        build(root(street, pot, behind), &Sizes::default(), path)
+    }
+
+    fn actions(tree: &SubTree, at: usize) -> Vec<SubAction> {
+        match &tree.nodes[at] {
+            SubNode::Decision { actions, .. } => actions.iter().map(|(a, _)| *a).collect(),
+            other => panic!("not a decision: {other:?}"),
+        }
+    }
+
+    fn child(tree: &SubTree, at: usize, action: SubAction) -> usize {
+        match &tree.nodes[at] {
+            SubNode::Decision { actions, .. } => {
+                actions.iter().find(|(a, _)| *a == action).unwrap().1
+            }
+            other => panic!("not a decision: {other:?}"),
+        }
+    }
+
+    use SubAction::{Call, Check, Fold, RaiseTo};
+
+    #[test]
+    fn river_root_offers_check_and_bets() {
+        let t = tree(Street::River, 400, 1800, &[]);
+        assert!(matches!(
+            t.nodes[0],
+            SubNode::Decision {
+                seat: 1,
+                river: true,
+                ..
+            }
+        ));
+        assert_eq!(
+            actions(&t, 0),
+            vec![Check, RaiseTo(200), RaiseTo(400), RaiseTo(1800)]
+        );
+    }
+
+    #[test]
+    fn facing_a_bet_offers_fold_call_raise() {
+        let t = tree(Street::River, 400, 1800, &[]);
+        let c = child(&t, 0, RaiseTo(200));
+        assert!(matches!(t.nodes[c], SubNode::Decision { seat: 0, .. }));
+        assert_eq!(
+            actions(&t, c),
+            vec![Fold, Call, RaiseTo(1000), RaiseTo(1800)]
+        );
+    }
+
+    #[test]
+    fn big_sizes_become_all_in() {
+        let t = tree(Street::River, 400, 300, &[]);
+        assert_eq!(actions(&t, 0), vec![Check, RaiseTo(200), RaiseTo(300)]);
+    }
+
+    #[test]
+    fn short_stack_only_jams() {
+        let t = tree(Street::River, 400, 15, &[]);
+        assert_eq!(actions(&t, 0), vec![Check, RaiseTo(15)]);
+        let c = child(&t, 0, RaiseTo(15));
+        assert_eq!(actions(&t, c), vec![Fold, Call]);
+    }
+
+    #[test]
+    fn turn_round_ends_in_a_chance_node() {
+        let t = tree(Street::Turn, 400, 1800, &[]);
+        let c = child(&t, 0, Check);
+        let end = child(&t, c, Check);
+        let SubNode::Chance { child: river } = t.nodes[end] else {
+            panic!("expected chance");
+        };
+        assert!(matches!(
+            t.nodes[river],
+            SubNode::Decision {
+                seat: 1,
+                river: true,
+                ..
+            }
+        ));
+        let jam = child(&t, 0, RaiseTo(1800));
+        let called = child(&t, jam, Call);
+        assert_eq!(
+            t.nodes[called],
+            SubNode::Showdown {
+                river: false,
+                contributed: 2000
+            }
+        );
+    }
+
+    #[test]
+    fn turn_call_of_a_bet_continues_on_the_river_with_smaller_stacks() {
+        let t = tree(Street::Turn, 400, 1800, &[]);
+        let bet = child(&t, 0, RaiseTo(200));
+        let end = child(&t, bet, Call);
+        let SubNode::Chance { child: river } = t.nodes[end] else {
+            panic!("expected chance");
+        };
+        assert_eq!(
+            actions(&t, river),
+            vec![Check, RaiseTo(400), RaiseTo(800), RaiseTo(1600)]
+        );
+    }
+
+    #[test]
+    fn fold_and_showdown_contributions() {
+        let t = tree(Street::River, 400, 1800, &[]);
+        let bet = child(&t, 0, RaiseTo(200));
+        let called = child(&t, bet, Call);
+        assert_eq!(
+            t.nodes[called],
+            SubNode::Showdown {
+                river: true,
+                contributed: 400
+            }
+        );
+        let folded = child(&t, bet, Fold);
+        assert_eq!(
+            t.nodes[folded],
+            SubNode::Fold {
+                folder: 0,
+                contributed: [200, 400]
+            }
+        );
+    }
+
+    #[test]
+    fn path_inserts_an_off_tree_size() {
+        let t = tree(Street::River, 400, 1800, &[RaiseTo(60)]);
+        assert_eq!(
+            actions(&t, 0),
+            vec![
+                Check,
+                RaiseTo(60),
+                RaiseTo(200),
+                RaiseTo(400),
+                RaiseTo(1800)
+            ]
+        );
+        let at = t.node_at(&[RaiseTo(60)]).unwrap();
+        assert!(matches!(t.nodes[at], SubNode::Decision { seat: 0, .. }));
+        assert_eq!(t.node_at(&[RaiseTo(61)]), None);
+    }
+
+    #[test]
+    fn path_clamps_an_illegal_size() {
+        let t = tree(Street::River, 400, 1800, &[RaiseTo(5000)]);
+        assert_eq!(
+            actions(&t, 0),
+            vec![Check, RaiseTo(200), RaiseTo(400), RaiseTo(1800)]
+        );
+        let t = tree(Street::River, 400, 1800, &[RaiseTo(5)]);
+        assert_eq!(actions(&t, 0)[1], RaiseTo(20));
+    }
+
+    #[test]
+    fn min_raise_holds() {
+        let t = tree(Street::River, 400, 1800, &[RaiseTo(20)]);
+        let at = t.node_at(&[RaiseTo(20)]).unwrap();
+        for action in actions(&t, at) {
+            if let RaiseTo(x) = action {
+                assert!(x >= 40, "{x}");
+            }
+        }
+    }
+
+    #[test]
+    fn max_aggressive_caps_the_fourth_raise() {
+        let t = tree(Street::River, 400, 100_000, &[]);
+        let bet = child(&t, 0, RaiseTo(200));
+        let raise = child(&t, bet, RaiseTo(1000));
+        assert!(actions(&t, raise).contains(&RaiseTo(3400)));
+        let third = child(&t, raise, RaiseTo(3400));
+        assert_eq!(actions(&t, third), vec![Fold, Call]);
+    }
+
+    #[test]
+    fn node_at_reaches_chance_and_stops_at_terminals() {
+        let t = tree(Street::Turn, 400, 1800, &[]);
+        let at = t.node_at(&[Check, Check]).unwrap();
+        assert!(matches!(t.nodes[at], SubNode::Chance { .. }));
+        assert_eq!(t.node_at(&[Check, Check, Check]), None);
+        assert_eq!(t.node_at(&[]), Some(0));
+    }
+
+    #[test]
+    fn parent_edges_invert_the_children() {
+        let t = tree(Street::Turn, 400, 1800, &[]);
+        let edges = t.parent_edges();
+        assert_eq!(edges[0], None);
+        for (parent, slot) in edges.iter().flatten().copied() {
+            match &t.nodes[parent] {
+                SubNode::Decision { actions, .. } => assert!(slot < actions.len()),
+                SubNode::Chance { .. } => assert_eq!(slot, 0),
+                _ => panic!("terminal parent"),
+            }
+        }
+        assert_eq!(edges.iter().filter(|e| e.is_none()).count(), 1);
+    }
+}
