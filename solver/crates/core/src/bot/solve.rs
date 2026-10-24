@@ -143,6 +143,7 @@ pub(super) fn decide(
 }
 
 fn rebuild(sub: &mut Subgame, root: Root, board: &[Card], iterations: u32) {
+    sub.solve = None;
     let tree = build(root, &Sizes::default(), &sub.path);
     let mut solve = Solver::new(tree, board, sub.ranges.clone());
     solve.run(iterations);
