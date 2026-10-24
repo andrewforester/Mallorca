@@ -1,8 +1,10 @@
+mod ranges;
 mod translate;
 
 use crate::abstraction::Abstraction;
 use crate::cards::Card;
 use crate::strategy::{StrategyError, StrategyFile};
+use crate::subgame::range::Range;
 use crate::tree::{ActionKind, Node, NodeId, Street};
 use translate::{fraction, nearest, sample, scaled_raise};
 
@@ -122,6 +124,7 @@ struct Hand {
     scale: f64,
     node: Option<NodeId>,
     pending: Option<NodeId>,
+    ranges: [Range; 2],
 }
 
 impl Hand {
@@ -183,7 +186,12 @@ impl Bot {
             scale: f64::from(model.file.big_blind) / f64::from(blinds[1].max(1)),
             node: Some(model.file.tree.root()),
             pending: None,
+            ranges: [Range::uniform(), Range::uniform()],
         });
+    }
+
+    pub fn ranges(&self) -> Option<&[Range; 2]> {
+        self.hand.as_ref().map(|h| &h.ranges)
     }
 
     pub fn hole_cards(&mut self, hole: [Card; 2]) {
@@ -202,6 +210,10 @@ impl Bot {
             _ => Street::River,
         };
         hand.board = board.to_vec();
+        hand.ranges = hand
+            .ranges
+            .clone()
+            .map(|r| r.without(board).or_uniform(board));
         hand.bets = [0, 0];
         hand.pending = None;
         let on_street = hand
@@ -222,6 +234,15 @@ impl Bot {
             Some(child) if hero => Some(child),
             _ => follow(model, hand, seat, mv, draw),
         };
+        ranges::track(
+            model,
+            &mut hand.ranges[seat],
+            hand.node,
+            next,
+            hand.street,
+            &hand.board,
+            seat,
+        );
         hand.apply(seat, mv);
         hand.node = next;
     }

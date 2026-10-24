@@ -1,6 +1,8 @@
 use super::*;
 use crate::measure::fixtures::trained;
 use crate::rng::Rng;
+use crate::subgame::combos::COMBOS;
+use crate::subgame::range::Range;
 use crate::tree::{ActionKind, Node};
 use std::sync::OnceLock;
 
@@ -284,4 +286,110 @@ fn random_hands_at_any_depth_and_blind_get_legal_moves() {
     for _ in 0..400 {
         play_random_hand(&mut rng);
     }
+}
+
+fn expected_after(id: NodeId, kind: ActionKind, street: Street, board: &[Card]) -> Range {
+    let Node::Decision { actions, .. } = model().file.tree.node(id) else {
+        panic!("not a decision");
+    };
+    let i = actions.iter().position(|a| a.0 == kind).unwrap();
+    let mut range = Range::uniform().without(board);
+    range.update(|combo| {
+        let bucket = model().abstraction.bucket(street, combo, board);
+        let p = model().file.probabilities(id, bucket)[i];
+        f32::from(p.max(1)) / 255.0
+    });
+    range
+}
+
+#[test]
+fn ranges_start_uniform() {
+    let bot = started(true, [400, 400], [10, 20], [0, 5]);
+    let ranges = bot.ranges().unwrap();
+    assert_eq!(ranges[0], Range::uniform());
+    assert_eq!(ranges[1], Range::uniform());
+}
+
+#[test]
+fn a_preflop_raise_reweights_the_raiser() {
+    let root = model().file.tree.root();
+    let mut bot = started(false, [400, 400], [10, 20], [0, 5]);
+    bot.acted(model(), false, Move::RaiseTo(50), 0.3);
+    let ranges = bot.ranges().unwrap();
+    let expected = expected_after(root, ActionKind::RaiseTo(50), Street::Preflop, &[]);
+    assert_eq!(ranges[0], expected);
+    assert_ne!(ranges[0], Range::uniform());
+    assert_eq!(ranges[1], Range::uniform());
+}
+
+#[test]
+fn own_actions_reweight_our_range() {
+    let root = model().file.tree.root();
+    let hole = [48, 49];
+    let bucket = model().abstraction.bucket(Street::Preflop, hole, &[]);
+    let draw = draw_for(root, bucket, ActionKind::RaiseTo(50));
+    assert!(draw >= 0.0, "the fixture never opens this hand");
+    let mut bot = started(true, [400, 400], [10, 20], hole);
+    let mv = bot.decide(model(), &facing_blind(20, 400), draw);
+    bot.acted(model(), true, mv, 0.0);
+    let ranges = bot.ranges().unwrap();
+    let expected = expected_after(root, ActionKind::RaiseTo(50), Street::Preflop, &[]);
+    assert_eq!(ranges[0], expected);
+    assert_eq!(ranges[1], Range::uniform());
+}
+
+#[test]
+fn the_board_zeroes_dead_combos() {
+    let mut bot = started(true, [400, 400], [10, 20], [0, 5]);
+    let flop = [10, 20, 30];
+    bot.street(model(), &flop);
+    let dead = Range::uniform().without(&flop);
+    let ranges = bot.ranges().unwrap();
+    assert_eq!(ranges[0], dead);
+    assert_eq!(ranges[1], dead);
+}
+
+#[test]
+fn ranges_never_empty() {
+    let mut bot = started(false, [400, 400], [10, 20], [0, 5]);
+    let flop = [10, 20, 30];
+    bot.hand.as_mut().unwrap().ranges[0] = Range {
+        weights: vec![0.0; COMBOS],
+    };
+    bot.street(model(), &flop);
+    let ranges = bot.ranges().unwrap();
+    assert_eq!(ranges[0], Range::uniform().without(&flop));
+}
+
+#[test]
+fn a_flop_action_reweights_by_the_flop_bucket() {
+    let mut bot = started(false, [400, 400], [10, 20], [0, 5]);
+    let flop = [10, 20, 30];
+    bot.acted(model(), false, Move::Call, 0.3);
+    bot.acted(model(), true, Move::Check, 0.3);
+    bot.street(model(), &flop);
+    let legal = Legal {
+        fold: false,
+        check: true,
+        call: None,
+        raise: Some((20, 360)),
+    };
+    bot.decide(model(), &legal, 0.5);
+    let id = bot.cursor().unwrap();
+    let before = bot.ranges().unwrap().clone();
+    bot.acted(model(), true, Move::Check, 0.0);
+    let after = bot.ranges().unwrap();
+    assert_eq!(after[0], before[0]);
+    assert_ne!(after[1], before[1]);
+    let mut expected = before[1].clone();
+    let i = match model().file.tree.node(id) {
+        Node::Decision { actions, .. } => actions.iter().position(|a| Some(a.1) == bot.cursor()),
+        _ => None,
+    }
+    .unwrap();
+    expected.update(|combo| {
+        let bucket = model().abstraction.bucket(Street::Flop, combo, &flop);
+        f32::from(model().file.probabilities(id, bucket)[i].max(1)) / 255.0
+    });
+    assert_eq!(after[1], expected);
 }
