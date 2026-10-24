@@ -17,6 +17,12 @@ describe('the cfr bot in the arena', () => {
     expect(Number.isInteger(first.net)).toBe(true);
   }, 60_000);
 
+  it('plays reproducible pairs with the solver on', async () => {
+    await prepareBots(['cfr-solve']);
+    const first = playPair(BOTS['cfr-solve'], BOTS.cfr, 3, 1);
+    expect(first).toEqual(playPair(BOTS['cfr-solve'], BOTS.cfr, 3, 1));
+  }, 600_000);
+
   it('runs in worker threads with the same result as in process', async () => {
     const options = { a: 'cfr', b: 'always-call', pairs: 6, seed: 2 };
     const one = await runArena({ ...options, workers: 1 });

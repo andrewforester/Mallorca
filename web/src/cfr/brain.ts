@@ -1,7 +1,7 @@
 import type { Rng } from '../cards/index.ts';
 import type { Brain, Decision, Observation } from '../brains/index.ts';
 import type { Action, LegalActions } from '../engine/index.ts';
-import type { CfrModel } from './model.ts';
+import type { BotOptions, CfrModel } from './model.ts';
 
 export interface CfrBrain extends Brain {
   dispose(): void;
@@ -24,8 +24,8 @@ function choiceOf(action: Action): Decision['solverChoice'] {
   }
 }
 
-export function createCfrBrain(model: CfrModel, rng: Rng): CfrBrain {
-  const bot = model.newBot();
+export function createCfrBrain(model: CfrModel, rng: Rng, options?: BotOptions): CfrBrain {
+  const bot = model.newBot(options);
   return {
     observe(o: Observation) {
       switch (o.type) {

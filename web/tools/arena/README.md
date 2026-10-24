@@ -6,7 +6,7 @@ Duplicate matches between two bots, reported in bb/100 with a 95% confidence int
 npm run arena -- --a math --b always-call --pairs 2000
 ```
 
-Flags: `--a`, `--b` (`math`, `cfr`, `always-call`, `always-raise`, `random`), `--pairs` (1000), `--seed` (1), `--workers` (available cores), `--out <file>` (JSON report), `--save-hands <file>` (JSONL hand records).
+Flags: `--a`, `--b` (`math`, `cfr`, `cfr-solve`, `always-call`, `always-raise`, `random`), `--pairs` (1000), `--seed` (1), `--workers` (available cores), `--out <file>` (JSON report), `--save-hands <file>` (JSONL hand records).
 
 Each pair plays the same deck twice with the seats swapped, so `bbPer100` is the mean of `net / 2 / bigBlind * 100` over pairs.
 
@@ -15,6 +15,8 @@ Reference run on Apple M3 Pro, 12 cores:
 ```
 math vs always-call: +272.8 ± 42.4 bb/100 over 4000 hands in 37 s
 ```
+
+`cfr-solve` is the same blueprint with the turn and river subgame solver on (`ARENA_SOLVER` in `bots.ts`).
 
 `cfr` is the `v1` blueprint of `solver/` (checkpoint 18) in `src/cfr/v1.mlcs.gz`, played through
 `src/cfr/mallorca.wasm`; `npm run arena` builds the module first. Reference runs on the same machine, seed in

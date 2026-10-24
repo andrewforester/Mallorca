@@ -28,6 +28,7 @@ interface Exports {
     draw: number,
   ): number;
   decided_to(bot: number): number;
+  bot_solver(bot: number, turn: number, river: number): void;
 }
 
 export interface HandStart {
@@ -47,8 +48,17 @@ export interface CfrBot {
   free(): void;
 }
 
+export interface SolverOptions {
+  turn: number;
+  river: number;
+}
+
+export interface BotOptions {
+  solver?: SolverOptions;
+}
+
 export interface CfrModel {
-  newBot(): CfrBot;
+  newBot(options?: BotOptions): CfrBot;
 }
 
 const KINDS = ['fold', 'check', 'call', 'raise'] as const;
@@ -137,5 +147,13 @@ export async function createCfrModel(wasm: BufferSource, strategy: Uint8Array): 
   if (model < 0) {
     throw new Error(LOAD_ERRORS[model] ?? `cannot load the strategy (${model})`);
   }
-  return { newBot: () => bot(e, e.bot_new(model)) };
+  return {
+    newBot(options) {
+      const handle = e.bot_new(model);
+      if (options?.solver) {
+        e.bot_solver(handle, options.solver.turn, options.solver.river);
+      }
+      return bot(e, handle);
+    },
+  };
 }
