@@ -104,15 +104,17 @@ test('the cash status bar shows every value without clipping when the text runs 
   await expect(byId(page, 'passive')).toBeEnabled();
   await page.addStyleTag({ content: '.status-bar { letter-spacing: 0.12em; }' });
   const leave = await byId(page, 'leave').boundingBox();
+  const bar = await page.locator('.status-bar').boundingBox();
   const info = await page.locator('.status-info').boundingBox();
   const values = await Promise.all(
     ['blinds', 'session-result', 'hand-number'].map((id) => byId(page, id).boundingBox()),
   );
-  if (leave === null || info === null || values.includes(null)) {
+  if (leave === null || bar === null || info === null || values.includes(null)) {
     throw new Error('status bar is not rendered');
   }
   const tops = values.map((box) => box?.y ?? 0);
   expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(2);
+  expect(bar.height).toBeLessThan(leave.height * 2);
   expect(info.height).toBeLessThan(leave.height);
   const clipped = await page.evaluate(() =>
     ['blinds', 'session-result', 'hand-number'].filter((id) => {

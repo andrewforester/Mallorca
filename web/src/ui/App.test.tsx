@@ -5,7 +5,10 @@ import { App } from './App.tsx';
 import { readSound } from './preferences.ts';
 import type { SoundPlayer } from './sound/player.ts';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  localStorage.clear();
+});
 
 function setup(mode = TOURNAMENT, store = memoryStore(), autoNext?: boolean, player?: SoundPlayer) {
   const session = createSession({
@@ -33,7 +36,6 @@ function setup(mode = TOURNAMENT, store = memoryStore(), autoNext?: boolean, pla
 
 describe('App sound toggles', () => {
   it('keeps the status bar button, the menu checkbox and storage in step', async () => {
-    localStorage.clear();
     const { session } = setup();
     fireEvent.click(screen.getByTestId('start-tournament'));
     await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
@@ -49,7 +51,6 @@ describe('App sound toggles', () => {
     expect(button.getAttribute('aria-pressed')).toBe('true');
     expect(readSound()).toBe(true);
     session.getState().dispose();
-    localStorage.clear();
   });
 });
 
@@ -62,7 +63,6 @@ describe('App sound', () => {
   }
 
   it('unlocks the player when a start button is clicked', async () => {
-    localStorage.clear();
     const { unlock, player } = recorder();
     const { session } = setup(TOURNAMENT, memoryStore(), undefined, player);
     expect(unlock).not.toHaveBeenCalled();
@@ -80,7 +80,6 @@ describe('App sound', () => {
     expect(unlock).not.toHaveBeenCalled();
     await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
     session.getState().dispose();
-    localStorage.clear();
   });
 
   it('unlocks the player when sound is switched on and on every human action', async () => {
@@ -99,11 +98,9 @@ describe('App sound', () => {
     fireEvent.click(screen.getByTestId('fold'));
     expect(unlock).toHaveBeenCalledTimes(3);
     session.getState().dispose();
-    localStorage.clear();
   });
 
   it('plays cues while sound is on and none once it is switched off', async () => {
-    localStorage.clear();
     const { plays, player } = recorder();
     const { session } = setup(TOURNAMENT, memoryStore(), false, player);
     fireEvent.click(screen.getByTestId('start-tournament'));
@@ -115,7 +112,6 @@ describe('App sound', () => {
     await waitFor(() => expect(screen.queryByTestId('next-hand')).not.toBeNull());
     expect(plays).toHaveLength(before);
     session.getState().dispose();
-    localStorage.clear();
   });
 });
 
