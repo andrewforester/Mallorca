@@ -17,6 +17,7 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 | `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                   |
 | `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`      |
 | `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena" |
+| `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                 |
 | `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`  |
 | `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`  |
 | `.github/workflows/`                                                | `web-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master`   |
@@ -385,16 +386,24 @@ files directly, including in workers. `tools/` may use the clock and Node APIs.
 
 ### Viewer
 
-`web/tools/arena/ui/` is a second Vite app, `npm run arena:ui`, never built into `dist`. It reads the runs in
-`resultsDir` (or `ARENA_DIR`) and imports from `src` only `game/records/record.ts`, `game/records/pokerstars.ts` and
-engine types.
+`web/tools/arena/ui/` is a second Vite app. In development (`npm run arena:ui`) it reads the runs in `resultsDir`
+(or `ARENA_DIR`) through the dev server; `npm run build` also builds it into `dist/arena/` with base
+`<BASE_PATH>arena/` and `web/arena-results/` as its public directory, so the published runs are served at
+`<site>/arena/`. It imports from `src` only `game/records/record.ts`, `game/records/pokerstars.ts` and engine
+types.
+
+- `publish.ts`, `publishCli.ts` (`npm run arena:publish -- <run>...`): `publishRun` copies a report into
+  `web/arena-results/` with `finishedAt` and `handsFile: '<name>.jsonl.gz'` (or null) and gzips its hands;
+  `writeIndex` writes `index.json`, the `listRuns` of that directory. The directory is committed.
+- `source.ts`: `sourceFor(dev, base)` gives the runs URL and hands URLs: the dev server API, or the published files.
 
 - `server.ts`: `listRuns(dir)` returns every `*.json` report, newest first by `finishedAt` (file mtime for older
   reports), with its hands file (`handsFile`, or the same base name with `.jsonl` for older reports) when it exists
   in `dir`; `handsPath(dir, name)` accepts only a plain `*.jsonl` name of `dir`. `arenaPlugin(dir)` serves them as
   `GET /api/runs` and `GET /api/hands?file=`.
-- `hands.ts`, `hands.worker.ts`, `handsClient.ts`: a Web Worker fetches and parses the JSONL, skips unreadable
-  lines and keeps the raw lines for `record(line)`.
+- `hands.ts`, `hands.worker.ts`, `handsClient.ts`: a Web Worker fetches the hands, gunzips them when they start
+  with the gzip magic bytes (`decodeHands`, so a host that sent `Content-Encoding: gzip` works too), parses the
+  JSONL, skips unreadable lines and keeps the raw lines for `record(line)`.
 - `analysis.ts`: `summarize(record, line)` takes A's seat from the hand number (`k = (handNumber - 1) % 2`, A on
   seat `k`), so a bot against itself works; `pairNets`, `cumulative` (at most 600 points), `slices` (position,
   street of the last action, showdown) and `pairRows`: a pair is kept when either hand passes the filter, its

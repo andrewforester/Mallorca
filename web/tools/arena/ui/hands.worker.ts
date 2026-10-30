@@ -1,4 +1,4 @@
-import { parseHands } from './hands.ts';
+import { decodeHands, parseHands } from './hands.ts';
 import type { WorkerRequest, WorkerResponse } from './protocol.ts';
 
 let lines: string[] = [];
@@ -7,11 +7,11 @@ function reply(message: WorkerResponse): void {
   postMessage(message);
 }
 
-async function load(file: string): Promise<void> {
+async function load(url: string): Promise<void> {
   try {
-    const response = await fetch(`/api/hands?file=${encodeURIComponent(file)}`);
-    if (!response.ok) throw new Error(`hands file ${file}: ${response.status}`);
-    const parsed = parseHands(await response.text());
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`${url} answered ${response.status}`);
+    const parsed = parseHands(await decodeHands(new Uint8Array(await response.arrayBuffer())));
     lines = parsed.lines;
     reply({ type: 'loaded', summaries: parsed.summaries, skipped: parsed.skipped });
   } catch (error) {
@@ -22,7 +22,7 @@ async function load(file: string): Promise<void> {
 addEventListener('message', (event: MessageEvent<WorkerRequest>) => {
   const request = event.data;
   if (request.type === 'load') {
-    void load(request.file);
+    void load(request.url);
     return;
   }
   const line = lines[request.line];

@@ -45,3 +45,15 @@ cfr vs random:       +57.2 ± 23.2 bb/100 over 10000 hands in 1 s   (3)
 math vs always-raise: +905.8 ± 95.9 bb/100 over 4000 hands in 41 s (3)
 math vs random:      +196.1 ± 45.0 bb/100 over 4000 hands in 27 s  (3)
 ```
+
+## Publishing
+
+```
+npm run arena:publish -- cfr-math-20000 cfr-always-call-2000-s3-20261030-154845
+```
+
+copies the named runs from the results directory (a file name with or without `.json`, or a path) into
+`web/arena-results/`: the report and the hands as `.jsonl.gz`, and rewrites `index.json`. Commit the files; after the
+merge the runs are public at `<site>/arena/`. To unpublish a run, delete its files and run `npm run arena:publish`
+with no argument to rewrite the index. A 20 000 pair run adds about 2 MB.
+

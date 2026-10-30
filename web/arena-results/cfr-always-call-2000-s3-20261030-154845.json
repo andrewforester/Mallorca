@@ -1,0 +1,13 @@
+{
+  "a": "cfr",
+  "b": "always-call",
+  "pairs": 2000,
+  "hands": 4000,
+  "seed": 3,
+  "bbPer100": 179.2725,
+  "ci95": 39.70713435087921,
+  "durationMs": 783,
+  "commit": "82c1036",
+  "finishedAt": "2026-10-30T15:48:46.032Z",
+  "handsFile": "cfr-always-call-2000-s3-20261030-154845.jsonl.gz"
+}

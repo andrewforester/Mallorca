@@ -37,3 +37,9 @@ export function parseHands(text: string): ParsedHands {
   }
   return parsed;
 }
+
+export async function decodeHands(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
+  if (bytes[0] !== 0x1f || bytes[1] !== 0x8b) return new TextDecoder().decode(bytes);
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return new Response(stream).text();
+}

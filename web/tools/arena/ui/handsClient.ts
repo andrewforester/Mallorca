@@ -27,7 +27,7 @@ function failAll(pending: Map<number, Pending>, error: Error): void {
   pending.clear();
 }
 
-export function loadHands(file: string): Promise<LoadedHands> {
+export function loadHands(url: string): Promise<LoadedHands> {
   const worker = new Worker(new URL('./hands.worker.ts', import.meta.url), { type: 'module' });
   const pending = new Map<number, Pending>();
   let nextId = 0;
@@ -60,6 +60,6 @@ export function loadHands(file: string): Promise<LoadedHands> {
       failAll(pending, error);
       reject(error);
     });
-    send({ type: 'load', file });
+    send({ type: 'load', url });
   });
 }

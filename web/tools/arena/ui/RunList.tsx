@@ -5,6 +5,7 @@ interface Props {
   runs: RunEntry[];
   selected: string | null;
   onSelect: (file: string) => void;
+  empty?: string;
 }
 
 function Row({
@@ -33,9 +34,9 @@ function Row({
   );
 }
 
-export function RunList({ runs, selected, onSelect }: Props) {
+export function RunList({ runs, selected, onSelect, empty = 'No runs yet.' }: Props) {
   if (runs.length === 0) {
-    return <p class="note">No runs yet. Play one with npm run arena and it appears here.</p>;
+    return <p class="note">{empty}</p>;
   }
   return (
     <div class="scroll">

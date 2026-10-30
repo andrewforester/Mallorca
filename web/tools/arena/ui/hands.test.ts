@@ -1,9 +1,10 @@
+import { gzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { CASH } from '../../../src/engine/index.ts';
 import { handRecord } from '../../../src/game/records/record.ts';
 import { BOTS } from '../bots.ts';
 import { playPair } from '../match.ts';
-import { parseHands } from './hands.ts';
+import { decodeHands, parseHands } from './hands.ts';
 
 function jsonl(pairs: number): string {
   const lines: string[] = [];
@@ -46,5 +47,16 @@ describe('parseHands', () => {
     const parsed = parseHands('{}\n[1]\n\n');
     expect(parsed.summaries).toEqual([]);
     expect(parsed.skipped).toBe(2);
+  });
+});
+
+describe('decodeHands', () => {
+  it('gunzips gzip bytes', async () => {
+    const bytes = new Uint8Array(gzipSync(Buffer.from('{"a":1}\n')));
+    expect(await decodeHands(bytes)).toBe('{"a":1}\n');
+  });
+
+  it('reads bytes the host already decoded as text', async () => {
+    expect(await decodeHands(new TextEncoder().encode('{"a":1}\n'))).toBe('{"a":1}\n');
   });
 });
