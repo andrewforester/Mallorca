@@ -186,6 +186,24 @@ describe('App', () => {
     session.getState().dispose();
   });
 
+  it('closes the hand log when the session ends', async () => {
+    const { session } = setup(CASH);
+    fireEvent.click(screen.getByTestId('start-cash'));
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    fireEvent.click(screen.getByTestId('hand-log-toggle'));
+    expect(screen.getByTestId('hand-log')).not.toBeNull();
+    session.setState({ phase: 'handOver', session: { hands: 1, net: 250 } });
+    await waitFor(() =>
+      expect(screen.queryByTestId('leave')?.hasAttribute('disabled')).toBe(false),
+    );
+    fireEvent.click(screen.getByTestId('hand-log-close'));
+    fireEvent.click(screen.getByTestId('hand-log-toggle'));
+    fireEvent.click(screen.getByTestId('leave'));
+    await waitFor(() => expect(screen.queryByTestId('session-over')).not.toBeNull());
+    expect(screen.queryByTestId('hand-log')).toBeNull();
+    session.getState().dispose();
+  });
+
   it('has no leave button or session result in a tournament', async () => {
     const { session } = setup();
     fireEvent.click(screen.getByTestId('start-tournament'));

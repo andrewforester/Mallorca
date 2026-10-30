@@ -32,22 +32,28 @@ function useSessionState(session: Session) {
   return state;
 }
 
-function useLogDrawer() {
+function useLogDrawer(phase: Phase) {
   const [open, setOpen] = useState(false);
+  const ended = phase === 'idle' || phase === 'sessionOver' || phase === 'tournamentOver';
+  useEffect(() => {
+    if (ended) {
+      setOpen(false);
+    }
+  }, [ended]);
   const toggle = useRef<HTMLButtonElement>(null);
   const close = useCallback(() => {
     setOpen(false);
     toggle.current?.focus();
   }, []);
   const flip = useCallback(() => (open ? close() : setOpen(true)), [open, close]);
-  return { open, toggle, close, flip };
+  return { open: open && !ended, toggle, close, flip };
 }
 
 export function App(props: AppProps) {
   const { session, store, humanSeat, onNewGame } = props;
   const state = useSessionState(session);
   const preferences = usePreferences();
-  const drawer = useLogDrawer();
+  const drawer = useLogDrawer(state.phase);
   const vm = state.phase === 'idle' ? null : toViewModel(state, humanSeat);
   const handOver = state.phase === 'handOver' ? vm : null;
   const autoNextMs = useAutoNext(
