@@ -71,6 +71,23 @@ into 200, 1200 hands a row:
 | 150         | 0.75         | 57%         | 48%        | 43%            |
 | 200         | 1.0          | 50%         | 50%        | 50%            |
 
+## Managing runs
+
+Local runs live in the results directory (`web/arena-out` of the main checkout), each as `<name>.json` and
+`<name>.jsonl`. Published runs live in `web/arena-results/` as `<name>.json` and `<name>.jsonl.gz`, listed in
+`index.json`.
+
+| To                      | Do                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------ |
+| add a local run         | `npm run arena -- --a <bot> --b <bot> --pairs <n>`; it is saved and listed at once   |
+| remove a local run      | delete its `.json` and `.jsonl` from the results directory                           |
+| publish a run           | `npm run arena:publish -- <name>`, commit `web/arena-results/`, merge to `master`    |
+| replace a published run | publish it again: the files and the index are overwritten                            |
+| unpublish a run         | delete its two files in `web/arena-results/`, `npm run arena:publish`, commit, merge |
+
+The viewer reads the directory on every page load, so `npm run arena:ui` shows a new or removed local run after a
+reload. The public page changes when the commit reaches `master` and the site is deployed.
+
 ## Publishing
 
 ```
