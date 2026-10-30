@@ -7,6 +7,7 @@ import { HandLog } from './HandLog.tsx';
 import { t } from './i18n.ts';
 import { handName } from './phrases.ts';
 import { Seat } from './Seat.tsx';
+import { useSweep } from './useSweep.ts';
 
 export interface TableProps {
   vm: ViewModel;
@@ -44,12 +45,20 @@ function chipsDirection(winner: SeatIndex | null, humanSeat: SeatIndex): string 
   return winner === humanSeat ? 'to-bottom' : 'to-top';
 }
 
-function FeltSpot({ vm, seat, side }: { vm: ViewModel; seat: SeatIndex; side: 'top' | 'bottom' }) {
+interface FeltSpotProps {
+  vm: ViewModel;
+  seat: SeatIndex;
+  side: 'top' | 'bottom';
+  bets: [number, number];
+}
+
+function FeltSpot({ vm, seat, side, bets }: FeltSpotProps) {
   const view = vm.seats[seat];
+  const amount = bets[seat];
   return (
     <div class={`felt-spot felt-spot-${side}`}>
       <span class="felt-spot-dealer">{view.isButton && <DealerButton />}</span>
-      <BetChips seat={seat} amount={view.bet} />
+      <BetChips seat={seat} amount={amount} sweeping={amount !== view.bet} />
     </div>
   );
 }
@@ -64,13 +73,14 @@ function Felt({
   showPot: boolean;
 }) {
   const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
+  const bets = useSweep([vm.seats[0].bet, vm.seats[1].bet], vm.pot.collected);
   return (
     <div class="table-felt">
-      <FeltSpot vm={vm} seat={botSeat} side="top" />
+      <FeltSpot vm={vm} seat={botSeat} side="top" bets={bets} />
       <div class="felt-plane">
         <BoardRow pot={showPot ? vm.pot : null} board={vm.board} />
       </div>
-      <FeltSpot vm={vm} seat={humanSeat} side="bottom" />
+      <FeltSpot vm={vm} seat={humanSeat} side="bottom" bets={bets} />
       {vm.result !== null && (
         <span
           class={`result-chips result-chips-${chipsDirection(vm.result.winner, humanSeat)}`}

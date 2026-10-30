@@ -20,4 +20,11 @@ describe('BetChips', () => {
     expect(stack?.querySelectorAll('.chip').length).toBe(2);
     expect(screen.getByText('Bet 60')).not.toBeNull();
   });
+
+  it('marks the stack as sweeping only while it moves into the pot', () => {
+    const { rerender } = render(<BetChips seat={1} amount={60} />);
+    expect(screen.getByTestId('bet-1').classList.contains('bet-sweep')).toBe(false);
+    rerender(<BetChips seat={1} amount={60} sweeping />);
+    expect(screen.getByTestId('bet-1').classList.contains('bet-sweep')).toBe(true);
+  });
 });

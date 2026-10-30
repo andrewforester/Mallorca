@@ -1190,3 +1190,20 @@ button {
     gap: var(--space-2);
   }
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .bet-sweep {
+    opacity: 0;
+    transition:
+      transform var(--sweep-duration) ease-in,
+      opacity var(--sweep-duration) ease-in;
+  }
+
+  .felt-spot-top .bet-sweep {
+    transform: translateY(var(--sweep-distance));
+  }
+
+  .felt-spot-bottom .bet-sweep {
+    transform: translateY(calc(-1 * var(--sweep-distance)));
+  }
+}
