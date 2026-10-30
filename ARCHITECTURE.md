@@ -304,7 +304,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 
 - Preact components render only the `ViewModel`, the session phase and the log; they call the session actions
   and hold no game rules.
-- Components: `App`, `StatusBar`, `HistoryMenu`, `StartScreen`, `Table`, `Seat`, `Card` (SVG), `Board`, `Pot`,
+- Components: `App`, `StatusBar`, `HistoryMenu`, `StartScreen`, `Table`, `Seat`, `BetChips`, `DealerButton`, `ActionBubble`, `Card` (SVG), `BoardRow`, `Board`, `Pot`,
   `ActionBar`, `BetSlider`, `HandLog`, `TournamentOver`, `SessionOver`.
 - The start screen offers a cash game (100 bb) and a tournament. In cash the status bar shows the blinds, the
   running result in bb and a leave button, enabled only between hands; the session-over dialog shows the result in
@@ -328,8 +328,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   is resolved by i18next from `count`.
 - Keyboard: `f` folds, `c` checks or calls, `r` raises, the arrow keys move the raise amount.
 - `data-testid` contract for e2e and contact sheets: `start-cash`, `start-tournament`, `blinds`,
-  `session-result`, `hand-number`, `leave`, `new-game`, `seat-<i>`, `stack-<i>` (with `data-stack`), `bet-<i>`, `action-<i>`, `thinking-<i>`, `card` (with
-  `data-card`), `card-back`, `board`, `pot` (with `data-amount`), `result`, `next-hand`, `fold`, `passive`,
+  `session-result`, `hand-number`, `leave`, `new-game`, `seat-<i>`, `stack-<i>` (with `data-stack`), `bet-<i>`, `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`, `bubble-aggressive` or `bubble-fold`), `thinking-<i>`, `card` (with
+  `data-card`), `card-back`, `board`, `pot` (with `data-amount` = total and `data-collected`), `result`, `next-hand`, `fold`, `passive`,
   `raise`, `raise-amount`, `preset-half`, `preset-pot`, `preset-allin`, `hand-log`, `coach`, `live-region`,
   `tournament-over`, `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and
   `export-text` (the session dialog, current session), and `export-all-json`, `export-all-text` and
@@ -343,7 +343,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   to a fresh table, a reload mid-hand shows the start screen, a cash hand is played and left with one hand in the
   summary, and the hand history is exported, persists across a reload and is cleared. `layout.spec.ts`: the start
   screen, the table, the cash table, the session summary and a cash status bar with long values fit the viewport
-  without horizontal scroll.
+  without horizontal scroll. `table.spec.ts`: on the human's first turn the dealer button, both bets, the pot
+  and the board are inside the viewport on every project.
 - `e2e/contact.ts` (`npm run contact`) captures every view state of a seeded game on `phone` and `desktop` and
   composes one sheet per device into `e2e/contact/`.
 
