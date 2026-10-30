@@ -1210,3 +1210,129 @@ button {
     visibility: hidden;
   }
 }
+
+.hand-log-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: var(--color-overlay);
+}
+
+.hand-log-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 21;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: min(var(--drawer-width), 100vw);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-panel);
+  color: var(--color-text);
+}
+
+.hand-log-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hand-log-heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-large);
+  font-weight: 600;
+}
+
+.hand-log-close {
+  min-width: var(--tap-size);
+  min-height: var(--tap-size);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-muted);
+  font-size: var(--font-size-large);
+  cursor: pointer;
+}
+
+.hand-log-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.hand-log-street-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.hand-log-street-name {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.hand-log-pot {
+  margin-left: auto;
+  font-family: var(--font-numeric);
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.log-card {
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-small);
+  background: var(--color-card-face);
+  color: var(--color-card-black);
+  font-family: var(--font-numeric);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+}
+
+.log-card-red {
+  color: var(--color-card-red);
+}
+
+.hand-log-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.log-token {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-token);
+  font-size: var(--font-size-small);
+}
+
+.log-token-aggressive {
+  background: var(--color-token-aggressive);
+  color: var(--color-accent);
+}
+
+@media (min-aspect-ratio: 1/1) {
+  .hand-log-scrim {
+    background: transparent;
+  }
+
+  .hand-log-drawer {
+    top: var(--drawer-top);
+    right: var(--space-5);
+    bottom: auto;
+    width: var(--drawer-width-wide);
+    max-height: calc(100dvh - var(--drawer-top) - var(--space-5));
+    border: 1px solid var(--color-glass-border);
+    border-radius: var(--radius-medium);
+  }
+}
