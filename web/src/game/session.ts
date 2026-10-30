@@ -81,7 +81,7 @@ export interface SessionActions {
   act(intent: Intent): Promise<void>;
   dispose(): void;
   say(text: string): void;
-  quick(id: QuickPhrase): void;
+  quick(id: QuickPhrase, text: string): void;
   setTalk(on: boolean): void;
   setTells(level: Level): void;
   attachTalk(client: TalkClient): void;
@@ -330,6 +330,7 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
       }
     },
     dispose() {
+      rt.talk.leave();
       rt.epoch += 1;
       rt.timers.cancel();
       rt.bot.dispose?.();
@@ -349,7 +350,7 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
       return drive(rt, rt.epoch);
     },
     say: (text) => rt.talk.say(text),
-    quick: (id) => rt.talk.quick(id),
+    quick: (id, text) => rt.talk.quick(id, text),
     setTalk: (on) => rt.talk.setOn(on),
     setTells: (level) => rt.talk.setLevel(level),
     attachTalk: (client) => rt.talk.attach(client),

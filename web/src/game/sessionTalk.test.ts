@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { BotStyle } from '../brains/index.ts';
-import { CASH } from '../engine/index.ts';
+import { CASH, TOURNAMENT } from '../engine/index.ts';
 import type { LegalActions } from '../engine/index.ts';
 import type { Level } from '../talk/index.ts';
 import { memoryStore } from './records/store.ts';
@@ -15,7 +15,7 @@ import type {
   TalkReply,
 } from './talkClient.ts';
 import { silentTalkClient } from './talkClient.ts';
-import { callingBot, shovingBot } from './testBot.ts';
+import { callingBot, scriptedBot, shovingBot } from './testBot.ts';
 import type { ScriptedBot } from './testBot.ts';
 import { toViewModel } from './viewModel.ts';
 
@@ -77,6 +77,7 @@ interface Table {
 }
 
 interface Extra {
+  mode?: typeof CASH | typeof TOURNAMENT;
   talkOn?: boolean;
   tells?: Level;
   records?: RecordsOptions;
@@ -264,7 +265,7 @@ describe('session talk', () => {
     });
     const table = open(client);
     await table.session.getState().start(CASH, 'cfr');
-    table.session.getState().quick('bluffing');
+    table.session.getState().quick('bluffing', "You're bluffing");
     expect(table.session.getState().talk.lines.at(-1)).toMatchObject({
       speaker: 'player',
       text: "You're bluffing",
@@ -275,8 +276,8 @@ describe('session talk', () => {
       speaker: 'mallorca',
       text: 'Maybe',
     });
-    table.session.getState().quick('niceHand');
-    table.session.getState().quick('notThisTime');
+    table.session.getState().quick('niceHand', 'Nice hand');
+    table.session.getState().quick('notThisTime', 'Not this time');
     expect(table.session.getState().talk.lines.at(-1)?.text).toBe('Not this time');
     await flush();
     await table.session.getState().act({ kind: 'fold' });
@@ -292,7 +293,7 @@ describe('session talk', () => {
     const client = fakeClient();
     const table = open(client, {}, callingBot());
     await table.session.getState().start(CASH, 'cfr');
-    table.session.getState().quick('bluffing');
+    table.session.getState().quick('bluffing', "You're bluffing");
     await flush();
     while (table.session.getState().phase === 'humanToAct') {
       await table.session.getState().act({ kind: 'passive' });
@@ -310,7 +311,7 @@ describe('session talk', () => {
       await foldHand(table);
     }
     table.session.getState().say('Hello');
-    table.session.getState().quick('niceHand');
+    table.session.getState().quick('niceHand', 'Nice hand');
     await table.session.getState().act({ kind: 'fold' });
     table.session.getState().leave();
     expect(client.lines).toEqual([]);
@@ -402,7 +403,13 @@ describe('session talk', () => {
     expect(client.summaries[0]?.summary.hands).toBe(50);
     expect(client.summaries[0]?.kind).toBe('summary');
     table.session.getState().leave();
+    expect(client.summaries).toHaveLength(1);
+    table.tick();
+    await table.session.getState().start();
+    await table.session.getState().act({ kind: 'fold' });
+    table.session.getState().leave();
     expect(client.summaries).toHaveLength(2);
+    expect(client.summaries[1]?.summary.hands).toBe(1);
   });
 
   it('math opponent has no talk', async () => {
@@ -414,7 +421,7 @@ describe('session talk', () => {
       await foldHand(table);
     }
     table.session.getState().say('Hello');
-    table.session.getState().quick('niceHand');
+    table.session.getState().quick('niceHand', 'Nice hand');
     expect(client.lines).toEqual([]);
     expect(client.replies).toEqual([]);
     expect(table.bot.styles.every((style) => style === undefined)).toBe(true);
@@ -441,5 +448,130 @@ describe('session talk', () => {
     const { lines } = table.session.getState().talk;
     expect(lines).toHaveLength(100);
     expect(lines.at(-1)?.text).toBe('line 129');
+  });
+
+  it('takes the quick phrase text from the caller', async () => {
+    const client = fakeClient();
+    const table = open(client);
+    await table.session.getState().start(CASH, 'cfr');
+    table.session.getState().quick('niceHand', '  Bien jugado  ');
+    expect(table.session.getState().talk.lines.at(-1)).toMatchObject({
+      speaker: 'player',
+      text: 'Bien jugado',
+    });
+    expect(client.replies[0]?.text).toBe('Bien jugado');
+  });
+
+  it('remembers her raise for the whole hand', async () => {
+    let decisions = 0;
+    const raiseOnce = scriptedBot((legal) => {
+      decisions += 1;
+      if (decisions === 1 && legal.raise !== null) {
+        return { kind: 'raise', to: legal.raise.min };
+      }
+      return legal.check ? { kind: 'check' } : { kind: 'call' };
+    });
+    const client = fakeClient();
+    const table = open(client, {}, raiseOnce);
+    await table.session.getState().start(CASH, 'cfr');
+    await table.session.getState().act({ kind: 'passive' });
+    await table.session.getState().act({ kind: 'passive' });
+    expect(table.session.getState().table.hand?.street).toBe('turn');
+    table.session.getState().quick('bluffing', "You're bluffing");
+    await flush();
+    while (table.session.getState().phase === 'humanToAct') {
+      await table.session.getState().act({ kind: 'passive' });
+    }
+    table.session.getState().leave();
+    expect(client.summaries[0]?.summary.signals).toEqual({ mockBluff: 1 });
+  });
+
+  it('sends a final summary on dispose', async () => {
+    const client = fakeClient();
+    const table = open(client);
+    await table.session.getState().start(CASH, 'cfr');
+    table.session.getState().dispose();
+    expect(client.summaries).toHaveLength(0);
+    const played = open(client);
+    await played.session.getState().start(CASH, 'cfr');
+    await played.session.getState().act({ kind: 'fold' });
+    played.session.getState().dispose();
+    expect(client.summaries).toHaveLength(1);
+    expect(client.summaries[0]?.summary.hands).toBe(1);
+  });
+
+  it('sends the summary of the previous game when a new one starts', async () => {
+    const client = fakeClient();
+    const table = open(client);
+    await table.session.getState().start(CASH, 'cfr');
+    await table.session.getState().act({ kind: 'fold' });
+    await table.session.getState().start();
+    expect(client.summaries).toHaveLength(1);
+    expect(client.summaries[0]?.summary.hands).toBe(1);
+  });
+
+  it('sends one summary for leave then dispose', async () => {
+    const client = fakeClient();
+    const table = open(client);
+    await table.session.getState().start(CASH, 'cfr');
+    await table.session.getState().act({ kind: 'fold' });
+    table.session.getState().leave();
+    table.session.getState().dispose();
+    expect(client.summaries).toHaveLength(1);
+  });
+
+  it('sends one summary when the tournament ends', async () => {
+    const client = fakeClient();
+    const table = open(client, { mode: TOURNAMENT });
+    await table.session.getState().start(TOURNAMENT, 'cfr');
+    for (let i = 0; i < 100 && table.session.getState().phase === 'humanToAct'; i += 1) {
+      await table.session.getState().act({ kind: 'passive' });
+      if (table.session.getState().phase === 'handOver') {
+        table.tick();
+        await table.session.getState().nextHand();
+      }
+    }
+    expect(table.session.getState().phase).toBe('tournamentOver');
+    expect(client.summaries).toHaveLength(1);
+    table.session.getState().dispose();
+    expect(client.summaries).toHaveLength(1);
+  });
+
+  it('sends no final summary with talk off', async () => {
+    const client = fakeClient();
+    const table = open(client, { talkOn: false });
+    await table.session.getState().start(CASH, 'cfr');
+    await table.session.getState().act({ kind: 'fold' });
+    table.session.getState().dispose();
+    expect(client.summaries).toEqual([]);
+  });
+
+  it('drops a line that arrives after talk was switched off', async () => {
+    const answer = deferred<string | null>();
+    const client = fakeClient({ line: () => answer.promise });
+    const table = open(client);
+    await table.session.getState().start(CASH, 'cfr');
+    await untilHerBet(table, client);
+    table.session.getState().setTalk(false);
+    answer.resolve('Still here');
+    await flush();
+    expect(table.session.getState().talk.lines.map((l) => l.text)).not.toContain('Still here');
+  });
+
+  it('drops a reply that arrives after talk was switched off', async () => {
+    const answer = deferred<TalkReply | null>();
+    const client = fakeClient({ reply: () => answer.promise });
+    const table = open(client);
+    await table.session.getState().start(CASH, 'cfr');
+    table.session.getState().say('Hello');
+    table.session.getState().setTalk(false);
+    answer.resolve({ text: 'Hi', signals: ['tease'] });
+    await flush();
+    expect(table.session.getState().talk.lines.map((l) => l.text)).toEqual(['Hello']);
+    expect(table.session.getState().talk.lines[0]?.undelivered).toBeUndefined();
+    table.session.getState().setTalk(true);
+    await table.session.getState().act({ kind: 'fold' });
+    table.session.getState().leave();
+    expect(client.summaries[0]?.summary.signals).toEqual({});
   });
 });

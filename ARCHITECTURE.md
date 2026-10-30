@@ -282,12 +282,13 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   `bubbles` the latest line per seat. Each `start` makes a `Talk` for the bot's seat with
   `mulberry32(seed ^ 0x7a1c)` when the opponent is `cfr`; it lives across hands, and every step's events reach
   `Talk.observe` after the bot, also with talk off. A line intent calls `client.line` without waiting, and its text
-  is kept only if the epoch, hand number and street still match. `say(text)` (trimmed, at most 200 characters) and
-  `quick(niceHand | bluffing | notThisTime)` append the player's line at once and call `client.reply`; `say` feeds
-  the reply's signals to `Talk.hear`, `quick` its own (`compliment`, `mockBluff` after her raise else `tease`,
+  is kept only if the epoch, hand number and street still match and talk is still available and on. `say(text)` (trimmed, at most 200 characters) and
+  `quick(niceHand | bluffing | notThisTime, text)` (the caller's localized label) append the player's line at once and call `client.reply`; `say` feeds
+  the reply's signals to `Talk.hear`, `quick` its own (`compliment`, `mockBluff` after any raise of hers in the hand, else `tease`,
   `claimStrength`). A reply that is null or fails marks the player's line `undelivered`. `setTalk`, `setTells` and
   `attachTalk(client)` change the switch, the tells level and the client. With a `Talk`, every `decide` and the
-  recorded decision get `Talk.style()`. A `summary` goes out on an effective `leave` and every 50th hand. Nothing
+  recorded decision get `Talk.style()`. A `summary` goes out on an effective `leave`, on `dispose`, at the end of a tournament, before a new
+  `start` replaces the `Talk`, and every 50th hand, only when a hand completed since the last one. Nothing
   is sent when talk is off or unavailable, and every client error is ignored. `toViewModel` adds `talk` with
   `herBubble` and `playerBubble`. `loadTalkClient({ url, anonKey })` (`talkLoader.ts`) imports `remoteTalk.ts`,
   the only module that uses supabase-js, on demand, and answers `silentTalkClient` when a value is missing or

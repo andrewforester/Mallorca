@@ -44,7 +44,7 @@ export interface SessionTalk {
   observe(events: readonly EngineEvent[]): void;
   style(): Style | undefined;
   say(text: string): void;
-  quick(id: QuickPhrase): void;
+  quick(id: QuickPhrase, text: string): void;
   setOn(on: boolean): void;
   setLevel(level: Level): void;
   attach(client: TalkClient): void;
@@ -56,12 +56,6 @@ const MAX_LINES = 100;
 const MAX_TEXT = 200;
 const SUMMARY_EVERY = 50;
 const TALK_SALT = 0x7a1c;
-
-const QUICK_TEXT: Record<QuickPhrase, string> = {
-  niceHand: 'Nice hand',
-  bluffing: "You're bluffing",
-  notThisTime: 'Not this time',
-};
 
 function attempt<T>(call: () => Promise<T>): Promise<T | null> {
   try {
@@ -79,6 +73,7 @@ class Wiring implements SessionTalk {
   private client: TalkClient;
   private talk: Talk | null = null;
   private herRaised = false;
+  private unsent = 0;
   private nextId = 0;
   private readonly setup: TalkSetup;
   private readonly host: TalkHost;
@@ -90,12 +85,14 @@ class Wiring implements SessionTalk {
   }
 
   begin(opponent: Opponent, seed: number): void {
+    this.sendSummary();
     const { level } = this.host.read();
     this.talk =
       opponent === 'cfr'
         ? createTalk({ seat: this.setup.botSeat, rng: mulberry32(seed ^ TALK_SALT), level })
         : null;
     this.herRaised = false;
+    this.unsent = 0;
     this.update({ available: this.available(), lines: [], bubbles: [null, null] });
   }
 
@@ -103,10 +100,13 @@ class Wiring implements SessionTalk {
     if (this.talk === null) {
       return;
     }
-    this.track(events);
+    const ended = this.track(events);
     const intent = this.talk.observe(events, this.setup.now());
     if (intent !== null && this.speaking()) {
       this.requestLine(intent);
+    }
+    if (ended) {
+      this.sendSummary();
     }
   }
 
@@ -122,13 +122,13 @@ class Wiring implements SessionTalk {
     this.send(trimmed, true);
   }
 
-  quick(id: QuickPhrase): void {
-    if (!this.speaking()) {
+  quick(id: QuickPhrase, text: string): void {
+    const trimmed = text.trim().slice(0, MAX_TEXT);
+    if (trimmed === '' || !this.speaking()) {
       return;
     }
-    const signals = this.quickSignals(id);
-    this.talk?.hear(signals);
-    this.send(QUICK_TEXT[id], false);
+    this.talk?.hear(this.quickSignals(id));
+    this.send(trimmed, false);
   }
 
   setOn(on: boolean): void {
@@ -167,14 +167,19 @@ class Wiring implements SessionTalk {
     this.host.write({ ...this.host.read(), ...patch });
   }
 
-  private track(events: readonly EngineEvent[]): void {
+  private track(events: readonly EngineEvent[]): boolean {
+    let ended = false;
     for (const event of events) {
       if (event.type === 'handStarted') {
         this.herRaised = false;
       } else if (event.type === 'acted' && event.seat === this.setup.botSeat) {
-        this.herRaised = event.action.kind === 'raise';
+        this.herRaised ||= event.action.kind === 'raise';
+      } else if (event.type === 'handEnded') {
+        this.unsent += 1;
       }
+      ended ||= event.type === 'tournamentEnded';
     }
+    return ended;
   }
 
   private quickSignals(id: QuickPhrase): Signal[] {
@@ -210,7 +215,7 @@ class Wiring implements SessionTalk {
     const epoch = this.host.epoch();
     const payload = toLinePayload(this.input(talk, intent, this.recent()));
     void attempt(() => client.line(payload)).then((text) => {
-      if (text !== null && this.current(epoch, intent)) {
+      if (text !== null && this.speaking() && this.current(epoch, intent)) {
         this.append('mallorca', text, intent.handNumber);
       }
     });
@@ -240,7 +245,7 @@ class Wiring implements SessionTalk {
   }
 
   private answered(epoch: number, lineId: number, reply: TalkReply | null, hear: boolean): void {
-    if (epoch !== this.host.epoch() || this.talk === null) {
+    if (epoch !== this.host.epoch() || this.talk === null || !this.speaking()) {
       return;
     }
     if (reply === null) {
@@ -273,9 +278,10 @@ class Wiring implements SessionTalk {
 
   private sendSummary(): void {
     const { talk, client } = this;
-    if (talk === null || !this.speaking()) {
+    if (talk === null || !this.speaking() || this.unsent === 0) {
       return;
     }
+    this.unsent = 0;
     const payload = toSummaryPayload({
       sessionId: this.host.sessionId(),
       locale: this.setup.locale,
