@@ -37,6 +37,14 @@ export function viewModel(overrides: Partial<ViewModel['controls']> = {}): ViewM
     handNumber: 1,
     result: null,
     tournamentWinner: null,
+    talk: {
+      available: false,
+      on: true,
+      level: 'subtle',
+      lines: [],
+      herBubble: null,
+      playerBubble: null,
+    },
   };
 }
 

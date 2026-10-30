@@ -275,6 +275,24 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   `now()` is ignored and the game goes on. A bot `Decision` is recorded with `recordDecision`; its `eventIndex` is
   the index of the resulting `acted` event in the hand's events. The timeout fallback plays without a decision
   and records none. `bot` is `MATH_BOT`, `playedAt` is `now()` at completion.
+- Table talk (`sessionTalk.ts`): `SessionOptions` takes `talk` (a `TalkClient`, default `silentTalkClient`), `now`
+  (default `Date.now`), `locale` (default `en`), `talkOn` (default true) and `tells` (default `subtle`).
+  `SessionState.talk` is `{ available, on, level, lines, bubbles }`: `available` is `client.enabled` with the `cfr`
+  opponent, `lines` the last 100 `ChatLine`s (`id`, `speaker`, `text`, `handNumber`, optional `undelivered`) and
+  `bubbles` the latest line per seat. Each `start` makes a `Talk` for the bot's seat with
+  `mulberry32(seed ^ 0x7a1c)` when the opponent is `cfr`; it lives across hands, and every step's events reach
+  `Talk.observe` after the bot, also with talk off. A line intent calls `client.line` without waiting, and its text
+  is kept only if the epoch, hand number and street still match. `say(text)` (trimmed, at most 200 characters) and
+  `quick(niceHand | bluffing | notThisTime)` append the player's line at once and call `client.reply`; `say` feeds
+  the reply's signals to `Talk.hear`, `quick` its own (`compliment`, `mockBluff` after her raise else `tease`,
+  `claimStrength`). A reply that is null or fails marks the player's line `undelivered`. `setTalk`, `setTells` and
+  `attachTalk(client)` change the switch, the tells level and the client. With a `Talk`, every `decide` and the
+  recorded decision get `Talk.style()`. A `summary` goes out on an effective `leave` and every 50th hand. Nothing
+  is sent when talk is off or unavailable, and every client error is ignored. `toViewModel` adds `talk` with
+  `herBubble` and `playerBubble`. `loadTalkClient({ url, anonKey })` (`talkLoader.ts`) imports `remoteTalk.ts`,
+  the only module that uses supabase-js, on demand, and answers `silentTalkClient` when a value is missing or
+  loading fails; `main.tsx` calls it with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` and attaches the client
+  to the session when it resolves.
 - `simulation.test.ts` plays full tournaments between the bot and a seeded random human through the session and
   checks that chips are conserved, the session never stalls and the winner holds every chip.
 

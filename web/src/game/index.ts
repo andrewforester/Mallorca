@@ -5,18 +5,21 @@ export { inProcessBot, workerBot } from './botClient.ts';
 export type { Opponent } from './opponent.ts';
 export { OPPONENTS } from './opponent.ts';
 export type {
+  ChatLine,
   Intent,
   Phase,
+  QuickPhrase,
   Session,
   SessionActions,
   SessionOptions,
   SessionState,
+  TalkState,
 } from './session.ts';
 export { createSession } from './session.ts';
 export type { LogEntry, SeatIndex, TableMode } from '../engine/index.ts';
 export { CASH, TOURNAMENT } from '../engine/index.ts';
 export type { HandCategory } from '../equity/index.ts';
-export type { RaiseControl, SeatView, ViewModel } from './viewModel.ts';
+export type { RaiseControl, SeatView, TalkView, ViewModel } from './viewModel.ts';
 export { toViewModel } from './viewModel.ts';
 export type { HandRecord, HandStore } from './records/index.ts';
 export { memoryStore, openHandStore, toPokerStars } from './records/index.ts';
@@ -24,16 +27,13 @@ export type {
   ChatTurn,
   HandInput,
   LinePayload,
-  RemoteOptions,
   ReplyPayload,
   SummaryPayload,
   TalkClient,
   TalkReply,
 } from './talkClient.ts';
-export {
-  remoteTalkClient,
-  silentTalkClient,
-  toLinePayload,
-  toReplyPayload,
-  toSummaryPayload,
-} from './talkClient.ts';
+export { silentTalkClient, toLinePayload, toReplyPayload, toSummaryPayload } from './talkClient.ts';
+export type { RemoteOptions } from './remoteTalk.ts';
+export type { TalkConfig } from './talkLoader.ts';
+export { loadTalkClient } from './talkLoader.ts';
+export type { Level } from '../talk/index.ts';

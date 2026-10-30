@@ -1,6 +1,12 @@
 import { render } from 'preact';
-import { createSession, openHandStore, TOURNAMENT, workerBot } from './game/index.ts';
-import type { Session } from './game/index.ts';
+import {
+  createSession,
+  loadTalkClient,
+  openHandStore,
+  TOURNAMENT,
+  workerBot,
+} from './game/index.ts';
+import type { Session, TalkClient } from './game/index.ts';
 import { App } from './ui/App.tsx';
 import { t } from './ui/i18n.ts';
 import '@fontsource/cormorant-garamond/latin-500.css';
@@ -33,7 +39,16 @@ const botDelay = numberParam('botDelay') ?? DEFAULT_BOT_DELAY;
 const autoNext = params.get('autoNext') !== 'off';
 let nextSeed: number | null = numberParam('seed');
 let session: Session | null = null;
+let talk: TalkClient | undefined;
 const store = await openHandStore();
+
+void loadTalkClient({
+  url: import.meta.env.VITE_SUPABASE_URL as string | undefined,
+  anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
+}).then((client) => {
+  talk = client;
+  session?.getState().attachTalk(client);
+});
 
 const root = document.getElementById('app');
 if (root === null) {
@@ -51,6 +66,7 @@ function mount(farewell = false): void {
     humanSeat: HUMAN_SEAT,
     names: [t('seat.you'), t('seat.bot')],
     mode: TOURNAMENT,
+    talk,
     records: {
       store,
       sessionId: crypto.randomUUID(),

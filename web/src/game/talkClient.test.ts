@@ -5,12 +5,12 @@ import { CALM } from '../talk/index.ts';
 import type { HandFacts, LineIntent } from '../talk/index.ts';
 import {
   TALK_TIMEOUT_MS,
-  remoteTalkClient,
   silentTalkClient,
   toLinePayload,
   toReplyPayload,
   toSummaryPayload,
 } from './talkClient.ts';
+import { remoteTalkClient } from './remoteTalk.ts';
 
 const fixture = (name: string): unknown =>
   JSON.parse(
