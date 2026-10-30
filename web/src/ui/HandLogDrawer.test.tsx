@@ -82,6 +82,8 @@ describe('HandLogDrawer', () => {
     expect(onClose).toHaveBeenCalledTimes(2);
     const close = screen.getByTestId('hand-log-close');
     expect(close.getAttribute('aria-label')).toBe('Close hand log');
+    expect(close.textContent).toBe('');
+    expect(close.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
     fireEvent.click(close);
     expect(onClose).toHaveBeenCalledTimes(3);
   });

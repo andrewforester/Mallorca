@@ -163,6 +163,8 @@ describe('App', () => {
     fireEvent.click(toggle);
     expect(screen.getByTestId('hand-log')).not.toBeNull();
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(toggle.getAttribute('aria-controls')).toBe(screen.getByTestId('hand-log').id);
+    expect(screen.getByTestId('hand-log').id).not.toBe('');
     expect(document.activeElement).toBe(screen.getByTestId('hand-log-close'));
     fireEvent.keyDown(document, { key: 'Escape' });
     await waitFor(() => expect(screen.queryByTestId('hand-log')).toBeNull());

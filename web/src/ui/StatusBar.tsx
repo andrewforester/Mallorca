@@ -54,6 +54,7 @@ export function StatusBar({
         data-testid="hand-log-toggle"
         aria-label={t('log.open')}
         aria-expanded={logOpen}
+        aria-controls="hand-log"
         ref={logToggle}
         onClick={onToggleLog}
       >

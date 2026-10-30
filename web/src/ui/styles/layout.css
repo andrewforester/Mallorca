@@ -1218,13 +1218,16 @@ button {
 }
 
 .hand-log-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-width: var(--tap-size);
   min-height: var(--tap-size);
+  padding: 0;
   border: 0;
   border-radius: var(--radius-pill);
   background: transparent;
   color: var(--color-muted);
-  font-size: var(--font-size-large);
   cursor: pointer;
 }
 
