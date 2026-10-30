@@ -1120,15 +1120,11 @@ button {
     padding: var(--space-1) var(--space-2);
     font-size: 0.75rem;
   }
-}
 
-@media (max-width: 480px) {
   .status-bar .menu-summary {
     font-size: var(--font-size-base);
   }
-}
 
-@media (max-width: 480px) {
   .status-info > span,
   .scene-simple .status-info > span {
     padding: 0;
@@ -1142,6 +1138,22 @@ button {
 
   .status-info {
     gap: var(--space-2);
+  }
+}
+
+@media (max-width: 380px) {
+  .status-bar .menu-summary {
+    padding: 0 var(--space-2);
+    font-size: var(--font-size-small);
+  }
+
+  .status-bar .leave {
+    padding: var(--space-1);
+  }
+
+  .status-bar,
+  .status-info {
+    gap: var(--space-1);
   }
 }
 
@@ -1292,21 +1304,5 @@ button {
     max-height: calc(100dvh - var(--drawer-top) - var(--space-5));
     border: 1px solid var(--color-glass-border);
     border-radius: var(--radius-medium);
-  }
-}
-
-@media (max-width: 380px) {
-  .status-bar .menu-summary {
-    padding: 0 var(--space-2);
-    font-size: var(--font-size-small);
-  }
-
-  .status-bar .leave {
-    padding: var(--space-1);
-  }
-
-  .status-bar,
-  .status-info {
-    gap: var(--space-1);
   }
 }

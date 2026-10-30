@@ -347,7 +347,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`, `bubble-aggressive` or `bubble-fold`),
   `thinking-<i>`, `card` (with `data-card`), `card-back`, `board`, `pot` (with `data-amount` = total and
   `data-collected`), `result`, `next-hand`, `fold`, `passive`, `raise`, `raise-amount`, `preset-half`,
-  `preset-pot`, `preset-allin`, `hand-log-toggle`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`, `live-region`, `tournament-over`, `session-over`,
+  `preset-pot`, `preset-allin`, `hand-log-toggle`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`, `live-region`,
+  `tournament-over`, `session-over`,
   `session-summary`, `session-rate`, `play-again`, `export-json` and
   `export-text` (the session dialog, current session), and `export-all-json`, `export-all-text` and
   `clear-history` (the menu).
