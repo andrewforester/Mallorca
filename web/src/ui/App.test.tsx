@@ -173,6 +173,19 @@ describe('App', () => {
     session.getState().dispose();
   });
 
+  it('closes the hand log when the menu opens', async () => {
+    const { session } = setup();
+    fireEvent.click(screen.getByTestId('start-tournament'));
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    fireEvent.click(screen.getByTestId('hand-log-toggle'));
+    expect(screen.getByTestId('hand-log')).not.toBeNull();
+    const menu = document.querySelector('details.menu') as HTMLDetailsElement;
+    fireEvent.click(menu.querySelector('summary') as HTMLElement);
+    await waitFor(() => expect(screen.queryByTestId('hand-log')).toBeNull());
+    expect(menu.open).toBe(true);
+    session.getState().dispose();
+  });
+
   it('plays a fold to the next hand', async () => {
     const { session } = setup();
     fireEvent.click(screen.getByTestId('start-tournament'));
