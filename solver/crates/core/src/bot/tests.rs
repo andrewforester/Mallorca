@@ -285,3 +285,104 @@ fn random_hands_at_any_depth_and_blind_get_legal_moves() {
         play_random_hand(&mut rng);
     }
 }
+
+fn smallest_raise(id: NodeId) -> (f64, ActionKind, NodeId) {
+    let spot = model().spot(id).unwrap();
+    spot.actions
+        .iter()
+        .filter_map(|&(kind, child)| {
+            let to = model().raise_to(&spot, kind)?;
+            let f = fraction(to, spot.street_bets[1 - spot.seat], spot.pot_after_call());
+            Some((f, kind, child))
+        })
+        .min_by(|a, b| a.0.total_cmp(&b.0))
+        .unwrap()
+}
+
+fn after_small_open_raise(draw: f64) -> Bot {
+    let mut bot = started(false, [400, 400], [10, 20], [48, 49]);
+    bot.acted(model(), false, Move::RaiseTo(40), draw);
+    bot
+}
+
+fn facing_small_open_raise() -> Legal {
+    Legal {
+        fold: true,
+        check: false,
+        call: Some(20),
+        raise: Some((60, 400)),
+    }
+}
+
+#[test]
+fn a_raise_below_the_smallest_size_maps_to_the_call_or_that_size() {
+    let root = model().file.tree.root();
+    let (smallest, _, raised) = smallest_raise(root);
+    assert!(smallest > 0.5, "the fixture opens smaller than a min-raise");
+    assert_eq!(
+        after_small_open_raise(0.0).cursor(),
+        Some(child(root, ActionKind::Call))
+    );
+    assert_eq!(after_small_open_raise(0.999).cursor(), Some(raised));
+}
+
+#[test]
+fn a_small_raise_taken_as_a_call_is_never_folded() {
+    let root = model().file.tree.root();
+    let limped = child(root, ActionKind::Call);
+    let legal = facing_small_open_raise();
+    for i in 0..100 {
+        let mut bot = after_small_open_raise(0.0);
+        let mv = bot.decide(model(), &legal, f64::from(i) / 100.0);
+        assert!(is_legal(mv, &legal), "{mv:?}");
+        assert_ne!(mv, Move::Fold);
+        assert_eq!(bot.cursor(), Some(limped));
+    }
+}
+
+#[test]
+fn a_tree_bet_over_a_small_raise_taken_as_a_call_keeps_its_fraction() {
+    let root = model().file.tree.root();
+    let limped = child(root, ActionKind::Call);
+    let hole = [48, 49];
+    let bucket = model().abstraction.bucket(Street::Preflop, hole, &[]);
+    let (f, kind, bet) = smallest_raise(limped);
+    let draw = draw_for(limped, bucket, kind);
+    assert!(
+        draw >= 0.0,
+        "the fixture never raises this hand after a limp"
+    );
+    let legal = facing_small_open_raise();
+    let mut bot = after_small_open_raise(0.0);
+    let mv = bot.decide(model(), &legal, draw);
+    assert_eq!(mv, Move::RaiseTo(scaled_raise(f, 40, 80, (60, 400))));
+    bot.acted(model(), true, mv, 0.0);
+    assert_eq!(bot.cursor(), Some(bet));
+}
+
+#[test]
+fn a_small_raise_taken_as_a_street_closing_call_is_called() {
+    let root = model().file.tree.root();
+    let opened = child(root, ActionKind::RaiseTo(50));
+    let (smallest, _, _) = smallest_raise(opened);
+    assert!(
+        smallest > 0.3,
+        "the fixture re-raises smaller than a min-raise"
+    );
+    let flop = child(opened, ActionKind::Call);
+    let mut bot = started(true, [400, 400], [10, 20], [48, 49]);
+    bot.acted(model(), true, Move::RaiseTo(50), 0.0);
+    bot.acted(model(), false, Move::RaiseTo(80), 0.0);
+    assert_eq!(bot.cursor(), Some(flop));
+    let legal = Legal {
+        fold: true,
+        check: false,
+        call: Some(30),
+        raise: Some((110, 400)),
+    };
+    let mv = bot.decide(model(), &legal, 0.5);
+    assert_eq!(mv, Move::Call);
+    bot.acted(model(), true, mv, 0.0);
+    bot.street(model(), &[10, 20, 30]);
+    assert_eq!(bot.cursor(), Some(flop));
+}
