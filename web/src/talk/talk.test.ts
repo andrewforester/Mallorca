@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mulberry32, parseCards } from '../cards/index.ts';
+import { fullDeck, mulberry32, parseCards, shuffle } from '../cards/index.ts';
 import { applyAction } from '../engine/hand.ts';
 import { call, check, deckOf, fold, raiseTo, startHand } from '../engine/testDeck.ts';
 import type { Action, Step } from '../engine/types.ts';
@@ -180,6 +180,27 @@ describe('outcomes', () => {
       afterHand(CALM, { netBb: -100, luckBb: null, bluffCaught: false }),
     );
     expect(t.talk.mood().tilt).toBe(0);
+  });
+});
+
+describe('reproducibility', () => {
+  const play = (gap: number) => {
+    const talk = createTalk({ seat: 1, rng: mulberry32(9), level: 'obvious' });
+    const decks = mulberry32(2);
+    let now = 0;
+    for (let i = 0; i < 30; i++) {
+      let step = startHand([2000, 2000], shuffle(fullDeck(), decks), 0);
+      talk.observe(step.events, (now += gap));
+      step = applyAction(step.hand, step.seats, raiseTo(2000));
+      talk.observe(step.events, (now += gap));
+      step = applyAction(step.hand, step.seats, call);
+      talk.observe(step.events, (now += gap));
+    }
+    return { mood: talk.mood(), style: talk.style() };
+  };
+
+  it('keeps the same mood and style for a seed whatever the pacing of lines', () => {
+    expect(play(10_000)).toEqual(play(0));
   });
 });
 

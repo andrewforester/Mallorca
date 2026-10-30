@@ -1,3 +1,4 @@
+import { mulberry32 } from '../cards/index.ts';
 import type { Card, Rng } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { BASE_HABITS, habitsAt } from './habits.ts';
@@ -46,6 +47,7 @@ export interface Talk {
 export interface TalkOptions {
   seat: SeatIndex;
   rng: Rng;
+  luckRng?: Rng;
   level: Level;
   habits?: Habits;
 }
@@ -70,6 +72,7 @@ interface Candidate {
 }
 
 const PACE_MS = 1500;
+const SEED_RANGE = 0x100000000;
 const BET_HINT_RATE = 0.7;
 const UNKNOWN_STRENGTH: StrengthClass = 'medium';
 const HAND_END: ReadonlySet<Situation> = new Set<Situation>(['handWon', 'handLost', 'bluffCaught']);
@@ -120,6 +123,7 @@ function actedSituation(event: EngineEvent, seat: SeatIndex): Situation | null {
 class TableTalk implements Talk {
   private readonly seat: SeatIndex;
   private readonly rng: Rng;
+  private readonly luck: Rng;
   private readonly base: Habits;
   private habits: Habits;
   private hand: HandState = NO_HAND;
@@ -133,6 +137,7 @@ class TableTalk implements Talk {
   constructor(options: TalkOptions) {
     this.seat = options.seat;
     this.rng = options.rng;
+    this.luck = options.luckRng ?? mulberry32(Math.floor(options.rng.next() * SEED_RANGE));
     this.base = options.habits ?? BASE_HABITS;
     this.habits = habitsAt(this.base, options.level);
   }
@@ -212,7 +217,7 @@ class TableTalk implements Talk {
     const netBb = netOf(hand, this.seat);
     this.feeling = afterHand(this.feeling, {
       netBb,
-      luckBb: luckOf(hand, this.seat, this.rng),
+      luckBb: luckOf(hand, this.seat, this.luck),
       bluffCaught,
     });
     this.session = withHand(this.session, {
@@ -231,7 +236,7 @@ class TableTalk implements Talk {
     if (cards === null || !this.hand.playerRiverBet) {
       return false;
     }
-    return strengthOf(cards, this.hand.board, this.rng) === 'weak';
+    return strengthOf(cards, this.hand.board, this.luck) === 'weak';
   }
 
   private unprompted(candidate: Candidate, nowMs: number): LineIntent | null {
@@ -269,7 +274,7 @@ class TableTalk implements Talk {
     }
     let cached = this.strengths.get(board.length);
     if (cached === undefined) {
-      cached = strengthOf(her, board, this.rng);
+      cached = strengthOf(her, board, this.luck);
       this.strengths.set(board.length, cached);
     }
     return cached;
