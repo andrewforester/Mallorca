@@ -1,3 +1,4 @@
+use crate::parallel::{atomic_cells, parallel_chunks};
 use crate::tree::load_preset;
 use clap::Args;
 use mallorca_core::abstraction::{aggregate_hs2, encode_table, percentile_buckets, river_strength};
@@ -6,12 +7,9 @@ use mallorca_core::iso::{board_indexer, street_indexers, HandIndexer};
 use mallorca_core::tree::Street;
 use std::fs::File;
 use std::io::{BufWriter, Write};
-use std::ops::Range;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::Instant;
-
-const CHUNK: usize = 512;
 
 #[derive(Args)]
 pub struct BucketsArgs {
@@ -19,41 +17,6 @@ pub struct BucketsArgs {
     pub preset: PathBuf,
     #[arg(long)]
     pub out: PathBuf,
-}
-
-fn parallel_chunks<F>(label: &str, total: usize, threads: usize, work: F)
-where
-    F: Fn(Range<usize>) + Sync,
-{
-    let next = AtomicUsize::new(0);
-    let done = AtomicUsize::new(0);
-    let printed = AtomicUsize::new(0);
-    let start = Instant::now();
-    std::thread::scope(|scope| {
-        for _ in 0..threads.max(1) {
-            scope.spawn(|| loop {
-                let from = next.fetch_add(CHUNK, Ordering::Relaxed);
-                if from >= total {
-                    break;
-                }
-                let to = (from + CHUNK).min(total);
-                work(from..to);
-                let finished = done.fetch_add(to - from, Ordering::Relaxed) + (to - from);
-                let step = finished * 20 / total;
-                if printed.fetch_max(step, Ordering::Relaxed) < step {
-                    println!(
-                        "{label}: {}% ({:.0}s)",
-                        step * 5,
-                        start.elapsed().as_secs_f64()
-                    );
-                }
-            });
-        }
-    });
-}
-
-fn atomic_cells(n: usize, value: f32) -> Vec<AtomicU32> {
-    (0..n).map(|_| AtomicU32::new(value.to_bits())).collect()
 }
 
 fn into_floats(cells: Vec<AtomicU32>) -> Vec<f32> {
