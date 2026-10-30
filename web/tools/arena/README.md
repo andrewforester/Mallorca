@@ -34,7 +34,12 @@ With 0 as the passive size of the translation (issue #17):
 ```
 cfr vs math:       +32.5 ± 9.3 bb/100 over 40000 hands in 309 s  (2)
 cfr vs min-bettor: +243.8 ± 33.9 bb/100 over 10000 hands in 1 s (7)
+cfr vs always-raise: +247.7 ± 56.0 bb/100 over 10000 hands in 1 s (3)
+cfr vs random:     +128.0 ± 24.4 bb/100 over 10000 hands in 1 s (3)
+cfr vs always-call: +165.3 ± 24.8 bb/100 over 10000 hands in 2 s (3)
 ```
+
+Against `random`, which raises the minimum, the fix more than doubles the win rate (+57.2 ± 23.2 before).
 
 `min-bettor` bets the minimum whenever nothing is bet and otherwise checks or calls. Before the fix `cfr` won
 +235.5 ± 42.9 against it with the same seed: it calls every bet, so it loses to `cfr` either way. The leak shows
