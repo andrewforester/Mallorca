@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { TALK_URL } from './e2e/talkServer.ts';
 
 const PREVIEW_PORT = 4173;
 const BASE_URL = `http://localhost:${PREVIEW_PORT}/`;
@@ -39,5 +40,9 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: !IS_CI,
     timeout: 120_000,
+    env: {
+      VITE_SUPABASE_URL: TALK_URL,
+      VITE_SUPABASE_ANON_KEY: 'e2e-anon-key',
+    },
   },
 });

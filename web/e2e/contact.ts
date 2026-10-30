@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 import type { Browser, Page } from '@playwright/test';
+import { serveTalk } from './talkServer.ts';
 
 const PORT = 4174;
 const BASE = `http://localhost:${PORT}/`;
@@ -131,6 +132,58 @@ async function capture(browser: Browser, device: (typeof DEVICES)[number]): Prom
   return shots;
 }
 
+const HER_LINE = 'Careful now, I have been waiting all evening for a hand like this.';
+const HER_ANSWER = 'Kind of you. Pour yourself another one.';
+
+async function captureTalk(browser: Browser, device: (typeof DEVICES)[number]): Promise<Shot[]> {
+  const shots: Shot[] = [];
+  const context = await browser.newContext({
+    viewport: device.viewport,
+    isMobile: device.isMobile,
+    hasTouch: device.isMobile,
+  });
+  await serveTalk(context, (request) => ({
+    status: 200,
+    body:
+      request.kind === 'line'
+        ? { text: HER_LINE }
+        : request.kind === 'reply'
+          ? { text: HER_ANSWER, signals: [] }
+          : {},
+  }));
+  const page = await context.newPage();
+  await page.goto(`${BASE}?seed=42&botDelay=0&autoNext=off`);
+  await id(page, 'opponent-cfr').click();
+  await id(page, 'start-cash').click();
+  const bubble = id(page, 'bubble-mallorca');
+  for (let action = 0; action < 60 && !(await bubble.isVisible()); action += 1) {
+    if ((await nextWaypoint(page)) === 'next-hand') {
+      await id(page, 'next-hand').click();
+    } else if (!(await bubble.isVisible())) {
+      await bubble.waitFor({ timeout: 800 }).catch(() => undefined);
+      if (!(await bubble.isVisible())) {
+        await id(page, 'passive').click();
+      }
+    }
+  }
+  await page.waitForTimeout(2500);
+  await snap(page, 'her bubble', shots);
+  await nextWaypoint(page);
+  if (device.isMobile) {
+    await id(page, 'chat-open').click();
+    await id(page, 'chat-sheet').getByTestId('quick-niceHand').click();
+  } else {
+    await id(page, 'tab-chat').click();
+    const input = id(page, 'chat-panel').getByTestId('chat-input');
+    await input.fill('Nice table you keep');
+    await input.press('Enter');
+  }
+  await page.getByText(HER_ANSWER).first().waitFor();
+  await snap(page, 'chat open', shots);
+  await context.close();
+  return shots;
+}
+
 async function compose(browser: Browser, shots: Shot[], out: string): Promise<void> {
   const cells = shots
     .map(
@@ -159,7 +212,7 @@ const browser = await chromium.launch();
 try {
   await waitForServer();
   for (const device of DEVICES) {
-    const shots = await capture(browser, device);
+    const shots = [...(await capture(browser, device)), ...(await captureTalk(browser, device))];
     await compose(browser, shots, `${OUT_DIR}/${device.name}.png`);
     console.log(`saved ${OUT_DIR}/${device.name}.png with ${shots.length} screenshots`);
   }

@@ -59,3 +59,27 @@ describe('handleKey', () => {
     expect(h.fold).not.toHaveBeenCalled();
   });
 });
+
+describe('handleKey while typing', () => {
+  it('leaves keys alone in a text field', () => {
+    const h = handlers(true);
+    const input = { tagName: 'INPUT', type: 'text' };
+    const area = { tagName: 'TEXTAREA' };
+    const editable = { tagName: 'DIV', isContentEditable: true };
+    expect(handleKey({ key: 'f', target: input }, h)).toBe(false);
+    expect(handleKey({ key: 'c', target: area }, h)).toBe(false);
+    expect(handleKey({ key: 'ArrowLeft', target: input }, h)).toBe(false);
+    expect(handleKey({ key: 'r', target: editable }, h)).toBe(false);
+    expect(h.fold).not.toHaveBeenCalled();
+    expect(h.passive).not.toHaveBeenCalled();
+    expect(h.adjust).not.toHaveBeenCalled();
+  });
+
+  it('still acts from a button or the bet slider', () => {
+    const h = handlers(true);
+    const button = { tagName: 'BUTTON' };
+    const slider = { tagName: 'INPUT', type: 'range' };
+    expect(handleKey({ key: 'f', target: button }, h)).toBe(true);
+    expect(handleKey({ key: 'r', target: slider }, h)).toBe(true);
+  });
+});

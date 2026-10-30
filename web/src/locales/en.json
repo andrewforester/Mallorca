@@ -133,5 +133,30 @@
     "full-house": "Full house",
     "quads": "Four of a kind",
     "straight-flush": "Straight flush"
+  },
+  "talk": {
+    "tab": "Chat",
+    "log": "Log",
+    "placeholder": "Say something to Mallorca",
+    "send": "Send",
+    "open": "Chat with Mallorca",
+    "close": "Close chat",
+    "quick": {
+      "niceHand": "Nice hand",
+      "bluffing": "You're bluffing",
+      "notThisTime": "Not this time"
+    },
+    "settings": {
+      "talk": "Table talk",
+      "tells": "Tells",
+      "levels": {
+        "obvious": "Obvious",
+        "subtle": "Subtle",
+        "hidden": "Hidden"
+      }
+    },
+    "undelivered": "Not delivered",
+    "tabs": "Side panel",
+    "message": "Message"
   }
 }

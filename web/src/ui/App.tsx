@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'preact/hooks';
 import { toViewModel } from '../game/index.ts';
-import type { HandStore, Intent, Phase, Session, SeatIndex, ViewModel } from '../game/index.ts';
+import type {
+  HandStore,
+  Intent,
+  Level,
+  Phase,
+  QuickPhrase,
+  Session,
+  SeatIndex,
+  ViewModel,
+} from '../game/index.ts';
 import { HandLog } from './HandLog.tsx';
 import { HistoryMenu } from './HistoryMenu.tsx';
 import { Scene } from './Scene.tsx';
@@ -32,6 +41,15 @@ function useSessionState(session: Session) {
   return state;
 }
 
+function talkActions(session: Session) {
+  return {
+    onTalk: (on: boolean) => session.getState().setTalk(on),
+    onTells: (level: Level) => session.getState().setTells(level),
+    onSay: (text: string) => session.getState().say(text),
+    onQuick: (id: QuickPhrase, text: string) => session.getState().quick(id, text),
+  };
+}
+
 export function App(props: AppProps) {
   const { session, store, humanSeat, onNewGame } = props;
   const state = useSessionState(session);
@@ -55,6 +73,7 @@ export function App(props: AppProps) {
   }
   const act = (intent: Intent) => void session.getState().act(intent);
   const names: [string, string] = [vm.seats[0].name, vm.seats[1].name];
+  const talk = talkActions(session);
   return (
     <Scene simple={preferences.simple}>
       <div class="app">
@@ -64,7 +83,7 @@ export function App(props: AppProps) {
           onLeave={() => session.getState().leave()}
         >
           <HistoryMenu seed={state.seed} store={store} onNewGame={onNewGame}>
-            <Settings preferences={preferences} />
+            <Settings preferences={preferences} talk={vm.talk.available} {...talk} />
             <HandLog
               entries={state.log}
               names={names}
@@ -81,6 +100,7 @@ export function App(props: AppProps) {
           autoNextMs={autoNextMs}
           onAct={act}
           onNextHand={() => void session.getState().nextHand()}
+          {...talk}
         />
         <GameOver props={props} vm={vm} phase={state.phase} sessionId={state.sessionId} />
       </div>

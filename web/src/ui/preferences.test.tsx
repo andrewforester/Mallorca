@@ -1,5 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { readAutoNext, readTableStyle, writeAutoNext, writeTableStyle } from './preferences.ts';
+import {
+  readAutoNext,
+  readTableStyle,
+  readTalk,
+  readTells,
+  writeAutoNext,
+  writeTableStyle,
+  writeTalk,
+  writeTells,
+} from './preferences.ts';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -52,5 +61,50 @@ describe('auto next hand preference', () => {
     vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked });
     expect(() => writeAutoNext(false)).not.toThrow();
     expect(readAutoNext()).toBe(true);
+  });
+});
+
+describe('table talk preference', () => {
+  it('is on by default and remembers turning it off', () => {
+    expect(readTalk()).toBe(true);
+    writeTalk(false);
+    expect(localStorage.getItem('mallorca.talk')).toBe('off');
+    expect(readTalk()).toBe(false);
+    writeTalk(true);
+    expect(readTalk()).toBe(true);
+  });
+
+  it('stays on when storage throws', () => {
+    const blocked = () => {
+      throw new Error('blocked');
+    };
+    vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked });
+    expect(() => writeTalk(false)).not.toThrow();
+    expect(readTalk()).toBe(true);
+  });
+});
+
+describe('tells preference', () => {
+  it('defaults to subtle and remembers each level', () => {
+    expect(readTells()).toBe('subtle');
+    for (const level of ['obvious', 'hidden', 'subtle'] as const) {
+      writeTells(level);
+      expect(localStorage.getItem('mallorca.tells')).toBe(level);
+      expect(readTells()).toBe(level);
+    }
+  });
+
+  it('ignores an unknown stored value', () => {
+    localStorage.setItem('mallorca.tells', 'loud');
+    expect(readTells()).toBe('subtle');
+  });
+
+  it('stays subtle when storage throws', () => {
+    const blocked = () => {
+      throw new Error('blocked');
+    };
+    vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked });
+    expect(() => writeTells('hidden')).not.toThrow();
+    expect(readTells()).toBe('subtle');
   });
 });

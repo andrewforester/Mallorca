@@ -326,7 +326,13 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - Preact components render only the `ViewModel`, the session phase and the log; they call the session actions
   and hold no game rules.
 - Components: `App`, `StatusBar`, `HistoryMenu`, `StartScreen`, `Table`, `Seat`, `Card` (SVG), `Board`, `Pot`,
-  `ActionBar`, `BetSlider`, `HandLog`, `TournamentOver`, `SessionOver`.
+  `ActionBar`, `BetSlider`, `HandLog`, `TournamentOver`, `SessionOver`, `SidePanel`, `Chat`, `ChatSheet`, `Bubble`.
+- Table talk shows only while `talk.available` and `talk.on`: `Bubble` types a line at about 40 characters per
+  second and removes it after 7 s (full text at once under `prefers-reduced-motion`), her bubble at her plaque and the
+  player's at theirs. On wide screens `SidePanel` holds Log and Chat tabs; on phones and short screens a chat button at
+  her plaque opens `ChatSheet`, a bottom sheet portalled to `body`. The menu holds Table talk and Tells, kept in
+  `localStorage` (`mallorca.talk`, `mallorca.tells`) and passed to `createSession` as `talkOn` and `tells`. Keyboard
+  shortcuts ignore keys typed in a text field.
 - The start screen offers a cash game (100 bb) and a tournament. In cash the status bar shows the blinds, the
   running result in bb and a leave button, enabled only between hands; the session-over dialog shows the result in
   bb, bb/100 and the hands, with play again and the export of the session. `signed` formats a bb value as sign

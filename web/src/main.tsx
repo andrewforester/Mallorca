@@ -9,6 +9,7 @@ import {
 import type { Session, TalkClient } from './game/index.ts';
 import { App } from './ui/App.tsx';
 import { t } from './ui/i18n.ts';
+import { readTalk, readTells } from './ui/preferences.ts';
 import '@fontsource/cormorant-garamond/latin-500.css';
 import '@fontsource/cormorant-garamond/latin-600.css';
 import '@fontsource/inter/latin-400.css';
@@ -67,6 +68,8 @@ function mount(farewell = false): void {
     names: [t('seat.you'), t('seat.bot')],
     mode: TOURNAMENT,
     talk,
+    talkOn: readTalk(),
+    tells: readTells(),
     records: {
       store,
       sessionId: crypto.randomUUID(),

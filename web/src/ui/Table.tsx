@@ -1,11 +1,14 @@
-import type { Intent, LogEntry, Phase, SeatIndex, ViewModel } from '../game/index.ts';
+import type { Intent, LogEntry, Phase, QuickPhrase, SeatIndex, ViewModel } from '../game/index.ts';
 import { ActionBar } from './ActionBar.tsx';
 import { Board } from './Board.tsx';
-import { HandLog } from './HandLog.tsx';
+import { Bubble } from './Bubble.tsx';
+import type { ChatProps } from './Chat.tsx';
+import { ChatSheet } from './ChatSheet.tsx';
 import { t } from './i18n.ts';
 import { handName } from './phrases.ts';
 import { Pot } from './Pot.tsx';
 import { Seat } from './Seat.tsx';
+import { SidePanel } from './SidePanel.tsx';
 
 export interface TableProps {
   vm: ViewModel;
@@ -15,6 +18,18 @@ export interface TableProps {
   autoNextMs?: number | null;
   onAct: (intent: Intent) => void;
   onNextHand: () => void;
+  onSay?: (text: string) => void;
+  onQuick?: (id: QuickPhrase, text: string) => void;
+}
+
+const ignore = () => undefined;
+
+function chatOf(props: TableProps): ChatProps | null {
+  const { talk } = props.vm;
+  if (!talk.available || !talk.on) {
+    return null;
+  }
+  return { lines: talk.lines, onSay: props.onSay ?? ignore, onQuick: props.onQuick ?? ignore };
 }
 
 function resultText(vm: ViewModel, humanSeat: SeatIndex): string | null {
@@ -98,15 +113,44 @@ function Result({ text, canContinue, autoNextMs, onNextHand }: ResultProps) {
   );
 }
 
-export function Table({
-  vm,
-  phase,
-  humanSeat,
-  log,
-  autoNextMs = null,
-  onAct,
-  onNextHand,
-}: TableProps) {
+interface SeatsProps {
+  vm: ViewModel;
+  humanSeat: SeatIndex;
+  thinking: boolean;
+  chat: ChatProps | null;
+}
+
+function Seats({ vm, humanSeat, thinking, chat }: SeatsProps) {
+  const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
+  const winner = vm.result?.winner ?? null;
+  return (
+    <>
+      <Seat
+        index={botSeat}
+        view={vm.seats[botSeat]}
+        thinking={thinking}
+        winner={winner === botSeat}
+        position="top"
+      >
+        {chat !== null && <Bubble line={vm.talk.herBubble} />}
+        {chat !== null && <ChatSheet {...chat} />}
+      </Seat>
+      <Seat
+        index={humanSeat}
+        view={vm.seats[humanSeat]}
+        thinking={false}
+        winner={winner === humanSeat}
+        position="bottom"
+      >
+        {chat !== null && <Bubble line={vm.talk.playerBubble} />}
+      </Seat>
+    </>
+  );
+}
+
+export function Table(props: TableProps) {
+  const { vm, phase, humanSeat, log, autoNextMs = null, onAct, onNextHand } = props;
+  const chat = chatOf(props);
   const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
   const botWaiting = phase === 'botThinking' || phase === 'animating';
   const text = resultText(vm, humanSeat);
@@ -114,9 +158,8 @@ export function Table({
   const barKey = raise === null ? 'none' : `${raise.min}:${raise.max}`;
   const thinking = botWaiting && vm.seats[botSeat].isToAct;
   const announcement = text ?? (thinking ? t('seat.thinking') : '');
-  const winner = vm.result?.winner ?? null;
   return (
-    <div class="table-layout">
+    <div class={`table-layout${text === null ? '' : ' table-result'}`}>
       <div class="visually-hidden" role="status" aria-live="polite" data-testid="live-region">
         {announcement}
       </div>
@@ -129,23 +172,15 @@ export function Table({
           onNextHand={onNextHand}
         />
       )}
-      <Seat
-        index={botSeat}
-        view={vm.seats[botSeat]}
-        thinking={thinking}
-        winner={winner === botSeat}
-        position="top"
-      />
-      <Seat
-        index={humanSeat}
-        view={vm.seats[humanSeat]}
-        thinking={false}
-        winner={winner === humanSeat}
-        position="bottom"
-      />
+      <Seats vm={vm} humanSeat={humanSeat} thinking={thinking} chat={chat} />
       <ActionBar key={barKey} controls={vm.controls} onAct={onAct} />
       <div class="table-side">
-        <HandLog entries={log} names={[vm.seats[0].name, vm.seats[1].name]} humanSeat={humanSeat} />
+        <SidePanel
+          log={log}
+          names={[vm.seats[0].name, vm.seats[1].name]}
+          humanSeat={humanSeat}
+          chat={chat}
+        />
         <aside class="coach" data-testid="coach" aria-label={t('coach.label')} />
       </div>
     </div>

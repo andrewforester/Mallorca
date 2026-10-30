@@ -95,3 +95,51 @@ describe('Table result and announcements', () => {
     expect(screen.getByTestId('live-region').textContent).toBe('Thinking…');
   });
 });
+
+function talking(on = true) {
+  const vm = viewModel();
+  const her = { id: 1, speaker: 'mallorca' as const, text: 'Brave call.', handNumber: 1 };
+  const mine = { id: 2, speaker: 'player' as const, text: 'Thanks', handNumber: 1 };
+  vm.talk = {
+    available: true,
+    on,
+    level: 'subtle',
+    lines: [her, mine],
+    herBubble: her,
+    playerBubble: mine,
+  };
+  return vm;
+}
+
+describe('Table talk', () => {
+  it('renders no chat, bubbles or tabs when talk is not available', () => {
+    const vm = viewModel();
+    vm.talk.herBubble = { id: 1, speaker: 'mallorca', text: 'Hidden', handNumber: 1 };
+    table(vm);
+    expect(screen.queryByTestId('bubble-mallorca')).toBeNull();
+    expect(screen.queryByTestId('chat-open')).toBeNull();
+    expect(screen.queryByRole('tab')).toBeNull();
+    expect(screen.getByTestId('hand-log')).not.toBeNull();
+    expect(screen.getByTestId('coach')).not.toBeNull();
+  });
+
+  it('shows her bubble at her seat, mine at mine, and the chat entry points', () => {
+    table(talking());
+    expect(
+      screen.getByTestId('seat-1').querySelector('[data-testid="bubble-mallorca"]'),
+    ).not.toBeNull();
+    expect(
+      screen.getByTestId('seat-0').querySelector('[data-testid="bubble-player"]'),
+    ).not.toBeNull();
+    expect(screen.getByTestId('seat-1').querySelector('[data-testid="chat-open"]')).not.toBeNull();
+    expect(screen.getAllByRole('tab').length).toBe(2);
+    expect(screen.getByTestId('coach')).not.toBeNull();
+  });
+
+  it('hides the chat while talk is off', () => {
+    table(talking(false));
+    expect(screen.queryByTestId('bubble-mallorca')).toBeNull();
+    expect(screen.queryByTestId('chat-open')).toBeNull();
+    expect(screen.queryByRole('tab')).toBeNull();
+  });
+});
