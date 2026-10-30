@@ -118,6 +118,8 @@ function Header({ app, vm, seed, drawer, preferences }: HeaderProps) {
       logOpen={drawer.open}
       logToggle={drawer.toggle}
       onToggleLog={drawer.flip}
+      sound={preferences.sound}
+      onToggleSound={preferences.toggleSound}
     >
       <HistoryMenu seed={seed} store={app.store} onNewGame={app.onNewGame} onOpen={drawer.dismiss}>
         <Settings preferences={preferences} />

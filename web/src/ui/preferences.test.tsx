@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { readAutoNext, readTableStyle, writeAutoNext, writeTableStyle } from './preferences.ts';
+import {
+  readAutoNext,
+  readSound,
+  readTableStyle,
+  writeAutoNext,
+  writeSound,
+  writeTableStyle,
+} from './preferences.ts';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -52,5 +59,28 @@ describe('auto next hand preference', () => {
     vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked });
     expect(() => writeAutoNext(false)).not.toThrow();
     expect(readAutoNext()).toBe(true);
+  });
+});
+
+describe('sound preference', () => {
+  it('is on by default', () => {
+    expect(readSound()).toBe(true);
+  });
+
+  it('remembers turning it off and on', () => {
+    writeSound(false);
+    expect(localStorage.getItem('mallorca.sound')).toBe('off');
+    expect(readSound()).toBe(false);
+    writeSound(true);
+    expect(readSound()).toBe(true);
+  });
+
+  it('stays on when storage throws', () => {
+    const blocked = () => {
+      throw new Error('blocked');
+    };
+    vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked });
+    expect(() => writeSound(false)).not.toThrow();
+    expect(readSound()).toBe(true);
   });
 });

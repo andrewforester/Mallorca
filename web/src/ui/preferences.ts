@@ -19,6 +19,24 @@ export function writeAutoNext(on: boolean): void {
   }
 }
 
+const SOUND_KEY = 'mallorca.sound';
+
+export function readSound(): boolean {
+  try {
+    return localStorage.getItem(SOUND_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
+export function writeSound(on: boolean): void {
+  try {
+    localStorage.setItem(SOUND_KEY, on ? 'on' : 'off');
+  } catch {
+    return;
+  }
+}
+
 export function readTableStyle(): TableStyle {
   try {
     return localStorage.getItem(KEY) === 'simple' ? 'simple' : 'room';

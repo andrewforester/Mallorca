@@ -218,6 +218,7 @@ button {
 }
 
 .leave + .log-toggle,
+.sound-toggle + .log-toggle,
 .log-toggle + .menu {
   margin-left: 0;
 }
@@ -1104,7 +1105,13 @@ button {
     font-size: 0.75rem;
   }
 
+  .status-bar {
+    flex-wrap: wrap;
+  }
+
   .status-info {
+    flex: 1 0 100%;
+    order: 1;
     gap: var(--space-2);
   }
 

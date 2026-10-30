@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/pr
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CASH, createSession, inProcessBot, memoryStore, TOURNAMENT } from '../game/index.ts';
 import { App } from './App.tsx';
+import { readSound } from './preferences.ts';
 
 afterEach(cleanup);
 
@@ -27,6 +28,28 @@ function setup(mode = TOURNAMENT, store = memoryStore(), autoNext?: boolean) {
   );
   return { session, onNewGame };
 }
+
+describe('App sound toggles', () => {
+  it('keeps the status bar button, the menu checkbox and storage in step', async () => {
+    localStorage.clear();
+    const { session } = setup();
+    fireEvent.click(screen.getByTestId('start-tournament'));
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    const button = screen.getByTestId('sound-toggle');
+    const box = screen.getByTestId('sound') as HTMLInputElement;
+    expect(button.getAttribute('aria-pressed')).toBe('true');
+    expect(box.checked).toBe(true);
+    fireEvent.click(button);
+    expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(box.checked).toBe(false);
+    expect(readSound()).toBe(false);
+    fireEvent.click(box);
+    expect(button.getAttribute('aria-pressed')).toBe('true');
+    expect(readSound()).toBe(true);
+    session.getState().dispose();
+    localStorage.clear();
+  });
+});
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

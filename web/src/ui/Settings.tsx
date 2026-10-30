@@ -22,6 +22,15 @@ export function Settings({ preferences }: { preferences: Preferences }) {
         />
         <span>{t('status.autoNext')}</span>
       </label>
+      <label class="menu-toggle">
+        <input
+          type="checkbox"
+          data-testid="sound"
+          checked={preferences.sound}
+          onChange={preferences.toggleSound}
+        />
+        <span>{t('status.sound')}</span>
+      </label>
     </>
   );
 }
