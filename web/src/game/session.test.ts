@@ -97,6 +97,20 @@ describe('session', () => {
     expect(second.getState().lastActions[1]).toEqual({ key: 'allIn', params: {} });
   });
 
+  it('labels a raise that opens the flop as a bet', async () => {
+    const session = open(callingBot());
+    await session.getState().start();
+    await session.getState().act({ kind: 'passive' });
+    expect(session.getState().table.hand?.street).toBe('flop');
+    await session.getState().act({ kind: 'raise', to: 40 });
+    const state = session.getState();
+    expect(state.lastActions[1]).toEqual({ key: 'bet', params: { amount: 40 } });
+    expect(state.log.find((entry) => entry.key === 'bet')).toEqual({
+      key: 'bet',
+      params: { seat: 1, amount: 40 },
+    });
+  });
+
   it('turns a fold into a check when checking is free', async () => {
     const session = open(callingBot());
     await session.getState().start();

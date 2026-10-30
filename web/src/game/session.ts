@@ -26,7 +26,14 @@ import { withFallback } from './botClient.ts';
 import type { BotClient } from './botClient.ts';
 import { resolveIntent, toIntent } from './intent.ts';
 import type { Intent } from './intent.ts';
-import { actedLabel, awardedTo, potCollected, resultOf } from './outcome.ts';
+import {
+  actedLabel,
+  awardedTo,
+  isOpeningBet,
+  openingEntries,
+  potCollected,
+  resultOf,
+} from './outcome.ts';
 import type { HandResult } from './outcome.ts';
 import { handRecorder } from './records/recorder.ts';
 import type { HandRecorder, RecordsOptions } from './records/recorder.ts';
@@ -158,19 +165,19 @@ function tally(rt: Runtime, table: Table): SessionResult {
   return { hands: rt.hands, net: stack - buyIn - rt.topUps };
 }
 
-function record(rt: Runtime, events: EngineEvent[]): void {
+function record(rt: Runtime, events: EngineEvent[], opens = false): void {
   rt.recorder.observe(events);
   rt.bot.observe(toObservations(events, rt.botSeat));
   const lastActions: [LogEntry | null, LogEntry | null] = [...rt.get().lastActions];
   for (const event of events) {
     if (event.type === 'acted') {
-      lastActions[event.seat] = actedLabel(event);
+      lastActions[event.seat] = actedLabel(event, opens);
     } else if (event.type === 'toppedUp' && event.seat === rt.humanSeat) {
       rt.topUps += event.amount;
     }
   }
   rt.set({
-    log: [...rt.get().log, ...handHistory(events)],
+    log: [...rt.get().log, ...openingEntries(handHistory(events), opens)],
     lastActions,
     session: tally(rt, rt.get().table),
   });
@@ -196,12 +203,14 @@ function conclude(rt: Runtime, step: Step): void {
 }
 
 function play(rt: Runtime, action: Action, decision: Decision | null = null): void {
+  const { hand } = rt.get().table;
+  const opens = hand !== null && isOpeningBet(hand, action);
   const step = apply(rt.get().table, action);
   if (decision !== null) {
     rt.recorder.decided(decision, step.events);
   }
   rt.set({ table: step.state });
-  record(rt, step.events);
+  record(rt, step.events, opens);
   conclude(rt, step);
 }
 
