@@ -16,14 +16,15 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 | `web/e2e/`                                                          | Playwright tests and the contact sheet script                         |
 | `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                   |
 | `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`      |
-| `web/tools/arena/`                                                  | Node duplicate matches between two bots, see "arena"                  |
+| `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena" |
+| `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                 |
 | `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`  |
 | `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`  |
 | `.github/workflows/`                                                | `web-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master`   |
 
 Generated and never committed: `web/dist`, `web/test-results`, `web/playwright-report`, `web/e2e/contact/`,
-`web/tools/golden/build`, `web/arena-out/` and `web/src/cfr/mallorca.wasm`, which `npm run wasm` builds with cargo
-(the toolchain pinned in `solver/`) before `dev`, `test`, `build` and `arena`.
+`web/tools/golden/build`, `web/arena-out/` (the arena results, see "arena") and `web/src/cfr/mallorca.wasm`, which
+`npm run wasm` builds with cargo (the toolchain pinned in `solver/`) before `dev`, `test`, `build` and `arena`.
 
 ## Stack
 
@@ -366,18 +367,54 @@ files directly, including in workers. `tools/` may use the clock and Node APIs.
 - `stats.ts`: `summarize(nets, bigBlind)`. The per-pair value is `v = net / 2 / bigBlind * 100`; `bbPer100` is the
   mean of `v` and `ci95 = 1.96 * sd(v) / sqrt(n)` with the sample standard deviation (n - 1). With fewer than 2
   pairs `ci95` is `Infinity`, and null in the report. `hands = 2 * pairs`.
-- `run.ts`: `runArena({ a, b, pairs, seed, workers, saveHands? })` splits the pair indices into contiguous chunks,
+- `paths.ts`: `resultsDir(cwd, env)` is `ARENA_DIR` resolved against `cwd`, else `web/arena-out` of the main
+  checkout (the parent of `git rev-parse --git-common-dir`, shared by every worktree), else `<cwd>/arena-out`.
+  `runName(a, b, pairs, seed, started)` is `<a>-<b>-<pairs>-s<seed>-<YYYYMMDD-HHMMSS>` in UTC.
+- `run.ts`: `runArena({ a, b, pairs, seed, workers, saveHands?, reportDir? })` splits the pair indices into
+  contiguous chunks,
   runs them in process (`workers: 1`) or in `worker_threads` (`worker.ts`), gathers the results in index order and
   returns the `Report` (`a`, `b`, `pairs`, `hands`, `seed`, `bbPer100`, `ci95`, `durationMs`, `commit` from
-  `git rev-parse --short HEAD` or `unknown`); the result depends only on the seed, not on the worker count.
+  `git rev-parse --short HEAD` or `unknown`, `finishedAt`, and `handsFile`, the `saveHands` path relative to
+  `reportDir`, or null); the result depends only on the seed, not on the worker count.
   `saveHands` writes one `HandRecord` per line (JSONL) with `humanSeat: null`, `sessionId: arena-<seed>`,
   `bot: { id: '<a>-vs-<b>', version: '1' }` and a `playedAt` one second apart per hand from the start of the run.
 - `cli.ts`: flags `--a`, `--b`, `--pairs` (1000), `--seed` (1), `--workers` (`os.availableParallelism()`),
-  `--out <file>` (the JSON report) and `--save-hands <file>`. An unknown bot or a bad number exits with code 1.
-  It prints one line: `a vs b: +12.3 ± 4.5 bb/100 over 10000 hands in 182 s`.
+  `--dir <path>` (`resultsDir` by default), `--out <file>`, `--save-hands <file>` and `--no-hands`. Every run is
+  saved: the report to `--out` or `<dir>/<runName>.json`, the hands to `--save-hands` or `<dir>/<runName>.jsonl`
+  unless `--no-hands`; both directories are created before the match. A directory that cannot be created, an
+  unknown bot or a bad number exits with code 1. It prints the report path on stderr and one line on stdout:
+  `a vs b: +12.3 ± 4.5 bb/100 over 10000 hands in 182 s`.
 - The tests in `tools/arena/*.test.ts` run under `npm test`.
 - `match.ts` calls `dispose` on both bots after each hand; `worker.ts` and the in-process path of `run.ts` await
   `prepareBots([a, b])` first.
+
+### Viewer
+
+`web/tools/arena/ui/` is a second Vite app. In development (`npm run arena:ui`) it reads the runs in `resultsDir`
+(or `ARENA_DIR`) through the dev server; `npm run build` also builds it into `dist/arena/` with base
+`<BASE_PATH>arena/` and `web/arena-results/` as its public directory, so the published runs are served at
+`<site>/arena/`. It imports from `src` only `game/records/record.ts`, `game/records/pokerstars.ts` and engine
+types.
+
+- `publish.ts`, `publishCli.ts` (`npm run arena:publish -- <run>...`): `publishRun` copies a report into
+  `web/arena-results/` with `finishedAt` and `handsFile: '<name>.jsonl.gz'` (or null) and gzips its hands;
+  `writeIndex` writes `index.json`, the `listRuns` of that directory. The directory is committed.
+- `source.ts`: `sourceFor(dev, base)` gives the runs URL and hands URLs: the dev server API, or the published files.
+
+- `server.ts`: `listRuns(dir)` returns every `*.json` report, newest first by `finishedAt` (file mtime for older
+  reports), with its hands file (`handsFile`, or the same base name with `.jsonl` for older reports) when it exists
+  in `dir`; `handsPath(dir, name)` accepts only a plain `*.jsonl` name of `dir`. `arenaPlugin(dir)` serves them as
+  `GET /api/runs` and `GET /api/hands?file=`.
+- `hands.ts`, `hands.worker.ts`, `handsClient.ts`: a Web Worker fetches the hands, gunzips them when they start
+  with the gzip magic bytes (`decodeHands`, so a host that sent `Content-Encoding: gzip` works too), parses the
+  JSONL, skips unreadable lines and keeps the raw lines for `record(line)`.
+- `analysis.ts`: `summarize(record, line)` takes A's seat from the hand number (`k = (handNumber - 1) % 2`, A on
+  seat `k`), so a bot against itself works; `pairNets`, `cumulative` (at most 600 points), `slices` (position,
+  street of the last action, showdown) and `pairRows`: a pair is kept when either hand passes the filter, its
+  `matches` mark which, and a filtered list is sorted by the matching hands.
+- Components: `App`, `RunList`, `RunView` (warns when the hands do not give the report's pairs and bb/100 within
+  0.05), `Curve`, `Slices`, `HandList`, `PairPanel` (both hands of a pair as PokerStars text). Tests run under
+  happy-dom in the `ui` Vitest project.
 
 ## Conventions
 

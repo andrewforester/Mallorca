@@ -1,0 +1,110 @@
+[
+  {
+    "file": "cfr-always-call-2000-s3-20261030-154845.json",
+    "report": {
+      "a": "cfr",
+      "b": "always-call",
+      "pairs": 2000,
+      "hands": 4000,
+      "seed": 3,
+      "bbPer100": 179.2725,
+      "ci95": 39.70713435087921,
+      "durationMs": 783,
+      "commit": "82c1036",
+      "finishedAt": "2026-10-30T15:48:46.032Z",
+      "handsFile": "cfr-always-call-2000-s3-20261030-154845.jsonl.gz"
+    },
+    "handsFile": "cfr-always-call-2000-s3-20261030-154845.jsonl.gz",
+    "handsBytes": 302527
+  },
+  {
+    "file": "cfr-random.json",
+    "report": {
+      "a": "cfr",
+      "b": "random",
+      "pairs": 5000,
+      "hands": 10000,
+      "seed": 3,
+      "bbPer100": 57.2165,
+      "ci95": 23.22569048557449,
+      "durationMs": 883,
+      "commit": "179bd56",
+      "finishedAt": "2026-10-24T14:41:03.871Z",
+      "handsFile": null
+    },
+    "handsFile": null,
+    "handsBytes": null
+  },
+  {
+    "file": "cfr-always-raise.json",
+    "report": {
+      "a": "cfr",
+      "b": "always-raise",
+      "pairs": 5000,
+      "hands": 10000,
+      "seed": 3,
+      "bbPer100": 250.654,
+      "ci95": 48.854634691175974,
+      "durationMs": 836,
+      "commit": "179bd56",
+      "finishedAt": "2026-10-24T14:41:02.906Z",
+      "handsFile": null
+    },
+    "handsFile": null,
+    "handsBytes": null
+  },
+  {
+    "file": "cfr-always-call.json",
+    "report": {
+      "a": "cfr",
+      "b": "always-call",
+      "pairs": 5000,
+      "hands": 10000,
+      "seed": 3,
+      "bbPer100": 165.2845,
+      "ci95": 24.80719620810749,
+      "durationMs": 1473,
+      "commit": "179bd56",
+      "finishedAt": "2026-10-24T14:41:01.984Z",
+      "handsFile": null
+    },
+    "handsFile": null,
+    "handsBytes": null
+  },
+  {
+    "file": "cfr-math-20000.json",
+    "report": {
+      "a": "cfr",
+      "b": "math",
+      "pairs": 20000,
+      "hands": 40000,
+      "seed": 2,
+      "bbPer100": 32.81675,
+      "ci95": 9.205916457914178,
+      "durationMs": 287160,
+      "commit": "179bd56",
+      "finishedAt": "2026-10-24T14:38:54.316Z",
+      "handsFile": "cfr-math-20000.jsonl.gz"
+    },
+    "handsFile": "cfr-math-20000.jsonl.gz",
+    "handsBytes": 2040834
+  },
+  {
+    "file": "cfr-math-2000.json",
+    "report": {
+      "a": "cfr",
+      "b": "math",
+      "pairs": 2000,
+      "hands": 4000,
+      "seed": 1,
+      "bbPer100": 47.20375,
+      "ci95": 34.43465594710367,
+      "durationMs": 30001,
+      "commit": "179bd56",
+      "finishedAt": "2026-10-24T14:33:48.188Z",
+      "handsFile": null
+    },
+    "handsFile": null,
+    "handsBytes": null
+  }
+]
