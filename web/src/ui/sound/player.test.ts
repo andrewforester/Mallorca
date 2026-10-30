@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Cue } from './cues.ts';
-import { createSynthPlayer, silentPlayer } from './player.ts';
+import { createSynthPlayer, defaultContext, silentPlayer } from './player.ts';
 
 interface Param {
   value: number;
@@ -157,6 +157,34 @@ describe('createSynthPlayer', () => {
       player.unlock();
       player.play('win');
     }).not.toThrow();
+  });
+});
+
+describe('hardening', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('swallows a rejected resume', async () => {
+    const unhandled = vi.fn();
+    process.on('unhandledRejection', unhandled);
+    const ctx = new FakeContext();
+    ctx.resume = () => Promise.reject(new Error('blocked'));
+    const player = createSynthPlayer(() => ctx as unknown as AudioContext);
+    expect(() => player.unlock()).not.toThrow();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    process.off('unhandledRejection', unhandled);
+    expect(unhandled).not.toHaveBeenCalled();
+  });
+
+  it('returns no context when the AudioContext constructor throws', () => {
+    vi.stubGlobal(
+      'AudioContext',
+      class {
+        constructor() {
+          throw new Error('not allowed');
+        }
+      },
+    );
+    expect(defaultContext()).toBeNull();
   });
 });
 

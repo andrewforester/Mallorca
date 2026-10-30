@@ -5,6 +5,9 @@ import { HandLogDrawer } from './HandLogDrawer.tsx';
 import { HistoryMenu } from './HistoryMenu.tsx';
 import { Scene } from './Scene.tsx';
 import { SessionOver } from './SessionOver.tsx';
+import { silentPlayer } from './sound/player.ts';
+import type { SoundPlayer } from './sound/player.ts';
+import { useSoundCues } from './sound/useSoundCues.ts';
 import { Settings } from './Settings.tsx';
 import { StartScreen } from './StartScreen.tsx';
 import { StatusBar } from './StatusBar.tsx';
@@ -22,6 +25,7 @@ export interface AppProps {
   onLeaveTonight: () => void;
   farewell?: boolean;
   autoNext?: boolean;
+  player?: SoundPlayer;
 }
 
 function useSessionState(session: Session) {
@@ -56,6 +60,8 @@ export function App(props: AppProps) {
   const state = useSessionState(session);
   const preferences = usePreferences();
   const drawer = useLogDrawer(state.phase);
+  const player = props.player ?? silentPlayer;
+  useSoundCues(session, player, preferences.sound);
   const vm = state.phase === 'idle' ? null : toViewModel(state, humanSeat);
   const handOver = state.phase === 'handOver' ? vm : null;
   const autoNextMs = useAutoNext(
@@ -69,7 +75,10 @@ export function App(props: AppProps) {
         seed={state.seed}
         simple={preferences.simple}
         farewell={props.farewell ?? false}
-        onStart={(mode, opponent) => void session.getState().start(mode, opponent)}
+        onStart={(mode, opponent) => {
+          player.unlock();
+          void session.getState().start(mode, opponent);
+        }}
       />
     );
   }

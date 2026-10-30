@@ -122,7 +122,12 @@ function createRig(ctx: AudioContext): Rig {
 
 export function defaultContext(): AudioContext | null {
   const Ctor = (globalThis as { AudioContext?: typeof AudioContext }).AudioContext;
-  return Ctor === undefined ? null : new Ctor();
+  if (Ctor === undefined) return null;
+  try {
+    return new Ctor();
+  } catch {
+    return null;
+  }
 }
 
 export function createSynthPlayer(
@@ -136,7 +141,7 @@ export function createSynthPlayer(
         if (ctx === null) return;
         rig = createRig(ctx);
       }
-      if (rig.ctx.state === 'suspended') void rig.ctx.resume();
+      if (rig.ctx.state === 'suspended') void rig.ctx.resume().catch(() => undefined);
     },
     play(cue, delayMs = 0) {
       if (rig === null) return;

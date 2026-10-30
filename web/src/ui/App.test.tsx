@@ -3,10 +3,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CASH, createSession, inProcessBot, memoryStore, TOURNAMENT } from '../game/index.ts';
 import { App } from './App.tsx';
 import { readSound } from './preferences.ts';
+import type { SoundPlayer } from './sound/player.ts';
 
 afterEach(cleanup);
 
-function setup(mode = TOURNAMENT, store = memoryStore(), autoNext?: boolean) {
+function setup(mode = TOURNAMENT, store = memoryStore(), autoNext?: boolean, player?: SoundPlayer) {
   const session = createSession({
     bot: inProcessBot(),
     seed: 42,
@@ -24,6 +25,7 @@ function setup(mode = TOURNAMENT, store = memoryStore(), autoNext?: boolean) {
       onNewGame={onNewGame}
       onLeaveTonight={vi.fn()}
       autoNext={autoNext}
+      player={player}
     />,
   );
   return { session, onNewGame };
@@ -46,6 +48,42 @@ describe('App sound toggles', () => {
     fireEvent.click(box);
     expect(button.getAttribute('aria-pressed')).toBe('true');
     expect(readSound()).toBe(true);
+    session.getState().dispose();
+    localStorage.clear();
+  });
+});
+
+describe('App sound', () => {
+  function recorder() {
+    const unlock = vi.fn();
+    const plays: string[] = [];
+    const player: SoundPlayer = { unlock, play: (cue) => void plays.push(cue) };
+    return { unlock, plays, player };
+  }
+
+  it('unlocks the player when a start button is clicked', async () => {
+    localStorage.clear();
+    const { unlock, player } = recorder();
+    const { session } = setup(TOURNAMENT, memoryStore(), undefined, player);
+    expect(unlock).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId('start-tournament'));
+    expect(unlock).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    session.getState().dispose();
+  });
+
+  it('plays cues while sound is on and none once it is switched off', async () => {
+    localStorage.clear();
+    const { plays, player } = recorder();
+    const { session } = setup(TOURNAMENT, memoryStore(), false, player);
+    fireEvent.click(screen.getByTestId('start-tournament'));
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    expect(plays).toContain('turn');
+    fireEvent.click(screen.getByTestId('sound-toggle'));
+    const before = plays.length;
+    fireEvent.click(screen.getByTestId('fold'));
+    await waitFor(() => expect(screen.queryByTestId('next-hand')).not.toBeNull());
+    expect(plays).toHaveLength(before);
     session.getState().dispose();
     localStorage.clear();
   });
