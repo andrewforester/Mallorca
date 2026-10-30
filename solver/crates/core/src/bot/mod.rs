@@ -1,10 +1,13 @@
+mod style;
 mod translate;
 
 use crate::abstraction::Abstraction;
 use crate::cards::Card;
 use crate::strategy::{StrategyError, StrategyFile};
 use crate::tree::{ActionKind, Node, NodeId, Street};
-use translate::{fraction, nearest, pseudo_harmonic, sample, scaled_raise};
+use style::choose;
+pub use style::{reweight, sample_weighted, Style};
+use translate::{fraction, nearest, pseudo_harmonic, scaled_raise};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Move {
@@ -149,11 +152,23 @@ impl Hand {
 #[derive(Default)]
 pub struct Bot {
     hand: Option<Hand>,
+    style: Style,
 }
 
 impl Bot {
     pub fn new() -> Bot {
-        Bot { hand: None }
+        Bot {
+            hand: None,
+            style: Style::NEUTRAL,
+        }
+    }
+
+    pub fn set_style(&mut self, style: Style) {
+        self.style = style;
+    }
+
+    pub fn style(&self) -> Style {
+        self.style
     }
 
     pub fn cursor(&self) -> Option<NodeId> {
@@ -261,7 +276,7 @@ impl Bot {
         };
         let spot = model.spot(id).expect("a decision node");
         let bucket = model.abstraction.bucket(hand.street, hole, &hand.board);
-        let chosen = spot.actions[sample(model.file.probabilities(id, bucket), draw)];
+        let chosen = spot.actions[choose(model, &spot, id, bucket, &self.style, draw)];
         hand.pending = Some(chosen.1);
         to_real(model, &spot, hand, chosen.0, legal)
     }
