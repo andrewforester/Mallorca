@@ -36,6 +36,12 @@ const alwaysRaise: BotFactory = () => ({
   decide: (legal) => (legal.raise ? { kind: 'raise', to: legal.raise.min } : passive(legal)),
 });
 
+const minBettor: BotFactory = () => ({
+  observe: () => undefined,
+  decide: (legal) =>
+    legal.call === null && legal.raise ? { kind: 'raise', to: legal.raise.min } : passive(legal),
+});
+
 const random: BotFactory = (rng) => ({
   observe: () => undefined,
   decide: (legal) => {
@@ -62,14 +68,17 @@ const cfr: BotFactory = (rng) => {
   };
 };
 
-export const BOTS: Record<'math' | 'cfr' | 'always-call' | 'always-raise' | 'random', BotFactory> =
-  {
-    math,
-    cfr,
-    'always-call': alwaysCall,
-    'always-raise': alwaysRaise,
-    random,
-  };
+export const BOTS: Record<
+  'math' | 'cfr' | 'always-call' | 'always-raise' | 'min-bettor' | 'random',
+  BotFactory
+> = {
+  math,
+  cfr,
+  'always-call': alwaysCall,
+  'always-raise': alwaysRaise,
+  'min-bettor': minBettor,
+  random,
+};
 
 export type BotName = keyof typeof BOTS;
 

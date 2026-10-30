@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { mulberry32 } from '../../src/cards/index.ts';
 import type { EngineEvent, SeatIndex } from '../../src/engine/index.ts';
 import { BOTS } from './bots.ts';
 import type { BotName } from './bots.ts';
@@ -13,6 +14,19 @@ describe('playPair', () => {
       expect(playPair(BOTS.math, BOTS.math, 1, i).net).toBe(0);
     }
   }, 120_000);
+
+  it('the min-bettor bets the minimum into no bet and calls a bet', () => {
+    const bot = BOTS['min-bettor'](mulberry32(1));
+    const raise = { min: 20, max: 400 };
+    expect(bot.decide({ fold: false, check: true, call: null, raise })).toEqual({
+      kind: 'raise',
+      to: 20,
+    });
+    expect(bot.decide({ fold: false, check: true, call: null, raise: null })).toEqual({
+      kind: 'check',
+    });
+    expect(bot.decide({ fold: true, check: false, call: 30, raise })).toEqual({ kind: 'call' });
+  });
 
   it('a pair is the same deck with the seats swapped', () => {
     const { hands } = playPair(BOTS['always-call'], BOTS['always-raise'], 5, 3);

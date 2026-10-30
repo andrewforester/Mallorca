@@ -44,15 +44,15 @@ web/src/
   ui/       Preact components, layout, tokens, i18n
 ```
 
-| Layer    | May import from                       |
-| -------- | ------------------------------------- |
-| `cards`  | nothing                               |
-| `equity` | `cards`                               |
-| `engine` | `cards`, `equity`                     |
-| `brains` | `cards`, `equity`, `engine`           |
-| `cfr`    | `cards`, types from `engine`, `brains` |
+| Layer    | May import from                              |
+| -------- | -------------------------------------------- |
+| `cards`  | nothing                                      |
+| `equity` | `cards`                                      |
+| `engine` | `cards`, `equity`                            |
+| `brains` | `cards`, `equity`, `engine`                  |
+| `cfr`    | `cards`, types from `engine`, `brains`       |
 | `game`   | `cards`, `equity`, `engine`, `brains`, `cfr` |
-| `ui`     | `game`                                |
+| `ui`     | `game`                                       |
 
 `brains` takes only types from `engine`: `Action`, `LegalActions` and the events it turns into observations.
 `ui` imports only from `game`; for the table, `game` re-exports `Card`, `formatCard`, `rankOf`, `suitOf`,
@@ -212,6 +212,10 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   the two neighbouring tree sizes by the pseudo-harmonic mapping on pot fractions, the bot's own raise keeps the
   tree's pot fraction and is clamped into `legal.raise`, and a hand that leaves the tree resyncs to the nearest
   decision node of the same street, seat and facing-a-bet state.
+- The passive action is size 0 on that axis: a bet below the smallest tree size maps to a check, and a raise to a
+  call, or to that size. A resync facing a bet below the nearest facing node's price can land on a node without a
+  bet by the same mapping. In such a node the bot faces a real bet the tree does not see: a tree check is a real
+  call, a tree bet a raise of the same pot fraction, and when the tree already closed the street the bot calls.
 
 ## game
 
