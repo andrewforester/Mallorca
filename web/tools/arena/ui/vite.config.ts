@@ -10,5 +10,4 @@ const webDir = fileURLToPath(new URL('../../../', import.meta.url));
 export default defineConfig({
   root,
   plugins: [preact(), arenaPlugin(resultsDir(webDir))],
-  server: { port: 5180 },
 });

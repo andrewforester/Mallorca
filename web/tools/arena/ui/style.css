@@ -1,0 +1,270 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f7f6f2;
+  --surface: #ffffff;
+  --text: #1d1f1e;
+  --muted: #5f6662;
+  --line: #dcdad3;
+  --accent: #1f6f66;
+  --win: #1f7a4d;
+  --loss: #b23a2e;
+  --warn-bg: #fff4d6;
+  --warn-text: #6b4a00;
+  --selected: #e3efec;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #151817;
+    --surface: #1d2120;
+    --text: #e6e8e6;
+    --muted: #9aa29e;
+    --line: #333937;
+    --accent: #6cc3b6;
+    --win: #6fd29a;
+    --loss: #f08a7e;
+    --warn-bg: #3a2f10;
+    --warn-text: #f3d68a;
+    --selected: #24332f;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    14px/1.45 system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+
+main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+h1 {
+  font-size: 22px;
+  margin: 0 0 16px;
+}
+
+h2 {
+  font-size: 18px;
+  margin: 0 0 4px;
+}
+
+h3 {
+  font-size: 15px;
+  margin: 24px 0 8px;
+}
+
+h4 {
+  font-size: 13px;
+  margin: 0 0 6px;
+}
+
+.note {
+  color: var(--muted);
+  margin: 4px 0 12px;
+}
+
+.warning {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.scroll {
+  overflow-x: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+th,
+td {
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+tbody tr {
+  cursor: pointer;
+}
+
+tbody tr:hover,
+tr.selected {
+  background: var(--selected);
+}
+
+.num {
+  text-align: right;
+}
+
+.win {
+  color: var(--win);
+}
+
+.loss {
+  color: var(--loss);
+}
+
+button.link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.run {
+  margin-top: 28px;
+}
+
+.curve {
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.curve svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.curve polyline {
+  fill: none;
+  stroke-width: 1.5;
+  stroke: var(--win);
+  vector-effect: non-scaling-stroke;
+}
+
+.curve polyline.loss {
+  stroke: var(--loss);
+}
+
+.curve .zero {
+  stroke: var(--line);
+  stroke-dasharray: 4 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.curve figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 4px 4px 0;
+}
+
+.slices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  align-items: start;
+  gap: 12px;
+}
+
+.slice {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.slice tbody tr {
+  cursor: default;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+select,
+.pager button {
+  font: inherit;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.pair-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 1100px) {
+  .pair-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .pair-panel {
+    position: sticky;
+    top: 12px;
+  }
+}
+
+.hands {
+  display: grid;
+  gap: 12px;
+}
+
+pre {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font:
+    12px/1.5 ui-monospace,
+    'SF Mono',
+    Menlo,
+    monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
