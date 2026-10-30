@@ -113,6 +113,23 @@ function Result({ text, canContinue, autoNextMs, onNextHand }: ResultProps) {
   );
 }
 
+function herText(vm: ViewModel): string {
+  return vm.talk.herBubble?.text ?? '';
+}
+
+function Announcements({ text, her }: { text: string; her: string }) {
+  return (
+    <>
+      <div class="visually-hidden" role="status" aria-live="polite" data-testid="live-region">
+        {text}
+      </div>
+      <div class="visually-hidden" aria-live="polite" data-testid="talk-region">
+        {her}
+      </div>
+    </>
+  );
+}
+
 interface SeatsProps {
   vm: ViewModel;
   humanSeat: SeatIndex;
@@ -160,9 +177,7 @@ export function Table(props: TableProps) {
   const announcement = text ?? (thinking ? t('seat.thinking') : '');
   return (
     <div class={`table-layout${text === null ? '' : ' table-result'}`}>
-      <div class="visually-hidden" role="status" aria-live="polite" data-testid="live-region">
-        {announcement}
-      </div>
+      <Announcements text={announcement} her={chat === null ? '' : herText(vm)} />
       <Felt vm={vm} humanSeat={humanSeat} showPot={text === null} />
       {text !== null && (
         <Result

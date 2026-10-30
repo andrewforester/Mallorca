@@ -20,7 +20,7 @@ function Lines({ lines }: { lines: ChatLine[] }) {
     }
   }, [lines.length]);
   return (
-    <ol class="chat-lines" ref={list} aria-live="polite">
+    <ol class="chat-lines" ref={list}>
       {lines.map((line) => (
         <li
           key={line.id}

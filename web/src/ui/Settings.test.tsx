@@ -30,6 +30,16 @@ function settings(talk = true) {
 }
 
 describe('Settings talk', () => {
+  it('shows the session state of talk and tells, not the stored preference', () => {
+    function Bound() {
+      const preferences = usePreferences();
+      return <Settings preferences={preferences} talk talkOn={false} tells="hidden" />;
+    }
+    render(<Bound />);
+    expect((screen.getByTestId('table-talk') as HTMLInputElement).checked).toBe(false);
+    expect((screen.getByTestId('tells') as HTMLSelectElement).value).toBe('hidden');
+  });
+
   it('toggles table talk and keeps it', () => {
     const { onTalk } = settings();
     const toggle = screen.getByTestId('table-talk') as HTMLInputElement;

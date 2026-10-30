@@ -70,6 +70,7 @@ describe('handleKey while typing', () => {
     expect(handleKey({ key: 'c', target: area }, h)).toBe(false);
     expect(handleKey({ key: 'ArrowLeft', target: input }, h)).toBe(false);
     expect(handleKey({ key: 'r', target: editable }, h)).toBe(false);
+    expect(handleKey({ key: 'ArrowDown', target: { tagName: 'SELECT' } }, h)).toBe(false);
     expect(h.fold).not.toHaveBeenCalled();
     expect(h.passive).not.toHaveBeenCalled();
     expect(h.adjust).not.toHaveBeenCalled();

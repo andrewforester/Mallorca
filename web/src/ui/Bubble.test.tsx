@@ -83,6 +83,32 @@ describe('Bubble', () => {
     expect(typed()).toBe('No hurry tonight.');
   });
 
+  it('does not bring back a dismissed line after a remount', () => {
+    const said = line(1, 'Once is enough');
+    const first = render(<Bubble line={said} />);
+    act(() => {
+      vi.advanceTimersByTime(7100);
+    });
+    first.unmount();
+    render(<Bubble line={said} />);
+    expect(screen.queryByTestId('bubble-mallorca')).toBeNull();
+  });
+
+  it('keeps the remaining time and the typed text across a remount', () => {
+    const said = line(1, 'Still here');
+    const first = render(<Bubble line={said} />);
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    first.unmount();
+    render(<Bubble line={said} />);
+    expect(typed()).toBe('Still here');
+    act(() => {
+      vi.advanceTimersByTime(2100);
+    });
+    expect(screen.queryByTestId('bubble-mallorca')).toBeNull();
+  });
+
   it('renders nothing without a line', () => {
     const { container } = render(<Bubble line={null} />);
     expect(container.innerHTML).toBe('');

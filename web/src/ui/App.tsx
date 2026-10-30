@@ -41,8 +41,11 @@ function useSessionState(session: Session) {
   return state;
 }
 
-function talkActions(session: Session) {
+function talkActions(session: Session, vm: ViewModel) {
   return {
+    talk: vm.talk.available,
+    talkOn: vm.talk.on,
+    tells: vm.talk.level,
     onTalk: (on: boolean) => session.getState().setTalk(on),
     onTells: (level: Level) => session.getState().setTells(level),
     onSay: (text: string) => session.getState().say(text),
@@ -73,7 +76,7 @@ export function App(props: AppProps) {
   }
   const act = (intent: Intent) => void session.getState().act(intent);
   const names: [string, string] = [vm.seats[0].name, vm.seats[1].name];
-  const talk = talkActions(session);
+  const talk = talkActions(session, vm);
   return (
     <Scene simple={preferences.simple}>
       <div class="app">
@@ -83,7 +86,7 @@ export function App(props: AppProps) {
           onLeave={() => session.getState().leave()}
         >
           <HistoryMenu seed={state.seed} store={store} onNewGame={onNewGame}>
-            <Settings preferences={preferences} talk={vm.talk.available} {...talk} />
+            <Settings preferences={preferences} {...talk} />
             <HandLog
               entries={state.log}
               names={names}
@@ -100,7 +103,8 @@ export function App(props: AppProps) {
           autoNextMs={autoNextMs}
           onAct={act}
           onNextHand={() => void session.getState().nextHand()}
-          {...talk}
+          onSay={talk.onSay}
+          onQuick={talk.onQuick}
         />
         <GameOver props={props} vm={vm} phase={state.phase} sessionId={state.sessionId} />
       </div>

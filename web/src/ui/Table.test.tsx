@@ -143,3 +143,41 @@ describe('Table talk', () => {
     expect(screen.queryByRole('tab')).toBeNull();
   });
 });
+
+describe('Table talk announcements', () => {
+  it('announces her line in a polite live region that stays mounted', () => {
+    const vm = talking();
+    const view = render(
+      <Table
+        vm={vm}
+        phase="humanToAct"
+        humanSeat={0}
+        log={[]}
+        onAct={vi.fn()}
+        onNextHand={vi.fn()}
+      />,
+    );
+    const region = screen.getByTestId('talk-region');
+    expect(region.getAttribute('aria-live')).toBe('polite');
+    expect(region.textContent).toBe('Brave call.');
+    const next = talking();
+    next.talk.herBubble = { id: 3, speaker: 'mallorca', text: 'Your turn, love.', handNumber: 1 };
+    view.rerender(
+      <Table
+        vm={next}
+        phase="humanToAct"
+        humanSeat={0}
+        log={[]}
+        onAct={vi.fn()}
+        onNextHand={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId('talk-region')).toBe(region);
+    expect(region.textContent).toBe('Your turn, love.');
+  });
+
+  it('keeps the region empty without talk', () => {
+    table();
+    expect(screen.getByTestId('talk-region').textContent).toBe('');
+  });
+});

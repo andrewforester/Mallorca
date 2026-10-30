@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { byId, expect, FAST_URL, test, waitForWaypoint } from './fixtures.ts';
 import { serveTalk } from './talkServer.ts';
 import type { TalkRequest } from './talkServer.ts';
@@ -7,6 +7,7 @@ const HER_BET = 'That bet is a question, darling.';
 const HER_ANSWER = 'Glad you came tonight.';
 const SOLVER_TIMEOUT_MS = 180_000;
 const MAX_ACTIONS = 80;
+const HER_PACE_MS = 1600;
 
 function answers(request: TalkRequest) {
   if (request.kind === 'line') {
@@ -47,6 +48,21 @@ async function myTurn(page: Page): Promise<void> {
   });
 }
 
+async function expectApart(over: Locator, under: Locator, name: string): Promise<void> {
+  const a = await over.boundingBox();
+  const b = await under.boundingBox();
+  expect(a, `${name} has a box`).not.toBeNull();
+  expect(b, `${name} has a box`).not.toBeNull();
+  if (a !== null && b !== null) {
+    const apart =
+      a.x + a.width <= b.x ||
+      b.x + b.width <= a.x ||
+      a.y + a.height <= b.y ||
+      b.y + b.height <= a.y;
+    expect(apart, `covers ${name}`).toBe(true);
+  }
+}
+
 test.describe('desktop', () => {
   test.skip(({ isMobile }) => isMobile, 'the side panel is a desktop layout');
 
@@ -56,20 +72,17 @@ test.describe('desktop', () => {
     await sitWithSolver(page);
     const bubble = byId(page, 'seat-1').getByTestId('bubble-mallorca');
     const herBet = () => requests.some((request) => request.intent?.situation === 'herBet');
-    await playUntil(page, async () => herBet());
+    await playUntil(page, async () => {
+      if (herBet()) {
+        return true;
+      }
+      await page.waitForTimeout(HER_PACE_MS);
+      return herBet();
+    });
     await expect(bubble).toContainText(HER_BET);
     await expect(bubble).toBeVisible();
     for (const id of ['board', 'pot', 'fold', 'passive', 'raise']) {
-      const box = await byId(page, id).boundingBox();
-      const over = await bubble.boundingBox();
-      if (box !== null && over !== null) {
-        const apart =
-          over.x + over.width <= box.x ||
-          box.x + box.width <= over.x ||
-          over.y + over.height <= box.y ||
-          box.y + box.height <= over.y;
-        expect(apart, `the bubble covers ${id}`).toBe(true);
-      }
+      await expectApart(bubble, byId(page, id), id);
     }
   });
 
@@ -158,6 +171,8 @@ test.describe('phone', () => {
     const sheet = byId(page, 'chat-sheet');
     await expect(sheet).toBeVisible();
     await expect(byId(page, 'passive')).toBeInViewport();
+    await expectApart(sheet, byId(page, 'seat-0').locator('.seat-cards'), 'your cards');
+    await expectApart(sheet, page.locator('.action-bar'), 'the action bar');
     await sheet.getByTestId('quick-niceHand').click();
     await expect(sheet.getByTestId('chat-line').filter({ hasText: HER_ANSWER })).toHaveCount(1);
     expect(

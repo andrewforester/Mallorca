@@ -44,7 +44,7 @@ function isTyping(target: unknown): boolean {
     return false;
   }
   const node = target as { tagName?: unknown; type?: unknown; isContentEditable?: unknown };
-  if (node.isContentEditable === true || node.tagName === 'TEXTAREA') {
+  if (node.isContentEditable === true || node.tagName === 'TEXTAREA' || node.tagName === 'SELECT') {
     return true;
   }
   return node.tagName === 'INPUT' && !NOT_TEXT.has(String(node.type));

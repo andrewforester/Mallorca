@@ -7,20 +7,23 @@ const LEVELS: readonly Level[] = ['obvious', 'subtle', 'hidden'];
 export interface SettingsProps {
   preferences: Preferences;
   talk?: boolean;
+  talkOn?: boolean;
+  tells?: Level;
   onTalk?: (on: boolean) => void;
   onTells?: (level: Level) => void;
 }
 
-function TalkSettings({ preferences, onTalk, onTells }: SettingsProps) {
+function TalkSettings({ preferences, talkOn, tells, onTalk, onTells }: SettingsProps) {
+  const on = talkOn ?? preferences.talk;
   return (
     <>
       <label class="menu-toggle">
         <input
           type="checkbox"
           data-testid="table-talk"
-          checked={preferences.talk}
+          checked={on}
           onChange={() => {
-            const next = !preferences.talk;
+            const next = !on;
             preferences.setTalk(next);
             onTalk?.(next);
           }}
@@ -31,7 +34,7 @@ function TalkSettings({ preferences, onTalk, onTells }: SettingsProps) {
         <span>{t('talk.settings.tells')}</span>
         <select
           data-testid="tells"
-          value={preferences.tells}
+          value={tells ?? preferences.tells}
           onChange={(event) => {
             const value = (event.currentTarget as HTMLSelectElement).value;
             const level = LEVELS.find((candidate) => candidate === value) ?? 'subtle';

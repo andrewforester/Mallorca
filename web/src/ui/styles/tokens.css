@@ -49,6 +49,9 @@
   --shadow-panel: 0 8px 22px rgba(0, 0, 0, 0.35);
   --shadow-glow: 0 0 24px rgba(240, 180, 100, 0.35);
   --card-width: 56px;
+  --action-bar-width: 380px;
+  --chat-button-size: 40px;
+  --status-bar-height: calc(2 * var(--space-3) + var(--tap-size));
 }
 
 @media (prefers-color-scheme: dark) {

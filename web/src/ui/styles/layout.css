@@ -704,7 +704,7 @@ button {
     left: auto;
     right: var(--space-5);
     bottom: var(--space-5);
-    width: 380px;
+    width: var(--action-bar-width);
   }
 
   .action-buttons {
@@ -1119,8 +1119,8 @@ button {
   top: -4px;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: var(--chat-button-size);
+  height: var(--chat-button-size);
   padding: 0;
   border-radius: 50%;
   color: var(--color-text);
@@ -1142,12 +1142,12 @@ button {
   position: fixed;
   left: var(--space-3);
   right: var(--space-3);
-  bottom: calc(128px + env(safe-area-inset-bottom));
+  top: calc(var(--status-bar-height) + env(safe-area-inset-top));
   z-index: 8;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  max-height: min(18rem, calc(100dvh - 200px));
+  max-height: min(18rem, 40dvh);
   padding: var(--space-2) var(--space-3) var(--space-3);
   border-radius: var(--radius-large);
   background-color: var(--color-glass-strong);
@@ -1315,6 +1315,19 @@ button {
   flex: 1;
 }
 
+.side-panel .chat-form {
+  gap: var(--space-1);
+}
+
+.side-panel .chat-input {
+  padding: 0 var(--space-2);
+  font-size: var(--font-size-small);
+}
+
+.side-panel .chat-form .button {
+  padding: 0 var(--space-2);
+}
+
 @media (min-aspect-ratio: 1/1) {
   .chat-open,
   .chat-sheet {
@@ -1349,20 +1362,21 @@ button {
     display: flex;
     left: auto;
     width: 22rem;
+    top: auto;
     bottom: var(--space-3);
-    right: calc(380px + 2 * var(--space-5));
+    right: calc(var(--action-bar-width) + 2 * var(--space-5));
   }
 
   .bubble-mallorca {
-    left: calc(100% + 56px);
+    left: calc(100% + var(--chat-button-size) + 2 * var(--space-2));
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .bubble {
     animation:
-      bubble-in 240ms ease-out both,
-      bubble-out 600ms ease-in 6400ms forwards;
+      bubble-in 240ms ease-out calc(0ms - var(--bubble-elapsed, 0ms)) both,
+      bubble-out 600ms ease-in calc(6400ms - var(--bubble-elapsed, 0ms)) forwards;
   }
 }
 
