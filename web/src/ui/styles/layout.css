@@ -1103,9 +1103,6 @@ button {
     right: var(--space-2);
     gap: var(--space-1);
     font-size: 0.75rem;
-  }
-
-  .status-bar {
     flex-wrap: wrap;
   }
 
