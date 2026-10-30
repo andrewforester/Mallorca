@@ -9,6 +9,7 @@ pub mod games;
 pub mod holdem;
 pub mod iso;
 pub mod measure;
+pub mod potential;
 pub mod preset;
 pub mod rng;
 pub mod strategy;
