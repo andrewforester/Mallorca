@@ -2,7 +2,8 @@ import { fullDeck, mulberry32, shuffle } from '../../src/cards/index.ts';
 import type { EngineEvent, Seat, SeatIndex, Step } from '../../src/engine/index.ts';
 import { applyAction, legalActions, startHandWith } from '../../src/engine/index.ts';
 import { toObservations } from '../../src/brains/index.ts';
-import type { ArenaBot, BotFactory } from './bots.ts';
+import type { ArenaBot } from './arenaBot.ts';
+import type { BotFactory } from './bots.ts';
 
 const STACK = 2000;
 const BLINDS = { small: 10, big: 20 };
@@ -37,7 +38,11 @@ function playHand(
   feed(step);
   while (step.hand.street !== 'complete') {
     const seat = step.hand.toAct as SeatIndex;
-    const action = bots[seat].decide(legalActions(step.hand, step.seats));
+    const actor = bots[seat];
+    const action = actor.decide(legalActions(step.hand, step.seats));
+    if (action.kind === 'raise' && actor.spoke) {
+      bots[seat === 0 ? 1 : 0].heard?.(actor.spoke());
+    }
     step = applyAction(step.hand, step.seats, action);
     feed(step);
   }

@@ -6,7 +6,7 @@ Duplicate matches between two bots, reported in bb/100 with a 95% confidence int
 npm run arena -- --a math --b always-call --pairs 2000
 ```
 
-Flags: `--a`, `--b` (`math`, `cfr`, `always-call`, `always-raise`, `min-bettor`, `random`), `--pairs` (1000), `--seed` (1), `--workers` (available cores), `--dir <path>` (results directory), `--out <file>` (JSON report), `--save-hands <file>` (JSONL hand records), `--no-hands`.
+Flags: `--a`, `--b` (`math`, `cfr`, `cfr-tilted`, `cfr-confident`, `cfr-cautious`, `cfr-talk-obvious`, `cfr-talk-subtle`, `cfr-talk-hidden`, `reader`, `always-call`, `always-raise`, `min-bettor`, `random`), `--pairs` (1000), `--seed` (1), `--workers` (available cores), `--dir <path>` (results directory), `--out <file>` (JSON report), `--save-hands <file>` (JSONL hand records), `--no-hands`.
 
 Every run is saved. The report goes to `<dir>/<a>-<b>-<pairs>-s<seed>-<YYYYMMDD-HHMMSS>.json` and the hands next to
 it as `.jsonl`, unless `--out` or `--save-hands` name other paths; `--no-hands` skips the hands. The default
@@ -70,6 +70,23 @@ into 200, 1200 hands a row:
 | 100         | 0.5          | 46%         | 40%        | 33%            |
 | 150         | 0.75         | 57%         | 48%        | 43%            |
 | 200         | 1.0          | 50%         | 50%        | 50%            |
+
+## Styled and talking bots (issue #23)
+
+| Bot                                                      | What it is                                                                                                                                                                                                         |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cfr-tilted`                                             | `cfr` with the style aggression 1.25, bluff 1.3, tightness 0.85                                                                                                                                                    |
+| `cfr-confident`                                          | `cfr` with the style 1.15, 1, 0.95                                                                                                                                                                                 |
+| `cfr-cautious`                                           | `cfr` with the style 0.9, 0.9, 1.2                                                                                                                                                                                 |
+| `cfr-talk-obvious`, `cfr-talk-subtle`, `cfr-talk-hidden` | plain `cfr` that, after deciding a raise, speaks with the chance of the base habit `herBet` for its hand strength class at that level                                                                              |
+| `reader`                                                 | the `math` bot that uses the talk: facing a bet after the opponent spoke, a math fold becomes a call when the call is at most half the pot; facing a bet after the opponent was silent, a math call becomes a fold |
+
+A bot may implement `spoke()` (did it speak on its last decision) and `heard(spoke)`. The match loop calls
+`other.heard(actor.spoke())` after every raise by an actor that has `spoke`, before the next decision, and `heard`
+holds only for the next decision.
+
+Cost of a style: `cfr-tilted vs cfr` should lose at most 5 bb/100. Readability of the habits: `reader` should win
+against `cfr-talk-obvious` by more than the interval above what it wins against `cfr-talk-hidden`.
 
 ## Managing runs
 
