@@ -1,3 +1,4 @@
+import { basename } from 'node:path';
 import type { Action, LegalActions } from '../../src/engine/index.ts';
 import type { Observation } from '../../src/brains/index.ts';
 import { createMathBrain, randomVillainModel } from '../../src/brains/index.ts';
@@ -54,26 +55,31 @@ const random: BotFactory = (rng) => ({
   },
 });
 
-let cfrModel: CfrModel | null = null;
+const CFR_FILE = 'cfr:';
+const SHIPPED = 'cfr';
+const cfrModels = new Map<string, CfrModel>();
 
-const cfr: BotFactory = (rng) => {
-  if (cfrModel === null) {
-    throw new Error('The cfr bot needs prepareBots before it plays');
-  }
-  const brain = createCfrBrain(cfrModel, rng);
-  return {
-    observe: (o) => brain.observe(o),
-    decide: (legal) => brain.decide(legal).action,
-    dispose: () => brain.dispose(),
+function cfrBot(key: string): BotFactory {
+  return (rng) => {
+    const model = cfrModels.get(key);
+    if (model === undefined) {
+      throw new Error('The cfr bot needs prepareBots before it plays');
+    }
+    const brain = createCfrBrain(model, rng);
+    return {
+      observe: (o) => brain.observe(o),
+      decide: (legal) => brain.decide(legal).action,
+      dispose: () => brain.dispose(),
+    };
   };
-};
+}
 
 export const BOTS: Record<
   'math' | 'cfr' | 'always-call' | 'always-raise' | 'min-bettor' | 'random',
   BotFactory
 > = {
   math,
-  cfr,
+  cfr: cfrBot(SHIPPED),
   'always-call': alwaysCall,
   'always-raise': alwaysRaise,
   'min-bettor': minBettor,
@@ -82,8 +88,38 @@ export const BOTS: Record<
 
 export type BotName = keyof typeof BOTS;
 
+function cfrFile(name: string): string | null {
+  return name.startsWith(CFR_FILE) && name.length > CFR_FILE.length
+    ? name.slice(CFR_FILE.length)
+    : null;
+}
+
+export function isBotName(name: string): boolean {
+  return Object.hasOwn(BOTS, name) || cfrFile(name) !== null;
+}
+
+export function botFactory(name: string): BotFactory {
+  if (cfrFile(name) !== null) return cfrBot(name);
+  if (!Object.hasOwn(BOTS, name)) {
+    throw new Error(`unknown bot "${name}", choose from: ${Object.keys(BOTS).join(', ')}`);
+  }
+  return BOTS[name as BotName];
+}
+
+export function botLabel(name: string): string {
+  const file = cfrFile(name);
+  if (file === null) return name;
+  const base = basename(file)
+    .replace(/\.gz$/, '')
+    .replace(/\.mlcs$/, '');
+  return `cfr-${base}`;
+}
+
 export async function prepareBots(names: readonly string[]): Promise<void> {
-  if (names.includes('cfr') && cfrModel === null) {
-    cfrModel = await loadCfrModel();
+  for (const name of names) {
+    if (cfrModels.has(name)) continue;
+    const file = cfrFile(name);
+    if (name === SHIPPED) cfrModels.set(name, await loadCfrModel());
+    else if (file !== null) cfrModels.set(name, await loadCfrModel(file));
   }
 }
