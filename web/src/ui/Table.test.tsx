@@ -6,10 +6,16 @@ import { Table } from './Table.tsx';
 afterEach(cleanup);
 
 function table(vm = viewModel(), phase: 'humanToAct' | 'botThinking' | 'handOver' = 'humanToAct') {
-  return render(
-    <Table vm={vm} phase={phase} humanSeat={0} log={[]} onAct={vi.fn()} onNextHand={vi.fn()} />,
-  );
+  return render(<Table vm={vm} phase={phase} humanSeat={0} onAct={vi.fn()} onNextHand={vi.fn()} />);
 }
+
+describe('Table layout', () => {
+  it('keeps the coach slot and holds no hand log', () => {
+    const { container } = table();
+    expect(screen.getByTestId('coach')).not.toBeNull();
+    expect(container.querySelector('[data-testid="hand-log"]')).toBeNull();
+  });
+});
 
 describe('Table result and announcements', () => {
   it('shows the won amount and hides the pot while a result is shown', () => {
@@ -93,7 +99,6 @@ describe('Table result and announcements', () => {
         vm={fixtureResult()}
         phase="handOver"
         humanSeat={0}
-        log={[]}
         autoNextMs={2000}
         onAct={vi.fn()}
         onNextHand={vi.fn()}
@@ -123,14 +128,7 @@ describe('Table result and announcements', () => {
     flop.seats[0].lastAction = { key: 'bet', params: { amount: 80 } };
     flop.seats[1].lastAction = null;
     const view = render(
-      <Table
-        vm={flop}
-        phase="botThinking"
-        humanSeat={0}
-        log={[]}
-        onAct={vi.fn()}
-        onNextHand={vi.fn()}
-      />,
+      <Table vm={flop} phase="botThinking" humanSeat={0} onAct={vi.fn()} onNextHand={vi.fn()} />,
     );
     const turn = viewModel({ enabled: false });
     turn.board = [48, 41, 25, 10];
@@ -141,14 +139,7 @@ describe('Table result and announcements', () => {
     turn.seats[0].closingAction = { key: 'bet', params: { amount: 80 } };
     turn.seats[1].closingAction = { key: 'call', params: { amount: 80 } };
     view.rerender(
-      <Table
-        vm={turn}
-        phase="botThinking"
-        humanSeat={0}
-        log={[]}
-        onAct={vi.fn()}
-        onNextHand={vi.fn()}
-      />,
+      <Table vm={turn} phase="botThinking" humanSeat={0} onAct={vi.fn()} onNextHand={vi.fn()} />,
     );
     expect(screen.getByTestId('action-1').textContent).toBe('Call 80');
     expect(screen.getByTestId('action-0').textContent).toBe('Bet 80');

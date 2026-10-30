@@ -1,4 +1,4 @@
-import { useEffect } from 'preact/hooks';
+import { useEffect, useRef } from 'preact/hooks';
 import type { LogEntry, SeatIndex } from '../game/index.ts';
 import { groupHand } from './handLog.ts';
 import type { StreetGroup } from './handLog.ts';
@@ -68,6 +68,8 @@ function handNumber(entries: LogEntry[]): number | string {
 }
 
 export function HandLogDrawer({ entries, names, humanSeat, onClose }: HandLogDrawerProps) {
+  const closeButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => closeButton.current?.focus(), []);
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -86,6 +88,7 @@ export function HandLogDrawer({ entries, names, humanSeat, onClose }: HandLogDra
           <button
             type="button"
             class="hand-log-close"
+            ref={closeButton}
             data-testid="hand-log-close"
             aria-label={t('log.close')}
             onClick={onClose}

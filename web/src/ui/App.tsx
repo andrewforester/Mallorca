@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { toViewModel } from '../game/index.ts';
 import type { HandStore, Intent, Phase, Session, SeatIndex, ViewModel } from '../game/index.ts';
-import { HandLog } from './HandLog.tsx';
+import { HandLogDrawer } from './HandLogDrawer.tsx';
 import { HistoryMenu } from './HistoryMenu.tsx';
 import { Scene } from './Scene.tsx';
 import { SessionOver } from './SessionOver.tsx';
@@ -32,10 +32,22 @@ function useSessionState(session: Session) {
   return state;
 }
 
+function useLogDrawer() {
+  const [open, setOpen] = useState(false);
+  const toggle = useRef<HTMLButtonElement>(null);
+  const close = useCallback(() => {
+    setOpen(false);
+    toggle.current?.focus();
+  }, []);
+  const flip = useCallback(() => (open ? close() : setOpen(true)), [open, close]);
+  return { open, toggle, close, flip };
+}
+
 export function App(props: AppProps) {
   const { session, store, humanSeat, onNewGame } = props;
   const state = useSessionState(session);
   const preferences = usePreferences();
+  const drawer = useLogDrawer();
   const vm = state.phase === 'idle' ? null : toViewModel(state, humanSeat);
   const handOver = state.phase === 'handOver' ? vm : null;
   const autoNextMs = useAutoNext(
@@ -62,26 +74,30 @@ export function App(props: AppProps) {
           vm={vm}
           canLeave={state.phase === 'handOver'}
           onLeave={() => session.getState().leave()}
+          logOpen={drawer.open}
+          logToggle={drawer.toggle}
+          onToggleLog={drawer.flip}
         >
           <HistoryMenu seed={state.seed} store={store} onNewGame={onNewGame}>
             <Settings preferences={preferences} />
-            <HandLog
-              entries={state.log}
-              names={names}
-              humanSeat={humanSeat}
-              testId="hand-log-menu"
-            />
           </HistoryMenu>
         </StatusBar>
         <Table
           vm={vm}
           phase={state.phase}
           humanSeat={humanSeat}
-          log={state.log}
           autoNextMs={autoNextMs}
           onAct={act}
           onNextHand={() => void session.getState().nextHand()}
         />
+        {drawer.open && (
+          <HandLogDrawer
+            entries={state.log}
+            names={names}
+            humanSeat={humanSeat}
+            onClose={drawer.close}
+          />
+        )}
         <GameOver props={props} vm={vm} phase={state.phase} sessionId={state.sessionId} />
       </div>
     </Scene>

@@ -134,7 +134,27 @@ describe('App', () => {
     const bets = [...document.querySelectorAll('[data-testid^="bet-"]')].length;
     expect(bets).toBeGreaterThan(0);
     expect(stacks).toBeLessThan(4000);
+    expect(screen.queryByTestId('hand-log')).toBeNull();
+    expect(screen.queryByTestId('hand-log-menu')).toBeNull();
+    session.getState().dispose();
+  });
+
+  it('opens the hand log from the status bar and returns focus on close', async () => {
+    const { session } = setup();
+    fireEvent.click(screen.getByTestId('start-tournament'));
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    const toggle = screen.getByTestId('hand-log-toggle');
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
     expect(screen.getByTestId('hand-log')).not.toBeNull();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(document.activeElement).toBe(screen.getByTestId('hand-log-close'));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByTestId('hand-log')).toBeNull());
+    expect(document.activeElement).toBe(toggle);
+    fireEvent.click(toggle);
+    fireEvent.click(screen.getByTestId('hand-log-close'));
+    expect(screen.queryByTestId('hand-log')).toBeNull();
     session.getState().dispose();
   });
 
