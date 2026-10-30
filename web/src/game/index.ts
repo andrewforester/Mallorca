@@ -20,3 +20,20 @@ export type { RaiseControl, SeatView, ViewModel } from './viewModel.ts';
 export { toViewModel } from './viewModel.ts';
 export type { HandRecord, HandStore } from './records/index.ts';
 export { memoryStore, openHandStore, toPokerStars } from './records/index.ts';
+export type {
+  ChatTurn,
+  HandInput,
+  LinePayload,
+  RemoteOptions,
+  ReplyPayload,
+  SummaryPayload,
+  TalkClient,
+  TalkReply,
+} from './talkClient.ts';
+export {
+  remoteTalkClient,
+  silentTalkClient,
+  toLinePayload,
+  toReplyPayload,
+  toSummaryPayload,
+} from './talkClient.ts';
