@@ -1,0 +1,4 @@
+{
+  "fmt": { "lineWidth": 100 },
+  "test": { "include": ["./**/*.test.ts"] }
+}
