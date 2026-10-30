@@ -200,7 +200,9 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 ## cfr
 
 - `v1.mlcs.gz` is the play file of `solver/` (`export --streets play`, strategy format 2, `v1` checkpoint 18),
-  gzipped: all four streets, the flop bucket table and the turn and river thresholds. `mallorca.wasm` is
+  gzipped: all four streets, the flop bucket table and the turn and river thresholds. Strategy format 3, written
+  for `v2` presets with `bucketing = "potential"`, carries turn and river centroids instead of thresholds and
+  buckets those streets live; the same loader reads it, and the browser still ships `v1`. `mallorca.wasm` is
   `solver/crates/wasm`, a plain `extern "C"` ABI over `mallorca-core::bot`; it imports nothing.
 - `inflate(bytes)` gunzips with `DecompressionStream` when the bytes start with the gzip magic and returns other
   bytes as they are. `createCfrModel(wasm, strategy)` instantiates the module and loads the strategy; a bad file
