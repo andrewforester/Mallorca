@@ -107,4 +107,26 @@ describe('groupHand', () => {
     expect(groups[1]?.pot).toBe(40);
     expect(groups[2]?.pot).toBe(520);
   });
+
+  it('puts the top-ups before the hand at the head of the preflop group', () => {
+    const groups = groupHand([
+      e('handStarted', { number: 1, small: 10, big: 20 }),
+      e('fold', { seat: 1 }),
+      e('toppedUp', { seat: 1, amount: 500 }),
+      START,
+      e('post', { seat: 0, amount: 10 }),
+    ]);
+    expect(groups[0]?.entries.map((x) => x.key)).toEqual(['toppedUp', 'post']);
+  });
+
+  it('keeps top-ups from earlier hands out of the current hand', () => {
+    const groups = groupHand([
+      e('toppedUp', { seat: 0, amount: 300 }),
+      e('handStarted', { number: 1, small: 10, big: 20 }),
+      e('fold', { seat: 1 }),
+      START,
+      e('post', { seat: 0, amount: 10 }),
+    ]);
+    expect(groups[0]?.entries.map((x) => x.key)).toEqual(['post']);
+  });
 });

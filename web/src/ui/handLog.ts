@@ -18,7 +18,11 @@ function lastHand(entries: LogEntry[]): LogEntry[] {
       start = index;
     }
   });
-  return entries.slice(start + 1);
+  let first = start;
+  while (first > 0 && entries[first - 1]?.key === 'toppedUp') {
+    first -= 1;
+  }
+  return [...entries.slice(first, start), ...entries.slice(start + 1)];
 }
 
 function applyChips(entry: LogEntry, totals: Map<number, number>): void {
