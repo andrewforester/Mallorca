@@ -10,11 +10,15 @@ afterEach(cleanup);
 
 function recorder() {
   const plays: Array<[Cue, number]> = [];
+  const starts: Array<[Cue, number]> = [];
   const player: SoundPlayer = {
     unlock: () => undefined,
-    play: (cue, delay = 0) => void plays.push([cue, delay]),
+    play: (cue, delay = 0) => {
+      plays.push([cue, delay]);
+      starts.push([cue, performance.now() + delay]);
+    },
   };
-  return { plays, player };
+  return { plays, starts, player };
 }
 
 function makeSession(): Session {
@@ -43,8 +47,8 @@ describe('useSoundCues', () => {
     const cues = plays.map(([cue]) => cue);
     expect(cues.slice(0, 2)).toEqual(['deal', 'chips']);
     expect(cues).toContain('turn');
-    expect(plays[0]).toEqual(['deal', 0]);
-    expect(plays[1]).toEqual(['chips', 120]);
+    expect(plays[0]?.[1]).toBeLessThan(5);
+    expect(plays[1]?.[1]).toBeGreaterThan(100);
     session.getState().dispose();
   });
 
@@ -58,6 +62,21 @@ describe('useSoundCues', () => {
     session.getState().dispose();
   });
 
+  it('schedules cues of separate updates one after another', async () => {
+    const session = makeSession();
+    const { starts, player } = recorder();
+    render(<Probe session={session} player={player} enabled />);
+    await session.getState().start(TOURNAMENT, 'math');
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    const times = starts.map(([, at]) => at);
+    for (let i = 1; i < times.length; i += 1) {
+      expect(times[i]).toBeGreaterThanOrEqual((times[i - 1] ?? 0) + 100);
+    }
+    const turn = starts.findIndex(([cue]) => cue === 'turn');
+    expect(turn).toBeGreaterThan(0);
+    session.getState().dispose();
+  });
+
   it('does not replay a log that already exists when it mounts', async () => {
     const session = makeSession();
     await session.getState().start(TOURNAMENT, 'math');
@@ -65,10 +84,13 @@ describe('useSoundCues', () => {
     const { plays, player } = recorder();
     render(<Probe session={session} player={player} enabled />);
     expect(plays).toEqual([]);
+    await session.getState().act({ kind: 'fold' });
+    await waitFor(() => expect(session.getState().phase).toBe('handOver'));
+    expect(plays.map(([cue]) => cue)).toEqual(['fold', 'win']);
     session.getState().dispose();
   });
 
-  it('plays the cues of a new session after the log shrinks', async () => {
+  it('plays a new session from its own start without replaying the old one', async () => {
     const first = makeSession();
     await first.getState().start(TOURNAMENT, 'math');
     await waitFor(() => expect(first.getState().phase).toBe('humanToAct'));

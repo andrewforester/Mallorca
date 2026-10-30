@@ -14,16 +14,22 @@ export function useSoundCues(session: Session, player: SoundPlayer, enabled: boo
     const initial = session.getState();
     let seen = initial.log.length;
     let phase = initial.phase;
+    let freeAt = 0;
     return session.subscribe((state) => {
       const previousPhase = phase;
-      const fresh = state.log.length >= seen ? state.log.slice(seen) : [];
+      const fresh = state.log.slice(seen);
       seen = state.log.length;
       phase = state.phase;
       if (!enabledRef.current) return;
       const cues = cuesFor(fresh);
       const turn = turnCue(previousPhase, state.phase);
       if (turn !== null) cues.push(turn);
-      cues.forEach((cue, i) => playerRef.current.play(cue, i * STAGGER_MS));
+      for (const cue of cues) {
+        const now = performance.now();
+        const delay = Math.max(0, freeAt - now);
+        freeAt = now + delay + STAGGER_MS;
+        playerRef.current.play(cue, delay);
+      }
     });
   }, [session]);
 }
