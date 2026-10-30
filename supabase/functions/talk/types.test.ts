@@ -125,3 +125,19 @@ Deno.test("drops unknown fields", () => {
   assert(req !== null);
   assertEquals("extra" in req, false);
 });
+
+Deno.test("rejects an empty or blank recent line", () => {
+  const line = fixture("line");
+  assertEquals(parseRequest({ ...line, recent: [{ speaker: "player", text: "" }] }), null);
+  assertEquals(parseRequest({ ...line, recent: [{ speaker: "mallorca", text: " \n " }] }), null);
+});
+
+Deno.test("rejects a locale with spaces or punctuation", () => {
+  const line = fixture("line");
+  for (const locale of ["e n", "en!", "en_US", "ru;drop", "en-", "12", "en-US-x"]) {
+    assertEquals(parseRequest({ ...line, locale }), null, locale);
+  }
+  for (const locale of ["en", "ru", "pt-BR", "zh-Hant", "fil"]) {
+    assert(parseRequest({ ...line, locale }) !== null, locale);
+  }
+});

@@ -98,6 +98,7 @@ export const LIMITS = {
 } as const;
 
 const CARD = /^[2-9TJQKA][cdhs]$/;
+const LOCALE = /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})?$/;
 
 type Json = Record<string, unknown>;
 
@@ -156,7 +157,7 @@ function parseRecentLine(value: unknown): RecentLine | null {
   if (!isRecord(value)) return null;
   const { speaker, text } = value;
   if (speaker !== "mallorca" && speaker !== "player") return null;
-  if (!isText(text, 0, LIMITS.recentText)) return null;
+  if (!isText(text, 1, LIMITS.recentText) || text.trim().length === 0) return null;
   return { speaker, text };
 }
 
@@ -189,7 +190,7 @@ function parseSummary(value: unknown): SessionSummary | null {
 function parseEnvelope(body: Json): Envelope | null {
   const { sessionId, locale } = body;
   if (!isText(sessionId, 1, LIMITS.sessionId)) return null;
-  if (!isText(locale, LIMITS.localeMin, LIMITS.localeMax)) return null;
+  if (!isText(locale, LIMITS.localeMin, LIMITS.localeMax) || !LOCALE.test(locale)) return null;
   return { sessionId, locale };
 }
 
