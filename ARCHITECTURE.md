@@ -41,19 +41,21 @@ web/src/
   engine/   heads-up NLHE rules as a pure reducer, table with a mode and its rules, hand history
   brains/   port of the Mallorca math bot
   cfr/      the CFR bot: the WASM module, the strategy file and a Brain over them
+  talk/     table talk: hand-strength class, tells, mood and the style it maps to
   game/     session store, turn loop, bot worker client, view-model, hand records
   ui/       Preact components, layout, tokens, i18n
 ```
 
-| Layer    | May import from                              |
-| -------- | -------------------------------------------- |
-| `cards`  | nothing                                      |
-| `equity` | `cards`                                      |
-| `engine` | `cards`, `equity`                            |
-| `brains` | `cards`, `equity`, `engine`                  |
-| `cfr`    | `cards`, types from `engine`, `brains`       |
-| `game`   | `cards`, `equity`, `engine`, `brains`, `cfr` |
-| `ui`     | `game`                                       |
+| Layer    | May import from                                      |
+| -------- | ---------------------------------------------------- |
+| `cards`  | nothing                                              |
+| `equity` | `cards`                                              |
+| `engine` | `cards`, `equity`                                    |
+| `brains` | `cards`, `equity`, `engine`                          |
+| `cfr`    | `cards`, types from `engine`, `brains`               |
+| `talk`   | `cards`, `equity`, types from `engine`               |
+| `game`   | `cards`, `equity`, `engine`, `brains`, `cfr`, `talk` |
+| `ui`     | `game`                                               |
 
 `brains` takes only types from `engine`: `Action`, `LegalActions` and the events it turns into observations.
 `ui` imports only from `game`; for the table, `game` re-exports `Card`, `formatCard`, `rankOf`, `suitOf`,
@@ -61,12 +63,12 @@ web/src/
 `HandStore`, `openHandStore`, `memoryStore` and `toPokerStars`.
 
 ESLint enforces the table with a `@typescript-eslint/no-restricted-imports` rule per directory. For `brains` the
-rule sets `allowTypeImports` on `engine`; the tests in `brains` (`*.test.ts`) may also import `engine` code to
+rule sets `allowTypeImports` on `engine`; the tests in `brains` and `talk` (`*.test.ts`) may also import `engine` code to
 build events. `import-x/no-cycle` forbids import cycles inside `src`.
 
 ### Purity
 
-`cards`, `equity`, `engine`, `brains` and `cfr` use no DOM, no `Math.random`, no `Date` and no `performance`. ESLint
+`cards`, `equity`, `engine`, `brains`, `cfr` and `talk` use no DOM, no `Math.random`, no `Date` and no `performance`. ESLint
 enforces it with `no-restricted-globals` and `no-restricted-properties`. Randomness enters as an `Rng` argument.
 
 ## cards
