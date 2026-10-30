@@ -444,4 +444,22 @@ mod tests {
         let centroids = kmeans(&points, 2, &[1, 1, 1], 3, Metric::L2, 3, 1);
         assert_eq!(centroids, vec![0.0, 0.4, 0.3, 0.3, 0.9, 0.9]);
     }
+
+    #[test]
+    fn an_emptied_cluster_is_reseeded_with_the_farthest_point() {
+        let points = [8.0f32, 5.0, 4.0, 14.0, 12.0, 7.0];
+        let weights = [28u32, 2, 5, 30, 20, 23];
+        let expected = [30.0f32 / 7.0, 385.0 / 51.0, 13.2];
+        let one = kmeans(&points, 1, &weights, 3, Metric::L2, 2, 1);
+        let four = kmeans(&points, 1, &weights, 3, Metric::L2, 2, 4);
+        assert_eq!(one, four);
+        assert_eq!(one.len(), 3);
+        for (got, want) in one.iter().zip(expected) {
+            assert!((got - want).abs() < 1e-5, "{one:?}");
+        }
+        let labels = assign(&points, 1, &one, Metric::L2, 4);
+        assert_eq!(labels, assign(&points, 1, &one, Metric::L2, 1));
+        assert!(labels.iter().all(|&l| l < 3));
+        assert_eq!(labels, vec![1, 0, 0, 2, 2, 1]);
+    }
 }
