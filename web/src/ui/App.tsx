@@ -59,7 +59,7 @@ export function App(props: AppProps) {
   const autoNextMs = useAutoNext(
     session,
     handOver,
-    (props.autoNext ?? true) && preferences.autoNext,
+    (props.autoNext ?? true) && preferences.autoNext && !drawer.open,
   );
   if (vm === null) {
     return (

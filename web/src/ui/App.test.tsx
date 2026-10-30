@@ -78,6 +78,21 @@ describe('App auto next hand', () => {
     session.getState().dispose();
   });
 
+  it('pauses while the hand log is open and resumes when it closes', async () => {
+    localStorage.clear();
+    const { session } = setup();
+    await foldFirstHand(session);
+    fireEvent.click(screen.getByTestId('hand-log-toggle'));
+    await pause(1300);
+    expect(session.getState().phase).toBe('handOver');
+    expect(screen.getByTestId('hand-number').textContent).toBe('Hand 1');
+    fireEvent.click(screen.getByTestId('hand-log-close'));
+    await waitFor(() => expect(screen.getByTestId('hand-number').textContent).toBe('Hand 2'), {
+      timeout: 2500,
+    });
+    session.getState().dispose();
+  });
+
   it('stays put when the page turns auto next hand off', async () => {
     localStorage.clear();
     const { session } = setup(TOURNAMENT, memoryStore(), false);
