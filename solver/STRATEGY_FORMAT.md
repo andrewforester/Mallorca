@@ -1,4 +1,4 @@
-# Strategy file format, versions 1 and 2
+# Strategy file format, versions 1, 2 and 3
 
 The contract between the trainer (`mallorca-trainer export`) and the browser bot. Everything is little-endian. The
 reference implementation is `crates/core/src/strategy.rs`; the bot reader is written from this file.
@@ -8,7 +8,7 @@ reference implementation is `crates/core/src/strategy.rs`; the bot reader is wri
 | Offset | Size | Field | Meaning |
 | --- | --- | --- | --- |
 | 0 | 4 | `magic` | ASCII `MLCS` |
-| 4 | 2 | `format_version` | u16, `1` or `2`. A reader rejects any other value |
+| 4 | 2 | `format_version` | u16, `1`, `2` or `3`. A reader rejects any other value |
 | 6 | 32 | `fingerprint` | SHA-256 over the abstraction part of the preset, the serialized tree and the bucket tables of the training run |
 | 38 | 4 | `small_blind` | u32 |
 | 42 | 4 | `big_blind` | u32 |
@@ -80,6 +80,43 @@ strength over the 46 river cards, summed in card order on the canonical represen
 checks on every class that the thresholds reproduce the tables before it writes the file. The flop always uses a
 table. A file that holds no thresholds is written as version 1.
 
+## Buckets in version 3
+
+Version 3 is the potential-aware play file: the turn and river buckets are the nearest of a set of centroids to a
+feature the bot computes live, so the browser loads neither the turn nor the river table. Everything else is as in
+version 2: each included postflop street, in street order, starts with a kind byte, and kinds 0 and 1 keep their
+meaning. Version 3 adds kind 2:
+
+```
+kind 2, centroids:   count u16, dimension u16, count x dimension f32
+                     on the river only, followed by clusters 169 bytes
+```
+
+- `count` equals the street's bucket count from the tree; centroid `i` is bucket `i`, its `dimension` values stored
+  one after another.
+- `dimension` is 50 on the turn and 8 on the river. Kind 2 is allowed on the turn and the river only.
+- Every value is finite.
+- `clusters` follows the river centroid section and appears exactly once in the file, only when the river uses
+  kind 2. It maps each of the 169 preflop classes (the preflop class index of the opponent's hole cards) to an
+  opponent cluster; every byte is below 8.
+
+The bucket of a hand on a kind 2 street:
+
+- Turn: for each of the 46 live river cards, in card order, the river hand strength of the hole cards on the five
+  card board (the version 2 river strength: wins plus half the ties against the 990 live opponent holes, divided by
+  990, in `f32`) falls into bin `min(floor(hs * 50), 49)`. The feature is the 50 bin counts divided by 46, in `f32`.
+  The bucket is the centroid with the smallest earth mover's distance to it: running sums `a` and `b` over the bins
+  in order, distance the sum of `|a - b|`, in `f32`.
+- River: the feature is the opponent cluster hand strength. For each cluster `k` in 0 to 7, over the live opponent
+  holes whose preflop class maps to `k`, the wins plus half the ties of the hole cards against them, divided by
+  their number, in `f32`; a cluster with no live hole gives 0.5. The bucket is the centroid with the smallest
+  squared Euclidean distance to it, in `f32`.
+- Ties between centroids go to the lower bucket. The reference implementation is `mallorca-core::potential`
+  (`turn_counts`, `histogram`, `ochs_live`, `nearest`).
+
+A file is written as version 3 if and only if it holds a centroid section; a file without one is written exactly as
+in version 1 or 2.
+
 ## Probabilities
 
 Walk the tree nodes in id order. For every decision node whose street is included in `streets`, write one block for
@@ -95,7 +132,10 @@ the node's action order. Decision nodes of excluded streets contribute nothing.
 
 ## Validity
 
-A reader rejects the file when: the magic differs, the version is not 1 or 2, a version 2 bucket kind is not 0 or 1,
-a thresholds block has the wrong count or a value that is not finite or smaller than the one before, the data ends inside the header, tree or
+A reader rejects the file when: the magic differs, the version is not 1, 2 or 3, a version 2 bucket kind is not 0 or
+1, a version 3 bucket kind is not 0, 1 or 2, a version 3 file holds no centroid section, a thresholds block has the
+wrong count or a value that is not finite or smaller than the one before, a centroid section sits on the flop, has a
+count other than the street's bucket count, a dimension other than 50 on the turn or 8 on the river, or a value that
+is not finite, the river cluster map is short or holds a byte of 8 or more, the data ends inside the header, tree or
 bucket section, `streets` lacks bit 0 or sets a bit above bit 3, the tree does not deserialize, a table has the
 wrong length or the bucket section has leftover bytes, or the probabilities length differs from the total above.

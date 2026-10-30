@@ -1,7 +1,8 @@
 use crate::cards::Card;
 use crate::eval::rank;
 use crate::iso::{street_indexers, HandIndexer};
-use crate::strategy::{StrategyError, StrategyFile};
+use crate::potential::{histogram, nearest, ochs_live, turn_counts, Metric};
+use crate::strategy::{centroid_dimension, StrategyError, StrategyFile};
 use crate::strength::{bucket_of, percentile_thresholds, river_hs, turn_value};
 use crate::tree::Street;
 use std::fmt;
@@ -182,6 +183,11 @@ pub(crate) fn aggregate_squares(
 pub enum BucketSource {
     Table(Vec<u8>),
     Thresholds(Vec<f32>),
+    Centroids {
+        centroids: Vec<f32>,
+        dimension: usize,
+        clusters: [u8; 169],
+    },
 }
 
 pub struct Abstraction {
@@ -210,10 +216,11 @@ impl Abstraction {
             if !file.includes(street) {
                 return Err(StrategyError::MissingStreet(street));
             }
-            *slot = match file.thresholds_of(street) {
-                Some(t) if street != Street::Flop => BucketSource::Thresholds(t.to_vec()),
-                Some(_) => return Err(StrategyError::MissingStreet(street)),
-                None => BucketSource::Table(
+            *slot = match (file.centroids_of(street), file.thresholds_of(street)) {
+                (Some(c), _) => centroid_source(file, street, c)?,
+                (None, Some(t)) if street != Street::Flop => BucketSource::Thresholds(t.to_vec()),
+                (None, Some(_)) => return Err(StrategyError::MissingStreet(street)),
+                (None, None) => BucketSource::Table(
                     next.next()
                         .ok_or(StrategyError::MissingStreet(street))?
                         .clone(),
@@ -254,6 +261,11 @@ impl Abstraction {
                 u16::from(table[index as usize])
             }
             BucketSource::Thresholds(t) => bucket_of(t, live_value(street, hole, board)),
+            BucketSource::Centroids {
+                centroids,
+                dimension,
+                clusters,
+            } => nearest_centroid(street, hole, board, centroids, *dimension, clusters),
         }
     }
 
@@ -264,7 +276,7 @@ impl Abstraction {
     pub fn table_bytes(&self, street: Street) -> &[u8] {
         match &self.sources[street.as_index() - 1] {
             BucketSource::Table(table) => table,
-            BucketSource::Thresholds(_) => panic!("the {street:?} has thresholds, not a table"),
+            _ => panic!("the {street:?} is bucketed live, it has no table"),
         }
     }
 }
@@ -272,6 +284,51 @@ impl Abstraction {
 impl Default for BucketSource {
     fn default() -> BucketSource {
         BucketSource::Table(Vec::new())
+    }
+}
+
+fn centroid_source(
+    file: &StrategyFile,
+    street: Street,
+    centroids: &[f32],
+) -> Result<BucketSource, StrategyError> {
+    let dimension = centroid_dimension(street).ok_or(StrategyError::MissingStreet(street))?;
+    let buckets = usize::from(file.tree.buckets()[street.as_index()]);
+    if centroids.len() != buckets * dimension {
+        return Err(StrategyError::Inconsistent);
+    }
+    let clusters = match (street, file.clusters) {
+        (_, Some(clusters)) => clusters,
+        (Street::River, None) => return Err(StrategyError::Inconsistent),
+        (_, None) => [0; 169],
+    };
+    Ok(BucketSource::Centroids {
+        centroids: centroids.to_vec(),
+        dimension,
+        clusters,
+    })
+}
+
+fn nearest_centroid(
+    street: Street,
+    hole: [Card; 2],
+    board: &[Card],
+    centroids: &[f32],
+    dimension: usize,
+    clusters: &[u8; 169],
+) -> u16 {
+    match street {
+        Street::Turn => {
+            let board: &[Card; 4] = board.try_into().expect("four board cards");
+            let feature = histogram(&turn_counts(hole, board, river_hs));
+            nearest(Metric::Emd, centroids, dimension, &feature)
+        }
+        Street::River => {
+            let board: &[Card; 5] = board.try_into().expect("five board cards");
+            let feature = ochs_live(hole, board, clusters);
+            nearest(Metric::L2, centroids, dimension, &feature)
+        }
+        _ => panic!("no centroids on the {street:?}"),
     }
 }
 
@@ -288,6 +345,7 @@ mod tests {
     use super::*;
     use crate::cards::parse_cards;
     use crate::iso::board_indexer;
+    use crate::potential::{BINS, CLUSTERS};
     use crate::rng::Rng;
     use std::collections::HashMap;
 
@@ -522,6 +580,174 @@ mod tests {
         expected /= 46.0;
         let got = aggregate_hs2(&indexers, Street::Turn, turn_index, &next);
         assert!((got - expected).abs() < 1e-6, "{got} vs {expected}");
+    }
+
+    fn turn_centroids() -> Vec<f32> {
+        let mut out = Vec::new();
+        for peak in [3usize, 15, 30, 45] {
+            let mut h = [0.0f32; BINS];
+            h[peak] = 0.6;
+            h[(peak + 4).min(BINS - 1)] += 0.4;
+            out.extend_from_slice(&h);
+        }
+        out
+    }
+
+    fn river_centroids() -> Vec<f32> {
+        (0..5)
+            .flat_map(|k| (0..CLUSTERS).map(move |c| ((k * 3 + c * 7) % 11) as f32 / 10.0))
+            .collect()
+    }
+
+    fn opponent_clusters() -> [u8; 169] {
+        std::array::from_fn(|i| (i * 3 % CLUSTERS) as u8)
+    }
+
+    fn centroid_abstraction() -> Abstraction {
+        Abstraction::with_sources([
+            BucketSource::Table(Vec::new()),
+            BucketSource::Centroids {
+                centroids: turn_centroids(),
+                dimension: BINS,
+                clusters: opponent_clusters(),
+            },
+            BucketSource::Centroids {
+                centroids: river_centroids(),
+                dimension: CLUSTERS,
+                clusters: opponent_clusters(),
+            },
+        ])
+    }
+
+    #[test]
+    fn centroid_source_matches_nearest_of_live_feature() {
+        let abstraction = centroid_abstraction();
+        let mut rng = Rng::new(808);
+        let mut turn_seen = std::collections::HashSet::new();
+        let mut river_seen = std::collections::HashSet::new();
+        for _ in 0..40 {
+            let cards = deal(&mut rng, 7);
+            let hole = [cards[0], cards[1]];
+            let turn: [Card; 4] = cards[2..6].try_into().unwrap();
+            let river: [Card; 5] = cards[2..7].try_into().unwrap();
+            let feature = histogram(&turn_counts(hole, &turn, river_hs));
+            let expected = nearest(Metric::Emd, &turn_centroids(), BINS, &feature);
+            let got = abstraction.bucket(Street::Turn, hole, &turn);
+            assert_eq!(got, expected);
+            turn_seen.insert(got);
+            let feature = ochs_live(hole, &river, &opponent_clusters());
+            let expected = nearest(Metric::L2, &river_centroids(), CLUSTERS, &feature);
+            let got = abstraction.bucket(Street::River, hole, &river);
+            assert_eq!(got, expected);
+            river_seen.insert(got);
+        }
+        assert!(turn_seen.len() > 1, "{turn_seen:?}");
+        assert!(river_seen.len() > 1, "{river_seen:?}");
+    }
+
+    fn tiny_file() -> StrategyFile {
+        use crate::preset::Preset;
+        use crate::strategy::StrategyHeader;
+        use crate::tree::Tree;
+        let preset = Preset::from_toml(include_str!("../../../presets/tiny.toml")).unwrap();
+        let header = StrategyHeader {
+            fingerprint: [0; 32],
+            small_blind: preset.small_blind,
+            big_blind: preset.big_blind,
+            stack: preset.stack,
+            streets: 0b1111,
+            iterations: 0,
+            checkpoint: 0,
+        };
+        let flop = (0..1_286_792).map(|i| (i % 8) as u8).collect();
+        StrategyFile::new(header, Tree::build(&preset), vec![flop], Vec::new())
+    }
+
+    fn eight(centroids: &[f32], dimension: usize) -> Vec<f32> {
+        centroids
+            .iter()
+            .cycle()
+            .take(8 * dimension)
+            .copied()
+            .collect()
+    }
+
+    #[test]
+    fn from_strategy_accepts_centroids_on_turn_and_river() {
+        let turn = eight(&turn_centroids(), BINS);
+        let river = eight(&river_centroids(), CLUSTERS);
+        let file = tiny_file().with_centroids(
+            vec![(Street::Turn, turn.clone()), (Street::River, river.clone())],
+            opponent_clusters(),
+        );
+        let abstraction = Abstraction::from_strategy(&file).unwrap();
+        let expected = Abstraction::with_sources([
+            BucketSource::Table(Vec::new()),
+            BucketSource::Centroids {
+                centroids: turn,
+                dimension: BINS,
+                clusters: opponent_clusters(),
+            },
+            BucketSource::Centroids {
+                centroids: river,
+                dimension: CLUSTERS,
+                clusters: opponent_clusters(),
+            },
+        ]);
+        assert_eq!(abstraction.sources[1], expected.sources[1]);
+        assert_eq!(abstraction.sources[2], expected.sources[2]);
+        let mut rng = Rng::new(9);
+        for _ in 0..10 {
+            let cards = deal(&mut rng, 7);
+            let hole = [cards[0], cards[1]];
+            assert_eq!(
+                abstraction.bucket(Street::River, hole, &cards[2..7]),
+                expected.bucket(Street::River, hole, &cards[2..7])
+            );
+        }
+    }
+
+    #[test]
+    fn from_strategy_refuses_flop_centroids() {
+        let file = tiny_file().with_centroids(
+            vec![(Street::Flop, eight(&turn_centroids(), BINS))],
+            opponent_clusters(),
+        );
+        assert_eq!(
+            Abstraction::from_strategy(&file).err(),
+            Some(StrategyError::MissingStreet(Street::Flop))
+        );
+    }
+
+    #[test]
+    fn from_strategy_refuses_centroids_of_the_wrong_size() {
+        let file = tiny_file().with_centroids(
+            vec![
+                (Street::Turn, eight(&turn_centroids(), BINS)),
+                (Street::River, river_centroids()),
+            ],
+            opponent_clusters(),
+        );
+        assert_eq!(
+            Abstraction::from_strategy(&file).err(),
+            Some(StrategyError::Inconsistent)
+        );
+    }
+
+    #[test]
+    fn from_strategy_needs_the_cluster_map_for_river_centroids() {
+        let mut file = tiny_file().with_centroids(
+            vec![
+                (Street::Turn, eight(&turn_centroids(), BINS)),
+                (Street::River, eight(&river_centroids(), CLUSTERS)),
+            ],
+            opponent_clusters(),
+        );
+        file.clusters = None;
+        assert_eq!(
+            Abstraction::from_strategy(&file).err(),
+            Some(StrategyError::Inconsistent)
+        );
     }
 
     #[test]
