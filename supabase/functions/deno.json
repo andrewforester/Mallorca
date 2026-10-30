@@ -1,4 +1,8 @@
 {
   "fmt": { "lineWidth": 100 },
-  "test": { "include": ["./**/*.test.ts"] }
+  "test": { "include": ["./**/*.test.ts"] },
+  "imports": {
+    "@anthropic-ai/sdk": "npm:@anthropic-ai/sdk@0.65",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2"
+  }
 }

@@ -1,0 +1,216 @@
+import { assert, assertEquals } from "../_shared/testing.ts";
+import { FALLBACK_LINES } from "./filter.ts";
+import { handle } from "./handler.ts";
+import type { Deps } from "./handler.ts";
+import { fixture } from "./fixtures/fixtures.ts";
+
+type Input = Parameters<Deps["complete"]>[0];
+
+interface Fake {
+  deps: Deps;
+  inputs: Input[];
+  saved: { speaker: string; text: string }[][];
+  facts: string[][];
+  consumed: number;
+}
+
+interface Options {
+  user?: string | null;
+  allow?: number;
+  texts?: (string | Error)[];
+  signals?: unknown;
+  facts?: unknown;
+}
+
+function fake(options: Options = {}): Fake {
+  const state: Fake = {
+    deps: null as unknown as Deps,
+    inputs: [],
+    saved: [],
+    facts: [],
+    consumed: 0,
+  };
+  const texts = [...(options.texts ?? ["Nice try, friend."])];
+  const allow = options.allow ?? Infinity;
+  state.deps = {
+    userId: () => Promise.resolve(options.user === undefined ? "u1" : options.user),
+    consume: () => Promise.resolve(state.consumed++ < allow),
+    memories: () => Promise.resolve(["Likes to bluff."]),
+    saveLines: (_user, _session, lines) => {
+      state.saved.push(lines);
+      return Promise.resolve();
+    },
+    saveFacts: (_user, facts) => {
+      state.facts.push(facts);
+      return Promise.resolve();
+    },
+    complete: (input) => {
+      state.inputs.push(input);
+      if (input.tool?.name === "signals") {
+        if (options.signals instanceof Error) return Promise.reject(options.signals);
+        return Promise.resolve({ text: "", toolInput: options.signals ?? { signals: [] } });
+      }
+      if (input.tool?.name === "facts") {
+        return Promise.resolve({ text: "", toolInput: options.facts ?? { facts: [] } });
+      }
+      const next = texts.length > 1 ? texts.shift()! : texts[0];
+      return next instanceof Error
+        ? Promise.reject(next)
+        : Promise.resolve({ text: next, toolInput: undefined });
+    },
+  };
+  return state;
+}
+
+const post = (body: unknown, raw?: string): Request =>
+  new Request("https://f.example/talk", {
+    method: "POST",
+    headers: { authorization: "Bearer t" },
+    body: raw ?? JSON.stringify(body),
+  });
+
+const json = async (res: Response): Promise<Record<string, unknown>> => await res.json();
+
+Deno.test("no user answers 401 and calls nothing", async () => {
+  const f = fake({ user: null });
+  const res = await handle(post(fixture("line")), f.deps);
+  assertEquals(res.status, 401);
+  assertEquals(f.inputs.length, 0);
+  assertEquals(f.consumed, 0);
+});
+
+Deno.test("a bad body answers 400", async () => {
+  const f = fake();
+  assertEquals((await handle(post(null, "not json"), f.deps)).status, 400);
+  assertEquals((await handle(post({ kind: "line" }), f.deps)).status, 400);
+  assertEquals(f.inputs.length, 0);
+});
+
+Deno.test("a body over 16 KB answers 413 before parsing", async () => {
+  const f = fake();
+  const res = await handle(post(null, "x".repeat(16 * 1024 + 1)), f.deps);
+  assertEquals(res.status, 413);
+  assertEquals(f.consumed, 0);
+});
+
+Deno.test("only POST is accepted", async () => {
+  const f = fake();
+  const res = await handle(new Request("https://f.example/talk", { method: "GET" }), f.deps);
+  assertEquals(res.status, 405);
+});
+
+Deno.test("over the limit answers 429 silent without a model call", async () => {
+  const f = fake({ allow: 0 });
+  const res = await handle(post(fixture("line")), f.deps);
+  assertEquals(res.status, 429);
+  assertEquals(await json(res), { silent: true });
+  assertEquals(f.inputs.length, 0);
+});
+
+Deno.test("a line answers its text and saves it", async () => {
+  const f = fake({ texts: ["  Your move.  "] });
+  const res = await handle(post(fixture("line")), f.deps);
+  assertEquals(res.status, 200);
+  assertEquals(await json(res), { text: "Your move." });
+  assertEquals(f.inputs.length, 1);
+  assertEquals(f.inputs[0].tool, undefined);
+  assertEquals(f.saved, [[{ speaker: "mallorca", text: "Your move." }]]);
+  assertEquals(f.consumed, 1);
+});
+
+Deno.test("a reply returns signals from the tool input and saves both speakers", async () => {
+  const f = fake({ signals: { signals: ["tease", "bogus"] } });
+  const body = fixture("reply");
+  const res = await handle(post(body), f.deps);
+  assertEquals(res.status, 200);
+  assertEquals(await json(res), { text: "Nice try, friend.", signals: ["tease"] });
+  assertEquals(f.inputs.length, 2);
+  assertEquals(f.inputs.filter((i) => i.tool?.name === "signals").length, 1);
+  assertEquals(f.consumed, 2);
+  assertEquals(f.saved, [[
+    { speaker: "player", text: (body.text as string).trim() },
+    { speaker: "mallorca", text: "Nice try, friend." },
+  ]]);
+});
+
+Deno.test("a failed signals call still answers the text with no signals", async () => {
+  const f = fake({ signals: new Error("boom") });
+  const res = await handle(post(fixture("reply")), f.deps);
+  assertEquals(res.status, 200);
+  assertEquals(await json(res), { text: "Nice try, friend.", signals: [] });
+});
+
+Deno.test("a failed text call answers 502", async () => {
+  const f = fake({ texts: [new Error("down")] });
+  assertEquals((await handle(post(fixture("line")), f.deps)).status, 502);
+  assertEquals(
+    (await handle(post(fixture("reply")), fake({ texts: [new Error("x")] }).deps)).status,
+    502,
+  );
+  assertEquals(f.saved.length, 0);
+});
+
+Deno.test("an empty model text answers 502", async () => {
+  const f = fake({ texts: ["   "] });
+  assertEquals((await handle(post(fixture("line")), f.deps)).status, 502);
+});
+
+const her = (fixture("line").facts as { her: string[] }).her;
+const leak = `I hold the ${her[0]} and ${her[1]} for sure.`;
+
+Deno.test("a leak then a clean text returns the clean text after two calls", async () => {
+  assert(her !== null);
+  const f = fake({ texts: [leak, "Clean line."] });
+  const res = await handle(post(fixture("line")), f.deps);
+  assertEquals(await json(res), { text: "Clean line." });
+  assertEquals(f.inputs.length, 2);
+  assert(f.inputs[1].system[1].text !== f.inputs[0].system[1].text);
+  assertEquals(f.consumed, 2);
+  assertEquals(f.saved, [[{ speaker: "mallorca", text: "Clean line." }]]);
+});
+
+Deno.test("two leaks answer a fallback line", async () => {
+  const f = fake({ texts: [leak, leak] });
+  const res = await handle(post(fixture("line")), f.deps);
+  const { text } = await json(res);
+  assert(FALLBACK_LINES.includes(text as string));
+  assertEquals(f.inputs.length, 2);
+});
+
+Deno.test("a retry refused by consume answers a fallback line", async () => {
+  const f = fake({ texts: [leak, "Clean line."], allow: 1 });
+  const res = await handle(post(fixture("line")), f.deps);
+  assertEquals(res.status, 200);
+  const { text } = await json(res);
+  assert(FALLBACK_LINES.includes(text as string));
+  assertEquals(f.inputs.length, 1);
+});
+
+Deno.test("a reply costs two calls and a leak retry one more", async () => {
+  const f = fake({ texts: [leak, "Clean line."] });
+  await handle(post(fixture("reply")), f.deps);
+  assertEquals(f.consumed, 3);
+});
+
+Deno.test("a summary forces the facts tool, caps at three and saves", async () => {
+  const f = fake({ facts: { facts: ["a", "b", "c", "d"] } });
+  const res = await handle(post(fixture("summary")), f.deps);
+  assertEquals(res.status, 200);
+  assertEquals(await json(res), { facts: ["a", "b", "c"] });
+  assertEquals(f.inputs[0].tool?.name, "facts");
+  assertEquals(f.facts, [["a", "b", "c"]]);
+  assertEquals(f.consumed, 1);
+});
+
+Deno.test("a summary with no facts saves nothing", async () => {
+  const f = fake();
+  const res = await handle(post(fixture("summary")), f.deps);
+  assertEquals(await json(res), { facts: [] });
+  assertEquals(f.facts.length, 0);
+});
+
+Deno.test("a summary over the limit answers 429 silent", async () => {
+  const f = fake({ allow: 0 });
+  const res = await handle(post(fixture("summary")), f.deps);
+  assertEquals(res.status, 429);
+});
