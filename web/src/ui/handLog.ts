@@ -34,12 +34,8 @@ function applyChips(entry: LogEntry, totals: Map<number, number>): void {
   }
 }
 
-function sum(totals: Map<number, number>): number {
-  let total = 0;
-  for (const value of totals.values()) {
-    total += value;
-  }
-  return total;
+function matched(totals: Map<number, number>): number {
+  return 2 * Math.min(totals.get(0) ?? 0, totals.get(1) ?? 0);
 }
 
 export function groupHand(entries: LogEntry[]): StreetGroup[] {
@@ -47,7 +43,7 @@ export function groupHand(entries: LogEntry[]): StreetGroup[] {
   let totals = new Map<number, number>();
   let pot = 0;
   const open = (street: StreetName, cards: string[]): void => {
-    pot += sum(totals);
+    pot += matched(totals);
     totals = new Map();
     groups.push({ street, cards, pot, entries: [] });
   };

@@ -65,4 +65,46 @@ describe('groupHand', () => {
     expect(last?.pot).toBe(40);
     expect(last?.entries.map((x) => x.key)).toEqual(['show', 'show', 'win']);
   });
+
+  it('counts only matched chips into the pot after an all-in with unequal stacks', () => {
+    const groups = groupHand([
+      START,
+      e('post', { seat: 0, amount: 10 }),
+      e('post', { seat: 1, amount: 20 }),
+      e('raise', { seat: 0, amount: 1000 }),
+      e('call', { seat: 1, amount: 380 }),
+      e('allIn', { seat: 1 }),
+      e('flop', { cards: 'As Td 3h' }),
+      e('turn', { cards: '2c' }),
+      e('river', { cards: 'Kc' }),
+      e('show', { seat: 0, cards: 'Ah Ad', category: 'pair' }),
+      e('show', { seat: 1, cards: 'Qh Qd', category: 'pair' }),
+      e('returned', { seat: 0, amount: 600 }),
+      e('win', { seat: 0, amount: 800 }),
+    ]);
+    expect(groups.map((g) => [g.street, g.pot])).toEqual([
+      ['preflop', 0],
+      ['flop', 800],
+      ['turn', 800],
+      ['river', 800],
+      ['showdown', 800],
+    ]);
+  });
+
+  it('adds a postflop bet, raise and call to the next pot', () => {
+    const groups = groupHand([
+      START,
+      e('post', { seat: 0, amount: 10 }),
+      e('post', { seat: 1, amount: 20 }),
+      e('call', { seat: 0, amount: 10 }),
+      e('check', { seat: 1 }),
+      e('flop', { cards: 'As Td 3h' }),
+      e('bet', { seat: 1, amount: 80 }),
+      e('raise', { seat: 0, amount: 240 }),
+      e('call', { seat: 1, amount: 160 }),
+      e('turn', { cards: '2c' }),
+    ]);
+    expect(groups[1]?.pot).toBe(40);
+    expect(groups[2]?.pot).toBe(520);
+  });
 });
