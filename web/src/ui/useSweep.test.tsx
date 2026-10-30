@@ -48,4 +48,16 @@ describe('useSweep', () => {
     rerender({ bets: [20, 0], collected: 120 });
     expect(result.current).toEqual([20, 0]);
   });
+
+  it('splits the collected chips evenly when the closing call never rendered', () => {
+    const { result, rerender } = setup({ bets: [60, 20], collected: 0 });
+    rerender({ bets: [0, 0], collected: 120 });
+    expect(result.current).toEqual([60, 60]);
+  });
+
+  it('does not sweep when the bets drop while collected stays the same', () => {
+    const { result, rerender } = setup({ bets: [60, 20], collected: 40 });
+    rerender({ bets: [0, 0], collected: 40 });
+    expect(result.current).toEqual([0, 0]);
+  });
 });

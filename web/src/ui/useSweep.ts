@@ -13,7 +13,8 @@ export function useSweep(bets: Bets, collected: number, ms = SWEEP_MS): Bets {
   if (standing || collected < before.collected) {
     held.current = null;
   } else if (before.bets[0] > 0 || before.bets[1] > 0) {
-    held.current = collected > before.collected ? before.bets : null;
+    const half = (collected - before.collected) / 2;
+    held.current = half > 0 ? [half, half] : null;
   }
   useEffect(() => {
     last.current = { bets, collected };
