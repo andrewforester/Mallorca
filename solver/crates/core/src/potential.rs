@@ -1,3 +1,4 @@
+use crate::abstraction::{below_and_equal, river_indexer, LIVE_HOLES};
 use crate::cards::Card;
 use crate::eval::rank;
 use crate::iso::HandIndexer;
@@ -146,12 +147,100 @@ pub fn ochs_live(hole: [Card; 2], board: &[Card; 5], clusters: &[u8; 169]) -> [f
     out
 }
 
+struct ClusterRanks {
+    all: Vec<Vec<u16>>,
+    per_card: Vec<Vec<Vec<u16>>>,
+}
+
+impl ClusterRanks {
+    fn new(cards: usize) -> ClusterRanks {
+        ClusterRanks {
+            all: vec![Vec::new(); CLUSTERS],
+            per_card: vec![vec![Vec::new(); CLUSTERS]; cards],
+        }
+    }
+
+    fn push(&mut self, i: usize, j: usize, cluster: usize, r: u16) {
+        self.all[cluster].push(r);
+        self.per_card[i][cluster].push(r);
+        self.per_card[j][cluster].push(r);
+    }
+
+    fn sort(&mut self) {
+        let lists = self
+            .all
+            .iter_mut()
+            .chain(self.per_card.iter_mut().flatten());
+        for ranks in lists {
+            ranks.sort_unstable();
+        }
+    }
+
+    fn ochs(&self, i: usize, j: usize, own: usize, r: u16) -> [f32; CLUSTERS] {
+        let mut out = [0.5f32; CLUSTERS];
+        for (c, o) in out.iter_mut().enumerate() {
+            let both = usize::from(c == own);
+            let (a, b) = (&self.per_card[i][c], &self.per_card[j][c]);
+            let total = (self.all[c].len() + both - a.len() - b.len()) as u32;
+            if total == 0 {
+                continue;
+            }
+            let (all_below, all_equal) = below_and_equal(&self.all[c], r);
+            let (a_below, a_equal) = below_and_equal(a, r);
+            let (b_below, b_equal) = below_and_equal(b, r);
+            let wins = (all_below - a_below - b_below) as u32;
+            let ties = (all_equal + both - a_equal - b_equal) as u32;
+            *o = (wins as f32 + 0.5 * ties as f32) / total as f32;
+        }
+        out
+    }
+}
+
+pub fn river_ochs(board: &[Card; 5], clusters: &[u8; 169]) -> Vec<(u64, [f32; CLUSTERS])> {
+    let live = live_cards(board);
+    let pre = preflop_indexer();
+    let mut seven = [0 as Card; 7];
+    seven[2..].copy_from_slice(board);
+    let mut holes: Vec<(usize, usize, usize, u16)> = Vec::with_capacity(LIVE_HOLES);
+    let mut ranks = ClusterRanks::new(live.len());
+    for i in 0..live.len() {
+        for j in (i + 1)..live.len() {
+            seven[0] = live[i];
+            seven[1] = live[j];
+            let r = rank(&seven);
+            let cluster = clusters[pre.index(&seven[..2]) as usize] as usize;
+            holes.push((i, j, cluster, r));
+            ranks.push(i, j, cluster, r);
+        }
+    }
+    ranks.sort();
+    let indexer = river_indexer();
+    holes
+        .iter()
+        .map(|&(i, j, cluster, r)| {
+            seven[0] = live[i];
+            seven[1] = live[j];
+            (indexer.index(&seven), ranks.ochs(i, j, cluster, r))
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::abstraction::river_strength;
     use crate::cards::parse_cards;
     use crate::iso::street_indexers;
+    use crate::rng::Rng;
     use crate::strength::river_hs;
+    use std::collections::HashMap;
+
+    fn deal(rng: &mut Rng, n: usize) -> Vec<Card> {
+        let mut deck: Vec<Card> = (0..52).collect();
+        rng.shuffle(&mut deck);
+        deck.truncate(n);
+        deck
+    }
 
     fn hole(s: &str) -> [Card; 2] {
         parse_cards(s).unwrap().try_into().unwrap()
@@ -268,6 +357,81 @@ mod tests {
         for h in ["As Ad", "3c 4d", "Jc Jd", "Ah Qh"] {
             let ochs = ochs_live(hole(h), &board, &clusters);
             assert_eq!(ochs[3].to_bits(), river_hs(hole(h), &board).to_bits());
+        }
+    }
+
+    fn assert_river_ochs_is_live(board: &[Card; 5], clusters: &[u8; 169]) {
+        let indexer = &street_indexers()[3];
+        let features = river_ochs(board, clusters);
+        assert_eq!(features.len(), 1081);
+        let mut live: HashMap<u64, [f32; CLUSTERS]> = HashMap::new();
+        for (index, v) in features {
+            let expected = *live.entry(index).or_insert_with(|| {
+                let hand = indexer.unindex(1, index);
+                let full: [Card; 5] = hand[2..].try_into().unwrap();
+                ochs_live([hand[0], hand[1]], &full, clusters)
+            });
+            for (got, want) in v.iter().zip(&expected) {
+                assert_eq!(got.to_bits(), want.to_bits(), "{got} vs {want}");
+            }
+        }
+    }
+
+    #[test]
+    fn river_ochs_matches_live_on_tied_and_blocked_boards() {
+        let pre = &street_indexers()[0];
+        let mut clusters = [0u8; 169];
+        for (class, c) in clusters.iter_mut().enumerate() {
+            *c = (class % 5) as u8;
+        }
+        clusters[pre.index(&parse_cards("Ac Ad").unwrap()) as usize] = 7;
+        for b in ["Ts Js Qs Ks As", "Ah 7d 9h Js Kc", "2c 2d 2h 7s 7c"] {
+            let board: [Card; 5] = parse_cards(b).unwrap().try_into().unwrap();
+            assert_river_ochs_is_live(&board, &clusters);
+        }
+        let board: [Card; 5] = parse_cards("Ah 7d 9h Js Kc").unwrap().try_into().unwrap();
+        let mut seven = vec![0 as Card; 2];
+        seven[..2].copy_from_slice(&hole("As Ad"));
+        seven.extend_from_slice(&board);
+        let index = street_indexers()[3].index(&seven);
+        let ochs = river_ochs(&board, &clusters)
+            .into_iter()
+            .find(|&(i, _)| i == index)
+            .unwrap()
+            .1;
+        assert_eq!(ochs[7], 0.5);
+        assert!(ochs.iter().all(|v| v.is_finite()));
+    }
+
+    #[test]
+    #[ignore]
+    fn batch_and_live_features_agree() {
+        let indexers = street_indexers();
+        let mut clusters = [0u8; 169];
+        for (class, c) in clusters.iter_mut().enumerate() {
+            *c = (class % CLUSTERS) as u8;
+        }
+        let mut rng = Rng::new(7);
+        for _ in 0..200 {
+            let cards = deal(&mut rng, 5);
+            let board: [Card; 5] = cards.try_into().unwrap();
+            assert_river_ochs_is_live(&board, &clusters);
+        }
+        for _ in 0..200 {
+            let cards = deal(&mut rng, 6);
+            let index = indexers[2].index(&cards);
+            let hand = indexers[2].unindex(1, index);
+            let h = [hand[0], hand[1]];
+            let board: [Card; 4] = hand[2..].try_into().unwrap();
+            let live = turn_counts(h, &board, river_hs);
+            let batch = turn_counts(h, &board, |h, full| {
+                let by_index: HashMap<u64, f32> = river_strength(full).into_iter().collect();
+                let mut seven = [0 as Card; 7];
+                seven[..2].copy_from_slice(&h);
+                seven[2..].copy_from_slice(full);
+                by_index[&indexers[3].index(&seven)]
+            });
+            assert_eq!(batch, live);
         }
     }
 }

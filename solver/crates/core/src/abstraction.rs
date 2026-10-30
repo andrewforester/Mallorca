@@ -83,15 +83,15 @@ pub fn decode_table(mut bytes: Vec<u8>) -> Result<(TableHeader, Vec<u8>), TableE
     Ok((header, bytes))
 }
 
-const LIVE_HOLES: usize = 1081;
+pub(crate) const LIVE_HOLES: usize = 1081;
 pub(crate) const LIVE_OPPONENTS: f32 = 990.0;
 
-fn river_indexer() -> &'static HandIndexer {
+pub(crate) fn river_indexer() -> &'static HandIndexer {
     static INDEXER: OnceLock<HandIndexer> = OnceLock::new();
     INDEXER.get_or_init(|| HandIndexer::new(&[2, 5]))
 }
 
-fn below_and_equal(sorted: &[u16], r: u16) -> (usize, usize) {
+pub(crate) fn below_and_equal(sorted: &[u16], r: u16) -> (usize, usize) {
     let below = sorted.partition_point(|&x| x < r);
     let at_most = sorted.partition_point(|&x| x <= r);
     (below, at_most - below)
