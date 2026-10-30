@@ -92,6 +92,41 @@ describe('createWorkerHandler', () => {
 
 const settle = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
+describe('createWorkerHandler style', () => {
+  const style = { aggression: 1.2, bluff: 0.8, tightness: 1 };
+
+  it('passes the style before decide', () => {
+    const calls: string[] = [];
+    const brain: Brain = {
+      observe: () => undefined,
+      setStyle: (given) => {
+        calls.push(`style ${JSON.stringify(given)}`);
+      },
+      decide: () => {
+        calls.push('decide');
+        return decision;
+      },
+    };
+    const handle = createWorkerHandler(
+      () => brain,
+      () => undefined,
+    );
+    handle({ kind: 'decide', id: 1, legal, style });
+    expect(calls).toEqual([`style ${JSON.stringify(style)}`, 'decide']);
+  });
+
+  it('math brain ignores style', () => {
+    const { brain } = fakeBrain();
+    const replies: WorkerReply[] = [];
+    const handle = createWorkerHandler(
+      () => brain,
+      (reply) => replies.push(reply),
+    );
+    handle({ kind: 'decide', id: 2, legal, style });
+    expect(replies).toEqual([{ id: 2, decision }]);
+  });
+});
+
 describe('createWorkerHandler select', () => {
   it('swaps the brain once the opponent is ready and replays what came meanwhile', async () => {
     const math = fakeBrain();

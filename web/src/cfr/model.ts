@@ -1,3 +1,4 @@
+import type { BotStyle } from '../brains/index.ts';
 import type { Card } from '../cards/index.ts';
 import type { Action, LegalActions } from '../engine/index.ts';
 
@@ -28,6 +29,7 @@ interface Exports {
     draw: number,
   ): number;
   decided_to(bot: number): number;
+  bot_style(bot: number, aggression: number, bluff: number, tightness: number): void;
 }
 
 export interface HandStart {
@@ -44,6 +46,7 @@ export interface CfrBot {
   street(board: readonly Card[]): void;
   acted(hero: boolean, action: Action, draw: number): void;
   decide(legal: LegalActions, draw: number): Action;
+  setStyle(style: BotStyle): void;
   free(): void;
 }
 
@@ -121,6 +124,9 @@ function bot(e: Exports, handle: number): CfrBot {
         draw,
       );
       return toAction(kind, e.decided_to(handle));
+    },
+    setStyle({ aggression, bluff, tightness }) {
+      e.bot_style(handle, aggression, bluff, tightness);
     },
     free() {
       e.bot_free(handle);

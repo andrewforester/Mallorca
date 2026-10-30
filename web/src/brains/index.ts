@@ -25,7 +25,7 @@ export type { Advice, VillainModel } from './villainModel.ts';
 export { randomVillainModel, VillainSpectrumTracker } from './villainModel.ts';
 export type { AdviceCreatorFromMap } from './adviceFromMap.ts';
 export { getOptimal, LessVarianceActionFromMap } from './adviceFromMap.ts';
-export type { Brain, Decision, MathBrainOptions } from './brain.ts';
+export type { BotStyle, Brain, Decision, MathBrainOptions } from './brain.ts';
 export { createMathBrain } from './brain.ts';
 export { preprocessAction, toLegalAction } from './preprocess.ts';
 export type {

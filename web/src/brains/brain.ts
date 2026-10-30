@@ -17,9 +17,16 @@ export interface Decision {
   evByAction: { fold: number; passive: number; aggressive: number };
 }
 
+export interface BotStyle {
+  aggression: number;
+  bluff: number;
+  tightness: number;
+}
+
 export interface Brain {
   observe(o: Observation): void;
   decide(legal: LegalActions): Decision;
+  setStyle?(style: BotStyle): void;
 }
 
 export interface MathBrainOptions {

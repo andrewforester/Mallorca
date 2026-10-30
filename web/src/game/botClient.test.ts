@@ -196,6 +196,29 @@ describe('workerBot', () => {
     expect(currentWorker().terminated).toBe(true);
   });
 
+  it('sends the style with the decide request', async () => {
+    const bot = workerBot();
+    const style = { aggression: 1.1, bluff: 1, tightness: 0.9 };
+    const pending = bot.decide(legal, style);
+    await settle();
+    const sent = currentWorker().sent.at(-1);
+    expect(sent).toMatchObject({ kind: 'decide', style });
+    bot.dispose?.();
+    await pending.catch(() => undefined);
+  });
+
+  it('fallback ignores style', async () => {
+    vi.useFakeTimers();
+    const bot = workerBot();
+    bot.observe(hand);
+    const style = { aggression: 1.3, bluff: 1.2, tightness: 0.8 };
+    const pending = bot.decide(legal, style);
+    const settled = expect(pending).resolves.toMatchObject({ action: expect.any(Object) });
+    await vi.advanceTimersByTimeAsync(BOT_TIMEOUT_MS);
+    await settled;
+    await expect(bot.decide(legal, style)).resolves.toMatchObject({ action: expect.any(Object) });
+  });
+
   it('rejects pending requests and terminates the worker on dispose', async () => {
     const bot = workerBot();
     const { pending, worker } = await startDecide(bot);

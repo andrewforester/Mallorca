@@ -1,12 +1,12 @@
 import { createMathBrain, randomVillainModel } from '../brains/index.ts';
-import type { Decision, Observation } from '../brains/index.ts';
+import type { BotStyle, Decision, Observation } from '../brains/index.ts';
 import type { LegalActions } from '../engine/index.ts';
 import type { Opponent } from './opponent.ts';
 import type { WorkerReply, WorkerRequest } from './workerProtocol.ts';
 
 export interface BotClient {
   observe(o: Observation[]): void;
-  decide(legal: LegalActions): Promise<Decision>;
+  decide(legal: LegalActions, style?: BotStyle): Promise<Decision>;
   reset(): void;
   select?(opponent: Opponent, seed: number): Promise<Opponent>;
   dispose?(): void;
@@ -27,9 +27,14 @@ export function inProcessBot(): BotClient {
         brain.observe(observation);
       }
     },
-    decide(legal) {
+    decide(legal, style) {
       const current = brain;
-      return Promise.resolve().then(() => current.decide(legal));
+      return Promise.resolve().then(() => {
+        if (style !== undefined) {
+          current.setStyle?.(style);
+        }
+        return current.decide(legal);
+      });
     },
     reset() {
       brain = newBrain();
@@ -101,18 +106,18 @@ export function withFallback(primary: BotClient, timeoutMs = BOT_TIMEOUT_MS): Bo
       seen = [];
       active.reset();
     },
-    async decide(legal) {
+    async decide(legal, style) {
       const mine = generation;
       try {
         return await withTimeout(
-          Promise.resolve().then(() => active.decide(legal)),
+          Promise.resolve().then(() => active.decide(legal, style)),
           timeoutMs,
         );
       } catch (error) {
         if (usedFallback || mine !== generation) {
           throw error;
         }
-        return fallBack().decide(legal);
+        return fallBack().decide(legal, style);
       }
     },
     select: (opponent, seed) =>
@@ -195,9 +200,9 @@ function rawWorkerBot(): BotClient {
     observe(observations) {
       send({ kind: 'observe', observations });
     },
-    decide(legal) {
+    decide(legal, style) {
       return ask(
-        (id) => ({ kind: 'decide', id, legal }),
+        (id) => ({ kind: 'decide', id, legal, ...(style === undefined ? {} : { style }) }),
         (r) => ('decision' in r ? r.decision : undefined),
       );
     },
