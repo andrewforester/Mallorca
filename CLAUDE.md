@@ -33,3 +33,8 @@
   to GitHub Pages on every push to `master` that touches `web/`. GitHub Pages is not enabled for the repository;
   the owner enables it (source "GitHub Actions"), and from then on the game is served at
   https://andrewforester.github.io/mallorca/.
+- Vercel: `.github/workflows/web-vercel.yml` builds `web/` and deploys `web/dist` to production on every push to
+  `master` that touches `web/`, and on a manual run from `master`. A preview is never automatic: run the workflow by
+  hand from another branch (Actions, "Deploy web to Vercel", Run workflow, or
+  `gh workflow run web-vercel.yml --ref <branch>`). The Vercel project is not connected to Git; the workflow needs the
+  repository secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID`.
