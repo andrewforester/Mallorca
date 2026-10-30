@@ -1105,24 +1105,17 @@ button {
   }
 
   .status-info {
-    gap: var(--space-1);
-  }
-
-  .status-info > span {
-    padding: 2px var(--space-2);
+    gap: var(--space-2);
   }
 
   .status-bar .menu-summary {
     padding: 0 var(--space-3);
+    font-size: var(--font-size-base);
   }
 
   .status-bar .leave {
     padding: var(--space-1) var(--space-2);
     font-size: 0.75rem;
-  }
-
-  .status-bar .menu-summary {
-    font-size: var(--font-size-base);
   }
 
   .status-info > span,
@@ -1134,10 +1127,6 @@ button {
     backdrop-filter: none;
     color: var(--color-text);
     text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
-  }
-
-  .status-info {
-    gap: var(--space-2);
   }
 }
 
