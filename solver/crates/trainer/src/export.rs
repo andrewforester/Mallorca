@@ -1,10 +1,12 @@
 use crate::thresholds::play_thresholds;
 use crate::train::{latest_checkpoint, load_abstraction, load_checkpoint};
 use crate::tree::load_preset;
+use crate::verify::play_centroids;
 use clap::{Args, ValueEnum};
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use mallorca_core::fingerprint::fingerprint;
+use mallorca_core::preset::Bucketing;
 use mallorca_core::strategy::{quantize, StrategyFile, StrategyHeader};
 use mallorca_core::tree::{Node, Street, Tree};
 use std::io::Write;
@@ -76,19 +78,13 @@ pub fn build(
             probabilities.extend(quantize(&average));
         }
     }
-    let (tables, thresholds) = match streets {
-        StreetSet::Play => (
-            vec![abstraction.table_bytes(Street::Flop).to_vec()],
-            play_thresholds(data, &preset, &abstraction)?,
-        ),
-        _ => (
-            [Street::Flop, Street::Turn, Street::River]
-                .into_iter()
-                .filter(|&street| included(street))
-                .map(|street| abstraction.table_bytes(street).to_vec())
-                .collect(),
-            Vec::new(),
-        ),
+    let tables = match streets {
+        StreetSet::Play => vec![abstraction.table_bytes(Street::Flop).to_vec()],
+        _ => [Street::Flop, Street::Turn, Street::River]
+            .into_iter()
+            .filter(|&street| included(street))
+            .map(|street| abstraction.table_bytes(street).to_vec())
+            .collect(),
     };
     let header = StrategyHeader {
         fingerprint: fp,
@@ -99,7 +95,23 @@ pub fn build(
         iterations: loaded.iterations,
         checkpoint: loaded.checkpoint,
     };
-    Ok(StrategyFile::new(header, tree, tables, probabilities).with_thresholds(thresholds))
+    let file = StrategyFile::new(header, tree, tables, probabilities);
+    match (streets, preset.bucketing) {
+        (StreetSet::Play, Bucketing::Hs2) => {
+            Ok(file.with_thresholds(play_thresholds(data, &preset, &abstraction)?))
+        }
+        (StreetSet::Play, Bucketing::Potential) => {
+            let centroids = play_centroids(data, &preset, &abstraction)?;
+            Ok(file.with_centroids(
+                vec![
+                    (Street::Turn, centroids.turn),
+                    (Street::River, centroids.river),
+                ],
+                centroids.clusters,
+            ))
+        }
+        _ => Ok(file),
+    }
 }
 
 fn gzip_size(bytes: &[u8]) -> Result<usize, String> {
@@ -286,6 +298,78 @@ mod tests {
                 );
             }
         }
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    fn potential_dir(name: &str, tamper: Option<usize>) -> PathBuf {
+        let shared = crate::potential::tests::tiny_potential();
+        let dir =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join(format!("../../target/tmp/trainer-{name}"));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        for file in ["flop.bkt", "river.bkt", "river_hs.f32", "centroids.bin"] {
+            std::fs::hard_link(shared.join(file), dir.join(file)).unwrap();
+        }
+        let mut turn = std::fs::read(shared.join("turn.bkt")).unwrap();
+        if let Some(class) = tamper {
+            let at = mallorca_core::abstraction::TABLE_HEADER_LEN + class;
+            turn[at] = (turn[at] + 1) % 8;
+        }
+        std::fs::write(dir.join("turn.bkt"), turn).unwrap();
+        std::fs::copy(shared.join("tiny-potential.toml"), dir.join("tiny.toml")).unwrap();
+        go(&session(&dir, Some(2000), 3, None)).unwrap();
+        dir
+    }
+
+    #[test]
+    #[ignore]
+    fn play_export_with_centroids_reproduces_every_bucket() {
+        let dir = potential_dir("export-play-centroids", None);
+        let file = export(&dir, StreetSet::Play).unwrap();
+        assert_eq!(file.streets, 0b1111);
+        assert_eq!(file.tables.len(), 1);
+        assert!(file.thresholds_of(Street::Turn).is_none());
+        assert!(file.thresholds_of(Street::River).is_none());
+        let centroids = mallorca_core::centroids::Centroids::decode(
+            &std::fs::read(dir.join("centroids.bin")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(file.centroids_of(Street::Turn), Some(&centroids.turn[..]));
+        assert_eq!(file.centroids_of(Street::River), Some(&centroids.river[..]));
+        assert_eq!(file.clusters, Some(centroids.clusters));
+        let bytes = file.to_bytes();
+        assert_eq!(u16::from_le_bytes([bytes[4], bytes[5]]), 3);
+        let again = StrategyFile::from_bytes(&bytes).unwrap();
+        assert_eq!(again, file);
+        let live = mallorca_core::abstraction::Abstraction::from_strategy(&again).unwrap();
+        let preset = load_preset(&dir.join("tiny.toml")).unwrap();
+        let tables = load_abstraction(&preset, &dir).unwrap();
+        let mut rng = mallorca_core::rng::Rng::new(29);
+        for _ in 0..10_000 {
+            let mut deck: Vec<u8> = (0..52).collect();
+            rng.shuffle(&mut deck);
+            let hole = [deck[0], deck[1]];
+            for (street, n) in [(Street::Flop, 5), (Street::Turn, 6), (Street::River, 7)] {
+                assert_eq!(
+                    live.bucket(street, hole, &deck[2..n]),
+                    tables.bucket(street, hole, &deck[2..n]),
+                    "{street:?} {deck:?}"
+                );
+            }
+        }
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    #[ignore]
+    fn a_tampered_table_is_refused() {
+        let class = 123_457;
+        let dir = potential_dir("export-play-tampered", Some(class));
+        let err = export(&dir, StreetSet::Play).err().unwrap();
+        assert!(
+            err.contains("turn") && err.contains(&class.to_string()),
+            "{err}"
+        );
         std::fs::remove_dir_all(dir).unwrap();
     }
 

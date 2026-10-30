@@ -117,6 +117,12 @@ The bucket of a hand on a kind 2 street:
 A file is written as version 3 if and only if it holds a centroid section; a file without one is written exactly as
 in version 1 or 2.
 
+`export --streets play` writes version 3 for a preset with `bucketing = "potential"`: the flop table, the turn and
+river centroids and the cluster map from `centroids.bin`. Before it writes the file it recomputes the bucket of every
+turn class (from `river_hs.f32`) and every river class (from the OCHS board pass) with these centroids and refuses
+the export, naming the street and the class, at the first class that differs from `turn.bkt` or `river.bkt`. An
+`hs2` preset still gets version 2.
+
 ## Probabilities
 
 Walk the tree nodes in id order. For every decision node whose street is included in `streets`, write one block for

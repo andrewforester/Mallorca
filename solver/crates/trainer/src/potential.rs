@@ -49,18 +49,8 @@ pub fn run(preset: &Preset, out: &Path) -> Result<(), String> {
     drop(river.1);
     let river_of =
         |hole: [Card; 2], board: &[Card; 5]| lookup(&indexers[3], &river_hs, hole, board);
-    let turn = StreetJob {
-        name: "turn",
-        indexer: &indexers[2],
-        buckets: preset.buckets[1],
-        seed: TURN_SEED,
-        threads,
-    };
-    let turn_feature = |cards: &[Card]| {
-        let board: [Card; 4] = cards[2..].try_into().expect("four board cards");
-        histogram(&turn_counts([cards[0], cards[1]], &board, river_of))
-    };
-    let (turn_centroids, turn_table) = street_buckets(&turn, turn_feature);
+    let turn = turn_job(&indexers, preset.buckets[1], threads);
+    let (turn_centroids, turn_table) = street_buckets(&turn, turn_feature(&indexers, &river_hs));
     write_table(out, "turn.bkt", Street::Turn, turn.buckets, &turn_table)?;
     let flop = StreetJob {
         name: "flop",
@@ -85,6 +75,38 @@ pub fn run(preset: &Preset, out: &Path) -> Result<(), String> {
     println!("wrote centroids.bin: {} bytes", bytes.len());
     println!("total {:.1}s", started.elapsed().as_secs_f64());
     Ok(())
+}
+
+fn turn_job(indexers: &[HandIndexer; 4], buckets: u16, threads: usize) -> StreetJob<'_> {
+    StreetJob {
+        name: "turn",
+        indexer: &indexers[2],
+        buckets,
+        seed: TURN_SEED,
+        threads,
+    }
+}
+
+fn turn_feature<'a>(
+    indexers: &'a [HandIndexer; 4],
+    river_hs: &'a [f32],
+) -> impl Fn(&[Card]) -> [f32; BINS] + Sync + 'a {
+    move |cards: &[Card]| {
+        let board: [Card; 4] = cards[2..].try_into().expect("four board cards");
+        let river_of =
+            |hole: [Card; 2], board: &[Card; 5]| lookup(&indexers[3], river_hs, hole, board);
+        histogram(&turn_counts([cards[0], cards[1]], &board, river_of))
+    }
+}
+
+pub(crate) fn turn_table(
+    indexers: &[HandIndexer; 4],
+    river_hs: &[f32],
+    centroids: &[f32],
+    threads: usize,
+) -> Vec<u8> {
+    let job = turn_job(indexers, (centroids.len() / BINS) as u16, threads);
+    stream_assign(&job, centroids, &turn_feature(indexers, river_hs))
 }
 
 fn lookup(river: &HandIndexer, river_hs: &[f32], hole: [Card; 2], board: &[Card; 5]) -> f32 {
@@ -213,12 +235,22 @@ fn river_buckets(
         threads,
     );
     drop(points);
+    let table = river_table(river, clusters, &centroids, threads)?;
+    Ok((centroids, table))
+}
+
+pub(crate) fn river_table(
+    river: &HandIndexer,
+    clusters: &[u8; 169],
+    centroids: &[f32],
+    threads: usize,
+) -> Result<Vec<u8>, String> {
     let boards = board_indexer(5);
     let cells: Vec<AtomicU16> = (0..river.size(1)).map(|_| AtomicU16::new(UNSET)).collect();
     parallel_chunks("river buckets", boards.size(0) as usize, threads, |range| {
         for b in range {
             for (index, feature) in river_ochs(&canonical_board(&boards, b), clusters) {
-                let label = nearest(Metric::L2, &centroids, RIVER_DIMENSION, &feature);
+                let label = nearest(Metric::L2, centroids, RIVER_DIMENSION, &feature);
                 cells[index as usize].store(label, Ordering::Relaxed);
             }
         }
@@ -230,7 +262,7 @@ fn river_buckets(
             label => table.push(label as u8),
         }
     }
-    Ok((centroids, table))
+    Ok(table)
 }
 
 fn features<F>(street: &StreetJob, indices: &[u64], feature: &F) -> Vec<f32>
@@ -307,16 +339,40 @@ where
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use crate::buckets::{run, BucketsArgs};
     use mallorca_core::abstraction::decode_table;
     use mallorca_core::cards::parse_cards;
     use mallorca_core::centroids::Centroids;
     use mallorca_core::iso::street_indexers;
     use mallorca_core::tree::Street;
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
+    use std::sync::OnceLock;
 
     const PRESET: &str = include_str!("../../../presets/tiny-potential.toml");
+
+    pub fn tiny_potential() -> &'static Path {
+        static DIR: OnceLock<PathBuf> = OnceLock::new();
+        DIR.get_or_init(|| {
+            let dir =
+                Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target/tmp/trainer-potential");
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(&dir).unwrap();
+            let threads = std::thread::available_parallelism().map_or(2, |n| n.get());
+            let preset = dir.join("tiny-potential.toml");
+            std::fs::write(
+                &preset,
+                PRESET.replace("threads = 2", &format!("threads = {threads}")),
+            )
+            .unwrap();
+            run(&BucketsArgs {
+                preset,
+                out: dir.clone(),
+            })
+            .unwrap();
+            dir
+        })
+    }
 
     fn bucket_of(table: &[u8], indexer: &mallorca_core::iso::HandIndexer, cards: &str) -> u8 {
         table[indexer.index(&parse_cards(cards).unwrap()) as usize]
@@ -325,21 +381,7 @@ mod tests {
     #[test]
     #[ignore]
     fn potential_buckets_on_tiny() {
-        let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target/tmp/trainer-potential");
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).unwrap();
-        let threads = std::thread::available_parallelism().map_or(2, |n| n.get());
-        let preset = dir.join("tiny-potential.toml");
-        std::fs::write(
-            &preset,
-            PRESET.replace("threads = 2", &format!("threads = {threads}")),
-        )
-        .unwrap();
-        run(&BucketsArgs {
-            preset,
-            out: dir.clone(),
-        })
-        .unwrap();
+        let dir = tiny_potential();
         let indexers = street_indexers();
         let mut tables = Vec::new();
         for (name, street, indexer) in [
@@ -370,6 +412,5 @@ mod tests {
             draw, pair,
             "flush draw and weak pair share turn bucket {draw}"
         );
-        std::fs::remove_dir_all(dir).unwrap();
     }
 }

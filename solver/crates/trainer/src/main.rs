@@ -8,6 +8,7 @@ mod potential;
 mod thresholds;
 mod train;
 mod tree;
+mod verify;
 
 use clap::{Parser, Subcommand};
 use std::process::ExitCode;
