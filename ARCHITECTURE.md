@@ -310,7 +310,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - Preact components render only the `ViewModel`, the session phase and the log; they call the session actions
   and hold no game rules.
 - Components: `App`, `StatusBar`, `HistoryMenu`, `StartScreen`, `Table`, `Seat`, `BetChips`, `DealerButton`,
-  `ActionBubble`, `Card` (SVG), `BoardRow`, `Board`, `Pot`, `ActionBar`, `BetSlider`, `HandLog`,
+  `ActionBubble`, `Card` (SVG), `BoardRow`, `Board`, `Pot`, `ActionBar`, `BetSlider`, `HandLogDrawer`,
   `TournamentOver`, `SessionOver`.
 - Hooks: `useSweep(bets, collected)` keeps half of the newly collected chips on each seat for `SWEEP_MS`
   (300 ms) when a street closes, so the bets slide into the pot; new bets or a new hand show at once.
@@ -321,8 +321,13 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   bb, bb/100 and the hands, with play again and the export of the session. `signed` formats a bb value as sign
   and one-decimal absolute value.
 - Layout: portrait for phones (bot at the top, the human's cards and controls at the bottom), landscape for wide
-  screens with the hand log at the side, switched by a `min-aspect-ratio: 1/1` media query. The `coach` panel is
+  screens, switched by a `min-aspect-ratio: 1/1` media query. The layout has no side log. The `coach` panel is
   the slot for a later training mode and is empty.
+- The hand log is a drawer grouped by street (`groupHand` in `ui/handLog.ts`), opened by the status bar toggle
+  `hand-log-toggle` (`aria-expanded`). Opening moves focus to `hand-log-close`; closing, by the close button,
+  Escape, the toggle or the scrim, returns focus to the toggle. On portrait screens it is a full-height sheet over
+  a scrim that closes on tap; in landscape it is a floating panel and the scrim does not take pointer events, so
+  the player can act while it is open.
 - Every colour, font, radius, spacing and shadow is a CSS token on `:root` in `ui/styles/tokens.css`, with a dark
   theme under `prefers-color-scheme: dark`. The visual design brief is GitHub issue #2.
 - Every string comes from `src/locales/en.json` through i18next (`ui/i18n.ts`). `ui/phrases.ts` words log
@@ -342,7 +347,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`, `bubble-aggressive` or `bubble-fold`),
   `thinking-<i>`, `card` (with `data-card`), `card-back`, `board`, `pot` (with `data-amount` = total and
   `data-collected`), `result`, `next-hand`, `fold`, `passive`, `raise`, `raise-amount`, `preset-half`,
-  `preset-pot`, `preset-allin`, `hand-log`, `coach`, `live-region`, `tournament-over`, `session-over`,
+  `preset-pot`, `preset-allin`, `hand-log-toggle`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`, `live-region`, `tournament-over`, `session-over`,
   `session-summary`, `session-rate`, `play-again`, `export-json` and
   `export-text` (the session dialog, current session), and `export-all-json`, `export-all-text` and
   `clear-history` (the menu).
@@ -356,7 +361,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   summary, and the hand history is exported, persists across a reload and is cleared. `layout.spec.ts`: the start
   screen, the table, the cash table, the session summary and a cash status bar with long values fit the viewport
   without horizontal scroll. `table.spec.ts`: on the human's first turn the dealer button, both bets, the pot
-  and the board are inside the viewport on every project.
+  and the board are inside the viewport on every project, and the hand log drawer opens inside the viewport
+  with its close button, without horizontal scroll, and Escape hides it.
 - `e2e/contact.ts` (`npm run contact`) captures every view state of a seeded game on `phone` and `desktop` and
   composes one sheet per device into `e2e/contact/`.
 
