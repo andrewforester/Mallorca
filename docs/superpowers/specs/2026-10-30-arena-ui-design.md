@@ -100,13 +100,18 @@ but the repository.
 web/tools/arena/
   paths.ts                 resultsDir, default file names
   cli.ts, run.ts           new flags and report fields
+  publish.ts, publishCli.ts
+                           arena:publish
   ui/
     index.html, main.tsx, vite.config.ts
     server.ts              list runs, resolve hands files (Node)
     analysis.ts            pure analysis
     hands.worker.ts, worker client
+    source.ts              dev server API or published files
     App.tsx and components
 ```
 
-`package.json` gains `arena:ui`; `vitest.config.ts` runs `tools/**/*.test.tsx` in the happy-dom project;
-`ARCHITECTURE.md` and `tools/arena/README.md` describe the viewer and the new defaults.
+`web/arena-results/` holds the published runs and `e2e/arena.spec.ts` opens one at `/arena/`. `package.json` gains
+`arena:ui` and `arena:publish`, and `build` also builds the viewer; `vitest.config.ts` runs `tools/**/*.test.tsx`
+in the happy-dom project; `ARCHITECTURE.md`, `CLAUDE.md` and `tools/arena/README.md` describe the viewer, the
+publishing and the new defaults.
