@@ -40,6 +40,7 @@ describe('toViewModel', () => {
     expect(vm.seats[0].isButton).toBe(true);
     expect(vm.seats[1].isToAct).toBe(true);
     expect(vm.seats[0].lastAction).toEqual({ key: 'call', params: { amount: 10 } });
+    expect(vm.seats[0].closingAction).toBeNull();
     expect(vm.blinds).toEqual({ small: 10, big: 20 });
     expect(vm.handNumber).toBe(1);
     expect(vm.board).toEqual([]);

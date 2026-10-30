@@ -11,6 +11,7 @@ export function viewModel(overrides: Partial<ViewModel['controls']> = {}): ViewM
         isToAct: true,
         cards: [48, 41],
         lastAction: null,
+        closingAction: null,
       },
       {
         name: 'Mallorca',
@@ -20,6 +21,7 @@ export function viewModel(overrides: Partial<ViewModel['controls']> = {}): ViewM
         isToAct: false,
         cards: ['back', 'back'],
         lastAction: { key: 'raiseTo', params: { amount: 100 } },
+        closingAction: null,
       },
     ],
     board: [],

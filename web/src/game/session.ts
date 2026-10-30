@@ -27,14 +27,14 @@ import type { BotClient } from './botClient.ts';
 import { resolveIntent, toIntent } from './intent.ts';
 import type { Intent } from './intent.ts';
 import {
-  actedLabel,
   awardedTo,
   isOpeningBet,
   openingEntries,
   potCollected,
   resultOf,
+  streetActions,
 } from './outcome.ts';
-import type { HandResult } from './outcome.ts';
+import type { HandResult, SeatActions } from './outcome.ts';
 import { handRecorder } from './records/recorder.ts';
 import type { HandRecorder, RecordsOptions } from './records/recorder.ts';
 import { CFR_BOT, MATH_BOT } from './records/record.ts';
@@ -65,7 +65,8 @@ export interface SessionState {
   table: Table;
   phase: Phase;
   log: LogEntry[];
-  lastActions: [LogEntry | null, LogEntry | null];
+  lastActions: SeatActions;
+  closingActions: SeatActions;
   lastDecision: Decision | null;
   seed: number;
   result: HandResult | null;
@@ -168,20 +169,17 @@ function tally(rt: Runtime, table: Table): SessionResult {
 function record(rt: Runtime, events: EngineEvent[], opens = false): void {
   rt.recorder.observe(events);
   rt.bot.observe(toObservations(events, rt.botSeat));
-  const lastActions: [LogEntry | null, LogEntry | null] = [...rt.get().lastActions];
   for (const event of events) {
-    if (event.type === 'acted') {
-      lastActions[event.seat] = actedLabel(event, opens);
-    } else if (event.type === 'streetDealt') {
-      lastActions[0] = null;
-      lastActions[1] = null;
-    } else if (event.type === 'toppedUp' && event.seat === rt.humanSeat) {
+    if (event.type === 'toppedUp' && event.seat === rt.humanSeat) {
       rt.topUps += event.amount;
     }
   }
+  const { lastActions, closingActions } = rt.get();
+  const actions = streetActions({ last: lastActions, closing: closingActions }, events, opens);
   rt.set({
     log: [...rt.get().log, ...openingEntries(handHistory(events), opens)],
-    lastActions,
+    lastActions: actions.last,
+    closingActions: actions.closing,
     session: tally(rt, rt.get().table),
   });
 }
@@ -272,7 +270,12 @@ function beginHand(rt: Runtime): Promise<void> {
   ];
   rt.bot.reset();
   rt.recorder.begin();
-  rt.set({ table: step.state, lastActions: [null, null], result: null });
+  rt.set({
+    table: step.state,
+    lastActions: [null, null],
+    closingActions: [null, null],
+    result: null,
+  });
   record(rt, step.events);
   conclude(rt, step);
   return drive(rt, rt.epoch);
@@ -371,6 +374,7 @@ export function createSession(options: SessionOptions): Session {
       phase: 'idle',
       log: [],
       lastActions: [null, null],
+      closingActions: [null, null],
       lastDecision: null,
       seed,
       result: null,

@@ -75,3 +75,31 @@ export function awardedTo(events: EngineEvent[], seat: SeatIndex): number {
   }
   return total;
 }
+
+export type SeatActions = [LogEntry | null, LogEntry | null];
+
+export interface StreetActions {
+  last: SeatActions;
+  closing: SeatActions;
+}
+
+export function streetActions(
+  previous: StreetActions,
+  events: EngineEvent[],
+  opens: boolean,
+): StreetActions {
+  const last: SeatActions = [...previous.last];
+  let closing: SeatActions = previous.closing;
+  for (const event of events) {
+    if (event.type === 'acted') {
+      last[event.seat] = actedLabel(event, opens);
+    } else if (event.type === 'streetDealt') {
+      if (last[0] !== null || last[1] !== null) {
+        closing = [last[0], last[1]];
+      }
+      last[0] = null;
+      last[1] = null;
+    }
+  }
+  return { last, closing };
+}

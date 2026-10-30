@@ -117,6 +117,32 @@ describe('session', () => {
     expect(session.getState().lastActions).toEqual([null, null]);
   });
 
+  it('keeps the actions that closed a street when the next one is dealt', async () => {
+    const session = open(callingBot());
+    await session.getState().start();
+    await session.getState().act({ kind: 'passive' });
+    expect(session.getState().table.hand?.street).toBe('flop');
+    await session.getState().act({ kind: 'raise', to: 80 });
+    const state = session.getState();
+    expect(state.table.hand?.street).toBe('turn');
+    expect(state.lastActions).toEqual([null, null]);
+    expect(state.closingActions).toEqual([
+      { key: 'call', params: { amount: 80 } },
+      { key: 'bet', params: { amount: 80 } },
+    ]);
+  });
+
+  it('forgets the closing actions when a new hand starts', async () => {
+    const session = open(callsThenFolds());
+    await session.getState().start();
+    await session.getState().act({ kind: 'passive' });
+    expect(session.getState().closingActions[0]).not.toBeNull();
+    await session.getState().act({ kind: 'raise', to: 40 });
+    expect(session.getState().phase).toBe('handOver');
+    await session.getState().nextHand();
+    expect(session.getState().closingActions).toEqual([null, null]);
+  });
+
   it('labels a raise that opens the flop as a bet', async () => {
     const session = open(callsThenFolds());
     await session.getState().start();

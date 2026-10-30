@@ -12,6 +12,7 @@ export interface SeatView {
   isToAct: boolean;
   cards: (Card | 'back')[];
   lastAction: LogEntry | null;
+  closingAction: LogEntry | null;
 }
 
 export interface RaiseControl {
@@ -62,6 +63,7 @@ function seatView(state: SessionState, seat: SeatIndex, humanSeat: SeatIndex): S
     isToAct: hand?.toAct === seat,
     cards,
     lastAction: state.lastActions[seat],
+    closingAction: state.closingActions[seat],
   };
 }
 
