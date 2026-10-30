@@ -6,3 +6,6 @@ export type { StrengthClass } from './strength.ts';
 export { strengthOf } from './strength.ts';
 export type { Style } from './style.ts';
 export { NEUTRAL_STYLE, styleOf } from './style.ts';
+export type { SessionSummary } from './summary.ts';
+export type { Draw, HandFacts, LineIntent, Spot, Talk, TalkOptions } from './talk.ts';
+export { createTalk, drawLine } from './talk.ts';
