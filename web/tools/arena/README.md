@@ -35,3 +35,11 @@ cfr vs random:       +57.2 ± 23.2 bb/100 over 10000 hands in 1 s   (3)
 math vs always-raise: +905.8 ± 95.9 bb/100 over 4000 hands in 41 s (3)
 math vs random:      +196.1 ± 45.0 bb/100 over 4000 hands in 27 s  (3)
 ```
+
+`cfr-solve` at efecf9c, pooled over chunks of 1000 pairs (seeds 101 to 110 and 301 to 305), about an hour a chunk;
+details in `solver/RESULTS.md`:
+
+```
+cfr-solve vs cfr:  +10.6 ± 12.7 bb/100 over 20000 hands
+cfr-solve vs math: +20.7 ± 20.5 bb/100 over 10000 hands
+```
