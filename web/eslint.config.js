@@ -33,7 +33,7 @@ const layer = (
 
 export default tseslint.config(
   {
-    ignores: ['**/dist', 'node_modules', 'test-results', 'playwright-report'],
+    ignores: ['**/dist', '.vercel', 'node_modules', 'test-results', 'playwright-report'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

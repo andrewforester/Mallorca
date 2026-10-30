@@ -19,7 +19,7 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 | `web/tools/arena/`                                                  | Node duplicate matches between two bots, see "arena"                  |
 | `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`  |
 | `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`  |
-| `.github/workflows/`                                                | `web-ci.yml` on pull requests, `web-deploy.yml` on `master`           |
+| `.github/workflows/`                                                | `web-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master`   |
 
 Generated and never committed: `web/dist`, `web/test-results`, `web/playwright-report`, `web/e2e/contact/`,
 `web/tools/golden/build`, `web/arena-out/` and `web/src/cfr/mallorca.wasm`, which `npm run wasm` builds with cargo
