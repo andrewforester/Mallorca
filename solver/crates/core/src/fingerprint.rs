@@ -16,6 +16,7 @@ pub fn fingerprint(preset: &Preset, tree: &Tree, abstraction: &Abstraction) -> [
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::preset::Sizes;
 
     const TINY: &str = include_str!("../../../presets/tiny.toml");
 
@@ -86,18 +87,20 @@ mod tests {
     fn game_settings_change_fingerprint() {
         let p = Preset::from_toml(TINY).unwrap();
         let base = with_tree(&p);
-        let edits: [fn(&mut Preset); 11] = [
+        let edits: [fn(&mut Preset); 13] = [
             |q| q.small_blind = 5,
             |q| q.big_blind = 30,
             |q| q.stack = 500,
             |q| q.buckets[1] = 9,
-            |q| q.preflop.open_bb = 3.0,
-            |q| q.preflop.three_bet_x = 3.5,
+            |q| q.preflop.open_bb = Sizes(vec![3.0]),
+            |q| q.preflop.three_bet_x = Sizes(vec![3.5]),
             |q| q.postflop.first_bet_pot = vec![0.5],
             |q| q.postflop.first_raise_pot = vec![1.0],
             |q| q.postflop.max_aggressive = 3,
             |q| q.postflop.all_in_threshold = 0.5,
-            |q| q.preflop.iso_vs_limp_bb = 4.0,
+            |q| q.preflop.iso_vs_limp_bb = Sizes(vec![4.0]),
+            |q| q.postflop.min_raise = true,
+            |q| q.bucketing = crate::preset::Bucketing::Potential,
         ];
         for (i, edit) in edits.into_iter().enumerate() {
             let mut q = p.clone();

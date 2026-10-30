@@ -420,10 +420,10 @@ impl Builder<'_> {
             let pf = &self.preset.preflop;
             let bb = f64::from(self.preset.big_blind);
             return match s.aggressive {
-                0 if to_call > 0 => vec![pf.open_bb * bb],
-                0 => vec![pf.iso_vs_limp_bb * bb],
-                1 => vec![pf.three_bet_x * opp_bet],
-                2 => vec![pf.four_bet_x * opp_bet],
+                0 if to_call > 0 => vec![pf.open_bb.values()[0] * bb],
+                0 => vec![pf.iso_vs_limp_bb.values()[0] * bb],
+                1 => vec![pf.three_bet_x.values()[0] * opp_bet],
+                2 => vec![pf.four_bet_x.values()[0] * opp_bet],
                 _ => Vec::new(),
             };
         }
