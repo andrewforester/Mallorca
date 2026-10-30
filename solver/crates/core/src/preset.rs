@@ -263,4 +263,13 @@ mod tests {
         let q = Preset::from_toml(&reformatted).unwrap();
         assert_eq!(p.canonical_toml(), q.canonical_toml());
     }
+
+    #[test]
+    fn v1_abstraction_toml_is_pinned() {
+        let p = Preset::from_toml(V1).unwrap();
+        assert_eq!(
+            p.abstraction_toml(),
+            "small_blind = 10\nbig_blind = 20\nstack = 2000\nbuckets = [128, 128, 128]\n\n[preflop]\nopen_bb = 2.5\niso_vs_limp_bb = 3.5\nthree_bet_x = 3.0\nfour_bet_x = 2.2\n\n[postflop]\nfirst_bet_pot = [0.5, 0.75, 1.0, 1.5, 2.0]\nfirst_raise_pot = [1.0]\nmax_aggressive = 3\nall_in_threshold = 0.6667\n"
+        );
+    }
 }

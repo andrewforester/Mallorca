@@ -895,4 +895,15 @@ mod tests {
         };
         t.offset(t.root(), t.buckets()[street.as_index()]);
     }
+
+    #[test]
+    fn v1_tree_bytes_are_pinned() {
+        use sha2::{Digest, Sha256};
+        let digest = Sha256::digest(Tree::build(&v1()).serialize());
+        let hex: String = digest.iter().map(|b| format!("{b:02x}")).collect();
+        assert_eq!(
+            hex,
+            "1807bf640a19d2092c2e3aa5cac694785683a4baadaadb75d48931cda73be244"
+        );
+    }
 }
