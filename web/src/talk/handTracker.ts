@@ -1,7 +1,7 @@
-import type { Card } from '../cards/index.ts';
+import type { Card, Rng } from '../cards/index.ts';
 import { formatCard } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex, ShowdownHand } from '../engine/index.ts';
-import { equityVsHand } from '../equity/index.ts';
+import { equityVsHand, equityVsRange } from '../equity/index.ts';
 
 type Stacks = [number, number];
 
@@ -45,6 +45,7 @@ export const NO_HAND: HandState = {
 
 const FULL_BOARD = 5;
 const TURN_BOARD = 4;
+const PREFLOP_SAMPLES = 2000;
 
 type EventType = EngineEvent['type'];
 type EventOf<K extends EventType> = Extract<EngineEvent, { type: K }>;
@@ -156,14 +157,30 @@ export function netOf(state: HandState, seat: SeatIndex): number {
   return (state.stacks[seat] - state.startStack) / state.bigBlind;
 }
 
-export function luckOf(state: HandState, seat: SeatIndex): number | null {
+function allInEquity(
+  hero: readonly [Card, Card],
+  villain: readonly [Card, Card],
+  board: readonly Card[],
+  rng: Rng,
+): number {
+  if (board.length === 0) {
+    return equityVsRange(hero, [{ cards: villain, weight: 1 }], board, {
+      rng,
+      samples: PREFLOP_SAMPLES,
+    });
+  }
+  return equityVsHand(hero, villain, board);
+}
+
+export function luckOf(state: HandState, seat: SeatIndex, rng: Rng): number | null {
   if (state.showdown === null || state.actionBoard.length === FULL_BOARD) {
     return null;
   }
-  const equity = equityVsHand(
+  const equity = allInEquity(
     state.showdown[seat].cards,
     state.showdown[otherOf(seat)].cards,
     state.actionBoard,
+    rng,
   );
   const pot = state.awarded[0] + state.awarded[1];
   return (state.awarded[seat] - equity * pot) / state.bigBlind;

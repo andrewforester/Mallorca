@@ -127,7 +127,7 @@ class TableTalk implements Talk {
   private session: SessionSummary = EMPTY_SUMMARY;
   private last: Situation | null = null;
   private lastLineAt = Number.NEGATIVE_INFINITY;
-  private lastLineKey = '';
+  private readonly usedStreets = new Set<string>();
   private readonly strengths = new Map<number, StrengthClass>();
 
   constructor(options: TalkOptions) {
@@ -190,8 +190,10 @@ class TableTalk implements Talk {
   private step(event: EngineEvent): Candidate | null {
     if (event.type === 'handStarted') {
       this.strengths.clear();
+      this.usedStreets.clear();
+      this.last = null;
     }
-    const key = `${this.hand.handNumber}:${this.hand.street}`;
+    const key = this.streetKey();
     this.hand = track(this.hand, event, this.seat);
     const situation =
       event.type === 'handEnded' ? this.endHand() : actedSituation(event, this.seat);
@@ -208,7 +210,11 @@ class TableTalk implements Talk {
     const won = hand.awarded[this.seat] > 0;
     const bluffCaught = !won && hand.showdown !== null && strength === 'weak' && hand.herLateBet;
     const netBb = netOf(hand, this.seat);
-    this.feeling = afterHand(this.feeling, { netBb, luckBb: luckOf(hand, this.seat), bluffCaught });
+    this.feeling = afterHand(this.feeling, {
+      netBb,
+      luckBb: luckOf(hand, this.seat, this.rng),
+      bluffCaught,
+    });
     this.session = withHand(this.session, {
       netBb,
       playerBluffShown: this.playerBluffShown(),
@@ -230,7 +236,7 @@ class TableTalk implements Talk {
 
   private unprompted(candidate: Candidate, nowMs: number): LineIntent | null {
     const { situation, strength, key } = candidate;
-    const sameStreet = !HAND_END.has(situation) && key === this.lastLineKey;
+    const sameStreet = !HAND_END.has(situation) && this.usedStreets.has(key);
     if (nowMs - this.lastLineAt < PACE_MS || sameStreet) {
       return null;
     }
@@ -242,8 +248,13 @@ class TableTalk implements Talk {
       return null;
     }
     this.lastLineAt = nowMs;
-    this.lastLineKey = key;
+    this.usedStreets.add(key);
+    this.usedStreets.add(this.streetKey());
     return this.intent(situation, strength, draw);
+  }
+
+  private streetKey(): string {
+    return `${this.hand.handNumber}:${this.hand.street}`;
   }
 
   private intent(situation: Situation, strength: StrengthClass, draw: Draw): LineIntent {

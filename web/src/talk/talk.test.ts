@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { mulberry32, parseCards } from '../cards/index.ts';
-import type { Card } from '../cards/index.ts';
 import { applyAction } from '../engine/hand.ts';
 import { call, check, deckOf, fold, raiseTo, startHand } from '../engine/testDeck.ts';
 import type { Action, Step } from '../engine/types.ts';
-import { equityVsHand } from '../equity/index.ts';
 import { BASE_HABITS, habitsAt } from './habits.ts';
 import type { Habits, Situation } from './habits.ts';
 import { CALM, afterHand } from './mood.ts';
@@ -92,6 +90,25 @@ describe('observe', () => {
     expect(late?.street).toBe('turn');
   });
 
+  it('lets a line on a call that closes the street take the next street slot', () => {
+    const t = chatty();
+    t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h', 0);
+    expect(t.act(call, 0)).toBeNull();
+    const closing = t.act(check, 2000);
+    expect(closing?.situation).toBe('herCall');
+    expect(closing?.street).toBe('flop');
+    expect(t.act(check, 5000)).toBeNull();
+  });
+
+  it('answers a new hand with herCall, not the end of the previous hand', () => {
+    const t = chatty();
+    t.begin('7c 2d', 'As Ah', 'Kd 9h 5h 3c Jd');
+    t.act(raiseTo(60), 0);
+    expect(t.act(fold, 2000)?.situation).toBe('handLost');
+    t.begin('7c 2d', 'As Ah', 'Kd 9h 5h 3c Jd', 4000);
+    expect(t.talk.replyIntent().situation).toBe('herCall');
+  });
+
   it('upgrades a lost showdown after her river bet with a weak hand to bluffCaught', () => {
     const t = chatty();
     t.begin('7c 2d', 'As Ah', 'Kd 9h 5h 3c Jd');
@@ -145,13 +162,9 @@ describe('outcomes', () => {
     t.act(raiseTo(2000), 0);
     const end = t.act(call, 2000);
     expect(end?.situation).toBe('handLost');
-    const equity = equityVsHand(
-      parseCards('Ah Ad') as [Card, Card],
-      parseCards('7c 2d') as [Card, Card],
-      [],
+    expect(t.talk.mood()).toEqual(
+      afterHand(CALM, { netBb: -100, luckBb: -100, bluffCaught: false }),
     );
-    const luckBb = (0 - equity * 4000) / 20;
-    expect(t.talk.mood()).toEqual(afterHand(CALM, { netBb: -100, luckBb, bluffCaught: false }));
     expect(t.talk.mood().tilt).toBeCloseTo(0.3, 12);
   });
 

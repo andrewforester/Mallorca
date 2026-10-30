@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { parseCards } from '../cards/index.ts';
+import { mulberry32, parseCards } from '../cards/index.ts';
 import type { Card } from '../cards/index.ts';
 import { call, check, deckOf, playEvents, raiseTo, startHand } from '../engine/testDeck.ts';
 import type { EngineEvent, SeatIndex } from '../engine/types.ts';
-import { equityVsHand } from '../equity/index.ts';
+import { equityVsHand, equityVsRange } from '../equity/index.ts';
 import { NO_HAND, luckOf, netOf, track } from './handTracker.ts';
 import type { HandState } from './handTracker.ts';
 
@@ -61,13 +61,13 @@ describe('luckOf', () => {
   it('is null when the last betting came on the river', () => {
     const start = startHand([2000, 2000], deckOf('Ah Ad', '7c 2d', 'Qs Jh 7d 4c 9h'));
     const end = playEvents(start, raiseTo(60), call, check, check, check, check, check, check);
-    expect(luckOf(replay(end.events), HER)).toBeNull();
+    expect(luckOf(replay(end.events), HER, mulberry32(1))).toBeNull();
   });
 
   it('is null when nobody reached a showdown', () => {
     const start = startHand([2000, 2000], deckOf('Ah Ad', '7c 2d', 'Qs Jh 7d 4c 9h'));
     const end = playEvents(start, raiseTo(60), { kind: 'fold' });
-    expect(luckOf(replay(end.events), HER)).toBeNull();
+    expect(luckOf(replay(end.events), HER, mulberry32(1))).toBeNull();
   });
 
   it('measures the chips won against her equity at the all-in board', () => {
@@ -80,7 +80,22 @@ describe('luckOf', () => {
       parseCards('7c 2d') as [Card, Card],
       parseCards('Qs 7h 7d'),
     );
-    expect(luckOf(state, HER)).toBeCloseTo((0 - equity * 4000) / 20, 9);
+    expect(luckOf(state, HER, mulberry32(1))).toBeCloseTo((0 - equity * 4000) / 20, 9);
     expect(netOf(state, HER)).toBe(-100);
+  });
+
+  it('estimates a preflop all-in by seeded sampling instead of enumerating every board', () => {
+    const start = startHand([2000, 2000], deckOf('Ah Ad', '7c 2d', 'Qs 7h 7d 4c 9h'));
+    const state = replay(playEvents(start, raiseTo(2000), call).events);
+    const luck = luckOf(state, HER, mulberry32(5));
+    const equity = equityVsRange(
+      parseCards('Ah Ad') as [Card, Card],
+      [{ cards: parseCards('7c 2d') as [Card, Card], weight: 1 }],
+      [],
+      { rng: mulberry32(5), samples: 2000 },
+    );
+    expect(luck).toBeCloseTo((0 - equity * 4000) / 20, 9);
+    expect(equity).toBeGreaterThan(0.8);
+    expect(equity).toBeLessThan(0.92);
   });
 });
