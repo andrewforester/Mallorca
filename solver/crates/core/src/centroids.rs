@@ -23,6 +23,7 @@ pub enum CentroidsError {
     BadDimension(u16),
     BadCount(u16),
     TrailingBytes,
+    NonFinite,
 }
 
 impl fmt::Display for CentroidsError {
@@ -35,6 +36,7 @@ impl fmt::Display for CentroidsError {
             CentroidsError::BadDimension(d) => write!(f, "centroid dimension {d} is wrong"),
             CentroidsError::BadCount(c) => write!(f, "centroid count {c} is out of range"),
             CentroidsError::TrailingBytes => write!(f, "centroid file has trailing bytes"),
+            CentroidsError::NonFinite => write!(f, "centroid file has a non-finite value"),
         }
     }
 }
@@ -80,12 +82,16 @@ impl<'a> Reader<'a> {
             return Err(CentroidsError::BadCount(count));
         }
         let body = self.take(count as usize * expected * 4)?;
-        Ok(body
+        let values: Vec<f32> = body
             .as_chunks::<4>()
             .0
             .iter()
             .map(|&b| f32::from_le_bytes(b))
-            .collect())
+            .collect();
+        if values.iter().any(|v| !v.is_finite()) {
+            return Err(CentroidsError::NonFinite);
+        }
+        Ok(values)
     }
 }
 
@@ -214,5 +220,19 @@ mod tests {
             Centroids::decode(&patched(river_at, &257u16.to_le_bytes())),
             Err(CentroidsError::BadCount(257))
         );
+    }
+
+    #[test]
+    fn non_finite_values_are_rejected() {
+        let river_at = HEADER + 4 + 3 * 50 * 4;
+        for bad in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY] {
+            for at in [HEADER + 4 + 8, river_at + 4 + 4] {
+                assert_eq!(
+                    Centroids::decode(&patched(at, &bad.to_le_bytes())),
+                    Err(CentroidsError::NonFinite),
+                    "{bad} at {at}"
+                );
+            }
+        }
     }
 }
