@@ -172,6 +172,9 @@ function record(rt: Runtime, events: EngineEvent[], opens = false): void {
   for (const event of events) {
     if (event.type === 'acted') {
       lastActions[event.seat] = actedLabel(event, opens);
+    } else if (event.type === 'streetDealt') {
+      lastActions[0] = null;
+      lastActions[1] = null;
     } else if (event.type === 'toppedUp' && event.seat === rt.humanSeat) {
       rt.topUps += event.amount;
     }

@@ -55,7 +55,7 @@ function Felt({
   return (
     <div class="table-felt">
       <div class="felt-plane">
-        {showPot && <Pot amount={vm.pot} />}
+        {showPot && <Pot {...vm.pot} />}
         <Board cards={vm.board} />
       </div>
       {vm.result !== null && (

@@ -43,7 +43,8 @@ describe('toViewModel', () => {
     expect(vm.blinds).toEqual({ small: 10, big: 20 });
     expect(vm.handNumber).toBe(1);
     expect(vm.board).toEqual([]);
-    expect(vm.pot).toBe(40);
+    expect(vm.pot).toEqual({ collected: 0, total: 40 });
+    expect(vm.controls.raise?.kind).toBe('raise');
     expect(vm.controls.enabled).toBe(true);
     expect(vm.controls.fold).toBe(false);
     expect(vm.controls.passive).toEqual({ kind: 'check', amount: 0 });
@@ -57,10 +58,31 @@ describe('toViewModel', () => {
     );
     await session.getState().start();
     const vm = toViewModel(session.getState(), 1);
-    expect(vm.pot).toBe(80);
+    expect(vm.pot).toEqual({ collected: 0, total: 80 });
     expect(vm.controls.fold).toBe(true);
     expect(vm.controls.passive).toEqual({ kind: 'call', amount: 40 });
     expect(vm.controls.raise?.presets).toEqual({ halfPot: 120, pot: 180, allIn: 2000 });
+  });
+
+  it('splits the pot into collected and total and names a bet or a raise', async () => {
+    let decisions = 0;
+    const session = open(
+      scriptedBot((legal) => {
+        decisions += 1;
+        if (decisions === 1 && legal.raise) {
+          return { kind: 'raise', to: 60 };
+        }
+        return decisions === 2 && legal.raise ? { kind: 'raise', to: 80 } : { kind: 'call' };
+      }),
+    );
+    await session.getState().start();
+    await session.getState().act({ kind: 'passive' });
+    const flop = toViewModel(session.getState(), 1);
+    expect(flop.pot).toEqual({ collected: 120, total: 120 });
+    expect(flop.controls.raise?.kind).toBe('bet');
+    await session.getState().act({ kind: 'passive' });
+    const after = toViewModel(session.getState(), 1);
+    expect(after.pot).toEqual({ collected: 120, total: 200 });
   });
 
   it('shows the bot cards and the result at showdown', async () => {
