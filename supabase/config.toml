@@ -170,3 +170,7 @@ s3_host = "env(S3_HOST)"
 s3_region = "env(S3_REGION)"
 s3_access_key = "env(S3_ACCESS_KEY)"
 s3_secret_key = "env(S3_SECRET_KEY)"
+
+[functions.talk]
+import_map = "./functions/deno.json"
+verify_jwt = false

@@ -1,11 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 import { corsHeaders, parseOrigins, preflight } from "./cors.ts";
-import { handle } from "./handler.ts";
+import { handleSafely } from "./handler.ts";
 import type { Deps } from "./handler.ts";
 import { createComplete } from "./model.ts";
-import { DEFAULT_DAILY_LIMIT, DEFAULT_GLOBAL_DAILY_LIMIT } from "../_shared/limits.ts";
-
-const MEMORY_LIMIT = 10;
+import {
+  DEFAULT_DAILY_LIMIT,
+  DEFAULT_GLOBAL_DAILY_LIMIT,
+  MEMORY_LIMIT,
+} from "../_shared/limits.ts";
 
 const numberFrom = (name: string, fallback: number): number => {
   const value = Number(Deno.env.get(name));
@@ -60,7 +62,7 @@ const deps: Deps = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return preflight(req, origins);
-  const res = await handle(req, deps);
+  const res = await handleSafely(req, deps);
   for (const [key, value] of Object.entries(corsHeaders(req.headers.get("Origin"), origins))) {
     res.headers.set(key, value);
   }

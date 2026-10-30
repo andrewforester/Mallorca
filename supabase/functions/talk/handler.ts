@@ -1,3 +1,4 @@
+import { MEMORY_LIMIT } from "../_shared/limits.ts";
 import { FALLBACK_LINES, leaksCards } from "./filter.ts";
 import { buildMessages, buildSummaryMessages, parseFacts } from "./prompt.ts";
 import type { Message, SystemBlock, Tool } from "./prompt.ts";
@@ -6,7 +7,6 @@ import { parseRequest } from "./types.ts";
 import type { LineRequest, ReplyRequest, SummaryRequest } from "./types.ts";
 
 export const MAX_BODY_BYTES = 16 * 1024;
-const MAX_MEMORIES = 10;
 
 export type Purpose = "line" | "signals" | "summary";
 
@@ -67,8 +67,17 @@ async function readBody(req: Request): Promise<unknown | Response> {
 async function safeSave(task: Promise<void>): Promise<void> {
   try {
     await task;
-  } catch {
-    return;
+  } catch (error) {
+    console.error("talk: save failed", error);
+  }
+}
+
+async function allowed(user: string, deps: Deps): Promise<boolean> {
+  try {
+    return await deps.consume(user);
+  } catch (error) {
+    console.error("talk: consume failed", error);
+    return false;
   }
 }
 
@@ -80,7 +89,7 @@ async function writeText(
 ): Promise<string> {
   const hole = req.facts.her ?? [];
   for (const strict of [false, true]) {
-    if (strict && !(await deps.consume(user))) break;
+    if (strict && !(await allowed(user, deps))) break;
     const prompt = buildMessages(req, memories, strict);
     const { text } = await deps.complete({ purpose: "line", ...prompt });
     const clean = text.trim();
@@ -121,7 +130,7 @@ async function handleReply(
   memories: string[],
   deps: Deps,
 ): Promise<Response> {
-  if (!(await deps.consume(user))) return silent();
+  if (!(await allowed(user, deps))) return silent();
   const [text, signals] = await Promise.all([
     writeText(req, user, memories, deps),
     readSignals(req, deps),
@@ -154,13 +163,22 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   if (body instanceof Response) return body;
   const parsed = parseRequest(body);
   if (parsed === null) return json(400, { error: "body" });
-  if (!(await deps.consume(user))) return silent();
+  if (!(await allowed(user, deps))) return silent();
   try {
-    const memories = (await deps.memories(user)).slice(0, MAX_MEMORIES);
+    const memories = (await deps.memories(user)).slice(0, MEMORY_LIMIT);
     if (parsed.kind === "line") return await handleLine(parsed, user, memories, deps);
     if (parsed.kind === "reply") return await handleReply(parsed, user, memories, deps);
     return await handleSummary(parsed, user, memories, deps);
   } catch {
+    return badGateway();
+  }
+}
+
+export async function handleSafely(req: Request, deps: Deps): Promise<Response> {
+  try {
+    return await handle(req, deps);
+  } catch (error) {
+    console.error("talk: unhandled", error);
     return badGateway();
   }
 }

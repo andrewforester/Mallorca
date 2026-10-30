@@ -1,6 +1,6 @@
 import { assert, assertEquals } from "../_shared/testing.ts";
 import { FALLBACK_LINES } from "./filter.ts";
-import { handle } from "./handler.ts";
+import { handle, handleSafely } from "./handler.ts";
 import type { Deps } from "./handler.ts";
 import { fixture } from "./fixtures/fixtures.ts";
 
@@ -20,6 +20,7 @@ interface Options {
   texts?: (string | Error)[];
   signals?: unknown;
   facts?: unknown;
+  throwFrom?: number;
 }
 
 function fake(options: Options = {}): Fake {
@@ -34,7 +35,13 @@ function fake(options: Options = {}): Fake {
   const allow = options.allow ?? Infinity;
   state.deps = {
     userId: () => Promise.resolve(options.user === undefined ? "u1" : options.user),
-    consume: () => Promise.resolve(state.consumed++ < allow),
+    consume: () => {
+      const n = state.consumed++;
+      if (options.throwFrom !== undefined && n >= options.throwFrom) {
+        return Promise.reject(new Error("rpc"));
+      }
+      return Promise.resolve(n < allow);
+    },
     memories: () => Promise.resolve(["Likes to bluff."]),
     saveLines: (_user, _session, lines) => {
       state.saved.push(lines);
@@ -213,4 +220,43 @@ Deno.test("a summary over the limit answers 429 silent", async () => {
   const f = fake({ allow: 0 });
   const res = await handle(post(fixture("summary")), f.deps);
   assertEquals(res.status, 429);
+});
+
+Deno.test("a throwing consume before the first model call answers 429 silent", async () => {
+  const f = fake({ throwFrom: 0 });
+  const res = await handle(post(fixture("line")), f.deps);
+  assertEquals(res.status, 429);
+  assertEquals(await json(res), { silent: true });
+  assertEquals(f.inputs.length, 0);
+});
+
+Deno.test("a throwing consume on a retry answers a fallback line", async () => {
+  const f = fake({ texts: [leak, "Clean line."], throwFrom: 1 });
+  const res = await handle(post(fixture("line")), f.deps);
+  assertEquals(res.status, 200);
+  const { text } = await json(res);
+  assert(FALLBACK_LINES.includes(text as string));
+  assertEquals(f.inputs.length, 1);
+});
+
+Deno.test("an exception that escapes handle becomes a 502", async () => {
+  const f = fake();
+  f.deps.userId = () => Promise.reject(new Error("auth down"));
+  const res = await handleSafely(post(fixture("line")), f.deps);
+  assertEquals(res.status, 502);
+});
+
+Deno.test("a failing save is logged and does not fail the answer", async () => {
+  const f = fake();
+  f.deps.saveLines = () => Promise.reject(new Error("db"));
+  const original = console.error;
+  const logged: unknown[][] = [];
+  console.error = (...args: unknown[]) => void logged.push(args);
+  try {
+    const res = await handle(post(fixture("line")), f.deps);
+    assertEquals(res.status, 200);
+  } finally {
+    console.error = original;
+  }
+  assertEquals(logged.length, 1);
 });

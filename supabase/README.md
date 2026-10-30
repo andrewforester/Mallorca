@@ -17,7 +17,10 @@ Function that gives Mallorca her voice. The game works without it: with no Supab
 4. Apply the schema: `supabase db push`.
 5. Set the secrets:
    `supabase secrets set ANTHROPIC_API_KEY=... TALK_DAILY_LIMIT=200 TALK_GLOBAL_DAILY_LIMIT=5000`.
-6. Deploy the function: `supabase functions deploy talk`.
+6. Deploy the function: `supabase functions deploy talk`. `config.toml` sets `[functions.talk]` with
+   `import_map = "./functions/deno.json"`, so the CLI resolves the npm imports, and `verify_jwt = false`: the gateway
+   would reject the browser's unauthenticated CORS preflight, so the function verifies the user itself with
+   `auth.getUser`.
 7. In the GitHub repository settings, add the variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` so the web
    build can reach the project.
 
