@@ -386,3 +386,34 @@ fn a_small_raise_taken_as_a_street_closing_call_is_called() {
     bot.street(model(), &[10, 20, 30]);
     assert_eq!(bot.cursor(), Some(flop));
 }
+
+#[test]
+fn a_small_bet_after_a_lost_cursor_is_rarely_folded() {
+    let flop_bet = Legal {
+        fold: true,
+        check: false,
+        call: Some(20),
+        raise: Some((40, 1800)),
+    };
+    let mut folds = 0;
+    for i in 0..100 {
+        let mut bot = started(false, [2000, 2000], [10, 20], [48, 49]);
+        bot.acted(model(), false, Move::Check, 0.0);
+        bot.acted(model(), false, Move::RaiseTo(200), 0.0);
+        bot.acted(model(), true, Move::Call, 0.0);
+        bot.street(model(), &[10, 20, 30]);
+        bot.acted(model(), true, Move::Check, 0.0);
+        bot.acted(model(), false, Move::RaiseTo(20), 0.0);
+        assert_eq!(bot.cursor(), None);
+        let mv = bot.decide(model(), &flop_bet, f64::from(i) / 100.0);
+        assert!(is_legal(mv, &flop_bet), "{mv:?}");
+        if mv == Move::Fold {
+            folds += 1;
+        }
+        if i == 0 {
+            let spot = model().spot(bot.cursor().unwrap()).unwrap();
+            assert_eq!(spot.to_call(), 0);
+        }
+    }
+    assert!(folds <= 15, "{folds} folds to a twentieth of the pot");
+}

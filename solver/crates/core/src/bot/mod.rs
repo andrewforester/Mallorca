@@ -4,7 +4,7 @@ use crate::abstraction::Abstraction;
 use crate::cards::Card;
 use crate::strategy::{StrategyError, StrategyFile};
 use crate::tree::{ActionKind, Node, NodeId, Street};
-use translate::{fraction, nearest, sample, scaled_raise};
+use translate::{fraction, nearest, pseudo_harmonic, sample, scaled_raise};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Move {
@@ -230,7 +230,7 @@ impl Bot {
         hand.shifted = shifted;
     }
 
-    pub fn decide(&mut self, model: &Model, legal: &Legal, draw: f64) -> Move {
+    pub fn decide(&mut self, model: &Model, legal: &Legal, mut draw: f64) -> Move {
         let Some(hand) = self.hand.as_mut() else {
             return passive(legal);
         };
@@ -252,6 +252,9 @@ impl Bot {
         });
         if !valid {
             hand.node = resync(model, hand, facing);
+            if facing {
+                draw = resync_to_check(model, hand, draw);
+            }
         }
         let Some(id) = hand.node else {
             return passive(legal);
@@ -316,6 +319,31 @@ fn resync(model: &Model, hand: &Hand, facing: bool) -> Option<NodeId> {
         .iter()
         .copied()
         .min_by(|&a, &b| distance(a).total_cmp(&distance(b)))
+}
+
+fn resync_to_check(model: &Model, hand: &mut Hand, draw: f64) -> f64 {
+    let Some(spot) = hand.node.and_then(|id| model.spot(id)) else {
+        return draw;
+    };
+    let tree_pot = f64::from(spot.committed[0] + spot.committed[1] - spot.to_call());
+    let to_call = hand.to_call(hand.hero);
+    let pot = f64::from(hand.committed[0] + hand.committed[1] - to_call);
+    let p = pseudo_harmonic(
+        0.0,
+        f64::from(spot.to_call()) / tree_pot,
+        f64::from(to_call) / pot,
+    );
+    if p <= 0.0 {
+        return draw;
+    }
+    if draw >= p {
+        return (draw - p) / (1.0 - p);
+    }
+    if let Some(id) = resync(model, hand, false) {
+        hand.node = Some(id);
+        hand.shifted = true;
+    }
+    draw / p
 }
 
 fn to_real(model: &Model, spot: &Spot<'_>, hand: &Hand, kind: ActionKind, legal: &Legal) -> Move {
