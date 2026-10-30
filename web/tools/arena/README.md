@@ -21,7 +21,7 @@ npm run arena:ui
 ```
 
 opens a local page over the results directory (`ARENA_DIR` overrides it): every run with its bb/100, and for a run
-with hands the cumulative result of bot A, the result by position, by the street where the hand ended and by
+with hands the cumulative result of bot A, the result by position, by the street of the last action and by
 showdown, and the hands, a duplicate pair at a time, as PokerStars text.
 
 Each pair plays the same deck twice with the seats swapped, so `bbPer100` is the mean of `net / 2 / bigBlind * 100` over pairs.

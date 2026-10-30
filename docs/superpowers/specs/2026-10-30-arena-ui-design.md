@@ -9,7 +9,7 @@ where the result comes from and the hands themselves. Matches are still started 
 - `npm run arena:ui` opens a page that lists every saved run with bots, bb/100, the 95% interval, hands, seed,
   commit and date.
 - For a run with hands: the cumulative result of bot A over the pairs, the result split by position, by the street
-  where the hand ended and by showdown, and a sortable list of hands where each pair of the duplicate opens side by
+  of the last action and by showdown, and a sortable list of hands where each pair of the duplicate opens side by
   side as PokerStars text.
 - Nothing of it reaches the game bundle or the deployed site.
 
@@ -36,7 +36,8 @@ where the result comes from and the hands themselves. Matches are still started 
    untouched.
 5. **Parsing in a Web Worker.** The worker fetches the hands file, parses it line by line and keeps the raw lines.
    For every hand it derives a summary: pair index, A's seat, A's position (button or big blind), A's net in
-   chips, the street where the hand ended, showdown or not, final pot. It answers the summaries once and a raw
+   chips, the street of the last action (an all-in preflop that runs out the board counts as preflop), showdown or
+   not, final pot. It answers the summaries once and a raw
    record on request. A 47 MB file of 40 000 hands parses in a few seconds without blocking the page.
 6. **Who is A.** In `match.ts` hand `k` of pair `i` has `handNumber = 2i + k + 1`, the button on seat 0, A on seat 0
    when `k = 0` and on seat 1 when `k = 1`. The viewer uses the hand number, not the names, so `math` against
@@ -46,8 +47,8 @@ where the result comes from and the hands themselves. Matches are still started 
      shows a mismatch warning (a hands file from another run);
    - `cumulative`: the cumulative A net in big blinds over pairs, reduced to at most 600 points by taking every
      n-th pair and the last;
-   - `slices`: hands, total big blinds and bb/100 per hand for A in each group: position, ending street
-     (preflop, flop, turn, river) and showdown or not. Slices carry no interval: the duplicate pairing that
+   - `slices`: hands, total big blinds and bb/100 per hand for A in each group: position, street of the last
+     action (preflop, flop, turn, river) and showdown or not. Slices carry no interval: the duplicate pairing that
      narrows the run's interval does not hold inside a slice, and the page says so;
    - `sortHands`: by A's absolute net or by final pot, filtered by position, street and showdown.
 8. **Hand view.** A row of the list is a pair. Opening it shows both hands of the pair as `toPokerStars` text, A's
