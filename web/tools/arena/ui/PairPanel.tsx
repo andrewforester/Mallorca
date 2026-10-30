@@ -12,12 +12,16 @@ interface Props {
 
 export function PairPanel({ row, a, record }: Props) {
   const [texts, setTexts] = useState<string[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
     setTexts(null);
-    void Promise.all(row.hands.map((h) => record(h.line))).then((records) => {
-      if (live) setTexts(records.map((r) => toPokerStars([r])));
-    });
+    setError(null);
+    Promise.all(row.hands.map((h) => record(h.line))).then(
+      (records) => live && setTexts(records.map((r) => toPokerStars([r]))),
+      (reason: unknown) =>
+        live && setError(reason instanceof Error ? reason.message : String(reason)),
+    );
     return () => {
       live = false;
     };
@@ -25,7 +29,8 @@ export function PairPanel({ row, a, record }: Props) {
   return (
     <section class="pair-panel">
       <h3>{`Pair ${row.pair + 1}: ${a} ${signed(row.net / BIG_BLIND)} bb`}</h3>
-      {texts === null ? (
+      {error !== null && <p class="warning">{`Could not read the hands of this pair: ${error}`}</p>}
+      {error !== null ? null : texts === null ? (
         <p class="note">Reading the hands.</p>
       ) : (
         <div class="hands">

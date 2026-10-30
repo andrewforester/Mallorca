@@ -55,6 +55,16 @@ const saveHands = values['no-hands']
     ? join(dir, `${name}.jsonl`)
     : resolve(values['save-hands']);
 
+for (const path of [out, saveHands]) {
+  if (path === undefined) continue;
+  try {
+    mkdirSync(dirname(path), { recursive: true });
+  } catch (error) {
+    console.error(`cannot create ${dirname(path)}: ${(error as Error).message}`);
+    process.exit(1);
+  }
+}
+
 const report = await runArena({
   a: values.a,
   b: values.b,
@@ -65,7 +75,6 @@ const report = await runArena({
   reportDir: dirname(out),
 });
 
-mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, JSON.stringify(report, null, 2) + '\n');
 console.error(`report ${out}`);
 

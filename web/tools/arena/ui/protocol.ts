@@ -7,4 +7,5 @@ export type WorkerRequest =
 export type WorkerResponse =
   | { type: 'loaded'; summaries: HandSummary[]; skipped: number }
   | { type: 'failed'; message: string }
-  | { type: 'record'; id: number; record: HandRecord };
+  | { type: 'record'; id: number; record: HandRecord }
+  | { type: 'missing'; id: number; line: number };

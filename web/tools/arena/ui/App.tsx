@@ -12,7 +12,10 @@ export function App() {
   const [selected, setSelected] = useState<string | null>(null);
   useEffect(() => {
     fetch('/api/runs')
-      .then((response) => response.json() as Promise<RunEntry[]>)
+      .then((response) => {
+        if (!response.ok) throw new Error(`/api/runs answered ${response.status}`);
+        return response.json() as Promise<RunEntry[]>;
+      })
       .then(
         (list) => setRuns({ kind: 'ready', runs: list }),
         (error: unknown) => setRuns({ kind: 'failed', message: String(error) }),

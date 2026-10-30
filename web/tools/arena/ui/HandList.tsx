@@ -57,8 +57,11 @@ function Row({ row, open, onOpen }: { row: PairRow; open: boolean; onOpen: () =>
           {row.pair + 1}
         </button>
       </td>
-      {row.hands.map((h) => (
-        <td key={h.handNumber} class={`num ${h.aNet < 0 ? 'loss' : 'win'}`}>
+      {row.hands.map((h, i) => (
+        <td
+          key={h.handNumber}
+          class={`num ${h.aNet < 0 ? 'loss' : 'win'}${row.matches[i] ? '' : ' dim'}`}
+        >
           {`${bb(h.aNet)} ${LABELS[h.street]?.toLowerCase()}${h.showdown ? ', showdown' : ''}`}
         </td>
       ))}
@@ -112,7 +115,7 @@ export function HandList({ hands, open, onOpen }: Props) {
           </select>
         </label>
       </div>
-      <p class="note">{`${rows.length} pairs where either hand matches. Amounts in big blinds for A.`}</p>
+      <p class="note">{`${rows.length} pairs where either hand matches, sorted by the matching hands. Faded hands do not match. Amounts in big blinds for A.`}</p>
       <div class="scroll">
         <table class="pairs">
           <thead>

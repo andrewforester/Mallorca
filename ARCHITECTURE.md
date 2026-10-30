@@ -22,8 +22,8 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 | `.github/workflows/`                                                | `web-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master`   |
 
 Generated and never committed: `web/dist`, `web/test-results`, `web/playwright-report`, `web/e2e/contact/`,
-`web/tools/golden/build`, `web/arena-out/` (the arena results, see "arena") and `web/src/cfr/mallorca.wasm`, which `npm run wasm` builds with cargo
-(the toolchain pinned in `solver/`) before `dev`, `test`, `build` and `arena`.
+`web/tools/golden/build`, `web/arena-out/` (the arena results, see "arena") and `web/src/cfr/mallorca.wasm`, which
+`npm run wasm` builds with cargo (the toolchain pinned in `solver/`) before `dev`, `test`, `build` and `arena`.
 
 ## Stack
 
@@ -365,7 +365,8 @@ files directly, including in workers. `tools/` may use the clock and Node APIs.
 - `paths.ts`: `resultsDir(cwd, env)` is `ARENA_DIR` resolved against `cwd`, else `web/arena-out` of the main
   checkout (the parent of `git rev-parse --git-common-dir`, shared by every worktree), else `<cwd>/arena-out`.
   `runName(a, b, pairs, seed, started)` is `<a>-<b>-<pairs>-s<seed>-<YYYYMMDD-HHMMSS>` in UTC.
-- `run.ts`: `runArena({ a, b, pairs, seed, workers, saveHands?, reportDir? })` splits the pair indices into contiguous chunks,
+- `run.ts`: `runArena({ a, b, pairs, seed, workers, saveHands?, reportDir? })` splits the pair indices into
+  contiguous chunks,
   runs them in process (`workers: 1`) or in `worker_threads` (`worker.ts`), gathers the results in index order and
   returns the `Report` (`a`, `b`, `pairs`, `hands`, `seed`, `bbPer100`, `ci95`, `durationMs`, `commit` from
   `git rev-parse --short HEAD` or `unknown`, `finishedAt`, and `handsFile`, the `saveHands` path relative to
@@ -375,8 +376,9 @@ files directly, including in workers. `tools/` may use the clock and Node APIs.
 - `cli.ts`: flags `--a`, `--b`, `--pairs` (1000), `--seed` (1), `--workers` (`os.availableParallelism()`),
   `--dir <path>` (`resultsDir` by default), `--out <file>`, `--save-hands <file>` and `--no-hands`. Every run is
   saved: the report to `--out` or `<dir>/<runName>.json`, the hands to `--save-hands` or `<dir>/<runName>.jsonl`
-  unless `--no-hands`. An unknown bot or a bad number exits with code 1. It prints the report path on stderr and
-  one line on stdout: `a vs b: +12.3 ± 4.5 bb/100 over 10000 hands in 182 s`.
+  unless `--no-hands`; both directories are created before the match. A directory that cannot be created, an
+  unknown bot or a bad number exits with code 1. It prints the report path on stderr and one line on stdout:
+  `a vs b: +12.3 ± 4.5 bb/100 over 10000 hands in 182 s`.
 - The tests in `tools/arena/*.test.ts` run under `npm test`.
 - `match.ts` calls `dispose` on both bots after each hand; `worker.ts` and the in-process path of `run.ts` await
   `prepareBots([a, b])` first.
@@ -395,7 +397,8 @@ engine types.
   lines and keeps the raw lines for `record(line)`.
 - `analysis.ts`: `summarize(record, line)` takes A's seat from the hand number (`k = (handNumber - 1) % 2`, A on
   seat `k`), so a bot against itself works; `pairNets`, `cumulative` (at most 600 points), `slices` (position,
-  street of the last action, showdown) and `pairRows` (filter and sort pairs).
+  street of the last action, showdown) and `pairRows`: a pair is kept when either hand passes the filter, its
+  `matches` mark which, and a filtered list is sorted by the matching hands.
 - Components: `App`, `RunList`, `RunView` (warns when the hands do not give the report's pairs and bb/100 within
   0.05), `Curve`, `Slices`, `HandList`, `PairPanel` (both hands of a pair as PokerStars text). Tests run under
   happy-dom in the `ui` Vitest project.

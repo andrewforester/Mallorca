@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, readdirSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -92,6 +92,23 @@ describe('default output', () => {
     expect(report.handsFile).toBe(files[1]);
     expect(Number.isNaN(Date.parse(report.finishedAt))).toBe(false);
     expect(readFileSync(join(dir, files[1]!), 'utf8').trim().split('\n')).toHaveLength(8);
+  });
+
+  it('fails before playing when the results directory cannot be created', () => {
+    const file = join(mkdtempSync(join(tmpdir(), 'arena-')), 'file');
+    writeFileSync(file, '');
+    const r = cli([
+      '--a',
+      'always-call',
+      '--b',
+      'always-raise',
+      '--pairs',
+      '5000000',
+      '--dir',
+      join(file, 'sub'),
+    ]);
+    expect(r.status).not.toBe(0);
+    expect(r.stdout).toBe('');
   });
 
   it('--no-hands saves only the report', () => {

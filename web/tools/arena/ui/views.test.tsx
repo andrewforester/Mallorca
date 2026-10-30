@@ -129,4 +129,18 @@ describe('RunView', () => {
     expect(texts[0]).toMatch(/Hold'em No Limit/);
     expect(texts[0]).toMatch(/random/);
   });
+
+  it('says so when a hand cannot be read', async () => {
+    const { records: list, nets } = records(30);
+    const load = () =>
+      loader(list)().then((hands) => ({
+        ...hands,
+        record: () => Promise.reject(new Error('no hand on line 7')),
+      }));
+    render(<RunView run={run({ bbPer100: stats(nets, 20).bbPer100 })} load={load} />);
+    fireEvent.click((await screen.findAllByTestId('pair-row'))[0]!);
+    expect(
+      await screen.findByText(/Could not read the hands of this pair: no hand on line 7/),
+    ).toBeTruthy();
+  });
 });

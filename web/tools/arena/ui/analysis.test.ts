@@ -117,6 +117,17 @@ describe('pairRows', () => {
     expect(pots).toEqual([...pots].sort((x, y) => y - x));
   });
 
+  it('sorts a filtered list by the hands that match', () => {
+    const { hands } = play('random', 'always-call', 5, 40);
+    const rows = pairRows(hands, { position: 'bigBlind' }, 'net');
+    expect(rows).toHaveLength(40);
+    const sizes = rows.map((r) => Math.abs(r.hands[1].aNet));
+    expect(sizes).toEqual([...sizes].sort((x, y) => y - x));
+    expect(rows.every((r) => r.matches[0] === false && r.matches[1] === true)).toBe(true);
+    const unfiltered = pairRows(hands, {}, 'net');
+    expect(unfiltered.every((r) => r.matches[0] && r.matches[1])).toBe(true);
+  });
+
   it('keeps a pair when either hand passes the filter', () => {
     const { hands } = play('random', 'always-call', 5, 40);
     const rows = pairRows(hands, { street: 'river', showdown: true }, 'net');

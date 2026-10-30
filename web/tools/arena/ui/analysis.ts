@@ -42,6 +42,7 @@ export interface PairRow {
   net: number;
   pot: number;
   hands: [HandSummary, HandSummary];
+  matches: [boolean, boolean];
 }
 
 function lastActionStreet(events: EngineEvent[]): EndStreet {
@@ -135,6 +136,12 @@ function passes(hand: HandSummary, filter: HandFilter): boolean {
   );
 }
 
+function sortKey(row: PairRow, sort: 'net' | 'pot', filtered: boolean): number {
+  if (!filtered) return sort === 'net' ? Math.abs(row.net) : row.pot;
+  const matching = row.hands.filter((_, i) => row.matches[i]);
+  return Math.max(...matching.map((h) => (sort === 'net' ? Math.abs(h.aNet) : h.pot)));
+}
+
 export function pairRows(hands: HandSummary[], filter: HandFilter, sort: 'net' | 'pot'): PairRow[] {
   const byPair = new Map<number, HandSummary[]>();
   for (const hand of hands) byPair.set(hand.pair, [...(byPair.get(hand.pair) ?? []), hand]);
@@ -142,14 +149,18 @@ export function pairRows(hands: HandSummary[], filter: HandFilter, sort: 'net' |
   for (const [pair, list] of byPair) {
     const [first, second] = [...list].sort((x, y) => x.handNumber - y.handNumber);
     if (first === undefined || second === undefined) continue;
-    if (!passes(first, filter) && !passes(second, filter)) continue;
+    const matches: [boolean, boolean] = [passes(first, filter), passes(second, filter)];
+    if (!matches[0] && !matches[1]) continue;
     rows.push({
       pair,
       net: first.aNet + second.aNet,
       pot: Math.max(first.pot, second.pot),
       hands: [first, second],
+      matches,
     });
   }
-  const key = sort === 'net' ? (r: PairRow) => Math.abs(r.net) : (r: PairRow) => r.pot;
-  return rows.sort((x, y) => key(y) - key(x) || x.pair - y.pair);
+  const filtered = Object.values(filter).some((v) => v !== undefined);
+  return rows.sort(
+    (x, y) => sortKey(y, sort, filtered) - sortKey(x, sort, filtered) || x.pair - y.pair,
+  );
 }

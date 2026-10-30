@@ -129,6 +129,10 @@ tr.selected {
   color: var(--loss);
 }
 
+.dim {
+  opacity: 0.45;
+}
+
 button.link {
   background: none;
   border: 0;

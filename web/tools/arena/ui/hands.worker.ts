@@ -26,5 +26,6 @@ addEventListener('message', (event: MessageEvent<WorkerRequest>) => {
     return;
   }
   const line = lines[request.line];
-  if (line !== undefined) reply({ type: 'record', id: request.id, record: JSON.parse(line) });
+  if (line === undefined) reply({ type: 'missing', id: request.id, line: request.line });
+  else reply({ type: 'record', id: request.id, record: JSON.parse(line) });
 });
