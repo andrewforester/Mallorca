@@ -1207,3 +1207,9 @@ button {
     transform: translateY(calc(-1 * var(--sweep-distance)));
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .bet-sweep {
+    visibility: hidden;
+  }
+}
