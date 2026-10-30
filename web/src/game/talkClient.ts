@@ -9,6 +9,10 @@ const MAX_RECENT = 8;
 const MAX_ACTIONS = 30;
 const MAX_ACTION_LENGTH = 80;
 const MAX_TEXT = 200;
+const MAX_RECENT_TEXT = 400;
+const MAX_SESSION_ID = 64;
+const LOCALE = /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})?$/;
+const DEFAULT_LOCALE = 'en';
 
 export interface ChatTurn {
   speaker: 'mallorca' | 'player';
@@ -97,11 +101,20 @@ function toFacts(facts: HandFacts): FactsPayload {
   };
 }
 
+function toSessionId(value: string): string {
+  return value.slice(0, MAX_SESSION_ID);
+}
+
+function toLocale(value: string): string {
+  const dashed = value.replace('_', '-');
+  return LOCALE.test(dashed) && dashed.length <= 10 ? dashed : DEFAULT_LOCALE;
+}
+
 function toHand(input: HandInput): HandPayload {
   const recent = input.recent.filter((turn) => turn.text.trim() !== '').slice(-MAX_RECENT);
   return {
-    sessionId: input.sessionId,
-    locale: input.locale,
+    sessionId: toSessionId(input.sessionId),
+    locale: toLocale(input.locale),
     facts: toFacts(input.facts),
     intent: {
       situation: input.intent.situation,
@@ -109,7 +122,10 @@ function toHand(input: HandInput): HandPayload {
       honest: input.intent.honest,
     },
     mood: moodWords(input.mood),
-    recent: recent.map((turn) => ({ speaker: turn.speaker, text: turn.text })),
+    recent: recent.map((turn) => ({
+      speaker: turn.speaker,
+      text: turn.text.slice(0, MAX_RECENT_TEXT),
+    })),
   };
 }
 
@@ -128,8 +144,8 @@ export function toSummaryPayload(input: {
 }): SummaryPayload {
   return {
     kind: 'summary',
-    sessionId: input.sessionId,
-    locale: input.locale,
+    sessionId: toSessionId(input.sessionId),
+    locale: toLocale(input.locale),
     summary: input.summary,
   };
 }
@@ -156,11 +172,17 @@ function parseReply(body: unknown): TalkReply | null {
   return { text: body.text, signals: parseSignals(body.signals) };
 }
 
+function aborted(signal: AbortSignal): Promise<null> {
+  return new Promise((resolve) => {
+    signal.addEventListener('abort', () => resolve(null));
+  });
+}
+
 async function post(options: RemoteOptions, tokens: Tokens, payload: unknown): Promise<unknown> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TALK_TIMEOUT_MS);
   try {
-    const token = await tokens();
+    const token = await Promise.race([tokens(), aborted(controller.signal)]);
     if (token === null) return null;
     const send = options.fetch ?? fetch;
     const response = await send(`${options.url}/functions/v1/talk`, {

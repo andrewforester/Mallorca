@@ -66,6 +66,27 @@ const base = {
 };
 
 describe('payload builders', () => {
+  it('caps recent text and session id and normalises the locale', () => {
+    const payload = toLinePayload({
+      ...base,
+      sessionId: 's'.repeat(100),
+      locale: 'en_US',
+      recent: [{ speaker: 'player', text: 'z'.repeat(500) }],
+    });
+    expect(payload.recent[0]?.text).toHaveLength(400);
+    expect(payload.sessionId).toHaveLength(64);
+    expect(payload.locale).toBe('en-US');
+    expect(toLinePayload({ ...base, locale: 'not a locale!' }).locale).toBe('en');
+    const summary = { hands: 0, netBb: 0, playerBluffsShown: 0, playerAllIns: 0, signals: {} };
+    expect(toSummaryPayload({ sessionId: 'x'.repeat(80), locale: 'x', summary }).locale).toBe('en');
+  });
+
+  it('does not append the reply text to recent', () => {
+    const payload = toReplyPayload({ ...base, text: 'secret question' });
+    expect(payload.recent).toEqual(recent);
+    expect(payload.recent.some((turn) => turn.text === 'secret question')).toBe(false);
+  });
+
   it('line payload has the shape of the line fixture', () => {
     const payload = toLinePayload(base);
     expect(shapeOf(payload)).toEqual(shapeOf(fixture('line')));
@@ -247,6 +268,22 @@ describe('remoteTalkClient', () => {
       anonKey: 'anon',
       fetch: fakeFetch(hang),
     });
+    const pending = client.line(toLinePayload(base));
+    await vi.advanceTimersByTimeAsync(TALK_TIMEOUT_MS);
+    expect(await pending).toBeNull();
+  });
+
+  it('resolves null when the token lookup hangs past the timeout', async () => {
+    vi.useFakeTimers();
+    let hang = false;
+    const stalled = ((input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.includes('/auth/v1/') && hang) return new Promise<Response>(() => undefined);
+      return Promise.resolve(authResponse());
+    }) as typeof fetch;
+    const client = await remoteTalkClient({ url: URL_BASE, anonKey: 'anon', fetch: stalled });
+    hang = true;
+    vi.setSystemTime(Date.now() + 2 * 3600 * 1000);
     const pending = client.line(toLinePayload(base));
     await vi.advanceTimersByTimeAsync(TALK_TIMEOUT_MS);
     expect(await pending).toBeNull();
