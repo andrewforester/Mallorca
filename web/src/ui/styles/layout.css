@@ -266,40 +266,148 @@ button {
   top: var(--board-y);
   z-index: 1;
   transform: translate(-50%, -50%);
-  perspective: 900px;
 }
 
 .felt-plane {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+}
+
+.board-row {
+  display: flex;
   align-items: center;
-  gap: var(--space-3);
-  transform: rotateX(var(--felt-tilt));
-  transform-style: preserve-3d;
+  gap: var(--space-2);
+}
+
+.pot-block {
+  display: flex;
+  justify-content: flex-end;
+  width: calc(var(--card-width) * 2);
 }
 
 .board {
   display: flex;
-  justify-content: center;
   gap: calc(var(--card-width) * 0.14);
-  min-width: calc(var(--card-width) * 5.6);
-  min-height: calc(var(--card-width) * 1.4);
+}
+
+.board-slot {
+  width: var(--card-width);
+  aspect-ratio: 250 / 350;
+  border: 1px dashed var(--color-slot-border);
+  border-radius: var(--radius-small);
 }
 
 .pot {
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
   font-family: var(--font-numeric);
-  font-size: var(--font-size-base);
   color: var(--color-felt-text);
+  text-align: right;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+}
+
+.pot .chip-stack {
+  width: calc(var(--chip-size-small) * 1.8);
+  height: calc(var(--chip-size-small) + var(--space-1));
+}
+
+.pot .chip {
+  width: var(--chip-size-small);
+  height: var(--chip-size-small);
+}
+
+.pot .chip:nth-child(1) {
+  top: var(--space-1);
+  left: 0;
+}
+
+.pot .chip:nth-child(2) {
+  top: var(--space-1);
+  left: calc(var(--chip-size-small) * 0.8);
+}
+
+.pot .chip:nth-child(3) {
+  top: 0;
+  left: calc(var(--chip-size-small) * 0.4);
+}
+
+.pot-amount {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+}
+
+.pot-total {
+  color: var(--color-muted);
+  font-size: var(--font-size-small);
+}
+
+.felt-spot {
+  position: absolute;
+  left: 50%;
+  display: grid;
+  grid-template-columns: 1fr minmax(var(--card-width), auto) 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  transform: translateX(-50%);
+}
+
+.felt-spot-top {
+  bottom: calc(100% + var(--space-4));
+}
+
+.felt-spot-bottom {
+  top: calc(100% + var(--space-4));
+}
+
+.felt-spot-dealer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.bet-chips {
+  display: flex;
+  grid-column: 2;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+.bet-amount {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-amount-bg);
+  color: var(--color-felt-text);
+  font-family: var(--font-numeric);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+}
+
+.chip-stack-small {
+  width: var(--chip-size-small);
+  height: calc(var(--chip-size-small) + var(--space-1));
+}
+
+.chip-stack-small .chip {
+  width: var(--chip-size-small);
+  height: var(--chip-size-small);
+}
+
+.chip-stack-small .chip:nth-child(1) {
+  top: var(--space-1);
+}
+
+.chip-stack-small .chip:nth-child(2) {
+  top: 0;
 }
 
 .result {
   position: absolute;
   left: 50%;
-  top: calc(var(--opponent-y) - var(--card-width) * 1.4);
+  top: calc(var(--opponent-y) - var(--card-width) * 1.4 - var(--space-6));
   z-index: 4;
   display: flex;
   flex-wrap: wrap;
@@ -388,14 +496,61 @@ button {
 }
 
 .seat-plaque {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
 }
 
-.seat-bottom .seat-plaque {
-  align-items: flex-start;
+.seat-bubble {
+  position: absolute;
+  bottom: calc(100% + var(--space-2));
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.bubble {
+  position: relative;
+  display: block;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-bubble);
+  font-family: var(--font-body);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--bubble-tail) / -2);
+  width: var(--bubble-tail);
+  height: var(--bubble-tail);
+  background: inherit;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.bubble-passive {
+  background: var(--color-text);
+  color: var(--color-accent-text);
+}
+
+.bubble-aggressive {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.bubble-fold,
+.bubble-thinking {
+  background: var(--color-bubble-fold);
+  color: var(--color-muted);
+}
+
+.bubble-thinking {
+  font-style: italic;
+  font-weight: 500;
 }
 
 .seat-info {
@@ -406,8 +561,13 @@ button {
   white-space: nowrap;
 }
 
+.seat-info {
+  transition: box-shadow 250ms ease;
+}
+
 .seat-active .seat-info {
   border-color: var(--color-accent);
+  box-shadow: var(--ring-turn), var(--shadow-glow);
 }
 
 .seat-name {
@@ -426,41 +586,19 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: var(--dealer-size);
+  height: var(--dealer-size);
   border-radius: 50%;
   background: radial-gradient(circle at 40% 35%, #fff, var(--color-chip-ivory));
+  box-shadow: var(--shadow-dealer);
   color: var(--color-accent-text);
   font-size: var(--font-size-small);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .seat-cards {
   display: flex;
   gap: var(--space-1);
-}
-
-.seat-tags {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-1);
-  min-height: 1.5rem;
-}
-
-.tag {
-  padding: 2px var(--space-3);
-  font-size: var(--font-size-small);
-  white-space: nowrap;
-  box-shadow: none;
-}
-
-.tag-thinking {
-  font-style: italic;
-}
-
-.tag-bet {
-  font-family: var(--font-numeric);
 }
 
 .card {
@@ -710,6 +848,10 @@ button {
     grid-template-columns: 1fr 1fr;
   }
 
+  .seat-bottom .card {
+    width: calc(var(--card-width) * 1.55);
+  }
+
   .action-buttons .button {
     font-size: var(--font-size-large);
   }
@@ -762,7 +904,7 @@ button {
     animation: deal-in 260ms ease-out both;
   }
 
-  .tag-thinking {
+  .bubble-thinking {
     animation: thinking 2.4s ease-in-out infinite;
   }
 
@@ -947,7 +1089,6 @@ button {
   background-color: transparent;
 }
 
-.scene-simple .felt-plane,
 .scene-simple .seat-top .card,
 .scene-simple .seat-bottom .card {
   transform: none;

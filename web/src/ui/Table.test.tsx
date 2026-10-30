@@ -49,6 +49,27 @@ describe('Table result and announcements', () => {
     );
   });
 
+  it('puts the dealer button once on the felt beside the button seat bet', () => {
+    const { container } = table();
+    const dealers = screen.getAllByTestId('dealer-button');
+    expect(dealers.length).toBe(1);
+    const dealer = screen.getByTestId('dealer-button');
+    expect(dealer.getAttribute('role')).toBe('img');
+    expect(dealer.getAttribute('aria-label')).toBe('Dealer button');
+    expect(container.querySelector('.table-felt')?.contains(dealer)).toBe(true);
+    expect(dealer.closest('.felt-spot')?.contains(screen.getByTestId('bet-0'))).toBe(true);
+    expect(screen.getByTestId('seat-0').contains(dealer)).toBe(false);
+  });
+
+  it('puts the bets on the felt instead of the seat tags', () => {
+    const { container } = table();
+    expect(container.querySelector('.tag-bet')).toBeNull();
+    const felt = container.querySelector('.table-felt');
+    expect(felt?.contains(screen.getByTestId('bet-0'))).toBe(true);
+    expect(felt?.contains(screen.getByTestId('bet-1'))).toBe(true);
+    expect(screen.getByTestId('seat-1').contains(screen.getByTestId('action-1'))).toBe(true);
+  });
+
   it('marks the player seat active on their turn', () => {
     table();
     expect(screen.getByTestId('seat-0').classList.contains('seat-active')).toBe(true);

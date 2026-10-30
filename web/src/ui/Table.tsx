@@ -1,10 +1,11 @@
 import type { Intent, LogEntry, Phase, SeatIndex, ViewModel } from '../game/index.ts';
 import { ActionBar } from './ActionBar.tsx';
-import { Board } from './Board.tsx';
+import { BetChips } from './BetChips.tsx';
+import { BoardRow } from './BoardRow.tsx';
+import { DealerButton } from './DealerButton.tsx';
 import { HandLog } from './HandLog.tsx';
 import { t } from './i18n.ts';
 import { handName } from './phrases.ts';
-import { Pot } from './Pot.tsx';
 import { Seat } from './Seat.tsx';
 
 export interface TableProps {
@@ -43,6 +44,16 @@ function chipsDirection(winner: SeatIndex | null, humanSeat: SeatIndex): string 
   return winner === humanSeat ? 'to-bottom' : 'to-top';
 }
 
+function FeltSpot({ vm, seat, side }: { vm: ViewModel; seat: SeatIndex; side: 'top' | 'bottom' }) {
+  const view = vm.seats[seat];
+  return (
+    <div class={`felt-spot felt-spot-${side}`}>
+      <span class="felt-spot-dealer">{view.isButton && <DealerButton />}</span>
+      <BetChips seat={seat} amount={view.bet} />
+    </div>
+  );
+}
+
 function Felt({
   vm,
   humanSeat,
@@ -52,12 +63,14 @@ function Felt({
   humanSeat: SeatIndex;
   showPot: boolean;
 }) {
+  const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
   return (
     <div class="table-felt">
+      <FeltSpot vm={vm} seat={botSeat} side="top" />
       <div class="felt-plane">
-        {showPot && <Pot {...vm.pot} />}
-        <Board cards={vm.board} />
+        <BoardRow pot={showPot ? vm.pot : null} board={vm.board} />
       </div>
+      <FeltSpot vm={vm} seat={humanSeat} side="bottom" />
       {vm.result !== null && (
         <span
           class={`result-chips result-chips-${chipsDirection(vm.result.winner, humanSeat)}`}
