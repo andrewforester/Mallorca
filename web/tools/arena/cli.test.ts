@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +15,18 @@ function cli(args: string[]) {
 describe('arena cli', () => {
   it('one worker and four workers give the same report', () => {
     const dir = mkdtempSync(join(tmpdir(), 'arena-'));
-    const base = ['--a', 'always-call', '--b', 'always-raise', '--pairs', '8', '--seed', '4'];
+    const base = [
+      '--a',
+      'always-call',
+      '--b',
+      'always-raise',
+      '--pairs',
+      '8',
+      '--seed',
+      '4',
+      '--dir',
+      dir,
+    ];
     const one = cli([...base, '--workers', '1', '--out', join(dir, 'a.json')]);
     const four = cli([...base, '--workers', '4', '--out', join(dir, 'b.json')]);
     expect(one.status).toBe(0);
@@ -52,6 +63,8 @@ describe('arena cli', () => {
       '2',
       '--save-hands',
       file,
+      '--dir',
+      dir,
     ]);
     expect(r.status).toBe(0);
     const lines = readFileSync(file, 'utf8').trim().split('\n');
@@ -61,6 +74,43 @@ describe('arena cli', () => {
     expect(first.humanSeat).toBeNull();
     expect(first.names).toEqual(['always-call', 'always-raise']);
     expect(JSON.parse(lines[1]!).names).toEqual(['always-raise', 'always-call']);
+  });
+});
+
+describe('default output', () => {
+  const base = ['--a', 'always-call', '--b', 'always-raise', '--pairs', '4', '--seed', '3'];
+
+  it('saves the report and the hands under --dir with the run name', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'arena-'));
+    const r = cli([...base, '--dir', dir]);
+    expect(r.status).toBe(0);
+    const files = readdirSync(dir).sort();
+    expect(files).toHaveLength(2);
+    expect(files[0]).toMatch(/^always-call-always-raise-4-s3-\d{8}-\d{6}\.json$/);
+    expect(files[1]).toBe(files[0]!.replace(/\.json$/, '.jsonl'));
+    const report = JSON.parse(readFileSync(join(dir, files[0]!), 'utf8'));
+    expect(report.handsFile).toBe(files[1]);
+    expect(Number.isNaN(Date.parse(report.finishedAt))).toBe(false);
+    expect(readFileSync(join(dir, files[1]!), 'utf8').trim().split('\n')).toHaveLength(8);
+  });
+
+  it('--no-hands saves only the report', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'arena-'));
+    expect(cli([...base, '--dir', dir, '--no-hands']).status).toBe(0);
+    const files = readdirSync(dir);
+    expect(files).toHaveLength(1);
+    expect(JSON.parse(readFileSync(join(dir, files[0]!), 'utf8')).handsFile).toBeNull();
+  });
+
+  it('--out and --save-hands write exactly those paths', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'arena-'));
+    const other = mkdtempSync(join(tmpdir(), 'arena-'));
+    const out = join(other, 'r.json');
+    const hands = join(other, 'h.jsonl');
+    expect(cli([...base, '--dir', dir, '--out', out, '--save-hands', hands]).status).toBe(0);
+    expect(readdirSync(dir)).toEqual([]);
+    expect(readdirSync(other).sort()).toEqual(['h.jsonl', 'r.json']);
+    expect(JSON.parse(readFileSync(out, 'utf8')).handsFile).toBe('h.jsonl');
   });
 });
 

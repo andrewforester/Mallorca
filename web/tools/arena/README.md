@@ -6,7 +6,23 @@ Duplicate matches between two bots, reported in bb/100 with a 95% confidence int
 npm run arena -- --a math --b always-call --pairs 2000
 ```
 
-Flags: `--a`, `--b` (`math`, `cfr`, `always-call`, `always-raise`, `random`), `--pairs` (1000), `--seed` (1), `--workers` (available cores), `--out <file>` (JSON report), `--save-hands <file>` (JSONL hand records).
+Flags: `--a`, `--b` (`math`, `cfr`, `always-call`, `always-raise`, `random`), `--pairs` (1000), `--seed` (1), `--workers` (available cores), `--dir <path>` (results directory), `--out <file>` (JSON report), `--save-hands <file>` (JSONL hand records), `--no-hands`.
+
+Every run is saved. The report goes to `<dir>/<a>-<b>-<pairs>-s<seed>-<YYYYMMDD-HHMMSS>.json` and the hands next to
+it as `.jsonl`, unless `--out` or `--save-hands` name other paths; `--no-hands` skips the hands. The default
+directory is `web/arena-out` of the main checkout, shared by all worktrees; `--dir` or `ARENA_DIR` override it. The
+report holds `a`, `b`, `pairs`, `hands`, `seed`, `bbPer100`, `ci95`, `durationMs`, `commit`, `finishedAt` and
+`handsFile` (relative to the report, or `null`).
+
+## Viewer
+
+```
+npm run arena:ui
+```
+
+opens a local page over the results directory (`ARENA_DIR` overrides it): every run with its bb/100, and for a run
+with hands the cumulative result of bot A, the result by position, by the street where the hand ended and by
+showdown, and the hands, a duplicate pair at a time, as PokerStars text.
 
 Each pair plays the same deck twice with the seats swapped, so `bbPer100` is the mean of `net / 2 / bigBlind * 100` over pairs.
 

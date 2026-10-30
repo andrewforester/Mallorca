@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, relative } from 'node:path';
 import { Worker } from 'node:worker_threads';
 import { CASH } from '../../src/engine/index.ts';
 import { handRecord } from '../../src/game/records/record.ts';
@@ -18,6 +19,7 @@ export interface ArenaOptions {
   seed: number;
   workers: number;
   saveHands?: string;
+  reportDir?: string;
 }
 
 export interface Report {
@@ -30,6 +32,8 @@ export interface Report {
   ci95: number | null;
   durationMs: number;
   commit: string;
+  finishedAt: string;
+  handsFile: string | null;
 }
 
 function commitHash(): string {
@@ -111,6 +115,7 @@ export async function runArena(options: ArenaOptions): Promise<Report> {
         lines.push(JSON.stringify(record));
       });
     }
+    mkdirSync(dirname(options.saveHands), { recursive: true });
     writeFileSync(options.saveHands, lines.join('\n') + '\n');
   }
   return {
@@ -123,5 +128,10 @@ export async function runArena(options: ArenaOptions): Promise<Report> {
     ci95: Number.isFinite(stats.ci95) ? stats.ci95 : null,
     durationMs: Date.now() - started,
     commit: commitHash(),
+    finishedAt: new Date().toISOString(),
+    handsFile:
+      options.saveHands === undefined
+        ? null
+        : relative(options.reportDir ?? process.cwd(), options.saveHands),
   };
 }
