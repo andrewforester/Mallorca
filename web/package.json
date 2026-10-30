@@ -16,6 +16,7 @@
     "prearena": "npm run wasm",
     "arena": "node tools/arena/cli.ts",
     "arena:ui": "vite --config tools/arena/ui/vite.config.ts",
+    "arena:publish": "node tools/arena/publishCli.ts",
     "contact": "npm run build && node e2e/contact.ts",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write . && eslint . --fix"

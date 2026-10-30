@@ -25,7 +25,7 @@ function readReport(path: string): Record<string, unknown> | null {
 }
 
 export function handsPath(dir: string, name: string): string | null {
-  if (!name.endsWith('.jsonl') || /[/\\]/.test(name) || name.includes('..')) return null;
+  if (!/\.jsonl(\.gz)?$/.test(name) || /[/\\]/.test(name) || name.includes('..')) return null;
   const path = join(dir, name);
   return existsSync(path) && statSync(path).isFile() ? path : null;
 }
@@ -36,7 +36,7 @@ function handsName(file: string, raw: Record<string, unknown>): string | null {
   return file.replace(/\.json$/, '.jsonl');
 }
 
-function entry(dir: string, file: string): RunEntry | null {
+export function readRun(dir: string, file: string): RunEntry | null {
   const path = join(dir, file);
   const raw = readReport(path);
   if (raw === null) return null;
@@ -56,7 +56,7 @@ export function listRuns(dir: string): RunEntry[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir)
     .filter((file) => file.endsWith('.json'))
-    .map((file) => entry(dir, file))
+    .map((file) => readRun(dir, file))
     .filter((run): run is RunEntry => run !== null)
     .sort((x, y) => y.report.finishedAt.localeCompare(x.report.finishedAt));
 }

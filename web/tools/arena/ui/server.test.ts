@@ -83,6 +83,12 @@ describe('handsPath', () => {
     expect(handsPath(dir, 'h.jsonl')).toBe(join(dir, 'h.jsonl'));
   });
 
+  it('resolves a gzipped hands file', () => {
+    const dir = fixture();
+    writeFileSync(join(dir, 'p.jsonl.gz'), '');
+    expect(handsPath(dir, 'p.jsonl.gz')).toBe(join(dir, 'p.jsonl.gz'));
+  });
+
   it.each(['../h.jsonl', 'a/h.jsonl', 'a\\h.jsonl', 'new.json', 'missing.jsonl', '', '..'])(
     'rejects %j',
     (name) => {
