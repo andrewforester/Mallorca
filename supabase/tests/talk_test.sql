@@ -1,5 +1,6 @@
 begin;
-select plan(23);
+create extension if not exists pgtap with schema extensions;
+select plan(24);
 
 select has_table('public', 'talk_lines', 'talk_lines exists');
 select has_table('public', 'memories', 'memories exists');
@@ -74,10 +75,11 @@ select is(
   1::bigint,
   'a user sees only own memories'
 );
-select is(
-  (select count(*) from public.usage),
-  0::bigint,
-  'a user sees no usage rows'
+select throws_ok(
+  $$select count(*) from public.usage$$,
+  '42501',
+  null,
+  'a user cannot read usage'
 );
 select throws_ok(
   $$insert into public.talk_lines (user_id, session_id, speaker, text)
@@ -128,6 +130,12 @@ select is(
   (select public.consume_call('00000000-0000-0000-0000-0000000000a2', 2, 3)),
   false,
   'the total limit refuses'
+);
+
+select is(
+  (select public.consume_call('00000000-0000-0000-0000-0000000000a2', null, 10)),
+  false,
+  'a null limit refuses the call'
 );
 
 reset role;

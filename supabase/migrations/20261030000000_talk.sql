@@ -37,6 +37,10 @@ alter table public.memories enable row level security;
 alter table public.usage enable row level security;
 alter table public.usage_total enable row level security;
 
+revoke insert, update, delete on public.talk_lines, public.memories, public.usage, public.usage_total
+  from anon, authenticated;
+revoke select on public.usage, public.usage_total from anon, authenticated;
+
 create policy talk_lines_select_own on public.talk_lines
   for select to authenticated
   using (user_id = (select auth.uid()));
@@ -66,7 +70,7 @@ begin
   select calls into user_calls
     from public.usage where user_id = p_user and day = today for update;
 
-  if total_calls >= global_limit or user_calls >= user_limit then
+  if not coalesce(total_calls < global_limit and user_calls < user_limit, false) then
     return false;
   end if;
 
