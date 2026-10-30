@@ -44,7 +44,6 @@ where
     });
 }
 
-#[cfg(test)]
 pub(crate) fn map_chunks_mut<T, R, F>(
     data: &mut [T],
     size: usize,
@@ -80,6 +79,18 @@ where
         .collect()
 }
 
+pub(crate) fn map_ranges<R, F>(total: usize, size: usize, threads: usize, work: F) -> Vec<R>
+where
+    R: Send,
+    F: Fn(Range<usize>) -> R + Sync,
+{
+    let mut slots = vec![(); total];
+    map_chunks_mut(&mut slots, size, threads, |index, chunk| {
+        let from = index * size;
+        work(from..from + chunk.len())
+    })
+}
+
 pub(crate) fn atomic_cells(n: usize, value: f32) -> Vec<AtomicU32> {
     (0..n).map(|_| AtomicU32::new(value.to_bits())).collect()
 }
@@ -101,6 +112,15 @@ mod tests {
             assert_eq!(sums, vec![(0, 12), (1, 44), (2, 34)]);
             assert_eq!(data, (0..10).map(|v| v * 2).collect::<Vec<u32>>());
         }
+    }
+
+    #[test]
+    fn map_ranges_covers_the_total_in_order() {
+        for threads in [1, 3, 8] {
+            let ranges = map_ranges(10, 4, threads, |range| range);
+            assert_eq!(ranges, vec![0..4, 4..8, 8..10]);
+        }
+        assert!(map_ranges(0, 4, 2, |range| range).is_empty());
     }
 
     #[test]

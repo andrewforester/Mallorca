@@ -1,6 +1,7 @@
 pub mod abstraction;
 pub mod bot;
 pub mod cards;
+pub mod centroids;
 pub mod cfr;
 pub mod checkpoint;
 pub mod eval;

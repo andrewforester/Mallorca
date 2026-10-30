@@ -1,10 +1,10 @@
 mod buckets;
 mod export;
-#[cfg(test)]
 mod kmeans;
 mod lbr;
 mod measure;
 mod parallel;
+mod potential;
 mod thresholds;
 mod train;
 mod tree;
