@@ -85,4 +85,22 @@ describe('HandLogDrawer', () => {
     fireEvent.click(close);
     expect(onClose).toHaveBeenCalledTimes(3);
   });
+
+  it('scrolls the body to the newest line when entries arrive', () => {
+    const onClose = vi.fn();
+    const view = render(
+      <HandLogDrawer entries={HAND} names={names} humanSeat={0} onClose={onClose} />,
+    );
+    const body = document.querySelector('.hand-log-body') as HTMLElement;
+    Object.defineProperty(body, 'scrollHeight', { configurable: true, value: 640 });
+    view.rerender(
+      <HandLogDrawer
+        entries={[...HAND, e('call', { seat: 1, amount: 80 })]}
+        names={names}
+        humanSeat={0}
+        onClose={onClose}
+      />,
+    );
+    expect(body.scrollTop).toBe(640);
+  });
 });

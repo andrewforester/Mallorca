@@ -69,7 +69,14 @@ function handNumber(entries: LogEntry[]): number | string {
 
 export function HandLogDrawer({ entries, names, humanSeat, onClose }: HandLogDrawerProps) {
   const closeButton = useRef<HTMLButtonElement>(null);
+  const body = useRef<HTMLDivElement>(null);
   useEffect(() => closeButton.current?.focus(), []);
+  useEffect(() => {
+    const node = body.current;
+    if (node) {
+      node.scrollTop = node.scrollHeight;
+    }
+  }, [entries.length]);
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -96,7 +103,7 @@ export function HandLogDrawer({ entries, names, humanSeat, onClose }: HandLogDra
             ×
           </button>
         </header>
-        <div class="hand-log-body">
+        <div class="hand-log-body" ref={body}>
           {groupHand(entries).map((group) => (
             <Street key={group.street} group={group} names={names} humanSeat={humanSeat} />
           ))}
