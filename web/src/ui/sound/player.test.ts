@@ -160,6 +160,24 @@ describe('createSynthPlayer', () => {
   });
 });
 
+describe('resume', () => {
+  it('resumes a context that is not running', () => {
+    const ctx = new FakeContext();
+    (ctx as { state: string }).state = 'interrupted';
+    const player = createSynthPlayer(() => ctx as unknown as AudioContext);
+    player.unlock();
+    expect(ctx.resumed).toBe(1);
+  });
+
+  it('does not resume a running context', () => {
+    const ctx = new FakeContext();
+    ctx.state = 'running';
+    const player = createSynthPlayer(() => ctx as unknown as AudioContext);
+    player.unlock();
+    expect(ctx.resumed).toBe(0);
+  });
+});
+
 describe('hardening', () => {
   afterEach(() => vi.unstubAllGlobals());
 

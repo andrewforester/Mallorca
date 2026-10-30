@@ -55,12 +55,28 @@ function useLogDrawer(phase: Phase) {
   return { open: open && !ended, toggle, close, flip, dismiss };
 }
 
+type UnlockingPreferences = Preferences & { unlock: () => void };
+
+function useUnlockingPreferences(player: SoundPlayer): UnlockingPreferences {
+  const preferences = usePreferences();
+  return {
+    ...preferences,
+    unlock: () => {
+      if (preferences.sound) player.unlock();
+    },
+    toggleSound: () => {
+      if (!preferences.sound) player.unlock();
+      preferences.toggleSound();
+    },
+  };
+}
+
 export function App(props: AppProps) {
   const { session, humanSeat } = props;
   const state = useSessionState(session);
-  const preferences = usePreferences();
-  const drawer = useLogDrawer(state.phase);
   const player = props.player ?? silentPlayer;
+  const preferences = useUnlockingPreferences(player);
+  const drawer = useLogDrawer(state.phase);
   useSoundCues(session, player, preferences.sound);
   const vm = state.phase === 'idle' ? null : toViewModel(state, humanSeat);
   const handOver = state.phase === 'handOver' ? vm : null;
@@ -76,13 +92,16 @@ export function App(props: AppProps) {
         simple={preferences.simple}
         farewell={props.farewell ?? false}
         onStart={(mode, opponent) => {
-          player.unlock();
+          preferences.unlock();
           void session.getState().start(mode, opponent);
         }}
       />
     );
   }
-  const act = (intent: Intent) => void session.getState().act(intent);
+  const act = (intent: Intent) => {
+    preferences.unlock();
+    void session.getState().act(intent);
+  };
   return (
     <Scene simple={preferences.simple}>
       <div class="app">

@@ -72,6 +72,36 @@ describe('App sound', () => {
     session.getState().dispose();
   });
 
+  it('does not unlock the player on the start click while sound is off', async () => {
+    localStorage.setItem('mallorca.sound', 'off');
+    const { unlock, player } = recorder();
+    const { session } = setup(TOURNAMENT, memoryStore(), undefined, player);
+    fireEvent.click(screen.getByTestId('start-tournament'));
+    expect(unlock).not.toHaveBeenCalled();
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    session.getState().dispose();
+    localStorage.clear();
+  });
+
+  it('unlocks the player when sound is switched on and on every human action', async () => {
+    localStorage.setItem('mallorca.sound', 'off');
+    const { unlock, player } = recorder();
+    const { session } = setup(TOURNAMENT, memoryStore(), false, player);
+    fireEvent.click(screen.getByTestId('start-tournament'));
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    expect(unlock).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId('sound-toggle'));
+    expect(unlock).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByTestId('sound-toggle'));
+    expect(unlock).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByTestId('sound-toggle'));
+    expect(unlock).toHaveBeenCalledTimes(2);
+    fireEvent.click(screen.getByTestId('fold'));
+    expect(unlock).toHaveBeenCalledTimes(3);
+    session.getState().dispose();
+    localStorage.clear();
+  });
+
   it('plays cues while sound is on and none once it is switched off', async () => {
     localStorage.clear();
     const { plays, player } = recorder();

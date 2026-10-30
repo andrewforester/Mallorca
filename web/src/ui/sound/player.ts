@@ -141,7 +141,7 @@ export function createSynthPlayer(
         if (ctx === null) return;
         rig = createRig(ctx);
       }
-      if (rig.ctx.state === 'suspended') void rig.ctx.resume().catch(() => undefined);
+      if (rig.ctx.state !== 'running') void rig.ctx.resume().catch(() => undefined);
     },
     play(cue, delayMs = 0) {
       if (rig === null) return;
