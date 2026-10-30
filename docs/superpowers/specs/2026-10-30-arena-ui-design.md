@@ -11,7 +11,8 @@ where the result comes from and the hands themselves. Matches are still started 
 - For a run with hands: the cumulative result of bot A over the pairs, the result split by position, by the street
   of the last action and by showdown, and a sortable list of hands where each pair of the duplicate opens side by
   side as PokerStars text.
-- Nothing of it reaches the game bundle or the deployed site.
+- Nothing of it reaches the game bundle. Runs published with `npm run arena:publish` are shown at
+  `<site>/arena/`.
 
 ## Decisions
 
@@ -59,9 +60,28 @@ where the result comes from and the hands themselves. Matches are still started 
    fonts, light and dark from `prefers-color-scheme`. English copy inside the components, no all-caps words, no
    dashes as punctuation. It is a developer tool, so it does not use the game's i18n.
 
+## Public viewer
+
+10. **Publishing chosen runs.** `npm run arena:publish -- <run>` takes a report by file name in the results directory
+    or by path, and writes `web/arena-results/<name>.json` and `<name>.jsonl.gz` (gzip level 9) next to it, then
+    rewrites `web/arena-results/index.json`, the `RunEntry` list of that directory. The published report carries
+    `finishedAt` (taken from the file time for older reports) and `handsFile` (`<name>.jsonl.gz`, or `null`). With
+    no argument the command only rewrites the index, which is how a run is unpublished after deleting its files. It
+    prints the bytes added. The directory is committed; a 20 000 pair run is about 2.2 MB.
+11. **Static build.** `npm run build` also builds the viewer into `dist/arena/` with base `<BASE_PATH>arena/` and
+    `web/arena-results` as its public directory, so the page is `<site>/arena/` on Vercel and on GitHub Pages. The
+    game's config and bundle do not change.
+12. **Data source.** In development the page reads `/api/runs` and `/api/hands?file=`; in the build it reads
+    `index.json` and the published files under its base. The worker fetches bytes and gunzips them with
+    `DecompressionStream` when they start with the gzip magic bytes, so a host that already decoded the file with
+    `Content-Encoding: gzip` works too.
+13. **First publication.** The runs already played are published in the same pull request; they become public only
+    when it is merged.
+
 ## Out of scope
 
-Starting matches from the page, a graphical table replay, comparing two runs on one chart, deploying the viewer.
+Starting matches from the page, a graphical table replay, comparing two runs on one chart, uploading runs anywhere
+but the repository.
 
 ## Testing
 
