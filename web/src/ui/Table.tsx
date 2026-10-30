@@ -7,6 +7,8 @@ import { HandLog } from './HandLog.tsx';
 import { t } from './i18n.ts';
 import { handName } from './phrases.ts';
 import { Seat } from './Seat.tsx';
+import { useHeldActions } from './useHeldActions.ts';
+import type { HeldActions } from './useHeldActions.ts';
 import { useSweep } from './useSweep.ts';
 
 export interface TableProps {
@@ -94,6 +96,15 @@ function Felt({
   );
 }
 
+function useSeatActions(vm: ViewModel): HeldActions {
+  const [first, second] = vm.seats;
+  return useHeldActions(
+    [first.lastAction, second.lastAction],
+    [first.closingAction, second.closingAction],
+    vm.board.length,
+  );
+}
+
 interface ResultProps {
   text: string;
   canContinue: boolean;
@@ -135,7 +146,9 @@ export function Table({
   const text = resultText(vm, humanSeat);
   const raise = vm.controls.raise;
   const barKey = raise === null ? 'none' : `${raise.min}:${raise.max}`;
-  const thinking = botWaiting && vm.seats[botSeat].isToAct;
+  const [bot, human] = [vm.seats[botSeat], vm.seats[humanSeat]];
+  const held = useSeatActions(vm);
+  const thinking = botWaiting && bot.isToAct && !held.holding;
   const announcement = text ?? (thinking ? t('seat.thinking') : '');
   const winner = vm.result?.winner ?? null;
   return (
@@ -154,14 +167,16 @@ export function Table({
       )}
       <Seat
         index={botSeat}
-        view={vm.seats[botSeat]}
+        view={bot}
+        action={held.actions[botSeat]}
         thinking={thinking}
         winner={winner === botSeat}
         position="top"
       />
       <Seat
         index={humanSeat}
-        view={vm.seats[humanSeat]}
+        view={human}
+        action={held.actions[humanSeat]}
         thinking={false}
         winner={winner === humanSeat}
         position="bottom"

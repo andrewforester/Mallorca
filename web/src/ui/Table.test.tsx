@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/preact';
+import { act, cleanup, render, screen } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fixtureResult, viewModel } from './fixtures.ts';
 import { Table } from './Table.tsx';
@@ -114,5 +114,51 @@ describe('Table result and announcements', () => {
     vm.seats[1].isToAct = true;
     table(vm, 'botThinking');
     expect(screen.getByTestId('live-region').textContent).toBe('Thinking…');
+  });
+
+  it('keeps the closing call on the bot seat for a moment after the next card', () => {
+    vi.useFakeTimers();
+    const flop = viewModel({ enabled: false });
+    flop.board = [48, 41, 25];
+    flop.seats[0].lastAction = { key: 'bet', params: { amount: 80 } };
+    flop.seats[1].lastAction = null;
+    const view = render(
+      <Table
+        vm={flop}
+        phase="botThinking"
+        humanSeat={0}
+        log={[]}
+        onAct={vi.fn()}
+        onNextHand={vi.fn()}
+      />,
+    );
+    const turn = viewModel({ enabled: false });
+    turn.board = [48, 41, 25, 10];
+    turn.seats[0].isToAct = false;
+    turn.seats[1].isToAct = true;
+    turn.seats[0].lastAction = null;
+    turn.seats[1].lastAction = null;
+    turn.seats[0].closingAction = { key: 'bet', params: { amount: 80 } };
+    turn.seats[1].closingAction = { key: 'call', params: { amount: 80 } };
+    view.rerender(
+      <Table
+        vm={turn}
+        phase="botThinking"
+        humanSeat={0}
+        log={[]}
+        onAct={vi.fn()}
+        onNextHand={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId('action-1').textContent).toBe('Call 80');
+    expect(screen.getByTestId('action-0').textContent).toBe('Bet 80');
+    expect(screen.queryByTestId('thinking-1')).toBeNull();
+    act(() => {
+      vi.advanceTimersByTime(900);
+    });
+    expect(screen.queryByTestId('action-1')).toBeNull();
+    expect(screen.queryByTestId('action-0')).toBeNull();
+    expect(screen.getByTestId('thinking-1')).not.toBeNull();
+    vi.useRealTimers();
   });
 });
