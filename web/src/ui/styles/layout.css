@@ -849,7 +849,7 @@ button {
     flex-direction: column;
     gap: var(--space-2);
     width: 18rem;
-    max-height: calc(100dvh - 64px - 220px);
+    max-height: calc(100dvh - 64px - var(--action-bar-reserve));
   }
 }
 
@@ -1282,7 +1282,7 @@ button {
   color: var(--color-accent);
 }
 
-@media (min-aspect-ratio: 1/1) {
+@media (min-aspect-ratio: 1/1) and (min-height: 561px) {
   .hand-log-scrim {
     background: transparent;
     pointer-events: none;
@@ -1293,7 +1293,7 @@ button {
     right: var(--space-5);
     bottom: auto;
     width: var(--drawer-width-wide);
-    max-height: calc(100dvh - var(--drawer-top) - var(--space-5));
+    max-height: calc(100dvh - var(--drawer-top) - var(--action-bar-reserve));
     border: 1px solid var(--color-glass-border);
     border-radius: var(--radius-medium);
   }
