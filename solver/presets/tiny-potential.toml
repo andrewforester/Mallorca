@@ -1,0 +1,27 @@
+name = "tiny-potential"
+small_blind = 10
+big_blind = 20
+stack = 400
+buckets = [8, 8, 8]
+memory_limit_gb = 12.0
+threads = 2
+bucketing = "potential"
+checkpoint_minutes = 1
+
+[preflop]
+open_bb = 2.5
+iso_vs_limp_bb = 3.5
+three_bet_x = 3.0
+four_bet_x = 2.2
+
+[postflop]
+first_bet_pot = [1.0]
+first_raise_pot = []
+max_aggressive = 2
+all_in_threshold = 0.6667
+
+[cfr]
+alpha = 1.5
+beta = 0.0
+gamma = 2.0
+discount_interval = 1000

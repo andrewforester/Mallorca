@@ -6,7 +6,7 @@ use mallorca_core::tree::{Node, Street, Tree};
 const TINY: &str = include_str!("../../../presets/tiny.toml");
 const FLOP_CLASSES: usize = 1_286_792;
 
-fn play_file() -> Vec<u8> {
+fn uniform_file() -> StrategyFile {
     let preset = Preset::from_toml(TINY).unwrap();
     let tree = Tree::build(&preset);
     let mut probabilities = Vec::new();
@@ -30,9 +30,26 @@ fn play_file() -> Vec<u8> {
         checkpoint: 1,
     };
     let flop = (0..FLOP_CLASSES).map(|i| (i % 8) as u8).collect();
-    let t: Vec<f32> = (1..8).map(|i| i as f32 / 8.0).collect();
     StrategyFile::new(header, tree, vec![flop], probabilities)
+}
+
+fn play_file() -> Vec<u8> {
+    let t: Vec<f32> = (1..8).map(|i| i as f32 / 8.0).collect();
+    uniform_file()
         .with_thresholds(vec![(Street::Turn, t.clone()), (Street::River, t)])
+        .to_bytes()
+}
+
+fn centroid_file() -> Vec<u8> {
+    let turn: Vec<f32> = (0..8)
+        .flat_map(|k| (0..50).map(move |bin| if bin == k * 7 { 1.0 } else { 0.0 }))
+        .collect();
+    let river: Vec<f32> = (0..8)
+        .flat_map(|k| (0..8).map(move |_| k as f32 / 7.0))
+        .collect();
+    let clusters = std::array::from_fn(|i| (i % 8) as u8);
+    uniform_file()
+        .with_centroids(vec![(Street::Turn, turn), (Street::River, river)], clusters)
         .to_bytes()
 }
 
@@ -71,6 +88,33 @@ fn a_bot_plays_a_hand_through_the_abi() {
     assert_eq!(kind, KIND_CHECK);
     bot_free(bot);
     assert_eq!(decide(bot, 0, 1, -1, -1, -1, 0.0), KIND_NONE);
+}
+
+#[test]
+fn a_bot_plays_a_hand_on_a_centroid_file() {
+    let bytes = centroid_file();
+    assert_eq!(u16::from_le_bytes([bytes[4], bytes[5]]), 3);
+    let model = loaded(&bytes);
+    assert!(model >= 0, "{model}");
+    let bot = bot_new(model);
+    assert!(bot >= 0);
+    hand_started(bot, 0, 400, 400, 10, 20);
+    hole_cards(bot, 48, 45);
+    acted(bot, 0, KIND_CALL, 0, 0.5);
+    assert_eq!(decide(bot, 0, 1, -1, 40, 400, 0.0), KIND_CHECK);
+    acted(bot, 1, KIND_CHECK, 0, 0.0);
+    let boards: [(u32, [u32; 5]); 3] = [
+        (3, [0, 21, 38, 0, 0]),
+        (4, [0, 21, 38, 9, 0]),
+        (5, [0, 21, 38, 9, 30]),
+    ];
+    for (count, b) in boards {
+        street(bot, count, b[0], b[1], b[2], b[3], b[4]);
+        assert_eq!(decide(bot, 0, 1, -1, 20, 400, 0.0), KIND_CHECK);
+        acted(bot, 1, KIND_CHECK, 0, 0.0);
+        acted(bot, 0, KIND_CHECK, 0, 0.5);
+    }
+    bot_free(bot);
 }
 
 #[test]
