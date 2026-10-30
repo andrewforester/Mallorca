@@ -442,7 +442,7 @@ impl Builder<'_> {
             .iter()
             .map(|f| opp_bet + f * pot_after_call)
             .collect();
-        if post.min_raise && s.aggressive == 1 {
+        if post.min_raise && s.aggressive == 1 && !post.first_raise_pot.is_empty() {
             targets.push(f64::from(min_to));
         }
         targets
@@ -885,6 +885,15 @@ mod tests {
             kinds(&t, bet),
             vec![Fold, Call, RaiseTo(240), RaiseTo(480), AllIn]
         );
+    }
+
+    #[test]
+    fn min_raise_needs_a_first_raise_size() {
+        let plain = tiny_potential();
+        let mut with_min = plain.clone();
+        with_min.postflop.min_raise = true;
+        assert!(with_min.postflop.first_raise_pot.is_empty());
+        assert_eq!(Tree::build(&with_min).nodes(), Tree::build(&plain).nodes());
     }
 
     #[test]
