@@ -3,7 +3,7 @@ import type { Card, Rng } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { BASE_HABITS, habitsAt } from './habits.ts';
 import type { Habit, Habits, Level, Situation } from './habits.ts';
-import type { Snapshot } from '../emotion/index.ts';
+import type { Impulse, Snapshot } from '../emotion/index.ts';
 import { createFeeling } from './feeling.ts';
 import type { Feeling } from './feeling.ts';
 import { NO_HAND, netOf, playerCardsShown, track } from './handTracker.ts';
@@ -42,10 +42,15 @@ export interface Talk {
   facts(): HandFacts;
   moodWords(): string[];
   feeling(): Snapshot;
+  feelingAt(nowMs: number): Snapshot;
+  impulses(): Impulse[];
+  stance(): Stance | null;
   style(): Style;
   summary(): SessionSummary;
   setLevel(level: Level): void;
 }
+
+export type Stance = 'bluff' | 'hide';
 
 export interface TalkOptions {
   seat: SeatIndex;
@@ -139,6 +144,7 @@ class TableTalk implements Talk {
   private lastLineAt = Number.NEGATIVE_INFINITY;
   private readonly usedStreets = new Set<string>();
   private readonly strengths = new Map<number, StrengthClass>();
+  private bluffKey: string | null = null;
 
   constructor(options: TalkOptions) {
     this.seat = options.seat;
@@ -199,6 +205,24 @@ class TableTalk implements Talk {
     return this.heart.snapshot();
   }
 
+  feelingAt(nowMs: number): Snapshot {
+    return this.heart.at(nowMs);
+  }
+
+  impulses(): Impulse[] {
+    return this.heart.drain();
+  }
+
+  stance(): Stance | null {
+    if (this.hand.ended || this.hand.her === null) {
+      return null;
+    }
+    if (this.bluffKey === this.streetKey()) {
+      return 'bluff';
+    }
+    return this.knownStrength() === 'strong' ? 'hide' : null;
+  }
+
   style(): Style {
     return this.heart.style();
   }
@@ -227,7 +251,11 @@ class TableTalk implements Talk {
       return null;
     }
     this.last = situation;
-    return { situation, strength: this.strength(), key, street };
+    const strength = this.strength();
+    if (situation === 'herBet' && strength === 'weak') {
+      this.bluffKey = this.streetKey();
+    }
+    return { situation, strength, key, street };
   }
 
   private endHand(): Situation {
@@ -291,6 +319,11 @@ class TableTalk implements Talk {
       actionStreet,
       handNumber,
     };
+  }
+
+  private knownStrength(): StrengthClass | null {
+    const known = [...this.strengths.entries()].sort((a, b) => b[0] - a[0]);
+    return known[0]?.[1] ?? null;
   }
 
   private strength(): StrengthClass {

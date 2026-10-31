@@ -1,6 +1,14 @@
 import type { Card, Rng } from '../cards/index.ts';
 import { MALLORCA, createEngine } from '../emotion/index.ts';
-import type { Emotion, Engine, Money, Personality, Snapshot } from '../emotion/index.ts';
+import type {
+  Emotion,
+  Engine,
+  Impulse,
+  Money,
+  Personality,
+  Snapshot,
+  TableEvent,
+} from '../emotion/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { equityVsHand, equityVsRange } from '../equity/index.ts';
 import type { HandState } from './handTracker.ts';
@@ -20,6 +28,8 @@ export interface Feeling {
   see(event: EngineEvent, hand: HandState): void;
   hear(signals: readonly Signal[]): void;
   snapshot(): Snapshot;
+  at(nowMs: number): Snapshot;
+  drain(): Impulse[];
   style(): Style;
   words(): string[];
   speakFactor(): number;
@@ -32,6 +42,7 @@ const MAX_WORDS = 3;
 const OVERLOADED = 0.6;
 const SPEAK_GAIN = 0.25;
 const NO_SHOWDOWN_EQUITY = 0.5;
+const MAX_PENDING = 64;
 
 const WORDS: Readonly<Record<Emotion, string>> = {
   hope: 'hopeful',
@@ -56,6 +67,7 @@ class TableFeeling implements Feeling {
   private lastMs: number | null = null;
   private herAggressive = false;
   private readonly equities = new Map<string, number>();
+  private pending: Impulse[] = [];
 
   constructor(options: FeelingOptions) {
     this.seat = options.seat;
@@ -99,12 +111,29 @@ class TableFeeling implements Feeling {
 
   hear(signals: readonly Signal[]): void {
     for (const signal of signals) {
-      this.engine.event({ kind: 'chat', signal });
+      this.feel({ kind: 'chat', signal });
     }
   }
 
   snapshot(): Snapshot {
     return this.engine.snapshot();
+  }
+
+  at(nowMs: number): Snapshot {
+    const last = this.lastMs;
+    return last === null || nowMs <= last
+      ? this.engine.snapshot()
+      : this.engine.ahead((nowMs - last) / 1000);
+  }
+
+  drain(): Impulse[] {
+    const out = this.pending;
+    this.pending = [];
+    return out;
+  }
+
+  private feel(e: TableEvent): void {
+    this.pending = [...this.pending, ...this.engine.event(e)].slice(-MAX_PENDING);
   }
 
   style(): Style {
@@ -136,11 +165,11 @@ class TableFeeling implements Feeling {
   }
 
   private dealt(hand: HandState): void {
-    this.engine.event({ kind: 'deal', equity: this.equity(hand), ...this.money(hand) });
+    this.feel({ kind: 'deal', equity: this.equity(hand), ...this.money(hand) });
   }
 
   private moved(hand: HandState): void {
-    this.engine.event({ kind: 'street', equity: this.equity(hand), ...this.money(hand) });
+    this.feel({ kind: 'street', equity: this.equity(hand), ...this.money(hand) });
   }
 
   private acted(event: Extract<EngineEvent, { type: 'acted' }>, hand: HandState): void {
@@ -148,7 +177,7 @@ class TableFeeling implements Feeling {
     if (event.seat === this.seat) {
       this.herAggressive ||= raise;
     } else if (raise) {
-      this.engine.event({
+      this.feel({
         kind: 'opponentBet',
         sizeBb: event.amount / hand.bigBlind,
         equity: this.equity(hand),
@@ -161,15 +190,14 @@ class TableFeeling implements Feeling {
   private ended(hand: HandState): void {
     const won = hand.awarded[this.seat] > 0;
     const netBb = netOf(hand, this.seat);
-    this.engine.event({ kind: 'result', netBb, lastEquity: this.whenMoneyWentIn(hand) });
+    this.feel({ kind: 'result', netBb, lastEquity: this.whenMoneyWentIn(hand) });
     const her = hand.her;
     if (her === null || !hand.herLateBet) return;
     const weak = strengthOf(her, hand.board, this.rng) === 'weak';
     if (!weak) return;
     const potBb = (hand.awarded[0] + hand.awarded[1]) / hand.bigBlind;
-    if (!won && hand.showdown !== null)
-      this.engine.event({ kind: 'bluff', succeeded: false, potBb });
-    if (won && hand.showdown === null) this.engine.event({ kind: 'bluff', succeeded: true, potBb });
+    if (!won && hand.showdown !== null) this.feel({ kind: 'bluff', succeeded: false, potBb });
+    if (won && hand.showdown === null) this.feel({ kind: 'bluff', succeeded: true, potBb });
   }
 
   private whenMoneyWentIn(hand: HandState): number {

@@ -373,3 +373,48 @@ describe('summary', () => {
     });
   });
 });
+
+describe('what the face reads', () => {
+  it('drains the impulses of her feeling once', () => {
+    const t = chatty();
+    t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h');
+    const dealt = t.talk.impulses();
+    expect(dealt.some((i) => i.emotion === 'joy')).toBe(true);
+    expect(t.talk.impulses()).toEqual([]);
+  });
+
+  it('reads her feeling ahead in time without changing it', () => {
+    const t = chatty();
+    t.begin('7c 2d', 'As Ah', 'Kd 9h 5h 3c Jd', 0);
+    t.act(raiseTo(60), 1000);
+    t.act(fold, 2000);
+    const now = t.talk.feeling();
+    const later = t.talk.feelingAt(30_000);
+    expect(t.talk.feeling()).toEqual(now);
+    expect(later.time).toBeCloseTo(now.time + 28);
+    expect(t.talk.feelingAt(1000)).toEqual(now);
+  });
+
+  it('bluffs after her raise with a weak hand until the street changes', () => {
+    const t = chatty();
+    t.begin('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
+    expect(t.talk.stance()).toBeNull();
+    t.act(call);
+    t.act(raiseTo(60));
+    expect(t.talk.stance()).toBe('bluff');
+    t.act(call);
+    expect(t.talk.stance()).toBeNull();
+  });
+
+  it('hides a strong hand while the hand runs', () => {
+    const t = chatty();
+    t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h');
+    t.act(raiseTo(60));
+    t.act(call);
+    expect(t.talk.stance()).toBe('hide');
+    t.act(check);
+    t.act(raiseTo(100));
+    t.act(fold);
+    expect(t.talk.stance()).toBeNull();
+  });
+});
