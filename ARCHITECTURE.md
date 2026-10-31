@@ -648,7 +648,7 @@ text)` (the caller's localized label) append the player's line at once and call 
   `sound`; off silences every cue.
 - Live face (`ui/avatar/`): `FaceSeat` seats her in the chair of the photo: its bottom edge is the far table rail
   (`railY` of the `PlateGeometry`, `--rail-y`), so her body goes on below the rail and her plaque and cards lie in
-  front of her; her action bubble moves to the right of the plaque. With the face preference on (`mallorca.face`, on
+  front of her. Nothing covers her face: her action bubble moves to the left of the plaque, the hand result below the board (over the idle action bar on phones), and on phones her talk bubble below her cards. With the face preference on (`mallorca.face`, on
   unless stored `off`, the menu checkbox `face`) it shows the still `portrait.webp` at once and, when `canRender()`
   finds hardware WebGL (a software renderer such as SwiftShader or llvmpipe counts as weak) on a device that is not
   weak (more than 2 cores and more than 2 GB when the browser tells), imports `ui/avatar/live.ts` on demand, so
