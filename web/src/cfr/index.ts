@@ -1,4 +1,5 @@
 export { createCfrBrain } from './brain.ts';
+export type { CfrBrain } from './brain.ts';
 export type { CfrBot, CfrModel, CfrSpot, HandStart } from './model.ts';
 export { createCfrModel, inflate } from './model.ts';
 export type { BotRecord, ReadBytes, ShippedStrategy, ShippedStrategyKey } from './strategies.ts';

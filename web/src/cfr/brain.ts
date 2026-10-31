@@ -20,7 +20,9 @@ function choiceOf(action: Action): Decision['solverChoice'] {
   }
 }
 
-export function createCfrBrain(model: CfrModel, rng: Rng): Required<Brain> {
+export type CfrBrain = Required<Brain> & { range(): Float32Array | null };
+
+export function createCfrBrain(model: CfrModel, rng: Rng): CfrBrain {
   const bot = model.newBot();
   return {
     observe(o: Observation) {
@@ -42,6 +44,9 @@ export function createCfrBrain(model: CfrModel, rng: Rng): Required<Brain> {
     decide(legal: LegalActions): Decision {
       const action = bot.decide(legal, rng.next());
       return { action, solverChoice: choiceOf(action), evByAction: { ...UNKNOWN_EV } };
+    },
+    range() {
+      return bot.range();
     },
     dispose() {
       bot.free();

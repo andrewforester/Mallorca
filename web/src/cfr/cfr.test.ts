@@ -122,3 +122,31 @@ describe('CfrBrain', () => {
     }
   });
 });
+
+describe('the range of a cfr brain', () => {
+  const open: LegalActions = { fold: true, check: false, call: 10, raise: { min: 40, max: 2000 } };
+  const start = {
+    type: 'handStarted' as const,
+    handNumber: 1,
+    heroOnButton: true,
+    heroStack: 2000,
+    villainStack: 2000,
+    smallBlind: 10,
+    bigBlind: 20,
+  };
+
+  it('narrows after the brain decides and does not change its play', () => {
+    const asked = createCfrBrain(model, mulberry32(9));
+    const plain = createCfrBrain(model, mulberry32(9));
+    for (const brain of [asked, plain]) {
+      brain.observe(start);
+      brain.observe({ type: 'holeCards', cards: parseCards('Kc Qc') as [number, number] });
+    }
+    expect(asked.range()?.every((w) => w === 1)).toBe(true);
+    const action = asked.decide(open).action;
+    expect(plain.decide(open).action).toEqual(action);
+    expect(asked.range()?.some((w) => w !== 1)).toBe(true);
+    asked.dispose();
+    plain.dispose();
+  });
+});
