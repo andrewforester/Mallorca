@@ -12,20 +12,12 @@ use mallorca_core::tree::{Node, Street, Tree};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+const ALL_STREETS: u8 = 0b1111;
+
 #[derive(Clone, Copy, ValueEnum)]
 pub enum StreetSet {
-    Browser,
     All,
     Play,
-}
-
-impl StreetSet {
-    fn mask(self) -> u8 {
-        match self {
-            StreetSet::Browser => 0b0011,
-            StreetSet::All | StreetSet::Play => 0b1111,
-        }
-    }
 }
 
 #[derive(Args)]
@@ -36,7 +28,7 @@ pub struct ExportArgs {
     pub data: PathBuf,
     #[arg(long)]
     pub checkpoint: Option<u32>,
-    #[arg(long, value_enum, default_value = "browser")]
+    #[arg(long, value_enum, default_value = "play")]
     pub streets: StreetSet,
     #[arg(long)]
     pub out: PathBuf,
@@ -59,8 +51,6 @@ pub fn build(
             .ok_or_else(|| format!("no checkpoints in {}", dir.display()))?,
     };
     let loaded = load_checkpoint(&dir, n, &fp, tree.action_slot_count())?;
-    let mask = streets.mask();
-    let included = |street: Street| mask & (1 << street.as_index()) != 0;
     let mut probabilities = Vec::new();
     for (id, node) in tree.nodes().iter().enumerate() {
         let Node::Decision {
@@ -69,9 +59,6 @@ pub fn build(
         else {
             continue;
         };
-        if !included(*street) {
-            continue;
-        }
         for bucket in 0..tree.buckets()[street.as_index()] {
             let offset = tree.offset(id as u32, bucket);
             let average = loaded.storage.average_strategy(offset, actions.len());
@@ -80,9 +67,8 @@ pub fn build(
     }
     let tables = match streets {
         StreetSet::Play => vec![abstraction.table_bytes(Street::Flop).to_vec()],
-        _ => [Street::Flop, Street::Turn, Street::River]
+        StreetSet::All => [Street::Flop, Street::Turn, Street::River]
             .into_iter()
-            .filter(|&street| included(street))
             .map(|street| abstraction.table_bytes(street).to_vec())
             .collect(),
     };
@@ -91,7 +77,7 @@ pub fn build(
         small_blind: preset.small_blind,
         big_blind: preset.big_blind,
         stack: preset.stack,
-        streets: mask,
+        streets: ALL_STREETS,
         iterations: loaded.iterations,
         checkpoint: loaded.checkpoint,
     };
@@ -110,7 +96,7 @@ pub fn build(
                 centroids.clusters,
             ))
         }
-        _ => Ok(file),
+        (StreetSet::All, _) => Ok(file),
     }
 }
 
@@ -164,12 +150,25 @@ mod tests {
         build(&dir.join("tiny.toml"), dir, None, streets)
     }
 
+    #[derive(clap::Parser)]
+    struct Cli {
+        #[command(flatten)]
+        export: ExportArgs,
+    }
+
     #[test]
-    fn browser_export_holds_preflop_and_flop_only() {
-        let dir = trained("export-browser", 200);
-        let file = export(&dir, StreetSet::Browser).unwrap();
-        assert_eq!(file.streets, 0b0011);
-        assert_eq!(file.tables.len(), 1);
+    fn streets_default_to_the_play_file() {
+        use clap::Parser;
+        let cli =
+            Cli::try_parse_from(["export", "--preset", "p", "--data", "d", "--out", "o"]).unwrap();
+        assert!(matches!(cli.export.streets, StreetSet::Play));
+    }
+
+    #[test]
+    fn export_carries_the_checkpoint_and_normalised_slices() {
+        let dir = trained("export-header", 200);
+        let file = export(&dir, StreetSet::All).unwrap();
+        assert_eq!(file.streets, 0b1111);
         assert_eq!(
             file.tables[0],
             read_table(&dir.join("flop.bkt"), Street::Flop, 8).unwrap()
@@ -184,14 +183,11 @@ mod tests {
         let mut slices = 0;
         for (id, node) in file.tree.nodes().iter().enumerate() {
             if let Node::Decision { street, .. } = node {
-                if file.includes(*street) {
-                    for bucket in 0..file.tree.buckets()[street.as_index()] {
-                        let p = file.probabilities(id as u32, bucket);
-                        assert_eq!(p.iter().map(|&x| u32::from(x)).sum::<u32>(), 255);
-                        slices += 1;
-                    }
-                } else {
-                    assert!(matches!(street, Street::Turn | Street::River));
+                assert!(file.includes(*street));
+                for bucket in 0..file.tree.buckets()[street.as_index()] {
+                    let p = file.probabilities(id as u32, bucket);
+                    assert_eq!(p.iter().map(|&x| u32::from(x)).sum::<u32>(), 255);
+                    slices += 1;
                 }
             }
         }
@@ -204,7 +200,7 @@ mod tests {
     #[test]
     fn export_matches_the_average_strategy() {
         let dir = trained("export-average", 300);
-        let file = export(&dir, StreetSet::Browser).unwrap();
+        let file = export(&dir, StreetSet::All).unwrap();
         let preset = load_preset(&dir.join("tiny.toml")).unwrap();
         let tree = Tree::build(&preset);
         let abstraction = load_abstraction(&preset, &dir).unwrap();
@@ -282,6 +278,7 @@ mod tests {
         assert_eq!(file.tables.len(), 1);
         let again = StrategyFile::from_bytes(&file.to_bytes()).unwrap();
         assert_eq!(again, file);
+        assert!(mallorca_core::bot::Model::new(again.clone()).is_ok());
         let live = mallorca_core::abstraction::Abstraction::from_strategy(&again).unwrap();
         let preset = load_preset(&dir.join("tiny.toml")).unwrap();
         let tables = load_abstraction(&preset, &dir).unwrap();
@@ -341,6 +338,7 @@ mod tests {
         assert_eq!(u16::from_le_bytes([bytes[4], bytes[5]]), 3);
         let again = StrategyFile::from_bytes(&bytes).unwrap();
         assert_eq!(again, file);
+        assert!(mallorca_core::bot::Model::new(again.clone()).is_ok());
         let live = mallorca_core::abstraction::Abstraction::from_strategy(&again).unwrap();
         let preset = load_preset(&dir.join("tiny.toml")).unwrap();
         let tables = load_abstraction(&preset, &dir).unwrap();
@@ -377,11 +375,11 @@ mod tests {
     fn explicit_checkpoint_is_chosen() {
         let dir = trained("export-explicit", 100);
         go(&session(&dir, Some(100), 3, Some(1))).unwrap();
-        let first = build(&dir.join("tiny.toml"), &dir, Some(1), StreetSet::Browser).unwrap();
-        let latest = export(&dir, StreetSet::Browser).unwrap();
+        let first = build(&dir.join("tiny.toml"), &dir, Some(1), StreetSet::All).unwrap();
+        let latest = export(&dir, StreetSet::All).unwrap();
         assert_eq!((first.checkpoint, first.iterations), (1, 100));
         assert_eq!((latest.checkpoint, latest.iterations), (2, 200));
-        let missing = build(&dir.join("tiny.toml"), &dir, Some(9), StreetSet::Browser);
+        let missing = build(&dir.join("tiny.toml"), &dir, Some(9), StreetSet::All);
         assert!(missing.err().unwrap().contains("9.ckpt"));
         std::fs::remove_dir_all(dir).unwrap();
     }
@@ -395,7 +393,7 @@ mod tests {
             text.replace("stack = 400", "stack = 500"),
         )
         .unwrap();
-        let err = build(&dir.join("other.toml"), &dir, None, StreetSet::Browser)
+        let err = build(&dir.join("other.toml"), &dir, None, StreetSet::All)
             .err()
             .unwrap();
         assert!(err.contains("another preset"), "{err}");
@@ -406,7 +404,7 @@ mod tests {
     fn no_checkpoint_is_an_error() {
         let dir = data_dir("export-none");
         std::fs::create_dir_all(dir.join("checkpoints")).unwrap();
-        let err = export(&dir, StreetSet::Browser).err().unwrap();
+        let err = export(&dir, StreetSet::All).err().unwrap();
         assert!(err.contains("no checkpoints"), "{err}");
         std::fs::remove_dir_all(dir).unwrap();
     }
@@ -419,7 +417,7 @@ mod tests {
             preset: dir.join("tiny.toml"),
             data: dir.clone(),
             checkpoint: None,
-            streets: StreetSet::Browser,
+            streets: StreetSet::All,
             out: out.clone(),
         })
         .unwrap();
