@@ -1,7 +1,10 @@
 import { createEngine } from '../../../src/emotion/index.ts';
 import { PROFILES } from '../profiles.ts';
-import { describe, expect, it } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { mulberry32 } from '../../../src/cards/index.ts';
+import { loadBlueprint } from './blueprint.ts';
+import type { Ranges } from './blueprint.ts';
 import { createRunner } from './runner.ts';
 import type { RunnerHooks } from './runner.ts';
 import { SCENES } from './scenes.ts';
@@ -52,6 +55,41 @@ describe('scene hands', () => {
           engine.step(0.5);
         }
         expect(engine.snapshot().prospect).toBeDefined();
+      }
+    }
+  });
+});
+
+describe("the player's range from the blueprint", () => {
+  let ranges: Ranges | null = null;
+
+  beforeAll(async () => {
+    ranges = await loadBlueprint(async (url) => new Uint8Array(await readFile(url)));
+  });
+
+  it('narrows him after his raise over her top pair and after his turn bet', () => {
+    const runner = createRunner(
+      createEngine(PROFILES.mira.personality),
+      silent,
+      () => mulberry32(7),
+      ranges ?? undefined,
+    );
+    runner.start(sceneById('raisetoppair'));
+    const random = runner.equityAt(0, 3, false);
+    expect(random).toBeGreaterThan(0.8);
+    expect(runner.equityAt(0, 3, false, 5)).toBeLessThan(random - 0.1);
+    expect(runner.equityAt(0, 4, false, 9)).toBeLessThan(runner.equityAt(0, 4, false, 5) - 0.1);
+  });
+
+  it('reads every narrow beat right after an action of his in the line', () => {
+    for (const scene of SCENES) {
+      let hand = 0;
+      for (const beat of scene.beats) {
+        if (beat.do === 'deal') hand = beat.hand ?? 0;
+        if (beat.do !== 'narrow') continue;
+        const line = scene.hands[hand]?.line ?? [];
+        expect(beat.after).toBeLessThanOrEqual(line.length);
+        expect(line[beat.after - 1]?.startsWith('him ')).toBe(true);
       }
     }
   });

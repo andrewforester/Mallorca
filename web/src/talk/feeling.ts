@@ -3,8 +3,10 @@ import { MALLORCA, createEngine } from '../emotion/index.ts';
 import type { Emotion, Engine, Money, Personality, Snapshot } from '../emotion/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { equityVsHand, equityVsRange } from '../equity/index.ts';
+import type { WeightedHands } from '../equity/index.ts';
 import type { HandState } from './handTracker.ts';
 import { netOf, playerCardsShown } from './handTracker.ts';
+import { liveRange } from './range.ts';
 import type { Signal } from './signals.ts';
 import { ALL_HANDS, strengthOf } from './strength.ts';
 import type { Style } from './style.ts';
@@ -18,6 +20,7 @@ export interface FeelingOptions {
 export interface Feeling {
   advance(nowMs: number): void;
   see(event: EngineEvent, hand: HandState): void;
+  narrow(weights: ArrayLike<number>, hand: HandState): void;
   hear(signals: readonly Signal[]): void;
   snapshot(): Snapshot;
   style(): Style;
@@ -65,6 +68,7 @@ class TableFeeling implements Feeling {
   private lastMs: number | null = null;
   private herAggressive = false;
   private readonly equities = new Map<string, number>();
+  private range: WeightedHands = ALL_HANDS;
 
   constructor(options: FeelingOptions) {
     this.seat = options.seat;
@@ -84,6 +88,7 @@ class TableFeeling implements Feeling {
       case 'handStarted':
         this.herAggressive = false;
         this.equities.clear();
+        this.range = ALL_HANDS;
         return;
       case 'holeCards':
         if (event.seat === this.seat) this.dealt(hand);
@@ -104,6 +109,16 @@ class TableFeeling implements Feeling {
       default:
         return;
     }
+  }
+
+  narrow(weights: ArrayLike<number>, hand: HandState): void {
+    const her = hand.her;
+    if (her === null || hand.ended || playerCardsShown(hand, this.seat) !== null) return;
+    const range = liveRange(weights, [...her, ...hand.board]);
+    if (range.length === 0) return;
+    this.range = range;
+    this.equities.clear();
+    this.moved(hand);
   }
 
   hear(signals: readonly Signal[]): void {
@@ -200,14 +215,13 @@ class TableFeeling implements Feeling {
     const key = `${hand.board.length}:${his === null ? '' : 'shown'}`;
     const known = this.equities.get(key);
     if (known !== undefined) return known;
-    const value =
-      his === null ? this.vsRandom(her, hand.board) : equityVsHand(her, his, hand.board);
+    const value = his === null ? this.vsRange(her, hand.board) : equityVsHand(her, his, hand.board);
     this.equities.set(key, value);
     return value;
   }
 
-  private vsRandom(her: readonly [Card, Card], board: readonly Card[]): number {
-    return equityVsRange(her, ALL_HANDS, board, { rng: this.rng, samples: SAMPLES });
+  private vsRange(her: readonly [Card, Card], board: readonly Card[]): number {
+    return equityVsRange(her, this.range, board, { rng: this.rng, samples: SAMPLES });
   }
 }
 

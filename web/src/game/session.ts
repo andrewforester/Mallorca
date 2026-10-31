@@ -343,6 +343,7 @@ function wireTalk(
       locale: options.locale ?? 'en',
       botSeat,
       connect: options.connectTalk,
+      playerRange: () => runtime().bot.opponentRange?.() ?? Promise.resolve(null),
     },
     {
       read: () => runtime().get().talk,

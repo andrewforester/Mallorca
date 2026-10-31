@@ -38,6 +38,7 @@ interface Exports {
     stickiness: number,
   ): void;
   bot_range(bot: number): number;
+  bot_opponent_range(bot: number): number;
   bot_spot(
     bot: number,
     fold: number,
@@ -65,6 +66,7 @@ export interface CfrBot {
   decide(legal: LegalActions, draw: number): Action;
   setStyle(style: BotStyle): void;
   range(): Float32Array | null;
+  opponentRange(): Float32Array | null;
   spot(legal: LegalActions): CfrSpot | null;
   free(): void;
 }
@@ -172,6 +174,9 @@ function bot(e: Exports, handle: number): CfrBot {
     },
     range() {
       return floats(e, e.bot_range(handle), PAIRS);
+    },
+    opponentRange() {
+      return floats(e, e.bot_opponent_range(handle), PAIRS);
     },
     spot(legal) {
       return readSpot(e, handle, legal);

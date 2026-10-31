@@ -343,3 +343,63 @@ describe('withFallback coach', () => {
     await expect(client.coach?.([], legal, 40)).rejects.toThrow();
   });
 });
+
+describe('opponentRange', () => {
+  const asking = (opponentRange?: () => Promise<Float32Array | null>): BotClient => ({
+    observe: () => undefined,
+    reset: () => undefined,
+    decide: () => Promise.resolve(decision),
+    ...(opponentRange === undefined ? {} : { opponentRange }),
+  });
+
+  it('forwards the range of the active client', async () => {
+    const range = new Float32Array([0.5]);
+    const client = withFallback(asking(() => Promise.resolve(range)));
+    await expect(client.opponentRange?.()).resolves.toBe(range);
+  });
+
+  it('answers null for a client without one, an error or no answer', async () => {
+    await expect(withFallback(asking()).opponentRange?.()).resolves.toBeNull();
+    const failing = withFallback(asking(() => Promise.reject(new Error('gone'))));
+    await expect(failing.opponentRange?.()).resolves.toBeNull();
+    const silent = withFallback(
+      asking(() => new Promise(() => undefined)),
+      10,
+    );
+    await expect(silent.opponentRange?.()).resolves.toBeNull();
+  });
+
+  it('answers null after the fallback', async () => {
+    const broken: BotClient = {
+      ...asking(() => Promise.resolve(new Float32Array([1]))),
+      decide: () => Promise.reject(new Error('down')),
+    };
+    const client = withFallback(broken);
+    await client.decide(legal).catch(() => undefined);
+    await expect(client.opponentRange?.()).resolves.toBeNull();
+  });
+});
+
+describe('workerBot opponentRange', () => {
+  beforeEach(() => {
+    FakeWorker.instances = [];
+    vi.stubGlobal('Worker', FakeWorker);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('asks the worker after the observations and resolves with its range', async () => {
+    const bot = workerBot();
+    bot.observe(hand);
+    const pending = bot.opponentRange?.();
+    await settle();
+    const worker = currentWorker();
+    const request = worker.sent.at(-1) as { kind: string; id: number };
+    expect(worker.sent.map((r) => r.kind)).toEqual(['observe', 'opponentRange']);
+    const range = new Float32Array([0.25]);
+    worker.reply({ id: request.id, range });
+    await expect(pending).resolves.toBe(range);
+  });
+});
