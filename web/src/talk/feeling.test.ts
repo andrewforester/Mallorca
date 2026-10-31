@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mulberry32 } from '../cards/index.ts';
+import { mulberry32, parseCard } from '../cards/index.ts';
 import { applyAction } from '../engine/hand.ts';
 import { call, check, deckOf, raiseTo, startHand } from '../engine/testDeck.ts';
 import type { Action, Step } from '../engine/types.ts';
@@ -16,8 +16,13 @@ interface Hand {
   act(action: Action, nowMs?: number): void;
 }
 
-function deal(her: string, player: string, board: string, nowMs = 0): Hand {
-  const feeling = createFeeling({ seat: HER, rng: mulberry32(5) });
+function deal(
+  her: string,
+  player: string,
+  board: string,
+  nowMs = 0,
+  feeling = createFeeling({ seat: HER, rng: mulberry32(5) }),
+): Hand {
   let hand = NO_HAND;
   let step: Step = startHand([2000, 2000], deckOf(her, player, board), 0);
   const see = (s: Step, now: number) => {
@@ -76,6 +81,92 @@ describe('the feeling of a hand', () => {
     expect(hand.feeling.snapshot().time).toBeCloseTo(3);
     hand.feeling.advance(12_000);
     expect(hand.feeling.snapshot().time).toBeCloseTo(3);
+  });
+});
+
+const PAIRS = 1326;
+
+function rangeOf(...hands: string[]): Float32Array {
+  const weights = new Float32Array(PAIRS);
+  for (const hand of hands) {
+    const [a, b] = hand.split(' ').map(parseCard) as [number, number];
+    const [lo, hi] = a < b ? [a, b] : [b, a];
+    weights[(hi * (hi - 1)) / 2 + lo] = 1;
+  }
+  return weights;
+}
+
+const SETS_AND_TWO_PAIR = rangeOf('8c 8h', '8s 8h', '4c 4d', '4d 4h', 'Kd 8c', 'Ks 8s', 'Kd 4c');
+const TOP_PAIRS = rangeOf('Ks Jd', 'Kd Th', 'Ks 9c', 'Kd Qs', 'Ks Jh');
+
+function raisedOnTheFlop(her: string): Hand {
+  const hand = deal(her, '7c 6c', 'Kc 8d 4s 2h 3c');
+  hand.act(call, 1000);
+  hand.act(check, 1500);
+  hand.act(raiseTo(40), 2000);
+  hand.act(raiseTo(120), 2500);
+  return hand;
+}
+
+const equityOf = (hand: Hand): number => hand.feeling.snapshot().prospect?.equity ?? Number.NaN;
+
+describe("her equity against the player's range", () => {
+  it('drops on her top pair when his raise narrows him to strength', () => {
+    const plain = raisedOnTheFlop('Kh Qd');
+    const read = raisedOnTheFlop('Kh Qd');
+    read.feeling.narrow(SETS_AND_TWO_PAIR, read.state());
+    expect(equityOf(plain)).toBeGreaterThan(0.75);
+    expect(equityOf(read)).toBeLessThan(0.3);
+    const before = plain.feeling.snapshot().emotions;
+    const after = read.feeling.snapshot().emotions;
+    expect(after.disappointment).toBeGreaterThan(before.disappointment + 0.1);
+    expect(after.surprise).toBeGreaterThan(before.surprise + 0.1);
+    read.feeling.advance(5000);
+    plain.feeling.advance(5000);
+    expect(read.feeling.snapshot().emotions.fear).toBeGreaterThan(
+      plain.feeling.snapshot().emotions.fear,
+    );
+  });
+
+  it('stays high on her set when he is narrowed to top pairs', () => {
+    const plain = raisedOnTheFlop('8h 8s');
+    const read = raisedOnTheFlop('8h 8s');
+    read.feeling.narrow(TOP_PAIRS, read.state());
+    expect(equityOf(read)).toBeGreaterThan(0.85);
+    const before = plain.feeling.snapshot().emotions;
+    const after = read.feeling.snapshot().emotions;
+    expect(after.disappointment).toBeLessThanOrEqual(before.disappointment + 0.01);
+    expect(after.fear).toBeLessThanOrEqual(before.fear + 0.01);
+  });
+
+  it('ignores a range with no live pair', () => {
+    const hand = raisedOnTheFlop('Kh Qd');
+    const equity = equityOf(hand);
+    hand.feeling.narrow(new Float32Array(PAIRS), hand.state());
+    hand.feeling.narrow(rangeOf('Kh Kd', 'Qd 8d'), hand.state());
+    expect(equityOf(hand)).toBe(equity);
+  });
+
+  it('ignores a range once the hand is over', () => {
+    const hand = raisedOnTheFlop('Kh Qd');
+    hand.act({ kind: 'fold' }, 3000);
+    const before = hand.feeling.snapshot();
+    hand.feeling.narrow(SETS_AND_TWO_PAIR, hand.state());
+    expect(hand.feeling.snapshot()).toEqual(before);
+  });
+
+  it('starts the next hand against a random hand', () => {
+    const onTheTurn = (feeling: Feeling) => {
+      const hand = deal('Kh Qd', '7c 6c', 'Kc 8d 4s 2h 3c', 4000, feeling);
+      for (const action of [call, check, check, check]) hand.act(action, 5000);
+      return equityOf(hand);
+    };
+    const narrowed = raisedOnTheFlop('Kh Qd');
+    narrowed.feeling.narrow(SETS_AND_TWO_PAIR, narrowed.state());
+    narrowed.act({ kind: 'fold' }, 3000);
+    const plain = raisedOnTheFlop('Kh Qd');
+    plain.act({ kind: 'fold' }, 3000);
+    expect(onTheTurn(narrowed.feeling)).toBe(onTheTurn(plain.feeling));
   });
 });
 

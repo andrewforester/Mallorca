@@ -38,6 +38,7 @@ export interface LineIntent {
 export interface Talk {
   observe(events: readonly EngineEvent[], nowMs: number): LineIntent | null;
   hear(signals: readonly Signal[]): void;
+  playerRange(weights: ArrayLike<number>, handNumber: number): void;
   replyIntent(): LineIntent;
   facts(): HandFacts;
   moodWords(): string[];
@@ -161,6 +162,12 @@ class TableTalk implements Talk {
   hear(signals: readonly Signal[]): void {
     this.heart.hear(signals);
     this.session = withSignals(this.session, signals);
+  }
+
+  playerRange(weights: ArrayLike<number>, handNumber: number): void {
+    if (handNumber === this.hand.handNumber) {
+      this.heart.narrow(weights, this.hand);
+    }
   }
 
   replyIntent(): LineIntent {

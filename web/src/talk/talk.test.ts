@@ -373,3 +373,41 @@ describe('summary', () => {
     });
   });
 });
+
+describe("the player's range", () => {
+  const strong = (): Float32Array => {
+    const weights = new Float32Array(1326);
+    for (const hand of ['8c 8h', '4c 4d', 'Kd 8c']) {
+      const [a, b] = parseCards(hand) as [number, number];
+      const [lo, hi] = a < b ? [a, b] : [b, a];
+      weights[(hi * (hi - 1)) / 2 + lo] = 1;
+    }
+    return weights;
+  };
+
+  const raised = (): Table => {
+    const t = chatty();
+    t.begin('Kh Qd', '7c 6c', 'Kc 8d 4s 2h 3c');
+    t.act(call, 1000);
+    t.act(check, 1500);
+    t.act(raiseTo(40), 2000);
+    t.act(raiseTo(120), 2500);
+    return t;
+  };
+
+  const equity = (t: Table): number => t.talk.feeling().prospect?.equity ?? Number.NaN;
+
+  it('narrows her equity for the hand it belongs to', () => {
+    const t = raised();
+    const before = equity(t);
+    t.talk.playerRange(strong(), 1);
+    expect(equity(t)).toBeLessThan(before - 0.4);
+  });
+
+  it('ignores a range of another hand', () => {
+    const t = raised();
+    const before = t.talk.feeling();
+    t.talk.playerRange(strong(), 2);
+    expect(t.talk.feeling()).toEqual(before);
+  });
+});
