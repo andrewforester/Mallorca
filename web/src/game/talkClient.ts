@@ -1,6 +1,13 @@
 import { formatCard } from '../cards/index.ts';
 import type { SeatIndex } from '../engine/index.ts';
-import type { HandFacts, LineIntent, SessionSummary, Signal } from '../talk/index.ts';
+import type {
+  Character,
+  FeelingState,
+  HandFacts,
+  LineIntent,
+  SessionSummary,
+  Signal,
+} from '../talk/index.ts';
 
 export const TALK_TIMEOUT_MS = 5000;
 
@@ -44,6 +51,8 @@ interface HandPayload extends Envelope {
   facts: FactsPayload;
   intent: IntentPayload;
   mood: string[];
+  feeling: FeelingState;
+  character: Character;
   recent: ChatTurn[];
 }
 
@@ -69,6 +78,8 @@ export interface HandInput {
   facts: HandFacts;
   intent: LineIntent;
   mood: string[];
+  feeling: FeelingState;
+  character: Character;
   recent: ChatTurn[];
 }
 
@@ -129,6 +140,8 @@ function toHand(input: HandInput): HandPayload {
       street: input.intent.actionStreet,
     },
     mood: [...input.mood],
+    feeling: input.feeling,
+    character: input.character,
     recent: recent.map((turn) => ({
       speaker: turn.speaker,
       text: turn.text.slice(0, MAX_RECENT_TEXT),

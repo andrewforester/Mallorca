@@ -49,6 +49,15 @@ const WORDS: Readonly<Record<Emotion, string>> = {
 
 const clamp = (v: number, low: number, high: number): number => Math.max(low, Math.min(high, v));
 
+export function wordsOf(s: Snapshot): string[] {
+  const found = (Object.keys(WORDS) as Emotion[])
+    .filter((e) => s.emotions[e] >= WORD_THRESHOLD)
+    .sort((a, b) => s.emotions[b] - s.emotions[a])
+    .map((e) => WORDS[e]);
+  const words = s.load.overload >= OVERLOADED ? ['on tilt', ...found] : found;
+  return words.slice(0, MAX_WORDS);
+}
+
 class TableFeeling implements Feeling {
   private readonly seat: SeatIndex;
   private readonly rng: Rng;
@@ -119,13 +128,7 @@ class TableFeeling implements Feeling {
   }
 
   words(): string[] {
-    const s = this.engine.snapshot();
-    const found = (Object.keys(WORDS) as Emotion[])
-      .filter((e) => s.emotions[e] >= WORD_THRESHOLD)
-      .sort((a, b) => s.emotions[b] - s.emotions[a])
-      .map((e) => WORDS[e]);
-    const words = s.load.overload >= OVERLOADED ? ['on tilt', ...found] : found;
-    return words.slice(0, MAX_WORDS);
+    return wordsOf(this.engine.snapshot());
   }
 
   speakFactor(): number {

@@ -3,8 +3,11 @@ import type { Card, Rng } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { BASE_HABITS, habitsAt } from './habits.ts';
 import type { Habit, Habits, Level, Situation } from './habits.ts';
+import { MALLORCA } from '../emotion/index.ts';
 import type { Snapshot } from '../emotion/index.ts';
 import { createFeeling } from './feeling.ts';
+import { characterOf, feelingState } from './state.ts';
+import type { Character, FeelingState } from './state.ts';
 import type { Feeling } from './feeling.ts';
 import { NO_HAND, netOf, playerCardsShown, track } from './handTracker.ts';
 import type { HandState } from './handTracker.ts';
@@ -42,6 +45,8 @@ export interface Talk {
   facts(): HandFacts;
   moodWords(): string[];
   feeling(): Snapshot;
+  feelingFor(intent: LineIntent): FeelingState;
+  character(): Character;
   style(): Style;
   summary(): SessionSummary;
   setLevel(level: Level): void;
@@ -197,6 +202,14 @@ class TableTalk implements Talk {
 
   feeling(): Snapshot {
     return this.heart.snapshot();
+  }
+
+  feelingFor(intent: LineIntent): FeelingState {
+    return feelingState(this.heart.snapshot(), intent.honest ? null : intent.hint);
+  }
+
+  character(): Character {
+    return characterOf(MALLORCA);
   }
 
   style(): Style {

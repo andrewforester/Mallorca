@@ -20,7 +20,7 @@ const EN_RANK = "ace|king|queen|jack|ten|nine|eight|seven|six|five|four|three|tw
 const RU_RANK = [
   "туз\\p{L}*",
   "корол\\p{L}*",
-  "дам[аыуео]\\p{L}*",
+  "дам(?:[аыуео]\\p{L}*)?",
   "(?:валет|вальт)\\p{L}*",
   "(?:десят|девят|восьм[её]р|сем[её]р|шест[её]р|пят[её]р|четв[её]р|трой|двой)к\\p{L}*",
 ].join("|");
@@ -50,15 +50,16 @@ const HOLDING = word(`${EN_HOLDING}|${RU_HOLDING}`);
 
 const POSSESSION = new RegExp(
   `${B}(?:i\\s+have|i've\\s+got|i've|ive|i\\s+got|i\\s+hold|i'm\\s+holding|i\\s+am\\s+holding|` +
-    `i'm\\s+sitting\\s+on|my\\s+hand\\s+is|my\\s+cards\\s+are|у\\s+меня|я\\s+держу|держу|` +
-    `мне\\s+пришл\\p{L}*|я\\s+собрал\\p{L}*)((?:\\s+[\\p{L}\\p{N}'-]+){1,${WINDOW}})`,
+    `i'm\\s+sitting\\s+on|my\\s+hand\\s+is|my\\s+cards\\s+are|i\\s+had|i\\s+held|i\\s+was\\s+holding|i'd|folded|my|` +
+    `у\\s+меня|я\\s+держу|держу|мне\\s+пришл\\p{L}*|я\\s+собрал\\p{L}*|сбросил\\p{L}*)` +
+    `((?:\\s+[\\p{L}\\p{N}'-]+){1,${WINDOW}})`,
   "gu",
 );
 
 const RANK_WORDS: Record<string, string> = {
   A: "aces?|туз\\p{L}*",
   K: "kings?|корол\\p{L}*",
-  Q: "queens?|дам[аыуео]\\p{L}*",
+  Q: "queens?|дам(?:[аыуео]\\p{L}*)?",
   J: "jacks?|(?:валет|вальт)\\p{L}*",
   T: "tens?|десятк\\p{L}*",
   "9": "nines?|девятк\\p{L}*",
@@ -101,7 +102,8 @@ function namesHolding(text: string, lower: string, hole: readonly string[]): boo
   const [x, y] = [RANK_WORDS[a], RANK_WORDS[b]];
   if (x === undefined || y === undefined) return false;
   const link = "(?:\\s+(?:and|и))?[\\s-]+";
-  return word(`(?:${x})${link}(?:${y})|(?:${y})${link}(?:${x})`).test(lower);
+  const pairOf = `pairs?\\s+of\\s+(?:${x}|${y})`;
+  return word(`(?:${x})${link}(?:${y})|(?:${y})${link}(?:${x})|${pairOf}`).test(lower);
 }
 
 export function leaksCards(text: string, hole: readonly string[]): boolean {
