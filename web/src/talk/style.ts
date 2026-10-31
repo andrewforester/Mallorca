@@ -13,8 +13,8 @@ const clampTo = (value: number, low: number, high: number): number =>
 
 export function styleOf(mood: Mood): Style {
   return {
-    aggression: clampTo(1 + 0.25 * mood.tilt + 0.1 * (mood.confidence + mood.form), 0.8, 1.25),
-    bluff: clampTo(1 + 0.3 * mood.tilt, 0.8, 1.3),
+    aggression: clampTo(1 + 0.5 * mood.tilt + 0.1 * (mood.confidence + mood.form), 0.8, 1.6),
+    bluff: clampTo(1 + 0.8 * mood.tilt, 0.8, 1.8),
     tightness: clampTo(1 + 0.2 * mood.caution - 0.1 * mood.cheer, 0.85, 1.2),
   };
 }

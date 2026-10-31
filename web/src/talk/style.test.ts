@@ -15,15 +15,15 @@ describe('styleOf', () => {
   it('follows the formulas inside the clamps', () => {
     const mood: Mood = { cheer: 0.2, confidence: 0.1, tilt: 0.2, caution: 0.3, form: 0.1 };
     const style = styleOf(mood);
-    expect(style.aggression).toBeCloseTo(1 + 0.25 * 0.2 + 0.1 * (0.1 + 0.1), 12);
-    expect(style.bluff).toBeCloseTo(1 + 0.3 * 0.2, 12);
+    expect(style.aggression).toBeCloseTo(1 + 0.5 * 0.2 + 0.1 * (0.1 + 0.1), 12);
+    expect(style.bluff).toBeCloseTo(1 + 0.8 * 0.2, 12);
     expect(style.tightness).toBeCloseTo(1 + 0.2 * 0.3 - 0.1 * 0.2, 12);
   });
 
   it('clamps at the corners', () => {
     expect(styleOf({ cheer: -1, confidence: 1, tilt: 1, caution: 1, form: 1 })).toEqual({
-      aggression: 1.25,
-      bluff: 1.3,
+      aggression: 1.6,
+      bluff: 1.8,
       tightness: 1.2,
     });
     expect(styleOf({ cheer: 1, confidence: -1, tilt: -1, caution: -1, form: -1 })).toEqual({
@@ -38,9 +38,9 @@ describe('styleOf', () => {
       fc.property(axis, axis, axis, axis, axis, (cheer, confidence, tilt, caution, form) => {
         const style = styleOf({ cheer, confidence, tilt, caution, form });
         expect(style.aggression).toBeGreaterThanOrEqual(0.8);
-        expect(style.aggression).toBeLessThanOrEqual(1.25);
+        expect(style.aggression).toBeLessThanOrEqual(1.6);
         expect(style.bluff).toBeGreaterThanOrEqual(0.8);
-        expect(style.bluff).toBeLessThanOrEqual(1.3);
+        expect(style.bluff).toBeLessThanOrEqual(1.8);
         expect(style.tightness).toBeGreaterThanOrEqual(0.85);
         expect(style.tightness).toBeLessThanOrEqual(1.2);
       }),

@@ -58,10 +58,14 @@ coach (#5) will be a second role on the same foundation; it is not part of this 
      `claimStrength` `caution` +0.15; `claimWeakness` `caution` −0.1; `mockBluff` `tilt` +0.3; `friendly`
      `cheer` +0.1.
    - `form` is not added to the axes: the style reads it (decision 7) and the prompt describes it as a streak.
-7. **Style from mood.** `aggression = 1 + 0.25 tilt + 0.1 (confidence + form)`, `bluff = 1 + 0.3 tilt`,
-   `tightness = 1 + 0.2 caution − 0.1 cheer`, each clamped: aggression to [0.8, 1.25], bluff to [0.8, 1.3],
-   tightness to [0.85, 1.2]. These clamps are the "half step". The arena checks their cost (goal above); if the
-   most tilted style costs more than 5 bb/100, the clamps narrow before the game uses them.
+7. **Style from mood.** `aggression = 1 + 0.5 tilt + 0.1 (confidence + form)`, `bluff = 1 + 0.8 tilt`,
+   `tightness = 1 + 0.2 caution − 0.1 cheer`, each clamped: aggression to [0.8, 1.6], bluff to [0.8, 1.8],
+   tightness to [0.85, 1.2]. The first clamps, aggression to 1.25 and bluff to 1.3, lost -0.2 ± 2.6 bb/100 to the
+   fixed `cfr` blueprint but moved her bet and raise frequencies after the flop by less than 3 percentage points, so
+   tilt was not visible in her play (Task 14, arena README). The clamps were widened to the bound of that task, and
+   the tilt coefficients with them (0.25 to 0.5, 0.3 to 0.8) so that a fully tilted mood reaches the corner. The
+   arena checks their cost (goal above); if the most tilted style costs more than 5 bb/100 against `cfr`, the clamps
+   narrow before the game uses them.
 8. **Style in the CFR bot.** `mallorca-core::bot` gets `Style { aggression, bluff, tightness }`, neutral by
    default. In `decide`, between `probabilities` and `sample`, the weights of the node are reweighted in `f64`:
    bets, raises and all-ins times `aggression`, checks and calls divided by it, fold times `tightness`, and on the
@@ -71,7 +75,7 @@ coach (#5) will be a second role on the same foundation; it is not part of this 
    a new brain every hand. The math bot ignores it. The subgame solver branch (#16) will apply the same reweighting
    to its own distribution when it lands; that is not in this design.
 9. **Arena.**
-   - Styled bots: `cfr-tilted` (aggression 1.25, bluff 1.3, tightness 0.85), `cfr-confident` (1.15, 1, 0.95) and
+   - Styled bots: `cfr-tilted` (aggression 1.6, bluff 1.8, tightness 0.85), `cfr-confident` (1.15, 1, 0.95) and
      `cfr-cautious` (0.9, 0.9, 1.2), the corners of the clamps.
    - Talking bots `cfr-talk-obvious`, `cfr-talk-subtle` and `cfr-talk-hidden`: the plain `cfr` bot plus the habits
      of their level. They emit `spoke` after their own bet or raise. Mood needs a session, which the arena does not

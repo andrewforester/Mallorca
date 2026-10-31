@@ -107,7 +107,7 @@ export const BOTS: Record<
 > = {
   math,
   cfr,
-  'cfr-tilted': styled({ aggression: 1.25, bluff: 1.3, tightness: 0.85 }),
+  'cfr-tilted': styled({ aggression: 1.6, bluff: 1.8, tightness: 0.85 }),
   'cfr-confident': styled({ aggression: 1.15, bluff: 1, tightness: 0.95 }),
   'cfr-cautious': styled({ aggression: 0.9, bluff: 0.9, tightness: 1.2 }),
   'cfr-talk-obvious': talking('obvious'),

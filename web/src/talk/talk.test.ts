@@ -311,7 +311,7 @@ describe('replyIntent and state', () => {
     const talk = createTalk({ seat: 1, rng: mulberry32(2), level: 'obvious' });
     talk.hear(['mockBluff', 'tease']);
     expect(talk.mood().tilt).toBeCloseTo(0.5, 12);
-    expect(talk.style().bluff).toBeCloseTo(1.15, 12);
+    expect(talk.style().bluff).toBeCloseTo(1.4, 12);
   });
 
   it('changes the habits with setLevel', () => {
