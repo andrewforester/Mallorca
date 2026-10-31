@@ -244,6 +244,17 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - `createCfrBrain(model, rng)` is a `Brain` whose `dispose()` is always present. It forwards every `Observation` to the bot and draws
   one `rng.next()` per observed action (the off-tree raise mapping) and one per decision (sampling the strategy),
   so a seed fixes its play. `solverChoice` is the kind of the action; `evByAction` is `NaN` for every class.
+- The coach reads the strategy through two more `CfrBot` methods. Hole-card pairs are indexed
+  `b * (b - 1) / 2 + a` for cards `a < b`, 1326 in all. `range()` is the bot's own range: 1 per pair at the start of
+  a hand, 0 for pairs that touch the board, times the probability of every action the bot sampled from the strategy
+  (its byte over the node's byte sum), a step that no pair takes being skipped; a decision played passive without
+  sampling does not narrow it. `spot(legal)` is the node `decide` would sample from, without moving the bot:
+  `moves` are the real actions of the node's tree actions under `legal`, `grid` holds 1326 rows of their
+  probabilities (0 for pairs that touch the board or the bot's cards), and `approximate` is true after a resync or
+  an off-tree size taken as a call. Both are null without a hand, a node or a live bot. In Rust they are
+  `Bot::range`, `Bot::spot` and `Bot::strategy_grid` over `Abstraction::buckets`, which buckets every pair of a board
+  at once and equals the per-pair `bucket`; the ABI exports `bot_range`, `bot_spot` (`[approximate, n, kind, to, ...]`)
+  and `bot_spot_grid`, each a pointer into a buffer of the seat, valid until the next call on it.
 - Translation lives in Rust (`mallorca-core::bot`): chips scale by the big blind, an opponent raise maps to one of
   the two neighbouring tree sizes by the pseudo-harmonic mapping on pot fractions, the bot's own raise keeps the
   tree's pot fraction and is clamped into `legal.raise`, and a hand that leaves the tree resyncs to the nearest
