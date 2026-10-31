@@ -130,7 +130,8 @@
     "tabs": {
       "hint": "Strategy",
       "range": "Bot range",
-      "numbers": "Numbers"
+      "numbers": "Numbers",
+      "session": "Session"
     },
     "move": {
       "fold": "Fold",
@@ -168,7 +169,33 @@
     "noOuts": "No card puts you ahead of most of the range.",
     "nextCard": "Next card {{percent}}%",
     "byRiver": "By the river {{percent}}%",
-    "blockers": "Your cards block {{percent}}% of its two pair and better"
+    "blockers": "Your cards block {{percent}}% of its two pair and better",
+    "reviewHeading": "This hand",
+    "action": {
+      "fold": "Fold",
+      "check": "Check",
+      "call": "Call",
+      "raise": "Raise to {{amount}}"
+    },
+    "grade": {
+      "strategy": "Strategy move",
+      "rare": "Rare in the strategy",
+      "off": "Off the strategy",
+      "none": "Not graded"
+    },
+    "leaksHeading": "Your leaks",
+    "leak": {
+      "open": "Raise first in from the button",
+      "threeBet": "Three-bet facing a raise",
+      "foldToThreeBet": "Fold to a three-bet",
+      "cbet": "Continuation bet on the flop",
+      "foldToCbet": "Fold to a continuation bet",
+      "turnBet": "Bet the turn when checked to",
+      "riverBet": "Bet the river when checked to",
+      "riverFold": "Fold to a river bet"
+    },
+    "leakLine": "You {{player}}%, strategy {{strategy}}%, {{spots}} spots",
+    "noLeaks": "Leaks appear after {{count}} spots of one kind."
   },
   "over": {
     "title": "Good game",
