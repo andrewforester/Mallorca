@@ -8,10 +8,18 @@ import { profitMap } from './profit.ts';
 import { NLGameSolver } from './solver.ts';
 import { VillainSpectrumTracker } from './villainModel.ts';
 
+export interface Breakdown {
+  moves: Action[];
+  base: number[];
+  styled: number[];
+  chosen: number;
+}
+
 export interface Decision {
   action: Action;
   solverChoice: SolverActionType;
   evByAction: { fold: number; passive: number; aggressive: number };
+  breakdown?: Breakdown;
 }
 
 export interface BotStyle {
@@ -26,6 +34,7 @@ export interface Brain {
   observe(o: Observation): void;
   decide(legal: LegalActions): Decision;
   setStyle?(style: BotStyle): void;
+  explain?(): Breakdown | null;
   dispose?(): void;
 }
 

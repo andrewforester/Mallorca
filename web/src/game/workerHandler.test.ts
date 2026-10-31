@@ -145,6 +145,63 @@ describe('createWorkerHandler style', () => {
   });
 });
 
+describe('createWorkerHandler explain', () => {
+  const breakdown = {
+    moves: [{ kind: 'fold' as const }, { kind: 'call' as const }],
+    base: [0.25, 0.75],
+    styled: [0.2, 0.8],
+    chosen: 1,
+  };
+  const explaining = (asked: string[]): Brain => ({
+    observe: () => undefined,
+    decide: () => decision,
+    explain: () => {
+      asked.push('explain');
+      return breakdown;
+    },
+  });
+
+  it('adds the breakdown when the request asks for it', () => {
+    const replies: WorkerReply[] = [];
+    const asked: string[] = [];
+    const handle = createWorkerHandler(
+      () => explaining(asked),
+      (reply) => replies.push(reply),
+      noLoader,
+      noCoach,
+    );
+    handle({ kind: 'decide', id: 1, legal, explain: true });
+    expect(replies).toEqual([{ id: 1, decision: { ...decision, breakdown } }]);
+  });
+
+  it('never calls explain without the flag', () => {
+    const replies: WorkerReply[] = [];
+    const asked: string[] = [];
+    const handle = createWorkerHandler(
+      () => explaining(asked),
+      (reply) => replies.push(reply),
+      noLoader,
+      noCoach,
+    );
+    handle({ kind: 'decide', id: 2, legal });
+    expect(replies).toEqual([{ id: 2, decision }]);
+    expect(asked).toEqual([]);
+  });
+
+  it('answers the plain decision for a brain without explain', () => {
+    const { brain } = fakeBrain();
+    const replies: WorkerReply[] = [];
+    const handle = createWorkerHandler(
+      () => brain,
+      (reply) => replies.push(reply),
+      noLoader,
+      noCoach,
+    );
+    handle({ kind: 'decide', id: 3, legal, explain: true });
+    expect(replies).toEqual([{ id: 3, decision }]);
+  });
+});
+
 describe('createWorkerHandler select', () => {
   it('swaps the brain once the opponent is ready and replays what came meanwhile', async () => {
     const math = fakeBrain();

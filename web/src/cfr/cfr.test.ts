@@ -196,3 +196,63 @@ describe('the range of a cfr brain', () => {
     brain.dispose();
   });
 });
+
+describe('the explanation of a cfr decision', () => {
+  const open: LegalActions = { fold: true, check: false, call: 10, raise: { min: 40, max: 2000 } };
+  const start = {
+    type: 'handStarted' as const,
+    handNumber: 1,
+    heroOnButton: true,
+    heroStack: 2000,
+    villainStack: 2000,
+    smallBlind: 10,
+    bigBlind: 20,
+  };
+  const seated = (seed: number) => {
+    const brain = createCfrBrain(model, mulberry32(seed));
+    brain.observe(start);
+    brain.observe({ type: 'holeCards', cards: parseCards('Kc Qc') as [number, number] });
+    return brain;
+  };
+  const sum = (xs: number[]): number => xs.reduce((a, b) => a + b, 0);
+
+  it('is null before a decision and after a new hand', () => {
+    const brain = seated(3);
+    expect(brain.explain()).toBeNull();
+    brain.decide(open);
+    expect(brain.explain()).not.toBeNull();
+    brain.observe(start);
+    expect(brain.explain()).toBeNull();
+    brain.dispose();
+  });
+
+  it('names the sampled move and the blueprint shares', () => {
+    const brain = seated(4);
+    const { action } = brain.decide(open);
+    const explained = brain.explain();
+    expect(explained).not.toBeNull();
+    if (explained === null) return;
+    expect(explained.moves[explained.chosen]).toEqual(action);
+    expect(explained.moves.length).toBe(explained.base.length);
+    expect(sum(explained.base)).toBeCloseTo(1, 5);
+    expect(explained.styled).toEqual(explained.base);
+    brain.dispose();
+  });
+
+  it('shows the style moving the shares and does not change the play', () => {
+    const asked = seated(5);
+    const plain = seated(5);
+    const style = { aggression: 1.6, bluff: 1, tightness: 0.6, sizing: 1, stickiness: 1 };
+    asked.setStyle(style);
+    plain.setStyle(style);
+    const action = asked.decide(open).action;
+    const explained = asked.explain();
+    expect(plain.decide(open).action).toEqual(action);
+    expect(explained).not.toBeNull();
+    if (explained === null) return;
+    expect(sum(explained.styled)).toBeCloseTo(1, 5);
+    expect(explained.styled).not.toEqual(explained.base);
+    asked.dispose();
+    plain.dispose();
+  });
+});
