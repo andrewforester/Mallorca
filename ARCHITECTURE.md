@@ -252,6 +252,13 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - `createCfrBrain(model, rng)` is a `Brain` whose `dispose()` is always present. It forwards every `Observation` to the bot and draws
   one `rng.next()` per observed action (the off-tree raise mapping) and one per decision (sampling the strategy),
   so a seed fixes its play. `solverChoice` is the kind of the action; `evByAction` is `NaN` for every class.
+- `setStyle(style)` passes a `BotStyle` of five positive multipliers to `bot_style`; all ones play the blueprint as
+  sampled. The bot reweights the node's probabilities by action kind: a fold before the flop by `tightness`, a fold
+  after the flop by `1 / stickiness`, a check or a call by `1 / aggression`, a raise or an all-in by `aggression`
+  (times `bluff` for a low bucket on the turn or the river). `sizing` then moves weight between the raises of the
+  node, bets and opens included: each raise is multiplied by `sizing ^ t`, `t = clamp(log2(chips added / pot), -1,
+  1)` (half the pot -1, the pot 0, twice the pot and more +1), and the raises are scaled back to their total, so
+  `sizing` changes how big she bets, not how often.
 - The coach reads the strategy through two more `CfrBot` methods. Hole-card pairs are indexed
   `b * (b - 1) / 2 + a` for cards `a < b`, 1326 in all. `range()` is the bot's own range: 1 per pair at the start of
   a hand, 0 for pairs that touch the board, times the probability of every action the bot sampled from the strategy
@@ -293,9 +300,10 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   none in the 1.5 s after a line.
 - `mood.ts` keeps four axes in [-1, 1] (`cheer`, `confidence`, `tilt`, `caution`) and `form`, an exponential mean of
   the recent results. A hand result and the player's signals move it and it decays toward calm. `styleOf(mood)`
-  maps it to the CFR style `{ aggression, bluff, tightness }`: aggression `1 + 0.5 tilt + 0.1 (confidence + form)`,
-  bluff `1 + 0.8 tilt` and tightness `1 + 0.2 caution - 0.1 cheer`, clamped to [0.8, 1.6], [0.8, 1.8] and
-  [0.85, 1.2]. A calm mood gives the neutral style 1, 1, 1. Her words never decide a move.
+  maps it to the CFR style: aggression `1 + 0.5 tilt + 0.1 (confidence + form)`, bluff `1 + 0.8 tilt` and
+  tightness `1 + 0.2 caution - 0.1 cheer`, clamped to [0.8, 1.6], [0.8, 1.8] and [0.85, 1.2], sizing 1 and
+  stickiness `1 / tightness`, so folds after the flop scale by tightness as they did before the bot split them. A
+  calm mood gives the neutral style, all ones. Her words never decide a move.
 
 ## game
 
