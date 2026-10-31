@@ -7,24 +7,28 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 
 ## Repository layout
 
-| Path                                                                | Owns                                                                  |
-| ------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `MallorcaBrains/`, `MallorcaCore/`, `MallorcaEquilator/`, `Tools/`  | Java bot, game model and equilator; the source of the golden fixtures |
-| Other Gradle modules (`MallorcaUI/`, `PokerRobot/`, `HHParser/`, …) | Java archive, not used by `web/`                                      |
-| `web/src/`                                                          | The game, in layers (see "Layers")                                    |
-| `web/src/locales/en.json`                                           | Every string the UI shows                                             |
-| `web/e2e/`                                                          | Playwright tests and the contact sheet script                         |
-| `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                   |
-| `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`      |
-| `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena" |
-| `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                 |
-| `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`  |
-| `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`  |
-| `.github/workflows/`                                                | `web-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master`   |
+| Path                                                                | Owns                                                                      |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `MallorcaBrains/`, `MallorcaCore/`, `MallorcaEquilator/`, `Tools/`  | Java bot, game model and equilator; the source of the golden fixtures     |
+| Other Gradle modules (`MallorcaUI/`, `PokerRobot/`, `HHParser/`, …) | Java archive, not used by `web/`                                          |
+| `web/src/`                                                          | The game, in layers (see "Layers")                                        |
+| `web/src/locales/en.json`                                           | Every string the UI shows                                                 |
+| `web/e2e/`                                                          | Playwright tests and the contact sheet script                             |
+| `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                       |
+| `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`          |
+| `web/tools/evaluator-golden/`                                       | Writes the evaluator fixture of `solver/crates/core`, see its `README.md` |
+| `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena"     |
+| `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                     |
+| `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`      |
+| `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`      |
+| `.github/workflows/`                                                | `web-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master`       |
 
 Generated and never committed: `web/dist`, `web/test-results`, `web/playwright-report`, `web/e2e/contact/`,
 `web/tools/golden/build`, `web/arena-out/` (the arena results, see "arena") and `web/src/cfr/mallorca.wasm`, which
 `npm run wasm` builds with cargo (the toolchain pinned in `solver/`) before `dev`, `test`, `build` and `arena`.
+
+`tsc` (`web/tsconfig.json`) type-checks `src`, `scripts`, `e2e`, `playwright.config.ts`, `tools/arena` and
+`tools/evaluator-golden`.
 
 ## Stack
 
