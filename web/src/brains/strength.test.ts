@@ -12,7 +12,7 @@ import {
 } from './preflopEquilator.ts';
 import { Spectrum } from './spectrum.ts';
 import { StrengthManager } from './strength.ts';
-import { randomVillainModel, VillainSpectrumTracker } from './villainModel.ts';
+import { randomAdvice, VillainSpectrumTracker } from './villainModel.ts';
 
 const hand = (text: string) => parseCards(text) as [Card, Card];
 
@@ -43,11 +43,11 @@ function expectEquity(
   expect(actual?.negativePotential).toBeCloseTo(negativePotential, 12);
 }
 
-describe('randomVillainModel', () => {
+describe('randomAdvice', () => {
   it('folds, calls or raises with a third each when facing a bet', () => {
     const state = new HandState(1);
     state.amountToCall = 40;
-    expect(randomVillainModel.advise(state, hand('As Kd'))).toEqual({
+    expect(randomAdvice(state)).toEqual({
       fold: 1 / 3,
       passive: 1 / 3,
       aggressive: 1 / 3,
@@ -55,7 +55,7 @@ describe('randomVillainModel', () => {
   });
 
   it('checks or bets with a half each when not facing a bet', () => {
-    expect(randomVillainModel.advise(new HandState(2), hand('As Kd'))).toEqual({
+    expect(randomAdvice(new HandState(2))).toEqual({
       fold: 0,
       passive: 0.5,
       aggressive: 0.5,
@@ -208,10 +208,8 @@ describe('VillainSpectrumTracker', () => {
   ];
 
   function trackUpTo(count: number): VillainSpectrumTracker {
-    const strength = new StrengthManager();
-    const tracker = new VillainSpectrumTracker(randomVillainModel, strength);
+    const tracker = new VillainSpectrumTracker();
     for (const o of steps.slice(0, count)) {
-      strength.observe(o);
       tracker.observe(o);
     }
     return tracker;

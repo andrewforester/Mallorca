@@ -170,13 +170,13 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 | `observation.ts`       | `Observation`, `toObservations(events, heroSeat)`, `parseObservation`            |
 | `handState.ts`         | `HandState`, `GameContext`, `HandStateObserver`: the bot's view of the hand      |
 | `spectrum.ts`          | `Spectrum`: a weight per villain hole-card pair                                  |
-| `villainModel.ts`      | `VillainModel`, `randomVillainModel`, `VillainSpectrumTracker`                   |
+| `villainModel.ts`      | `randomAdvice`, `VillainSpectrumTracker`                                         |
 | `strength.ts`          | `StrengthManager`: hero equity per street against the spectrum and at random     |
 | `spectrumEquilator.ts` | `SpectrumEquilator`: hero strength against a spectrum on a board, with its cache |
 | `preflopEquilator.ts`  | Preflop strength from `data/preflop-strength.json`                               |
-| `solver.ts`            | `NLGameSolver`, `ShowdownGameSolver`: the game tree, as `SolverNode`s            |
+| `solver.ts`            | `NLGameSolver`: the game tree, as `SolverNode`s                                  |
 | `profit.ts`            | `profitMap`, `SolverRequest`, `HeroKnowledge`, `RandomVariable`, raise sizing    |
-| `adviceFromMap.ts`     | `LessVarianceActionFromMap`: picks the action class from the action distribution |
+| `adviceFromMap.ts`     | `lessVarianceAction`: picks the action class from the action distribution        |
 | `preprocess.ts`        | `preprocessAction`, `toLegalAction`: resizes and clamps the chosen action        |
 | `brain.ts`             | `createMathBrain`, `Brain`, `Decision`                                           |
 | `javaCard.ts`          | The Java card numbering, for hashes that must match the original                 |
@@ -184,13 +184,14 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - `Observation` is the bot's view of engine events: `handStarted` (hand number, `heroOnButton`, both stacks,
   blinds), `holeCards` (its own), `acted` (`who` is `hero` or `villain`, the `Action` and the chips added) and
   `street` with the board. `toObservations` drops the villain's hole cards and the showdown.
-- `createMathBrain({ villainModel })` returns a `Brain` with `observe(o)` and `decide(legal)`. It enumerates
-  equities exactly and takes no `Rng`.
-- `randomVillainModel` returns the probabilities the Java `RandomBot` samples from: facing a bet fold, passive and
-  aggressive 1/3 each, otherwise passive and aggressive 1/2 each. It is never sampled.
+- `createMathBrain()` returns a `Brain` with `observe(o)` and `decide(legal)`. It enumerates equities exactly and
+  takes no `Rng`.
+- The villain is modelled as the Java `RandomBot`: `randomAdvice(state)` returns the probabilities it samples from,
+  facing a bet fold, passive and aggressive 1/3 each, otherwise passive and aggressive 1/2 each. It is never
+  sampled.
 - `profitMap(solver, game, situation, knowledge)` builds the `ActionDistribution`; `knowledge` is the
-  `HeroKnowledge` (`hero`, `spectrum`, `strength`). The solver gets one `SolverRequest` per call (game, hand
-  state, effective stack, pot, spectrum, hero, strength, button).
+  `HeroKnowledge` (`hero`, `spectrum`). The solver gets one `SolverRequest` per call (game, hand state, effective
+  stack, pot, spectrum, hero, button).
 - `decide` returns `{ action, solverChoice, evByAction }`. `action` is always legal under `legal`. `solverChoice`
   is the class (`fold`, `passive`, `aggressive`) the advice creator picked, before preprocessing and clamping.
 - `evByAction` holds the expected profit of each class in chips, relative to folding now: `fold` is 0 at the top
@@ -440,7 +441,7 @@ imports `engine`, `brains`, `cards`, `cfr` and `game/records/record.ts` and noth
 `.ts` files directly, including in workers. `tools/` may use the clock and Node APIs.
 
 - `bots.ts`: `BOTS`, the `BotFactory` (`(rng) => ArenaBot` with `observe`, `decide` and an optional `dispose`)
-  of each name: `math` (`createMathBrain` with `randomVillainModel`), `cfr` (`createCfrBrain` over the model that
+  of each name: `math` (`createMathBrain()`), `cfr` (`createCfrBrain` over the model that
   `prepareBots` loads from `SHIPPED_STRATEGIES.cfr` once per process or worker; it throws before that),
   `always-call` (checks or calls), `always-raise` (raises to `legal.raise.min` when it can, else checks or calls),
   `min-bettor` (bets the minimum when nobody has bet, else checks or calls) and `random` (uniform over the legal

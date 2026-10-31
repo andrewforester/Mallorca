@@ -3,7 +3,7 @@ import { basename, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Action, LegalActions } from '../../src/engine/index.ts';
 import type { Observation } from '../../src/brains/index.ts';
-import { createMathBrain, randomVillainModel } from '../../src/brains/index.ts';
+import { createMathBrain } from '../../src/brains/index.ts';
 import type { Rng } from '../../src/cards/index.ts';
 import type { CfrModel, ShippedStrategyKey } from '../../src/cfr/index.ts';
 import { SHIPPED_STRATEGIES, createCfrBrain, loadCfrModel } from '../../src/cfr/index.ts';
@@ -21,7 +21,7 @@ function passive(legal: LegalActions): Action {
 }
 
 const math: BotFactory = () => {
-  const brain = createMathBrain({ villainModel: randomVillainModel });
+  const brain = createMathBrain();
   return {
     observe: (o) => brain.observe(o),
     decide: (legal) => brain.decide(legal).action,

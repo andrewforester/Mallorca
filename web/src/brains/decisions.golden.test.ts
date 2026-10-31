@@ -3,7 +3,6 @@ import { createMathBrain } from './brain.ts';
 import type { DecisionFixture } from './decisionFixtures.ts';
 import { decisionFixtures as decisions } from './decisionFixtures.ts';
 import { parseObservation } from './observation.ts';
-import { randomVillainModel } from './villainModel.ts';
 
 const CLASSES = ['fold', 'passive', 'aggressive'] as const;
 
@@ -12,7 +11,7 @@ function expected(value: number | null): number {
 }
 
 function decide(fixture: DecisionFixture) {
-  const brain = createMathBrain({ villainModel: randomVillainModel });
+  const brain = createMathBrain();
   for (const raw of fixture.observations) {
     brain.observe(parseObservation(raw));
   }

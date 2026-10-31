@@ -1,7 +1,6 @@
 import type { GameContext, HandState } from './handState.ts';
 import { PREFLOP } from './handState.ts';
 import type { HoleCards, Spectrum } from './spectrum.ts';
-import type { StrengthManager } from './strength.ts';
 
 export type SolverActionType = 'fold' | 'passive' | 'aggressive';
 
@@ -114,17 +113,6 @@ export interface ActionProfitEntry {
 
 export type ActionDistribution = ActionProfitEntry[];
 
-export interface ProfitCorrections {
-  readonly preflopCall: number;
-  readonly preflopRaise: number;
-  readonly preflopCheck: number;
-  readonly preflopBet: number;
-  readonly postflopCall: number;
-  readonly postflopRaise: number;
-  readonly postflopCheck: number;
-  readonly postflopBet: number;
-}
-
 export interface SolverRequest {
   readonly game: GameContext;
   readonly info: HandState;
@@ -132,7 +120,6 @@ export interface SolverRequest {
   readonly pot: number;
   readonly spectrum: Spectrum;
   readonly hero: HoleCards;
-  readonly strength: StrengthManager;
   readonly isHeroOnButton: boolean;
 }
 
@@ -145,7 +132,6 @@ export interface GameSolver {
 export interface HeroKnowledge {
   readonly hero: HoleCards;
   readonly spectrum: Spectrum;
-  readonly strength: StrengthManager;
 }
 
 export function profitMap(
@@ -163,7 +149,6 @@ export function profitMap(
     pot: game.pot,
     spectrum: knowledge.spectrum,
     hero: knowledge.hero,
-    strength: knowledge.strength,
     isHeroOnButton: onButton,
   };
   if (game.street === PREFLOP) {

@@ -1,4 +1,4 @@
-import { createMathBrain, randomVillainModel } from '../brains/index.ts';
+import { createMathBrain } from '../brains/index.ts';
 import { mulberry32 } from '../cards/index.ts';
 import { SHIPPED_STRATEGIES, createCfrBrain, loadCfrModel } from '../cfr/index.ts';
 import type { CfrModel, ShippedStrategyKey } from '../cfr/index.ts';
@@ -41,7 +41,7 @@ const loadOpponent: OpponentLoader = async (opponent, seed) => {
 };
 
 const handle = createWorkerHandler(
-  () => createMathBrain({ villainModel: randomVillainModel }),
+  () => createMathBrain(),
   (reply) => {
     scope.postMessage(reply);
   },

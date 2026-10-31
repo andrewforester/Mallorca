@@ -8,10 +8,9 @@ import type { Observation } from './observation.ts';
 import { parseObservation } from './observation.ts';
 import { aggressive, call, check, fold } from './profit.ts';
 import { toLegalAction } from './preprocess.ts';
-import { randomVillainModel } from './villainModel.ts';
 
 function brainAfter(observations: readonly Observation[]) {
-  const brain = createMathBrain({ villainModel: randomVillainModel });
+  const brain = createMathBrain();
   for (const o of observations) {
     brain.observe(o);
   }
