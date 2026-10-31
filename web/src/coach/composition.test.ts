@@ -21,6 +21,7 @@ describe('classify', () => {
     ['Ac Qd', '8s 8d 3c', 'air'],
     ['4c 5d', 'Ks Kd Kh', 'air'],
     ['4c 5d', '6s 7d 8h', 'strong'],
+    ['2c 3d', '4h 5s Kc', 'draw'],
     ['Ah 5h', 'Kh 8h 3c 2s 9d', 'air'],
   ];
   for (const [hand, board, expected] of cases) {

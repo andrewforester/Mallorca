@@ -36,6 +36,19 @@ describe('outs', () => {
     expect(result?.cards).toContain(parseCard('Kc'));
   });
 
+  it('does not count a board pair that only adds a second pair', () => {
+    const result = outs(hole('Ac Kd'), parseCards('Ks 8h 3c'), null);
+    for (const card of parseCards('3d 3h 3s 8c 8d 8s')) {
+      expect(result?.cards).not.toContain(card);
+    }
+    expect(result?.cards).toContain(parseCard('Ah'));
+  });
+
+  it('counts the card that makes a better straight than the board', () => {
+    const result = outs(hole('Tc 2d'), parseCards('5h 6s 7c 8d'), null);
+    expect(result?.cards).toContain(parseCard('9h'));
+  });
+
   it('has no chance by the river on the turn and no outs on the river or preflop', () => {
     expect(outs(hole('Ah 5h'), parseCards('Kh 8h 3c 2s'), null)?.byRiver).toBeNull();
     expect(outs(hole('Ah 5h'), parseCards('Kh 8h 3c 2s 9d'), null)).toBeNull();

@@ -289,9 +289,9 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   pair at or above the top board rank), `pair`, `draw` (flop and turn: a flush draw with a hole card, or two or more
   ranks that complete a straight with a hole card) and `air`; a pair or trips on the board alone is not the bot's
   hand. `ahead` is the weighted share of live range pairs the player's current hand beats, ties half. `outs`
-  (`outs.ts`, flop and turn, against the range or a random hand) are the cards that lift the player's category above
-  both its current one and what the board alone gives everyone, and leave the player ahead of more than half of the
-  range; `nextCard` is their share of the unseen cards and `byRiver` the chance over two cards on the flop.
+  (`outs.ts`, flop and turn, against the range or a random hand) are the cards that raise the player's category by more than they raise the board's own
+  (a board pair that only adds a second pair is not an out), or that make a better straight or flush than the board
+  shows, and leave the player ahead of more than half of the range; `nextCard` is their share of the unseen cards and `byRiver` the chance over two cards on the flop.
   `blockers` (`blockers.ts`) is the share of the range's `strong` and `twoPair` weight whose pairs hold a player's
   card. Composition and blockers are null without a range, all three before the flop.
 - `odds` (`odds.ts`) is null with nothing to call, else `requiredEquity = toCall / (pot + toCall)`,

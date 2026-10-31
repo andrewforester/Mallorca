@@ -46,6 +46,18 @@ function boardCategory(board: readonly Card[]): number {
   return 0;
 }
 
+function isOut(hero: [Card, Card], board: readonly Card[], next: Card[], now: number): boolean {
+  const reached = categoryIndex([...hero, ...next]);
+  if (reached <= now) return false;
+  const margin = reached - boardCategory(next);
+  if (margin > now - boardCategory(board)) return true;
+  return (
+    margin === 0 &&
+    next.length === RIVER &&
+    pheEvaluator.rank([...hero, ...next]) > pheEvaluator.rank(next)
+  );
+}
+
 function aheadShare(
   hero: [Card, Card],
   board: readonly Card[],
@@ -75,9 +87,7 @@ export function outs(
   const unseen = fullDeck().filter((card) => !hero.includes(card) && !board.includes(card));
   const cards = unseen.filter((card) => {
     const next = [...board, card];
-    const reached = categoryIndex([...hero, ...next]);
-    const improved = reached > now && reached > boardCategory(next);
-    return improved && aheadShare(hero, next, weights) > 0.5;
+    return isOut(hero, board, next, now) && aheadShare(hero, next, weights) > 0.5;
   });
   const n = cards.length;
   const nextCard = n / unseen.length;

@@ -69,7 +69,8 @@ function straightDraw(hole: [Card, Card], board: readonly Card[]): boolean {
   const holeRanks = lowAce(hole.map(rankOf));
   let ways = 0;
   for (let extra = 2; extra <= ACE; extra++) {
-    if (!present.has(extra) && completes(present, extra, holeRanks)) ways += 1;
+    const wheel = extra === ACE && completes(present, 1, holeRanks);
+    if (!present.has(extra) && (wheel || completes(present, extra, holeRanks))) ways += 1;
   }
   return ways >= 2;
 }
