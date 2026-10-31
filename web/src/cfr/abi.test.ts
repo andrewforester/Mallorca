@@ -139,3 +139,74 @@ describe('the action kinds of mallorca.wasm', () => {
     });
   }
 });
+
+function pairIndex(a: number, b: number): number {
+  const [lo, hi] = a < b ? [a, b] : [b, a];
+  return (hi * (hi - 1)) / 2 + lo;
+}
+
+const OPEN: LegalActions = { fold: true, check: false, call: 10, raise: { min: 40, max: 2000 } };
+
+describe('the coach exports of mallorca.wasm', () => {
+  it('gives a uniform range before the bot acts', () => {
+    const bot = preflopBot();
+    const range = bot.range();
+    expect(range?.length).toBe(1326);
+    expect(range?.every((w) => w === 1)).toBe(true);
+    bot.free();
+  });
+
+  it('gives the spot and the strategy of aces on the button', () => {
+    const bot = preflopBot();
+    const spot = bot.spot(OPEN);
+    expect(spot?.approximate).toBe(false);
+    const n = spot?.moves.length ?? 0;
+    expect(n).toBeGreaterThan(1);
+    expect(spot?.grid.length).toBe(1326 * n);
+    for (const move of spot?.moves ?? []) {
+      if (move.kind === 'raise') {
+        expect(move.to).toBeGreaterThanOrEqual(40);
+        expect(move.to).toBeLessThanOrEqual(2000);
+      } else {
+        expect(['fold', 'call']).toContain(move.kind);
+      }
+    }
+    const row = Array.from(
+      spot?.grid.subarray(pairIndex(50, 51) * n, (pairIndex(50, 51) + 1) * n) ?? [],
+    );
+    expect(row.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 5);
+    const best = row.indexOf(Math.max(...row));
+    expect(spot?.moves[best]?.kind).toBe('raise');
+    bot.free();
+  });
+
+  it('narrows the range after the bot opens and drops the flop cards', () => {
+    const bot = preflopBot();
+    const open = bot.decide(OPEN, 0.5);
+    bot.acted(true, open, 0.5);
+    bot.acted(false, { kind: 'call' }, 0.5);
+    const flop = [0, 21, 38];
+    bot.street(flop);
+    const range = bot.range() ?? new Float32Array();
+    const live: number[] = [];
+    for (let b = 1; b < 52; b++) {
+      for (let a = 0; a < b; a++) {
+        const w = range[pairIndex(a, b)] ?? -1;
+        if (flop.includes(a) || flop.includes(b)) {
+          expect(w).toBe(0);
+        } else {
+          live.push(w);
+        }
+      }
+    }
+    expect(new Set(live).size).toBeGreaterThan(1);
+    bot.free();
+  });
+
+  it('answers null for a freed bot', () => {
+    const bot = preflopBot();
+    bot.free();
+    expect(bot.range()).toBeNull();
+    expect(bot.spot(OPEN)).toBeNull();
+  });
+});

@@ -30,6 +30,16 @@ interface Exports {
   ): number;
   decided_to(bot: number): number;
   bot_style(bot: number, aggression: number, bluff: number, tightness: number): void;
+  bot_range(bot: number): number;
+  bot_spot(
+    bot: number,
+    fold: number,
+    check: number,
+    call: number,
+    min: number,
+    max: number,
+  ): number;
+  bot_spot_grid(bot: number): number;
 }
 
 export interface HandStart {
@@ -47,7 +57,15 @@ export interface CfrBot {
   acted(hero: boolean, action: Action, draw: number): void;
   decide(legal: LegalActions, draw: number): Action;
   setStyle(style: BotStyle): void;
+  range(): Float32Array | null;
+  spot(legal: LegalActions): CfrSpot | null;
   free(): void;
+}
+
+export interface CfrSpot {
+  approximate: boolean;
+  moves: Action[];
+  grid: Float32Array;
 }
 
 export interface CfrModel {
@@ -95,6 +113,32 @@ function toAction(kind: number, to: number): Action {
   }
 }
 
+const PAIRS = 1326;
+
+type LegalArgs = [number, number, number, number, number];
+
+function legalArgs({ fold, check, call, raise }: LegalActions): LegalArgs {
+  return [fold ? 1 : 0, check ? 1 : 0, call ?? -1, raise?.min ?? -1, raise?.max ?? -1];
+}
+
+function floats(e: Exports, ptr: number, length: number): Float32Array | null {
+  return ptr === 0 ? null : new Float32Array(e.memory.buffer, ptr, length).slice();
+}
+
+function readSpot(e: Exports, handle: number, legal: LegalActions): CfrSpot | null {
+  const ptr = e.bot_spot(handle, ...legalArgs(legal));
+  const count = floats(e, ptr, 2)?.[1] ?? 0;
+  const head = floats(e, ptr, 2 + 2 * count);
+  const grid = floats(e, e.bot_spot_grid(handle), PAIRS * count);
+  if (head === null || grid === null) {
+    return null;
+  }
+  const moves = Array.from({ length: count }, (_, k) =>
+    toAction(head[2 + 2 * k] ?? -1, head[3 + 2 * k] ?? 0),
+  );
+  return { approximate: head[0] === 1, moves, grid };
+}
+
 function bot(e: Exports, handle: number): CfrBot {
   return {
     handStarted(s) {
@@ -113,20 +157,17 @@ function bot(e: Exports, handle: number): CfrBot {
       e.acted(handle, hero ? 1 : 0, kindOf(action), to, draw);
     },
     decide(legal, draw) {
-      const { fold, check, call, raise } = legal;
-      const kind = e.decide(
-        handle,
-        fold ? 1 : 0,
-        check ? 1 : 0,
-        call ?? -1,
-        raise?.min ?? -1,
-        raise?.max ?? -1,
-        draw,
-      );
+      const kind = e.decide(handle, ...legalArgs(legal), draw);
       return toAction(kind, e.decided_to(handle));
     },
     setStyle({ aggression, bluff, tightness }) {
       e.bot_style(handle, aggression, bluff, tightness);
+    },
+    range() {
+      return floats(e, e.bot_range(handle), PAIRS);
+    },
+    spot(legal) {
+      return readSpot(e, handle, legal);
     },
     free() {
       e.bot_free(handle);

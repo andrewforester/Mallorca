@@ -1,7 +1,9 @@
 use super::*;
 use crate::measure::fixtures::{trained, trained_multi_open};
+use crate::pairs::{pair_cards, pair_index, PAIRS};
 use crate::rng::Rng;
 use crate::tree::{ActionKind, Node};
+use range::range_of;
 use std::sync::OnceLock;
 
 fn model() -> &'static Model {
@@ -752,4 +754,298 @@ fn huge_stacks_do_not_overflow_the_pot() {
     };
     let mv = bot.decide(model(), &legal, 0.5);
     assert!(is_legal(mv, &legal), "{mv:?}");
+}
+
+fn p_of(id: NodeId, bucket: u16, kind: ActionKind) -> f32 {
+    let Node::Decision { actions, .. } = model().file.tree.node(id) else {
+        panic!("not a decision");
+    };
+    let p = model().file.probabilities(id, bucket);
+    let i = actions.iter().position(|a| a.0 == kind).unwrap();
+    let sum: u32 = p.iter().map(|&x| u32::from(x)).sum();
+    f32::from(p[i]) / sum as f32
+}
+
+fn opened(hole: [Card; 2]) -> Bot {
+    let root = model().file.tree.root();
+    let bucket = model().abstraction.bucket(Street::Preflop, hole, &[]);
+    let draw = draw_for(root, bucket, ActionKind::RaiseTo(50));
+    assert!(draw >= 0.0, "the fixture never opens this hand");
+    let mut bot = started(true, [400, 400], [10, 20], hole);
+    let mv = bot.decide(model(), &facing_blind(20, 400), draw);
+    bot.acted(model(), true, mv, 0.0);
+    bot
+}
+
+#[test]
+fn a_new_hand_has_a_uniform_range() {
+    let bot = started(true, [400, 400], [10, 20], [0, 5]);
+    assert!(bot.history().is_empty());
+    let range = bot.range(model());
+    assert_eq!(range.len(), PAIRS);
+    assert!(range.iter().all(|&w| w == 1.0));
+}
+
+#[test]
+fn a_sampled_decision_adds_one_step() {
+    let root = model().file.tree.root();
+    let bot = opened([48, 49]);
+    let Node::Decision { actions, .. } = model().file.tree.node(root) else {
+        panic!("not a decision");
+    };
+    let open = actions
+        .iter()
+        .position(|a| a.0 == ActionKind::RaiseTo(50))
+        .unwrap();
+    assert_eq!(bot.history().len(), 1);
+    let step = &bot.history()[0];
+    assert_eq!(
+        (step.node, step.action, step.street),
+        (root, open, Street::Preflop)
+    );
+    assert!(step.board.is_empty());
+}
+
+#[test]
+fn the_range_follows_the_strategy() {
+    let root = model().file.tree.root();
+    let range = opened([48, 49]).range(model());
+    for (i, &w) in range.iter().enumerate() {
+        let bucket = model()
+            .abstraction
+            .bucket(Street::Preflop, pair_cards(i), &[]);
+        let p = p_of(root, bucket, ActionKind::RaiseTo(50));
+        assert!((w - p).abs() < 1e-6, "{:?}: {w} vs {p}", pair_cards(i));
+    }
+    assert!(range.iter().any(|&w| w != range[0]));
+}
+
+#[test]
+fn board_pairs_leave_the_range() {
+    let mut bot = opened([48, 49]);
+    let board = [10, 20, 30];
+    bot.street(model(), &board);
+    let range = bot.range(model());
+    for (i, &w) in range.iter().enumerate() {
+        let c = pair_cards(i);
+        if board.contains(&c[0]) || board.contains(&c[1]) {
+            assert_eq!(w, 0.0, "{c:?}");
+        }
+    }
+}
+
+#[test]
+fn a_passive_play_off_the_tree_adds_no_step() {
+    let mut bot = started(true, [400, 400], [10, 20], [48, 48]);
+    bot.decide(model(), &facing_blind(20, 400), 0.5);
+    assert!(bot.history().is_empty());
+    let mut bot = started(false, [400, 400], [10, 20], [0, 5]);
+    bot.acted(model(), false, Move::Check, 0.3);
+    bot.street(model(), &[10, 20, 30]);
+    assert!(bot.history().is_empty());
+}
+
+fn impossible_step() -> Step {
+    let root = model().file.tree.root();
+    let Node::Decision { actions, .. } = model().file.tree.node(root) else {
+        panic!("not a decision");
+    };
+    Step {
+        node: root,
+        action: actions.len(),
+        street: Street::Preflop,
+        board: Vec::new(),
+        style: Style::NEUTRAL,
+    }
+}
+
+#[test]
+fn an_impossible_step_keeps_the_previous_range() {
+    let bot = opened([48, 49]);
+    let mut steps = bot.history().to_vec();
+    let before = range_of(model(), &steps, &[]);
+    steps.push(impossible_step());
+    assert_eq!(range_of(model(), &steps, &[]), before);
+}
+
+fn on_the_flop(hole: [Card; 2]) -> (Bot, Legal) {
+    let mut bot = started(false, [400, 400], [10, 20], hole);
+    bot.acted(model(), false, Move::Call, 0.3);
+    bot.acted(model(), true, Move::Check, 0.3);
+    bot.street(model(), &[10, 20, 30]);
+    let legal = Legal {
+        fold: false,
+        check: true,
+        call: None,
+        raise: Some((20, 360)),
+    };
+    (bot, legal)
+}
+
+fn preflop_spot() -> (Bot, Legal) {
+    (
+        started(true, [400, 400], [10, 20], [48, 49]),
+        facing_blind(20, 400),
+    )
+}
+
+#[test]
+fn spot_is_the_node_decide_samples() {
+    for (mut bot, legal) in [preflop_spot(), on_the_flop([48, 49])] {
+        let spot = bot.spot(model(), &legal).unwrap();
+        assert!(!spot.approximate);
+        bot.decide(model(), &legal, 0.5);
+        let step = bot.history().last().unwrap();
+        assert_eq!((spot.node, spot.street), (step.node, step.street));
+    }
+}
+
+#[test]
+fn spot_moves_are_the_real_moves() {
+    for setup in [preflop_spot, || on_the_flop([48, 49])] {
+        let (bot, legal) = setup();
+        let spot = bot.spot(model(), &legal).unwrap();
+        let hand = bot.hand.as_ref().unwrap();
+        let bucket = model()
+            .abstraction
+            .bucket(hand.street, hand.hole.unwrap(), &hand.board);
+        let Node::Decision { actions, .. } = model().file.tree.node(spot.node) else {
+            panic!("not a decision");
+        };
+        assert_eq!(spot.moves.len(), actions.len());
+        for (k, &(kind, _)) in actions.iter().enumerate() {
+            let draw = draw_for(spot.node, bucket, kind);
+            if draw < 0.0 {
+                continue;
+            }
+            let (mut fresh, _) = setup();
+            assert_eq!(
+                fresh.decide(model(), &legal, draw),
+                spot.moves[k],
+                "{kind:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn spot_does_not_move_the_bot() {
+    for draw in [0.1, 0.5, 0.9] {
+        let (mut plain, legal) = on_the_flop([48, 49]);
+        let (mut asked, _) = on_the_flop([48, 49]);
+        asked.spot(model(), &legal);
+        asked.spot(model(), &legal);
+        assert_eq!(
+            asked.decide(model(), &legal, draw),
+            plain.decide(model(), &legal, draw)
+        );
+        assert_eq!(asked.history(), plain.history());
+        assert_eq!(asked.cursor(), plain.cursor());
+    }
+}
+
+#[test]
+fn approximate_after_a_resync() {
+    let mut bot = started(false, [400, 400], [10, 20], [0, 5]);
+    bot.acted(model(), false, Move::Check, 0.3);
+    let legal = Legal {
+        fold: false,
+        check: true,
+        call: None,
+        raise: Some((40, 380)),
+    };
+    let spot = bot.spot(model(), &legal).unwrap();
+    assert!(spot.approximate);
+}
+
+#[test]
+fn grid_rows_are_the_strategy() {
+    let (bot, legal) = on_the_flop([48, 49]);
+    let spot = bot.spot(model(), &legal).unwrap();
+    let n = spot.moves.len();
+    let grid = bot.strategy_grid(model(), &spot);
+    assert_eq!(grid.len(), PAIRS * n);
+    let dead = [10, 20, 30];
+    for i in 0..PAIRS {
+        let c = pair_cards(i);
+        let row = &grid[i * n..(i + 1) * n];
+        if dead.contains(&c[0]) || dead.contains(&c[1]) {
+            assert!(row.iter().all(|&x| x == 0.0), "{c:?}");
+            continue;
+        }
+        let bucket = model().abstraction.bucket(Street::Flop, c, &[10, 20, 30]);
+        let bytes = model().file.probabilities(spot.node, bucket);
+        let sum: u32 = bytes.iter().map(|&x| u32::from(x)).sum();
+        for (k, &x) in row.iter().enumerate() {
+            assert!((x - f32::from(bytes[k]) / sum as f32).abs() < 1e-6, "{c:?}");
+        }
+        assert!((row.iter().sum::<f32>() - 1.0).abs() < 1e-5, "{c:?}");
+    }
+    let own = pair_index(48, 49);
+    assert!((grid[own * n..(own + 1) * n].iter().sum::<f32>() - 1.0).abs() < 1e-5);
+}
+
+#[test]
+fn no_spot_without_a_node() {
+    let bot = started(true, [400, 400], [10, 20], [48, 48]);
+    assert!(bot.spot(model(), &facing_blind(20, 400)).is_none());
+    assert!(Bot::new().spot(model(), &facing_blind(20, 400)).is_none());
+}
+
+#[test]
+fn a_facing_resync_spots_the_facing_node() {
+    let mut bot = started(false, [400, 400], [10, 20], [0, 5]);
+    bot.acted(model(), false, Move::Check, 0.3);
+    bot.acted(model(), false, Move::RaiseTo(100), 0.3);
+    assert_eq!(bot.cursor(), None);
+    let legal = Legal {
+        fold: true,
+        check: false,
+        call: Some(80),
+        raise: Some((180, 380)),
+    };
+    let spot = bot.spot(model(), &legal).unwrap();
+    assert!(spot.approximate);
+    let node = model().spot(spot.node).unwrap();
+    assert!(node.to_call() > 0);
+    assert_eq!(node.seat, bot.hand.as_ref().unwrap().hero);
+}
+
+#[test]
+fn a_styled_range_follows_the_styled_strategy() {
+    let style = Style {
+        aggression: 1.25,
+        bluff: 1.3,
+        tightness: 0.85,
+    };
+    let root = model().file.tree.root();
+    let hole = [48, 49];
+    let mut bot = started(true, [400, 400], [10, 20], hole);
+    bot.set_style(style);
+    let mv = bot.decide(model(), &facing_blind(20, 400), 0.99);
+    bot.acted(model(), true, mv, 0.0);
+    let step = bot.history()[0].clone();
+    let Node::Decision { actions, .. } = model().file.tree.node(root) else {
+        panic!("not a decision");
+    };
+    let kinds: Vec<ActionKind> = actions.iter().map(|a| a.0).collect();
+    let range = bot.range(model());
+    for (i, &w) in range.iter().enumerate() {
+        let bucket = model()
+            .abstraction
+            .bucket(Street::Preflop, pair_cards(i), &[]);
+        let weights = reweight(
+            model().file.probabilities(root, bucket),
+            &kinds,
+            &style,
+            false,
+            false,
+        );
+        let expected = weights[step.action] / weights.iter().sum::<f64>();
+        assert!(
+            (f64::from(w) - expected).abs() < 1e-5,
+            "{:?}: {w} vs {expected}",
+            pair_cards(i)
+        );
+    }
 }

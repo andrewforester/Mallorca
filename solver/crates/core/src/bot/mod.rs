@@ -1,5 +1,10 @@
+mod range;
+mod spot;
 mod style;
 mod translate;
+
+pub use range::Step;
+pub use spot::SpotView;
 
 use crate::abstraction::Abstraction;
 use crate::cards::Card;
@@ -134,6 +139,7 @@ struct Hand {
     node: Option<NodeId>,
     pending: Option<NodeId>,
     shifted: bool,
+    history: Vec<Step>,
 }
 
 impl Hand {
@@ -214,6 +220,7 @@ impl Bot {
             node: Some(model.file.tree.root()),
             pending: None,
             shifted: false,
+            history: Vec::new(),
         });
     }
 
@@ -267,28 +274,23 @@ impl Bot {
         let Some(hand) = self.hand.as_mut() else {
             return passive(legal);
         };
-        let Some(hole) = hand.hole.filter(|&h| distinct_cards(h, &hand.board)) else {
-            return passive(legal);
-        };
-        let facing = legal.call.is_some();
-        let here = hand
-            .node
-            .and_then(|id| model.spot(id))
-            .filter(|s| s.seat == hand.hero && s.street == hand.street);
-        if hand.shifted && facing && here.is_none() && hand.node.is_some() {
-            hand.pending = hand.node;
-            return passive(legal);
-        }
-        let valid = here.is_some_and(|s| {
-            let free = hand.shifted && facing && s.to_call() == 0;
-            free || (s.to_call() > 0) == facing
-        });
-        if !valid {
-            hand.node = resync(model, hand, facing);
-            if facing {
-                draw = resync_to_check(model, hand, draw);
+        match target(model, hand, legal) {
+            Target::Passive => return passive(legal),
+            Target::Hold => {
+                hand.pending = hand.node;
+                return passive(legal);
+            }
+            Target::Keep(_) => {}
+            Target::Resync(node) => {
+                hand.node = node;
+                if legal.call.is_some() {
+                    draw = resync_to_check(model, hand, draw);
+                }
             }
         }
+        let Some(hole) = hand.hole else {
+            return passive(legal);
+        };
         let Some(id) = hand.node else {
             return passive(legal);
         };
@@ -299,9 +301,46 @@ impl Bot {
         let Some(probabilities) = model.file.try_probabilities(id, bucket) else {
             return passive(legal);
         };
-        let chosen = spot.actions[choose(model, &spot, probabilities, bucket, &self.style, draw)];
+        let action = choose(model, &spot, probabilities, bucket, &self.style, draw);
+        let chosen = spot.actions[action];
+        hand.history.push(Step {
+            node: id,
+            action,
+            street: hand.street,
+            board: hand.board.clone(),
+            style: self.style,
+        });
         hand.pending = Some(chosen.1);
         to_real(&spot, hand, chosen.0, legal)
+    }
+}
+
+enum Target {
+    Passive,
+    Hold,
+    Keep(NodeId),
+    Resync(Option<NodeId>),
+}
+
+fn target(model: &Model, hand: &Hand, legal: &Legal) -> Target {
+    if !hand.hole.is_some_and(|h| distinct_cards(h, &hand.board)) {
+        return Target::Passive;
+    }
+    let facing = legal.call.is_some();
+    let here = hand
+        .node
+        .and_then(|id| model.spot(id))
+        .filter(|s| s.seat == hand.hero && s.street == hand.street);
+    if hand.shifted && facing && here.is_none() && hand.node.is_some() {
+        return Target::Hold;
+    }
+    let valid = here.is_some_and(|s| {
+        let free = hand.shifted && facing && s.to_call() == 0;
+        free || (s.to_call() > 0) == facing
+    });
+    match hand.node {
+        Some(id) if valid => Target::Keep(id),
+        _ => Target::Resync(resync(model, hand, facing)),
     }
 }
 

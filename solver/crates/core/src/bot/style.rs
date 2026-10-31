@@ -63,6 +63,20 @@ pub fn sample_weighted(weights: &[f64], draw: f64) -> usize {
         .unwrap_or(weights.len() - 1)
 }
 
+pub(super) fn styled(
+    model: &Model,
+    spot: &Spot<'_>,
+    probabilities: &[u8],
+    bucket: u16,
+    style: &Style,
+) -> Vec<f64> {
+    let kinds: Vec<ActionKind> = spot.actions.iter().map(|a| a.0).collect();
+    let late = matches!(spot.street, Street::Turn | Street::River);
+    let buckets = model.file.tree.buckets()[spot.street.as_index()];
+    let low = late && f64::from(bucket) < 0.35 * f64::from(buckets);
+    reweight(probabilities, &kinds, style, low, late)
+}
+
 pub(super) fn choose(
     model: &Model,
     spot: &Spot<'_>,
@@ -74,11 +88,7 @@ pub(super) fn choose(
     if *style == Style::NEUTRAL {
         return sample(probabilities, draw);
     }
-    let kinds: Vec<ActionKind> = spot.actions.iter().map(|a| a.0).collect();
-    let late = matches!(spot.street, Street::Turn | Street::River);
-    let buckets = model.file.tree.buckets()[spot.street.as_index()];
-    let low = late && f64::from(bucket) < 0.35 * f64::from(buckets);
-    sample_weighted(&reweight(probabilities, &kinds, style, low, late), draw)
+    sample_weighted(&styled(model, spot, probabilities, bucket, style), draw)
 }
 
 #[cfg(test)]

@@ -13,6 +13,7 @@ pub mod games;
 pub mod holdem;
 pub mod iso;
 pub mod measure;
+pub mod pairs;
 pub mod potential;
 pub mod preset;
 pub mod rng;
