@@ -140,6 +140,7 @@ struct Hand {
     pending: Option<NodeId>,
     shifted: bool,
     history: Vec<Step>,
+    opponent: Vec<Step>,
 }
 
 impl Hand {
@@ -221,6 +222,7 @@ impl Bot {
             pending: None,
             shifted: false,
             history: Vec::new(),
+            opponent: Vec::new(),
         });
     }
 
@@ -265,6 +267,11 @@ impl Bot {
             Some(child) if hero => (Some(child), false),
             _ => follow(model, hand, seat, mv, draw),
         };
+        if !hero {
+            if let Some(step) = opponent_step(model, hand, next) {
+                hand.opponent.push(step);
+            }
+        }
         hand.apply(seat, mv);
         hand.node = next;
         hand.shifted = shifted;
@@ -381,6 +388,23 @@ fn follow(model: &Model, hand: &Hand, seat: usize, mv: Move, draw: f64) -> (Opti
             (Some(sizes[i].1), i == 0 && passive.is_some())
         }
     }
+}
+
+fn opponent_step(model: &Model, hand: &Hand, next: Option<NodeId>) -> Option<Step> {
+    let node = hand.node?;
+    let child = next?;
+    let action = model
+        .spot(node)?
+        .actions
+        .iter()
+        .position(|a| a.1 == child)?;
+    Some(Step {
+        node,
+        action,
+        street: hand.street,
+        board: hand.board.clone(),
+        style: Style::NEUTRAL,
+    })
 }
 
 fn spot_pot(spot: &Spot<'_>) -> f64 {

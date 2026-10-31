@@ -356,8 +356,24 @@ fn the_range_narrows_after_a_decision() {
 }
 
 #[test]
+fn the_opponent_range_narrows_after_his_action_without_her_cards() {
+    let bot = seated([48, 49]);
+    let before = read(bot_opponent_range(bot), 1326);
+    let kind = decide(bot, 1, 0, 10, 40, 400, 0.99);
+    acted(bot, 1, kind, decided_to(bot), 0.5);
+    acted(bot, 0, KIND_CALL, 0, 0.5);
+    let after = read(bot_opponent_range(bot), 1326);
+    let hers = mallorca_core::pairs::pair_index(48, 49);
+    assert_eq!((before[hers], after[hers]), (0.0, 0.0));
+    assert!(before.iter().all(|&w| w == 0.0 || w == 1.0));
+    assert!(after.iter().any(|&w| w > 0.0 && w < 1.0));
+    bot_free(bot);
+}
+
+#[test]
 fn unknown_seat_gives_null() {
     assert!(bot_range(9999).is_null());
+    assert!(bot_opponent_range(9999).is_null());
     assert!(bot_spot(9999, 1, 0, 10, 40, 400).is_null());
     assert!(bot_spot_grid(9999).is_null());
 }
@@ -368,6 +384,7 @@ fn freed_seat_gives_null() {
     assert!(!bot_spot(bot, 1, 0, 10, 40, 400).is_null());
     bot_free(bot);
     assert!(bot_range(bot).is_null());
+    assert!(bot_opponent_range(bot).is_null());
     assert!(bot_spot(bot, 1, 0, 10, 40, 400).is_null());
     assert!(bot_spot_grid(bot).is_null());
 }

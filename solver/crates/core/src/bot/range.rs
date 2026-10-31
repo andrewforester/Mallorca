@@ -23,6 +23,22 @@ impl Bot {
         let board = self.hand.as_ref().map_or(&[][..], |h| &h.board);
         range_of(model, self.history(), board)
     }
+
+    pub fn opponent_range(&self, model: &Model) -> Vec<f32> {
+        let Some(hand) = self.hand.as_ref() else {
+            return range_of(model, &[], &[]);
+        };
+        let mut range = range_of(model, &hand.opponent, &hand.board);
+        if let Some(hole) = hand.hole {
+            for (i, w) in range.iter_mut().enumerate() {
+                let c = pair_cards(i);
+                if hole.contains(&c[0]) || hole.contains(&c[1]) {
+                    *w = 0.0;
+                }
+            }
+        }
+        range
+    }
 }
 
 pub(crate) fn action_probability(model: &Model, node: NodeId, bucket: u16, action: usize) -> f32 {
