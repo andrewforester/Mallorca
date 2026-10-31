@@ -3,6 +3,7 @@ export { ANCHORS, PULSE_FACES, blendOf, faceOf, shaped } from './anchors.ts';
 export type { Pulse, PulsePlan } from './expression.ts';
 export { feltPadOf, maskOf, pulsesFor, pulsesOf, shownPadOf } from './expression.ts';
 export type { FaceFrame, IdleState } from './frame.ts';
+export type { GazeTarget } from './gaze.ts';
 export { faceFrame, nervousOf, sadnessOf } from './frame.ts';
 export type { FaceLook } from './look.ts';
 export { MALLORCA_LOOK, leakOf } from './look.ts';

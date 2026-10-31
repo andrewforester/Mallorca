@@ -37,6 +37,8 @@ import { handRecorder } from './records/recorder.ts';
 import type { HandRecorder } from './records/recorder.ts';
 import { botRecord } from './records/record.ts';
 import type { Opponent } from './opponent.ts';
+import { initialFace, sessionFace } from './sessionFace.ts';
+import type { SessionFace } from './sessionFace.ts';
 import { initialTalk, sessionTalk } from './sessionTalk.ts';
 import { createTimers } from './timers.ts';
 import type { Timers } from './timers.ts';
@@ -92,6 +94,7 @@ interface Runtime {
   opponent: Opponent;
   seed: number;
   talk: SessionTalk;
+  face: SessionFace;
 }
 
 function freshTable(options: SessionOptions, mode: TableMode): Table {
@@ -121,6 +124,7 @@ function record(rt: Runtime, events: EngineEvent[], opens = false): void {
   rt.coach.observe(events);
   rt.bot.observe(toObservations(events, rt.botSeat));
   rt.talk.observe(events);
+  rt.face.observe(events);
   for (const event of events) {
     if (event.type === 'toppedUp' && event.seat === rt.humanSeat) {
       rt.topUps += event.amount;
@@ -328,6 +332,8 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
     attachTalk: (client) => rt.talk.attach(client),
     pageHidden: () => rt.talk.pageHidden(),
     setCoach: (on) => switchCoach(rt, on),
+    setFace: (on) => rt.face.setOn(on),
+    faceNow: () => rt.face.now(),
   };
 }
 
@@ -384,6 +390,13 @@ export function createSession(options: SessionOptions): Session {
       seed,
       opponent: 'math',
       talk: wireTalk(() => rt, options, botSeat),
+      face: sessionFace({
+        read: () => rt.get().face,
+        write: (face) => rt.set({ face }),
+        talk: () => rt.talk.active(),
+        now: options.now ?? Date.now,
+        botSeat,
+      }),
     };
     const initial = freshTable(options, rt.mode);
     return {
@@ -400,6 +413,7 @@ export function createSession(options: SessionOptions): Session {
       opponent: rt.opponent,
       talk: initialTalk(options.talkOn ?? true, options.tells ?? 'subtle'),
       coach: COACH_OFF,
+      face: initialFace(options.faceOn ?? true),
       ...sessionActions(rt, options),
     };
   });

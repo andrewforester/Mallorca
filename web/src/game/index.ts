@@ -43,3 +43,6 @@ export type { TalkConfig } from './talkLoader.ts';
 export { loadTalkClient, talkConnector } from './talkLoader.ts';
 export { onPageExit } from './pageExit.ts';
 export type { Level } from '../talk/index.ts';
+export type { FaceCue, FaceState } from './sessionFace.ts';
+export type { FaceFrame, GazeTarget, Pulse, VisemeCue, Weights } from '../face/index.ts';
+export { speechOf } from '../face/index.ts';

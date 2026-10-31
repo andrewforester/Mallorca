@@ -8,6 +8,8 @@ import type { Intent } from './intent.ts';
 import type { Opponent } from './opponent.ts';
 import type { HandResult, SeatActions } from './outcome.ts';
 import type { RecordsOptions } from './records/recorder.ts';
+import type { FaceFrame } from '../face/index.ts';
+import type { FaceState } from './sessionFace.ts';
 import type { QuickPhrase, TalkState } from './sessionTalk.ts';
 import type { TalkClient } from './talkClient.ts';
 
@@ -39,6 +41,7 @@ export interface SessionState {
   opponent: Opponent;
   talk: TalkState;
   coach: CoachState;
+  face: FaceState;
 }
 
 export interface SessionActions {
@@ -54,6 +57,8 @@ export interface SessionActions {
   setTells(level: Level): void;
   attachTalk(client: TalkClient): void;
   pageHidden(): void;
+  setFace(on: boolean): void;
+  faceNow(): FaceFrame | null;
 }
 
 export type Session = StoreApi<SessionState & SessionActions>;
@@ -74,4 +79,5 @@ export interface SessionOptions {
   talkOn?: boolean;
   tells?: Level;
   coach?: boolean;
+  faceOn?: boolean;
 }
