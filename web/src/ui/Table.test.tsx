@@ -181,16 +181,10 @@ describe('Table talk', () => {
 
   it('shows her bubble at her seat, mine at mine, and the chat entry points', () => {
     table(talking());
-    expect(
-      screen.getByTestId('seat-1').querySelector('[data-testid="bubble-mallorca"]'),
-    ).not.toBeNull();
-    expect(
-      screen.getByTestId('seat-0').querySelector('[data-testid="bubble-player"]'),
-    ).not.toBeNull();
-    expect(screen.getByTestId('seat-1').querySelector('[data-testid="chat-open"]')).not.toBeNull();
-    expect(
-      screen.getByTestId('chat-panel').querySelector('[data-testid="chat-input"]'),
-    ).not.toBeNull();
+    expect(within(screen.getByTestId('seat-1')).getByTestId('bubble-mallorca')).not.toBeNull();
+    expect(within(screen.getByTestId('seat-0')).getByTestId('bubble-player')).not.toBeNull();
+    expect(within(screen.getByTestId('seat-1')).getByTestId('chat-open')).not.toBeNull();
+    expect(within(screen.getByTestId('chat-panel')).getByTestId('chat-input')).not.toBeNull();
     expect(screen.getByTestId('coach')).not.toBeNull();
   });
 
