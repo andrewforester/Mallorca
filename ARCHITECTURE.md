@@ -276,7 +276,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   replays the observations into a fresh `CfrBot` in the player's seat (off-tree draws from `mulberry32(handNumber)`,
   so the same request gives the same facts), reads `spot(legal)` and frees the bot.
 - `hint` holds the spot's `moves` (`CoachMove`: `label` fold, check, call, bet, raise or allIn, `amount`, `tone`
-  fold, passive, small, large or allIn; a raise is large above 0.75 of the pot after the call), `mine`, the
+  fold, passive, small, large or allIn; a raise is large above 0.75 of the pot after the call; tree actions that land
+  on the same real move are merged and their probabilities summed), `mine`, the
   probabilities of the player's own hand, `approximate` and `heroCell`. `strategy` is the spot's grid folded to 169
   cells (`grid.ts`: cell `row * 13 + col` from ace to two, pairs on the diagonal, suited above, offsuit below; a cell is
   the mean of its live pairs, null when none is live); `range` folds the bot's range the same way after the player's
@@ -336,8 +337,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   rejects `select('cfr')`.
 - `withFallback` wraps a client: when `decide` rejects or takes longer than 5 s, it disposes the primary, replays
   the observations of the hand into an in-process bot and uses it from then on. It falls back once, and a failure
-  from before `reset` or `dispose` does not trigger it. Its `coach` forwards to the active client and rejects after a
-  fallback or when the client has none. The session drops a decision that arrives after `start`
+  from before `reset` or `dispose` does not trigger it. Its `coach` forwards to the active client with the same timeout as
+  `decide` and rejects after a fallback or when the client has none. The session drops a decision that arrives after `start`
   or `dispose`.
   Its `select` answers `math` without asking a client that has no `select`; when the client's `select` rejects or
   takes longer than 60 s, it falls back the same way and answers `math`.
@@ -426,8 +427,9 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - Coach mode: the `mallorca.coach` preference (off unless stored `on`), switched by the start screen checkbox
   `start-coach` and the menu checkbox `coach-mode`; `useCoach` calls `setCoach` from it. On wide screens `Coach` fills
   the `coach` slot of the table; on narrow ones the status bar button `coach-toggle` (`aria-expanded`) opens it in
-  `CoachSheet`, a bottom sheet over a scrim closed by its button, Escape or the scrim (`useWide` follows the same media
-  query, so the panel exists once). `Coach` shows the hint line (shares of 0.5 % and more, a mixed-strategy line when
+  `CoachSheet`, a bottom sheet over a scrim closed by its button, Escape or the scrim (`useWide`, `(min-aspect-ratio: 1/1) and
+(min-height: 561px)` like the floating hand log, decides, so the panel exists once and a short landscape screen
+  gets the sheet). `Coach` shows the hint line (shares of 0.5 % and more, a mixed-strategy line when
   two moves reach 10 %, an approximate line), then tabs: the strategy grid (each cell striped by its moves' shares,
   the player's cell outlined), the bot range grid (shaded by weight relative to the heaviest cell) or the math-bot
   line, and the numbers. Fold, passive and all-in have their own colour tokens; sized bets and raises are shaded
