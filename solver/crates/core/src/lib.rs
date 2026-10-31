@@ -1,5 +1,6 @@
 pub mod abstraction;
 pub mod bot;
+pub mod bytes;
 pub mod cards;
 pub mod centroids;
 pub mod cfr;

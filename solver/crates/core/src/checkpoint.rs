@@ -1,3 +1,4 @@
+use crate::bytes::{ByteReader, Truncated};
 use crate::cfr::{Storage, SLOT_BYTES};
 use std::fmt;
 
@@ -43,6 +44,12 @@ impl fmt::Display for CheckpointError {
 
 impl std::error::Error for CheckpointError {}
 
+impl From<Truncated> for CheckpointError {
+    fn from(_: Truncated) -> CheckpointError {
+        CheckpointError::Truncated
+    }
+}
+
 const HEADER_LEN: usize = 66;
 
 pub fn write_checkpoint(header: &CheckpointHeader, storage: &Storage) -> Vec<u8> {
@@ -64,43 +71,34 @@ pub fn write_checkpoint(header: &CheckpointHeader, storage: &Storage) -> Vec<u8>
     out
 }
 
-fn array<const N: usize>(bytes: &[u8], at: usize) -> [u8; N] {
-    bytes[at..at + N].try_into().expect("length checked")
-}
-
 pub fn read_checkpoint(
     bytes: &[u8],
     expected: &[u8; 32],
 ) -> Result<(CheckpointHeader, Storage), CheckpointError> {
-    if bytes.len() < MAGIC.len() {
-        return Err(CheckpointError::Truncated);
-    }
-    if &bytes[..4] != MAGIC {
+    let mut r = ByteReader::new(bytes);
+    if &r.array::<4>()? != MAGIC {
         return Err(CheckpointError::BadMagic);
     }
-    if bytes.len() < 6 {
-        return Err(CheckpointError::Truncated);
-    }
-    let format_version = u16::from_le_bytes(array(bytes, 4));
+    let format_version = r.u16()?;
     if format_version != FORMAT_VERSION {
         return Err(CheckpointError::UnknownVersion(format_version));
     }
     if bytes.len() < HEADER_LEN {
         return Err(CheckpointError::Truncated);
     }
-    let fingerprint: [u8; 32] = array(bytes, 6);
+    let fingerprint: [u8; 32] = r.array()?;
     if &fingerprint != expected {
         return Err(CheckpointError::FingerprintMismatch);
     }
     let header = CheckpointHeader {
         format_version,
         fingerprint,
-        iterations: u64::from_le_bytes(array(bytes, 38)),
-        elapsed_seconds: u64::from_le_bytes(array(bytes, 46)),
-        checkpoint: u32::from_le_bytes(array(bytes, 54)),
+        iterations: r.u64()?,
+        elapsed_seconds: r.u64()?,
+        checkpoint: r.u32()?,
     };
-    let slots = u64::from_le_bytes(array(bytes, 58));
-    let body = &bytes[HEADER_LEN..];
+    let slots = r.u64()?;
+    let body = r.rest();
     if slots.checked_mul(SLOT_BYTES as u64) != Some(body.len() as u64) {
         return Err(CheckpointError::Truncated);
     }

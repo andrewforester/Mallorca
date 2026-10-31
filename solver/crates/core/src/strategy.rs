@@ -1,3 +1,4 @@
+use crate::bytes::{ByteReader, Truncated};
 use crate::iso::street_indexers;
 use crate::potential::{BINS, CLUSTERS};
 use crate::tree::{Node, NodeId, Street, Tree};
@@ -51,6 +52,12 @@ impl fmt::Display for StrategyError {
 }
 
 impl std::error::Error for StrategyError {}
+
+impl From<Truncated> for StrategyError {
+    fn from(_: Truncated) -> StrategyError {
+        StrategyError::Truncated
+    }
+}
 
 pub fn quantize(probabilities: &[f32]) -> Vec<u8> {
     let n = probabilities.len();
@@ -128,50 +135,6 @@ fn offsets_for(tree: &Tree, streets: u8) -> (Vec<u64>, u64) {
     (offsets, next)
 }
 
-struct Cursor<'a> {
-    bytes: &'a [u8],
-    pos: usize,
-}
-
-impl<'a> Cursor<'a> {
-    fn take(&mut self, n: usize) -> Result<&'a [u8], StrategyError> {
-        let end = self.pos.checked_add(n).ok_or(StrategyError::Truncated)?;
-        let slice = self
-            .bytes
-            .get(self.pos..end)
-            .ok_or(StrategyError::Truncated)?;
-        self.pos = end;
-        Ok(slice)
-    }
-
-    fn u8(&mut self) -> Result<u8, StrategyError> {
-        Ok(self.take(1)?[0])
-    }
-
-    fn u16(&mut self) -> Result<u16, StrategyError> {
-        Ok(u16::from_le_bytes(
-            self.take(2)?.try_into().expect("2 bytes"),
-        ))
-    }
-
-    fn u32(&mut self) -> Result<u32, StrategyError> {
-        Ok(u32::from_le_bytes(
-            self.take(4)?.try_into().expect("4 bytes"),
-        ))
-    }
-
-    fn u64(&mut self) -> Result<u64, StrategyError> {
-        Ok(u64::from_le_bytes(
-            self.take(8)?.try_into().expect("8 bytes"),
-        ))
-    }
-
-    fn prefixed(&mut self) -> Result<&'a [u8], StrategyError> {
-        let n = self.u32()? as usize;
-        self.take(n)
-    }
-}
-
 #[derive(Default)]
 struct Buckets {
     tables: Vec<Vec<u8>>,
@@ -180,16 +143,8 @@ struct Buckets {
     clusters: Option<[u8; CLUSTER_MAP_LEN]>,
 }
 
-fn read_f32s(t: &mut Cursor<'_>, count: usize) -> Result<Vec<f32>, StrategyError> {
-    let bytes = t
-        .take(count.checked_mul(4).ok_or(StrategyError::Inconsistent)?)
-        .map_err(|_| StrategyError::Inconsistent)?;
-    let values: Vec<f32> = bytes
-        .as_chunks::<4>()
-        .0
-        .iter()
-        .map(|&c| f32::from_le_bytes(c))
-        .collect();
+fn read_f32s(t: &mut ByteReader<'_>, count: usize) -> Result<Vec<f32>, StrategyError> {
+    let values = t.f32s(count).map_err(|_| StrategyError::Inconsistent)?;
     if values.iter().any(|v| !v.is_finite()) {
         return Err(StrategyError::Inconsistent);
     }
@@ -197,7 +152,7 @@ fn read_f32s(t: &mut Cursor<'_>, count: usize) -> Result<Vec<f32>, StrategyError
 }
 
 fn read_centroids(
-    t: &mut Cursor<'_>,
+    t: &mut ByteReader<'_>,
     street: Street,
     expected: u16,
 ) -> Result<Vec<f32>, StrategyError> {
@@ -210,7 +165,7 @@ fn read_centroids(
     read_f32s(t, usize::from(count) * dimension)
 }
 
-fn read_clusters(t: &mut Cursor<'_>) -> Result<[u8; CLUSTER_MAP_LEN], StrategyError> {
+fn read_clusters(t: &mut ByteReader<'_>) -> Result<[u8; CLUSTER_MAP_LEN], StrategyError> {
     let bytes = t
         .take(CLUSTER_MAP_LEN)
         .map_err(|_| StrategyError::Inconsistent)?;
@@ -220,7 +175,7 @@ fn read_clusters(t: &mut Cursor<'_>) -> Result<[u8; CLUSTER_MAP_LEN], StrategyEr
     Ok(bytes.try_into().expect("169 bytes"))
 }
 
-fn read_table(t: &mut Cursor<'_>, street: Street) -> Result<Vec<u8>, StrategyError> {
+fn read_table(t: &mut ByteReader<'_>, street: Street) -> Result<Vec<u8>, StrategyError> {
     let table = t.prefixed().map_err(|_| StrategyError::Inconsistent)?;
     if table.len() as u64 != street_indexers()[street.as_index()].size(1) {
         return Err(StrategyError::Inconsistent);
@@ -228,7 +183,7 @@ fn read_table(t: &mut Cursor<'_>, street: Street) -> Result<Vec<u8>, StrategyErr
     Ok(table.to_vec())
 }
 
-fn read_thresholds(t: &mut Cursor<'_>, expected: u16) -> Result<Vec<f32>, StrategyError> {
+fn read_thresholds(t: &mut ByteReader<'_>, expected: u16) -> Result<Vec<f32>, StrategyError> {
     let count = t.u16().map_err(|_| StrategyError::Inconsistent)?;
     if count != expected.saturating_sub(1) {
         return Err(StrategyError::Inconsistent);
@@ -247,10 +202,7 @@ fn read_buckets(
     version: u16,
 ) -> Result<Buckets, StrategyError> {
     let mut out = Buckets::default();
-    let mut t = Cursor {
-        bytes: section,
-        pos: 0,
-    };
+    let mut t = ByteReader::new(section);
     for street in POSTFLOP.into_iter().filter(|&s| included(streets, s)) {
         let kind = if version == FORMAT_VERSION {
             KIND_TABLE
@@ -274,7 +226,7 @@ fn read_buckets(
         }
     }
     let centroids_match_version = out.centroids.is_empty() != (version == CENTROID_FORMAT_VERSION);
-    if t.pos != section.len() || !centroids_match_version {
+    if !t.is_done() || !centroids_match_version {
         return Err(StrategyError::Inconsistent);
     }
     Ok(out)
@@ -415,7 +367,7 @@ impl StrategyFile {
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<StrategyFile, StrategyError> {
-        let mut c = Cursor { bytes, pos: 0 };
+        let mut c = ByteReader::new(bytes);
         if c.take(4)? != MAGIC {
             return Err(StrategyError::BadMagic);
         }
@@ -423,7 +375,7 @@ impl StrategyFile {
         if !(FORMAT_VERSION..=CENTROID_FORMAT_VERSION).contains(&version) {
             return Err(StrategyError::UnknownVersion(version));
         }
-        let fingerprint: [u8; 32] = c.take(32)?.try_into().expect("32 bytes");
+        let fingerprint: [u8; 32] = c.array()?;
         let small_blind = c.u32()?;
         let big_blind = c.u32()?;
         let stack = c.u32()?;
@@ -432,7 +384,7 @@ impl StrategyFile {
         let checkpoint = c.u32()?;
         let tree_bytes = c.prefixed()?;
         let table_section = c.prefixed()?;
-        let probabilities = &bytes[c.pos..];
+        let probabilities = c.rest();
         if streets & 1 == 0 || streets & !KNOWN_STREETS != 0 {
             return Err(StrategyError::Inconsistent);
         }

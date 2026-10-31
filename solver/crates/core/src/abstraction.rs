@@ -1,3 +1,4 @@
+use crate::bytes::{ByteReader, Truncated};
 use crate::cards::Card;
 use crate::eval::rank;
 use crate::iso::{street_indexers, HandIndexer};
@@ -44,6 +45,12 @@ impl fmt::Display for TableError {
 
 impl std::error::Error for TableError {}
 
+impl From<Truncated> for TableError {
+    fn from(_: Truncated) -> TableError {
+        TableError::Truncated
+    }
+}
+
 pub fn encode_table(street: Street, buckets: u16, table: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(TABLE_HEADER_LEN + table.len());
     out.extend_from_slice(TABLE_MAGIC);
@@ -55,26 +62,25 @@ pub fn encode_table(street: Street, buckets: u16, table: &[u8]) -> Vec<u8> {
 }
 
 pub fn table_header(bytes: &[u8]) -> Result<TableHeader, TableError> {
-    if bytes.len() < TABLE_MAGIC.len() {
-        return Err(TableError::Truncated);
-    }
-    if &bytes[..4] != TABLE_MAGIC {
+    let mut r = ByteReader::new(bytes);
+    if &r.array::<4>()? != TABLE_MAGIC {
         return Err(TableError::BadMagic);
     }
     if bytes.len() < TABLE_HEADER_LEN {
         return Err(TableError::Truncated);
     }
-    let version = u16::from_le_bytes([bytes[4], bytes[5]]);
+    let version = r.u16()?;
     if version != TABLE_FORMAT_VERSION {
         return Err(TableError::UnknownVersion(version));
     }
-    let street = match Street::from_index(bytes[6]) {
+    let index = r.u8()?;
+    let street = match Street::from_index(index) {
         Some(s) if s != Street::Preflop => s,
-        _ => return Err(TableError::BadStreet(bytes[6])),
+        _ => return Err(TableError::BadStreet(index)),
     };
     Ok(TableHeader {
         street,
-        buckets: u16::from_le_bytes([bytes[7], bytes[8]]),
+        buckets: r.u16()?,
     })
 }
 

@@ -1,3 +1,4 @@
+use crate::bytes::{ByteReader, Truncated};
 use crate::preset::Preset;
 use std::fmt;
 
@@ -85,6 +86,12 @@ impl fmt::Display for TreeError {
 }
 
 impl std::error::Error for TreeError {}
+
+impl From<Truncated> for TreeError {
+    fn from(_: Truncated) -> TreeError {
+        TreeError::Truncated
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Tree {
@@ -230,7 +237,7 @@ impl Tree {
     }
 
     pub fn deserialize(bytes: &[u8]) -> Result<Tree, TreeError> {
-        let mut r = Reader { bytes, pos: 0 };
+        let mut r = ByteReader::new(bytes);
         let mut buckets = [0u16; 4];
         for b in &mut buckets {
             *b = r.u16()?;
@@ -246,11 +253,11 @@ impl Tree {
         for id in 0..count {
             let node = match r.u8()? {
                 0 => {
-                    let seat = r.seat()?;
+                    let seat = read_seat(&mut r)?;
                     let street =
                         Street::from_index(r.u8()?).ok_or(TreeError::BadValue("street"))?;
-                    let committed = r.pair()?;
-                    let street_bets = r.pair()?;
+                    let committed = read_pair(&mut r)?;
+                    let street_bets = read_pair(&mut r)?;
                     let n = r.u8()?;
                     if n == 0 {
                         return Err(TreeError::BadValue("action count"));
@@ -280,57 +287,31 @@ impl Tree {
                     }
                 }
                 1 => Node::Fold {
-                    folder: r.seat()?,
-                    committed: r.pair()?,
+                    folder: read_seat(&mut r)?,
+                    committed: read_pair(&mut r)?,
                 },
                 2 => Node::Showdown {
-                    committed: r.pair()?,
+                    committed: read_pair(&mut r)?,
                 },
                 t => return Err(TreeError::BadTag(t)),
             };
             nodes.push(node);
         }
-        if r.pos != bytes.len() {
+        if !r.is_done() {
             return Err(TreeError::TrailingBytes);
         }
         Ok(Tree::from_nodes(nodes, buckets))
     }
 }
 
-struct Reader<'a> {
-    bytes: &'a [u8],
-    pos: usize,
+fn read_pair(r: &mut ByteReader<'_>) -> Result<[u32; 2], TreeError> {
+    Ok([r.u32()?, r.u32()?])
 }
 
-impl Reader<'_> {
-    fn take<const N: usize>(&mut self) -> Result<[u8; N], TreeError> {
-        let end = self.pos.checked_add(N).ok_or(TreeError::Truncated)?;
-        let slice = self.bytes.get(self.pos..end).ok_or(TreeError::Truncated)?;
-        self.pos = end;
-        Ok(slice.try_into().expect("slice has length N"))
-    }
-
-    fn u8(&mut self) -> Result<u8, TreeError> {
-        Ok(self.take::<1>()?[0])
-    }
-
-    fn u16(&mut self) -> Result<u16, TreeError> {
-        Ok(u16::from_le_bytes(self.take()?))
-    }
-
-    fn u32(&mut self) -> Result<u32, TreeError> {
-        Ok(u32::from_le_bytes(self.take()?))
-    }
-
-    fn pair(&mut self) -> Result<[u32; 2], TreeError> {
-        Ok([self.u32()?, self.u32()?])
-    }
-
-    fn seat(&mut self) -> Result<u8, TreeError> {
-        match self.u8()? {
-            s @ (0 | 1) => Ok(s),
-            _ => Err(TreeError::BadValue("seat")),
-        }
+fn read_seat(r: &mut ByteReader<'_>) -> Result<u8, TreeError> {
+    match r.u8()? {
+        s @ (0 | 1) => Ok(s),
+        _ => Err(TreeError::BadValue("seat")),
     }
 }
 
