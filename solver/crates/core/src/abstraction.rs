@@ -8,6 +8,8 @@ use crate::tree::Street;
 use std::fmt;
 use std::sync::OnceLock;
 
+mod batch;
+
 pub const TABLE_MAGIC: &[u8; 4] = b"MLCB";
 pub const TABLE_FORMAT_VERSION: u16 = 1;
 pub const TABLE_HEADER_LEN: usize = 9;
@@ -348,6 +350,7 @@ mod tests {
     use super::*;
     use crate::cards::parse_cards;
     use crate::iso::board_indexer;
+    use crate::pairs::{pair_cards, PAIRS};
     use crate::potential::{BINS, CLUSTERS};
     use crate::rng::Rng;
     use std::collections::HashMap;
@@ -782,6 +785,84 @@ mod tests {
             } else if hs[i as usize] < hs[j as usize] {
                 assert!(bi <= bj);
             }
+        }
+    }
+
+    fn threshold_abstraction() -> Abstraction {
+        let t: Vec<f32> = (1..8).map(|i| i as f32 / 8.0).collect();
+        let flop = (0..1_286_792u32).map(|i| (i % 8) as u8).collect();
+        Abstraction::with_sources([
+            BucketSource::Table(flop),
+            BucketSource::Thresholds(t.clone()),
+            BucketSource::Thresholds(t),
+        ])
+    }
+
+    const BATCH_BOARDS: [&str; 3] = ["2c 7d Kh 4s 9c", "5s 9s Jd Qs 2h", "8c 8h 3d Ac 3s"];
+
+    fn assert_batch_matches(
+        abstraction: &Abstraction,
+        street: Street,
+        board: &[Card],
+        step: usize,
+    ) {
+        let all = abstraction.buckets(street, board);
+        assert_eq!(all.len(), PAIRS);
+        for (i, &got) in all.iter().enumerate() {
+            let hole = pair_cards(i);
+            if board.contains(&hole[0]) || board.contains(&hole[1]) {
+                assert_eq!(got, u16::MAX, "{street:?} {hole:?}");
+            } else if i % step == 0 {
+                assert_eq!(
+                    got,
+                    abstraction.bucket(street, hole, board),
+                    "{street:?} {hole:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn batched_buckets_equal_per_pair_buckets() {
+        let thresholds = threshold_abstraction();
+        let centroids = centroid_abstraction();
+        assert_batch_matches(&thresholds, Street::Preflop, &[], 1);
+        for text in BATCH_BOARDS {
+            let board = parse_cards(text).unwrap();
+            assert_batch_matches(&thresholds, Street::Flop, &board[..3], 1);
+            assert_batch_matches(&thresholds, Street::River, &board, 1);
+            assert_batch_matches(&centroids, Street::River, &board, 1);
+            assert_batch_matches(&thresholds, Street::Turn, &board[..4], 37);
+            assert_batch_matches(&centroids, Street::Turn, &board[..4], 37);
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn batched_turn_buckets_equal_per_pair_buckets_on_every_pair() {
+        for text in BATCH_BOARDS {
+            let board = parse_cards(text).unwrap();
+            assert_batch_matches(&threshold_abstraction(), Street::Turn, &board[..4], 1);
+            assert_batch_matches(&centroid_abstraction(), Street::Turn, &board[..4], 1);
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn batched_river_and_turn_are_fast() {
+        let centroids = centroid_abstraction();
+        let thresholds = threshold_abstraction();
+        let board = parse_cards(BATCH_BOARDS[0]).unwrap();
+        for (abstraction, street, cards) in [
+            (&centroids, Street::Turn, &board[..4]),
+            (&centroids, Street::River, &board[..]),
+            (&thresholds, Street::Turn, &board[..4]),
+            (&thresholds, Street::River, &board[..]),
+        ] {
+            let start = std::time::Instant::now();
+            abstraction.buckets(street, cards);
+            let ms = start.elapsed().as_millis();
+            assert!(ms < 150, "{street:?} took {ms} ms");
         }
     }
 }

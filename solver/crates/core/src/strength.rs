@@ -48,13 +48,21 @@ pub fn river_hs(hole: [Card; 2], board: &[Card; 5]) -> f32 {
 }
 
 pub fn turn_value(hole: [Card; 2], board: &[Card; 4]) -> f32 {
+    turn_value_with(hole, board, river_hs)
+}
+
+pub fn turn_value_with(
+    hole: [Card; 2],
+    board: &[Card; 4],
+    mut river: impl FnMut([Card; 2], &[Card; 5]) -> f32,
+) -> f32 {
     let mut six = [0 as Card; 6];
     six[..2].copy_from_slice(&hole);
     six[2..].copy_from_slice(board);
     let indexer = turn_indexer();
     let canonical = indexer.unindex(1, indexer.index(&six));
     aggregate_squares(canonical, |c| {
-        river_hs([c[0], c[1]], c[2..7].try_into().expect("five board cards"))
+        river([c[0], c[1]], c[2..7].try_into().expect("five board cards"))
     })
 }
 
