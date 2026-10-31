@@ -7,6 +7,7 @@ export type {
   LegalActions,
   Seat,
   SeatIndex,
+  ShowdownHand,
   Step,
   Street,
 } from './types.ts';

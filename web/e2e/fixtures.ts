@@ -1,5 +1,6 @@
 import { expect, test as base } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
+import { refuseTalk } from './talkServer.ts';
 
 declare global {
   interface Window {
@@ -36,6 +37,7 @@ export const test = base.extend<{ problems: string[] }>({
         problems.push(`pageerror: ${error.message}`);
       });
       await page.addInitScript(WORKER_TRACKER);
+      await refuseTalk(page);
       await use(problems);
       expect(problems).toEqual([]);
     },

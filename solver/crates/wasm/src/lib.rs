@@ -1,4 +1,4 @@
-use mallorca_core::bot::{Bot, Legal, Model, Move};
+use mallorca_core::bot::{Bot, Legal, Model, Move, Style};
 use mallorca_core::cards::Card;
 use mallorca_core::strategy::{StrategyError, StrategyFile};
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -129,6 +129,17 @@ pub extern "C" fn hand_started(
 #[no_mangle]
 pub extern "C" fn hole_cards(bot: i32, a: u32, b: u32) {
     with_seat(bot, (), |s| s.bot.hole_cards([card(a), card(b)]));
+}
+
+#[no_mangle]
+pub extern "C" fn bot_style(bot: i32, aggression: f64, bluff: f64, tightness: f64) {
+    with_seat(bot, (), |s| {
+        s.bot.set_style(Style {
+            aggression,
+            bluff,
+            tightness,
+        });
+    });
 }
 
 #[no_mangle]

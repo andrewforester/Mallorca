@@ -39,11 +39,19 @@ import { handRecorder } from './records/recorder.ts';
 import type { HandRecorder, RecordsOptions } from './records/recorder.ts';
 import { botRecord } from './records/record.ts';
 import type { Opponent } from './opponent.ts';
+import { initialTalk, sessionTalk } from './sessionTalk.ts';
+import { createTimers } from './timers.ts';
+import type { Timers } from './timers.ts';
+import type { QuickPhrase, SessionTalk, TalkState } from './sessionTalk.ts';
+import { silentTalkClient } from './talkClient.ts';
+import type { TalkClient } from './talkClient.ts';
+import type { Level, Style } from '../talk/index.ts';
 
 export { resolveIntent, toIntent } from './intent.ts';
 export type { Intent } from './intent.ts';
 export { potCollected, resultOf } from './outcome.ts';
 export type { HandResult } from './outcome.ts';
+export type { ChatLine, QuickPhrase, TalkState } from './sessionTalk.ts';
 
 export type Phase =
   | 'idle'
@@ -71,6 +79,7 @@ export interface SessionState {
   session: SessionResult;
   sessionId: string | null;
   opponent: Opponent;
+  talk: TalkState;
 }
 
 export interface SessionActions {
@@ -79,6 +88,12 @@ export interface SessionActions {
   nextHand(): Promise<void>;
   act(intent: Intent): Promise<void>;
   dispose(): void;
+  say(text: string): void;
+  quick(id: QuickPhrase, text: string): void;
+  setTalk(on: boolean): void;
+  setTells(level: Level): void;
+  attachTalk(client: TalkClient): void;
+  pageHidden(): void;
 }
 
 export type Session = StoreApi<SessionState & SessionActions>;
@@ -92,15 +107,16 @@ export interface SessionOptions {
   startingStacks?: [number, number];
   mode: TableMode;
   records?: RecordsOptions;
+  talk?: TalkClient;
+  connectTalk?: () => Promise<TalkClient>;
+  now?: () => number;
+  locale?: string;
+  talkOn?: boolean;
+  tells?: Level;
 }
 
 type Store = SessionState & SessionActions;
 type Step = { state: Table; events: EngineEvent[] };
-
-interface Timers {
-  sleep(ms: number): Promise<void>;
-  cancel(): void;
-}
 
 interface Runtime {
   set: StoreApi<Store>['setState'];
@@ -119,27 +135,7 @@ interface Runtime {
   topUps: number;
   opponent: Opponent;
   seed: number;
-}
-
-function createTimers(): Timers {
-  const pending = new Map<ReturnType<typeof setTimeout>, () => void>();
-  return {
-    sleep: (ms) =>
-      new Promise((resolve) => {
-        const timer = setTimeout(() => {
-          pending.delete(timer);
-          resolve();
-        }, ms);
-        pending.set(timer, resolve);
-      }),
-    cancel: () => {
-      for (const [timer, resolve] of pending) {
-        clearTimeout(timer);
-        resolve();
-      }
-      pending.clear();
-    },
-  };
+  talk: SessionTalk;
 }
 
 function freshTable(options: SessionOptions, mode: TableMode): Table {
@@ -167,6 +163,7 @@ function tally(rt: Runtime, table: Table): SessionResult {
 function record(rt: Runtime, events: EngineEvent[], opens = false): void {
   rt.recorder.observe(events);
   rt.bot.observe(toObservations(events, rt.botSeat));
+  rt.talk.observe(events);
   for (const event of events) {
     if (event.type === 'toppedUp' && event.seat === rt.humanSeat) {
       rt.topUps += event.amount;
@@ -189,6 +186,7 @@ function conclude(rt: Runtime, step: Step): void {
   const { seats } = step.state;
   rt.hands += 1;
   rt.recorder.save(step.state.mode, botRecord(rt.opponent));
+  rt.talk.handDone(rt.hands);
   const paid = (seat: SeatIndex) =>
     rt.startStacks[seat] - seats[seat].stack + awardedTo(step.events, seat);
   rt.set({
@@ -201,21 +199,21 @@ function conclude(rt: Runtime, step: Step): void {
   });
 }
 
-function play(rt: Runtime, action: Action, decision: Decision | null = null): void {
+function play(rt: Runtime, action: Action, decision: Decision | null = null, style?: Style): void {
   const { hand } = rt.get().table;
   const opens = hand !== null && isOpeningBet(hand, action);
   const step = apply(rt.get().table, action);
   if (decision !== null) {
-    rt.recorder.decided(decision, step.events);
+    rt.recorder.decided(decision, step.events, style);
   }
   rt.set({ table: step.state });
   record(rt, step.events, opens);
   conclude(rt, step);
 }
 
-async function decide(rt: Runtime, legal: LegalActions): Promise<Decision | null> {
+async function decide(rt: Runtime, legal: LegalActions, style?: Style): Promise<Decision | null> {
   try {
-    return await rt.bot.decide(legal);
+    return await rt.bot.decide(legal, style);
   } catch {
     return null;
   }
@@ -224,7 +222,8 @@ async function decide(rt: Runtime, legal: LegalActions): Promise<Decision | null
 async function botTurn(rt: Runtime, myEpoch: number): Promise<boolean> {
   rt.set({ phase: 'botThinking' });
   const legal = legalActionsOf(rt.get().table);
-  const decision = await decide(rt, legal);
+  const style = rt.talk.style();
+  const decision = await decide(rt, legal, style);
   if (myEpoch !== rt.epoch) {
     return false;
   }
@@ -239,7 +238,7 @@ async function botTurn(rt: Runtime, myEpoch: number): Promise<boolean> {
     }
   }
   const intent: Intent = decision === null ? { kind: 'passive' } : toIntent(decision.action);
-  play(rt, resolveIntent(intent, legal), decision);
+  play(rt, resolveIntent(intent, legal), decision, style);
   return true;
 }
 
@@ -295,6 +294,7 @@ function restart(rt: Runtime, options: SessionOptions): Promise<void> {
     opponent: rt.opponent,
     session: tally(rt, table),
   });
+  rt.talk.begin(rt.opponent, rt.seed);
   return beginHand(rt);
 }
 
@@ -317,9 +317,11 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
       const { phase, table } = rt.get();
       if (table.mode.kind === 'cash' && phase === 'handOver') {
         rt.set({ phase: 'sessionOver' });
+        rt.talk.leave();
       }
     },
     dispose() {
+      rt.talk.leave();
       rt.epoch += 1;
       rt.timers.cancel();
       rt.bot.dispose?.();
@@ -338,7 +340,36 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
       play(rt, resolveIntent(intent, legalActionsOf(table)));
       return drive(rt, rt.epoch);
     },
+    say: (text) => rt.talk.say(text),
+    quick: (id, text) => rt.talk.quick(id, text),
+    setTalk: (on) => rt.talk.setOn(on),
+    setTells: (level) => rt.talk.setLevel(level),
+    attachTalk: (client) => rt.talk.attach(client),
+    pageHidden: () => rt.talk.pageHidden(),
   };
+}
+
+function wireTalk(
+  runtime: () => Runtime,
+  options: SessionOptions,
+  botSeat: SeatIndex,
+): SessionTalk {
+  return sessionTalk(
+    {
+      client: options.talk ?? silentTalkClient,
+      now: options.now ?? Date.now,
+      locale: options.locale ?? 'en',
+      botSeat,
+      connect: options.connectTalk,
+    },
+    {
+      read: () => runtime().get().talk,
+      write: (talk) => runtime().set({ talk }),
+      table: () => runtime().get().table,
+      epoch: () => runtime().epoch,
+      sessionId: () => runtime().get().sessionId ?? `seed-${runtime().seed}`,
+    },
+  );
 }
 
 export function createSession(options: SessionOptions): Session {
@@ -347,6 +378,7 @@ export function createSession(options: SessionOptions): Session {
   const rng = mulberry32(seed);
   const timers = createTimers();
   const recorder = handRecorder(options.records, { names, humanSeat });
+  const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
   return createStore<Store>((set, get) => {
     const rt: Runtime = {
       set,
@@ -356,7 +388,7 @@ export function createSession(options: SessionOptions): Session {
       timers,
       recorder,
       humanSeat,
-      botSeat: humanSeat === 0 ? 1 : 0,
+      botSeat,
       botDelayMs,
       epoch: 0,
       mode: options.mode,
@@ -365,6 +397,7 @@ export function createSession(options: SessionOptions): Session {
       topUps: 0,
       seed,
       opponent: 'math',
+      talk: wireTalk(() => rt, options, botSeat),
     };
     const initial = freshTable(options, rt.mode);
     return {
@@ -379,6 +412,7 @@ export function createSession(options: SessionOptions): Session {
       session: tally(rt, initial),
       sessionId: options.records?.sessionId ?? null,
       opponent: rt.opponent,
+      talk: initialTalk(options.talkOn ?? true, options.tells ?? 'subtle'),
       ...sessionActions(rt, options),
     };
   });

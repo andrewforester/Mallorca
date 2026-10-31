@@ -153,3 +153,76 @@ describe('Table result and announcements', () => {
     vi.useRealTimers();
   });
 });
+
+function talking(on = true) {
+  const vm = viewModel();
+  const her = { id: 1, speaker: 'mallorca' as const, text: 'Brave call.', handNumber: 1 };
+  const mine = { id: 2, speaker: 'player' as const, text: 'Thanks', handNumber: 1 };
+  vm.talk = {
+    available: true,
+    on,
+    level: 'subtle',
+    lines: [her, mine],
+    herBubble: her,
+    playerBubble: mine,
+  };
+  return vm;
+}
+
+describe('Table talk', () => {
+  it('renders no chat or bubbles when talk is not available', () => {
+    const vm = viewModel();
+    vm.talk.herBubble = { id: 1, speaker: 'mallorca', text: 'Hidden', handNumber: 1 };
+    table(vm);
+    expect(screen.queryByTestId('bubble-mallorca')).toBeNull();
+    expect(screen.queryByTestId('chat-open')).toBeNull();
+    expect(screen.queryByTestId('chat-panel')).toBeNull();
+    expect(screen.getByTestId('coach')).not.toBeNull();
+  });
+
+  it('shows her bubble at her seat, mine at mine, and the chat entry points', () => {
+    table(talking());
+    expect(
+      screen.getByTestId('seat-1').querySelector('[data-testid="bubble-mallorca"]'),
+    ).not.toBeNull();
+    expect(
+      screen.getByTestId('seat-0').querySelector('[data-testid="bubble-player"]'),
+    ).not.toBeNull();
+    expect(screen.getByTestId('seat-1').querySelector('[data-testid="chat-open"]')).not.toBeNull();
+    expect(
+      screen.getByTestId('chat-panel').querySelector('[data-testid="chat-input"]'),
+    ).not.toBeNull();
+    expect(screen.getByTestId('coach')).not.toBeNull();
+  });
+
+  it('hides the chat while talk is off', () => {
+    table(talking(false));
+    expect(screen.queryByTestId('bubble-mallorca')).toBeNull();
+    expect(screen.queryByTestId('chat-open')).toBeNull();
+    expect(screen.queryByTestId('chat-panel')).toBeNull();
+  });
+});
+
+describe('Table talk announcements', () => {
+  it('announces her line in a polite live region that stays mounted', () => {
+    const vm = talking();
+    const view = render(
+      <Table vm={vm} phase="humanToAct" humanSeat={0} onAct={vi.fn()} onNextHand={vi.fn()} />,
+    );
+    const region = screen.getByTestId('talk-region');
+    expect(region.getAttribute('aria-live')).toBe('polite');
+    expect(region.textContent).toBe('Brave call.');
+    const next = talking();
+    next.talk.herBubble = { id: 3, speaker: 'mallorca', text: 'Your turn, love.', handNumber: 1 };
+    view.rerender(
+      <Table vm={next} phase="humanToAct" humanSeat={0} onAct={vi.fn()} onNextHand={vi.fn()} />,
+    );
+    expect(screen.getByTestId('talk-region')).toBe(region);
+    expect(region.textContent).toBe('Your turn, love.');
+  });
+
+  it('keeps the region empty without talk', () => {
+    table();
+    expect(screen.getByTestId('talk-region').textContent).toBe('');
+  });
+});

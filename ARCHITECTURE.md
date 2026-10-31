@@ -7,21 +7,22 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 
 ## Repository layout
 
-| Path                                                                | Owns                                                                      |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `MallorcaBrains/`, `MallorcaCore/`, `MallorcaEquilator/`, `Tools/`  | Java bot, game model and equilator; the source of the golden fixtures     |
-| Other Gradle modules (`MallorcaUI/`, `PokerRobot/`, `HHParser/`, …) | Java archive, not used by `web/`                                          |
-| `web/src/`                                                          | The game, in layers (see "Layers")                                        |
-| `web/src/locales/en.json`                                           | Every string the UI shows                                                 |
-| `web/e2e/`                                                          | Playwright tests and the contact sheet script                             |
-| `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                       |
-| `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`          |
-| `web/tools/evaluator-golden/`                                       | Writes the evaluator fixture of `solver/crates/core`, see its `README.md` |
-| `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena"     |
-| `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                     |
-| `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`      |
-| `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`      |
-| `.github/workflows/`                                                | `web-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master`       |
+| Path                                                                | Owns                                                                               |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `MallorcaBrains/`, `MallorcaCore/`, `MallorcaEquilator/`, `Tools/`  | Java bot, game model and equilator; the source of the golden fixtures              |
+| Other Gradle modules (`MallorcaUI/`, `PokerRobot/`, `HHParser/`, …) | Java archive, not used by `web/`                                                   |
+| `web/src/`                                                          | The game, in layers (see "Layers")                                                 |
+| `web/src/locales/en.json`                                           | Every string the UI shows                                                          |
+| `web/e2e/`                                                          | Playwright tests and the contact sheet script                                      |
+| `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                                |
+| `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`                   |
+| `web/tools/evaluator-golden/`                                       | Writes the evaluator fixture of `solver/crates/core`, see its `README.md`          |
+| `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena"              |
+| `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                              |
+| `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`               |
+| `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`               |
+| `supabase/`                                                         | Table talk server: schema, limits and the `talk` Edge Function                     |
+| `.github/workflows/`                                                | `web-ci.yml`, `talk-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master` |
 
 Generated and never committed: `web/dist`, `web/test-results`, `web/playwright-report`, `web/e2e/contact/`,
 `web/tools/golden/build`, `web/arena-out/` (the arena results, see "arena") and `web/src/cfr/mallorca.wasm`, which
@@ -41,23 +42,25 @@ interface.
 ```
 web/src/
   cards/    Card, parse and format ("As Kd"), seeded RNG, shuffle
-  equity/   hand evaluation and the equity types
+  equity/   hand evaluation, equity against a hand or a range, and the equity types
   engine/   heads-up NLHE rules as a pure reducer, table with a mode and its rules, hand history
   brains/   port of the Mallorca math bot
   cfr/      the CFR bot: the WASM module, the strategy file and a Brain over them
+  talk/     table talk: hand-strength class, tells, mood and the style it maps to
   game/     session store, turn loop, bot worker client, view-model, hand records
   ui/       Preact components, layout, tokens, i18n
 ```
 
-| Layer    | May import from                              |
-| -------- | -------------------------------------------- |
-| `cards`  | nothing                                      |
-| `equity` | `cards`                                      |
-| `engine` | `cards`, `equity`                            |
-| `brains` | `cards`, `equity`, `engine`                  |
-| `cfr`    | `cards`, types from `engine`, `brains`       |
-| `game`   | `cards`, `equity`, `engine`, `brains`, `cfr` |
-| `ui`     | `game`                                       |
+| Layer    | May import from                                      |
+| -------- | ---------------------------------------------------- |
+| `cards`  | nothing                                              |
+| `equity` | `cards`                                              |
+| `engine` | `cards`, `equity`                                    |
+| `brains` | `cards`, `equity`, `engine`                          |
+| `cfr`    | `cards`, types from `engine`, `brains`               |
+| `talk`   | `cards`, `equity`, types from `engine`               |
+| `game`   | `cards`, `equity`, `engine`, `brains`, `cfr`, `talk` |
+| `ui`     | `game`                                               |
 
 `brains` takes only types from `engine`: `Action`, `LegalActions`, the events it turns into observations and
 `BoardSize`, which pins its board sizes to the engine's.
@@ -74,14 +77,14 @@ the modes and `handHistory`; `game/index.ts` is the surface of `ui` (with `creat
 `groupHand`, `workerBot` and `inProcessBot`).
 
 ESLint enforces the table with a `@typescript-eslint/no-restricted-imports` rule per directory. For `brains` the
-rule sets `allowTypeImports` on `engine`; the tests in `brains` (`*.test.ts`) may also import `engine` code to
+rule sets `allowTypeImports` on `engine`; the tests in `brains` and `talk` (`*.test.ts`) may also import `engine` code to
 build events. `src/main.tsx` may import only `game` and `ui`. `tools/arena/**` may import from `src` only `cards`,
-`engine`, `brains`, `cfr` and `game/records`; the viewer `tools/arena/ui/**` (tests aside) only `game/records` and
+`engine`, `brains`, `cfr`, `talk` and `game/records`; the viewer `tools/arena/ui/**` (tests aside) only `game/records` and
 types from `engine`. `import-x/no-cycle` forbids import cycles inside `src`.
 
 ### Purity
 
-`cards`, `equity`, `engine`, `brains` and `cfr` use no DOM (`document`, `window`, `self`, `navigator`), no
+`cards`, `equity`, `engine`, `brains`, `cfr` and `talk` use no DOM (`document`, `window`, `self`, `navigator`), no
 `Math.random` or `crypto`, no `Date` or `performance`, no timers (`setTimeout`, `setInterval`), no `fetch` and no
 storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-globals` and
 `no-restricted-properties`. Randomness enters as an `Rng` argument, bytes through a reader passed in; `cfr`'s
@@ -101,7 +104,11 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
   `pheEvaluator` implements it over `phe`.
 - `WeightedHands` (hole cards with a weight) is the type `brains` computes equity with; the computation itself
   lives in `brains` (`spectrumEquilator.ts`, `preflopEquilator.ts`).
-- `index.ts` exports `pheEvaluator`, `HandCategory` and `WeightedHands`.
+- `equityVsHand(hero, villain, board)` enumerates the rest of the board exactly; `equityVsRange(hero, range, board,
+  { rng, samples })` is exact on the turn and the river and samples before that. `talk` uses them for her strength
+  class and her luck.
+- `index.ts` exports `pheEvaluator`, `HandCategory`, `WeightedHands`, `EquityOptions`, `equityVsHand` and
+  `equityVsRange`.
 - `npm run bench` (`evaluator.bench.test.ts`, outside `npm test`) ranks one million seven-card hands and expects
   under 1500 ms outside CI.
 
@@ -253,6 +260,28 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   bet by the same mapping. In such a node the bot faces a real bet the tree does not see: a tree check is a real
   call, a tree bet a raise of the same pot fraction, and when the tree already closed the street the bot calls.
 
+## talk
+
+- `createTalk({ seat, rng, level, luckRng?, habits? })` returns a `Talk` for one session against the CFR bot.
+  `observe(events, nowMs)` follows the engine events of a hand (`handTracker.ts`) and returns a `LineIntent` or null:
+  the situation (`herBet`, `herCall`, `playerBet`, `handWon`, `handLost`, `bluffCaught`; `endsHand` tells the last
+  three), the hint (her hand-strength class `strong`, `medium` or `weak`, or null for a neutral line), whether the
+  hint is honest, the street and hand number the line belongs to, and `actionStreet`, the street the action happened
+  on. A call that closes a street belongs to the next street (its pace slot and staleness), but its cue names
+  `actionStreet`. `hear(signals)` moves the mood with what the player said, `replyIntent()` is the intent for an
+  answer, `facts()` the hand as the server sees it (her cards included, stacks by seat) and `summary()` the session
+  summary from her side (`netBb` is her net); `since(current, earlier)` gives what changed between two summaries.
+- `strengthOf` classifies her hand from equity against a random hand, not from the blueprint. The habits
+  (`habits.ts`) give, for a situation and a class, the chance she speaks and the chance the hint is honest, and the
+  tells level (`obvious`, `subtle`, `hidden`) moves both toward the class-blind mean. Code draws every chance from
+  the `Rng` it was given; the model only words the line. Pace limits her to one unprompted line per street and
+  none in the 1.5 s after a line.
+- `mood.ts` keeps four axes in [-1, 1] (`cheer`, `confidence`, `tilt`, `caution`) and `form`, an exponential mean of
+  the recent results. A hand result and the player's signals move it and it decays toward calm. `styleOf(mood)`
+  maps it to the CFR style `{ aggression, bluff, tightness }`: aggression `1 + 0.5 tilt + 0.1 (confidence + form)`,
+  bluff `1 + 0.8 tilt` and tightness `1 + 0.2 caution - 0.1 cheer`, clamped to [0.8, 1.6], [0.8, 1.8] and
+  [0.85, 1.2]. A calm mood gives the neutral style 1, 1, 1. Her words never decide a move.
+
 ## game
 
 - `createSession({ bot, seed, botDelayMs, humanSeat, names, mode, startingStacks?, records? })` returns a
@@ -319,6 +348,37 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   the index of the resulting `acted` event in the hand's events. The timeout fallback plays without a decision
   and records none. `bot` is `botRecord` of the session's opponent (`MATH_BOT` by default), `playedAt` is `now()`
   at completion.
+- Table talk (`sessionTalk.ts`): `SessionOptions` takes `talk` (a `TalkClient`, default `silentTalkClient`),
+  `connectTalk` (a loader for the client, called at most once), `now` (default `Date.now`), `locale` (default `en`),
+  `talkOn` (default true) and `tells` (default `subtle`). `SessionState.talk` is
+  `{ available, on, level, lines, bubbles }`: with a Solver opponent (`cfr` or `cfr-v2`), `available` is
+  `client.enabled`, or true while
+  a `connectTalk` has not answered yet; `lines` are the last 100 `ChatLine`s (`id`, `speaker`, `text`, `handNumber`,
+  optional `undelivered`) and `bubbles` the latest line per seat. `connectTalk` runs when a Solver session starts with
+  talk on, or when talk is switched on in one, and its client is attached; a silent client hides the talk. Each
+  `start` makes a `Talk` for the bot's seat with `mulberry32(seed ^ 0x7a1c)` when the opponent is a Solver; it lives
+  across hands, and every step's events reach `Talk.observe` after the bot, also with talk off. A line intent calls
+  `client.line` without waiting. Its text is kept only if the epoch matches, talk is still available and on, and the
+  hand number and street still match; a hand-end line (`handWon`, `handLost`, `bluffCaught`) is kept until the next
+  hand's first action. `say(text)` (trimmed, at most 200 characters) and `quick(niceHand | bluffing | notThisTime,
+  text)` (the caller's localized label) append the player's line at once and call `client.reply`; `quick` sends
+  `quick: true`. `say` feeds the reply's signals to `Talk.hear`, `quick` its own (`compliment`, `mockBluff` after any
+  raise of hers in the hand, else `tease`, `claimStrength`). A reply that is null or fails marks the player's line
+  `undelivered`. `setTalk`, `setTells` and `attachTalk(client)` change the switch, the tells level and the client.
+  With a `Talk` and an enabled client, every `decide` and the recorded decision get `Talk.style()`, also with talk
+  switched off; without an enabled client the bot plays with no style. A `summary` goes out on an effective `leave`,
+  on `dispose`, at the end of a tournament, before a new `start` replaces the `Talk`, every 50th hand and on
+  `pageHidden()` (with `keepalive`), only when a hand completed since the last one, and it holds what changed since
+  the last summary. Nothing is sent when talk is off or unavailable, and every client error is ignored. `toViewModel`
+  adds `talk` with `herBubble` and `playerBubble`.
+- The payload builders (`talkClient.ts`) send `facts.stacks` as `[hers, the player's]` from the bot seat, the intent
+  street as `actionStreet`, `quick` on a reply, and the summary `netBb` as the player's net (the negated net of hers).
+  `loadTalkClient({ url, anonKey })` (`talkLoader.ts`) imports `remoteTalk.ts`, the only module that uses
+  supabase-js, on demand, and answers `silentTalkClient` when a value is missing or loading fails;
+  `talkConnector(config)` is undefined without both values and otherwise loads the client once. `main.tsx` passes it
+  to `createSession` as `connectTalk`, so the anonymous sign-in happens only for the Solver opponent with talk on, and
+  `onPageExit` (`pageExit.ts`, `pagehide` or the document becoming hidden) calls `pageHidden()`. The remote client
+  keeps the latest access token, so a `keepalive` summary is sent at once with `fetch(..., { keepalive: true })`.
 - `simulation.test.ts` plays full tournaments between the bot and a seeded random human through the session and
   checks that chips are conserved, the session never stalls and the winner holds every chip.
 
@@ -352,7 +412,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   and hold no game rules.
 - Components: `App`, `Scene`, `StatusBar`, `HistoryMenu`, `Settings`, `StartScreen`, `Table`, `Seat`, `BetChips`,
   `DealerButton`, `ActionBubble`, `Card` (SVG), `BoardRow`, `Board`, `Pot`, `ActionBar`, `BetSlider`,
-  `HandLogDrawer`, `TournamentOver`, `SessionOver`.
+  `HandLogDrawer`, `TournamentOver`, `SessionOver`, `Chat`, `ChatSheet`, `Bubble`.
 - `Scene` wraps the start screen and the table: the attic photo (`ui/scene/*.webp`, a portrait and a landscape plate
   over a blurred copy as the background) under a vignette, or with `simple` a flat felt without the photo (class
   `scene-simple`); `dimmed` blurs the plate behind the start screen. `ui/scene.ts` holds the `PlateGeometry` of each
@@ -374,6 +434,12 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   (300 ms) when a street closes, so the bets slide into the pot; new bets or a new hand show at once.
   `useHeldActions(actions, closing, board)` keeps the closing action tags, and hides the thinking bubble, for
   `HOLD_MS` (900 ms) after the board grows; a new action or a new hand shows at once.
+- Table talk shows only while `talk.available` and `talk.on`: `Bubble` types a line at about 40 characters per
+  second and removes it after 7 s (full text at once under `prefers-reduced-motion`), her bubble at her plaque and the
+  player's at theirs. On wide screens the chat sits in the right column of the table; on phones and short screens a
+  chat button at her plaque opens `ChatSheet`, a sheet portalled to `body`. The hand log stays in its drawer. The menu
+  holds Table talk and Tells, kept in `localStorage` (`mallorca.talk`, `mallorca.tells`) and passed to
+  `createSession` as `talkOn` and `tells`. Keyboard shortcuts ignore keys typed in a text field.
 - The start screen offers a cash game (100 bb) and a tournament. In cash the status bar shows the blinds, the
   running result in bb and a leave button, enabled only between hands; the session-over dialog shows the result in
   bb, bb/100 and the hands, with play again and the export of the session. `signed` formats a bb value as sign
@@ -417,7 +483,51 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   `preset-half`, `preset-pot`, `preset-allin`, `hand-log-toggle`, `sound-toggle`, `simple-table`, `auto-next`,
   `sound`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`, `live-region`, `tournament-over`, `leave-tonight`,
   `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and `export-text` (the session
-  dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu).
+  dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu). Table talk adds
+  `bubble-mallorca`, `bubble-player`, `talk-region`, `chat-panel`, `chat-open`, `chat-sheet`, `chat-close`,
+  `chat-line`, `chat-input`, `chat-send`, `quick-<id>`, `table-talk` and `tells`.
+
+## Table talk server
+
+`supabase/` holds the whole server; `supabase/README.md` lists the deploy steps and the owner's part.
+
+- Tables: `talk_lines` (the conversation), `memories` (the facts a `summary` leaves), `usage` and `usage_total` (the
+  call counts per user and day, and per day). `anon` and `authenticated` hold no table privilege except `select` on
+  `talk_lines` and `memories` for `authenticated`, and Row Level Security lets a user read only their own rows; the
+  function writes with the service role. `consume_call(user_limit, global_limit)` counts one call
+  against both limits in one transaction and returns false over a limit; only the service role can run it. The
+  defaults are 200 calls per user and 5000 in total per day (`TALK_DAILY_LIMIT`, `TALK_GLOBAL_DAILY_LIMIT`).
+- The Edge Function `talk` (Deno, `supabase/functions/talk/`) takes a `POST` with the user's JWT, checked with
+  `auth.getUser`, and a body of at most 16 KB of kind `line`, `reply` or `summary`. It validates the body, spends a
+  call while it loads the ten newest memories, builds the prompt (a system block marked for caching, then the facts,
+  memories and recent lines), calls the model (`claude-haiku-5-5`; a non-empty `TALK_MODEL` overrides it) and
+  answers `{ text }`, `{ text, signals }` or `{ facts }`. The cache marker only takes effect once the fixed block is
+  longer than the model's minimum cacheable prompt (2048 tokens or more for Haiku models); today's block is shorter,
+  so every call pays for it in full. In a body, `facts.stacks` is `[hers, the player's]`, `intent.street` is the
+  street of her action (the cue names it) and a summary's `netBb` is the player's net. A `reply` spends a second call
+  and makes two parallel model calls, one for the signals as strict JSON and one for her answer; a `reply` with
+  `quick: true` (a quick phrase, which carries its own signals) makes only the answer call. The card filter rejects a
+  text that names a card or her holding; the function asks once more with a stricter instruction and then falls back
+  to a fixed neutral line. Over a limit it answers an error and she stays silent. It answers before it saves the
+  lines or facts, which run through `EdgeRuntime.waitUntil` when there is one.
+- The browser reaches it through `remoteTalk.ts` (supabase-js, anonymous sign-in, a 5 s timeout, every error turned
+  into `null`). Without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` the build has no talk.
+
+### Data flow
+
+```
+style     talk.observe -> Talk.style() (enabled client only) -> session decide(legal, style) -> worker
+          -> CfrBot.setStyle -> bot_style (wasm)
+line      engine events -> Talk.observe -> LineIntent -> client.line(facts, intent, mood) -> function -> text
+          -> session (kept if epoch, hand and street match, a hand-end line until the next hand's first action)
+          -> bubble and chat
+reply     say(text) -> client.reply -> function (signals + answer) -> { text, signals }
+          -> Talk.hear(signals) moves the mood -> her line in the chat
+```
+
+The session never waits for the server: a line is requested without awaiting it, a late or missing answer is
+dropped, and an error leaves the game as it is. The style path is the only way talk touches a move, and it is
+bounded by the clamps above.
 
 ## e2e
 

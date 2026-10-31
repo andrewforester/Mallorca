@@ -18,7 +18,8 @@
     "arena": "node tools/arena/cli.ts",
     "arena:ui": "vite --config tools/arena/ui/vite.config.ts",
     "arena:publish": "node tools/arena/publishCli.ts",
-    "contact": "npm run build && node e2e/contact.ts",
+    "arena:paired": "node tools/arena/pairedCli.ts",
+    "contact": "VITE_SUPABASE_URL=http://talk.test VITE_SUPABASE_ANON_KEY=contact-anon-key npm run build && node e2e/contact.ts",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write . && eslint . --fix"
   },
@@ -46,6 +47,7 @@
     "@fontsource/cormorant-garamond": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "@fontsource/inter": "^5.3.0",
+    "@supabase/supabase-js": "^2.117.3",
     "i18next": "^26.5.6",
     "phe": "^0.6.0",
     "preact": "^11.0.1",

@@ -1,19 +1,21 @@
 import { readFile } from 'node:fs/promises';
 import { basename, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import type { Action, LegalActions } from '../../src/engine/index.ts';
+import type { Action } from '../../src/engine/index.ts';
 import { checkOrCall } from '../../src/engine/index.ts';
-import type { Brain, Observation } from '../../src/brains/index.ts';
+import type { BotStyle, Brain } from '../../src/brains/index.ts';
 import { createMathBrain } from '../../src/brains/index.ts';
 import type { Rng } from '../../src/cards/index.ts';
 import type { CfrModel, ShippedStrategyKey } from '../../src/cfr/index.ts';
 import { SHIPPED_STRATEGIES, createCfrBrain, loadCfrModel } from '../../src/cfr/index.ts';
+import { strengthOf } from '../../src/talk/index.ts';
+import type { Level } from '../../src/talk/index.ts';
+import type { ArenaBot } from './arenaBot.ts';
+import { createExploiter } from './exploiter.ts';
+import { createReader } from './reader.ts';
+import { createTalkingBot } from './talking.ts';
 
-export interface ArenaBot {
-  observe(o: Observation): void;
-  decide(legal: LegalActions): Action;
-  dispose?(): void;
-}
+export type { ArenaBot } from './arenaBot.ts';
 
 export type BotFactory = (rng: Rng) => ArenaBot;
 
@@ -62,22 +64,59 @@ const SHIPPED: ShippedStrategyKey = 'cfr';
 const cfrModels = new Map<string, CfrModel>();
 const read = (url: URL) => readFile(url);
 
-function cfrBot(key: string): BotFactory {
+function cfrBot(key: string, style?: BotStyle): BotFactory {
   return (rng) => {
     const model = cfrModels.get(key);
     if (model === undefined) {
       throw new Error('The cfr bot needs prepareBots before it plays');
     }
-    return fromBrain(createCfrBrain(model, rng));
+    const brain = createCfrBrain(model, rng);
+    if (style) brain.setStyle?.(style);
+    return fromBrain(brain);
   };
 }
 
+const cfr = cfrBot(SHIPPED);
+
+const styled = (style: BotStyle): BotFactory => cfrBot(SHIPPED, style);
+
+const talking =
+  (level: Level): BotFactory =>
+  (rng) =>
+    createTalkingBot(cfr(rng), level, rng);
+
+const reader: BotFactory = (rng) => createReader(math(rng));
+
+const tiltExploiter: BotFactory = (rng) =>
+  createExploiter(math(rng), (hole, board) => strengthOf(hole, board, rng));
+
 export const BOTS: Record<
-  'math' | 'cfr' | 'always-call' | 'always-raise' | 'min-bettor' | 'random',
+  | 'math'
+  | 'cfr'
+  | 'cfr-tilted'
+  | 'cfr-confident'
+  | 'cfr-cautious'
+  | 'cfr-talk-obvious'
+  | 'cfr-talk-subtle'
+  | 'cfr-talk-hidden'
+  | 'reader'
+  | 'tilt-exploiter'
+  | 'always-call'
+  | 'always-raise'
+  | 'min-bettor'
+  | 'random',
   BotFactory
 > = {
   math,
-  cfr: cfrBot(SHIPPED),
+  cfr,
+  'cfr-tilted': styled({ aggression: 1.6, bluff: 1.8, tightness: 0.85 }),
+  'cfr-confident': styled({ aggression: 1.15, bluff: 1, tightness: 0.95 }),
+  'cfr-cautious': styled({ aggression: 0.9, bluff: 0.9, tightness: 1.2 }),
+  'cfr-talk-obvious': talking('obvious'),
+  'cfr-talk-subtle': talking('subtle'),
+  'cfr-talk-hidden': talking('hidden'),
+  reader,
+  'tilt-exploiter': tiltExploiter,
   'always-call': alwaysCall,
   'always-raise': alwaysRaise,
   'min-bettor': minBettor,
@@ -121,7 +160,8 @@ function strategyUrl(name: string): URL | null {
 
 export async function prepareBots(names: readonly string[]): Promise<void> {
   for (const name of names) {
-    const url = strategyUrl(name);
-    if (url !== null && !cfrModels.has(name)) cfrModels.set(name, await loadCfrModel(url, read));
+    const key = cfrFile(name) === null && name.startsWith(SHIPPED) ? SHIPPED : name;
+    const url = strategyUrl(key);
+    if (url !== null && !cfrModels.has(key)) cfrModels.set(key, await loadCfrModel(url, read));
   }
 }

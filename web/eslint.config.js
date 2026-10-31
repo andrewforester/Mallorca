@@ -5,9 +5,9 @@ import { importX } from 'eslint-plugin-import-x';
 
 const typescriptSettings = importX.flatConfigs.typescript.settings;
 
-const pure = ['src/cards', 'src/equity', 'src/engine', 'src/brains', 'src/cfr'];
+const pure = ['src/cards', 'src/equity', 'src/engine', 'src/brains', 'src/cfr', 'src/talk'];
 
-const LAYERS = ['cards', 'equity', 'engine', 'brains', 'cfr', 'game', 'ui'];
+const LAYERS = ['cards', 'equity', 'engine', 'brains', 'cfr', 'talk', 'game', 'ui'];
 
 const layer = (
   dir,
@@ -32,7 +32,7 @@ const layer = (
 };
 
 const ARENA_MESSAGE =
-  'tools/arena may import from src only cards, engine, brains, cfr and game/records';
+  'tools/arena may import from src only cards, engine, brains, cfr, talk and game/records';
 const VIEWER_MESSAGE = 'tools/arena/ui may import from src only game/records and types from engine';
 const GAME_OUTSIDE_RECORDS = '(^|/)src/game(/(?!records/)|$)';
 
@@ -109,7 +109,9 @@ export default tseslint.config(
   layer('brains', ['cards', 'equity', 'engine'], [], ['src/brains/**/*.test.ts']),
   layer('cfr', ['cards'], ['engine', 'brains']),
   layer('cfr', ['cards', 'engine', 'brains'], [], ['src/cfr/**/*.test.ts']),
-  layer('game', ['cards', 'equity', 'engine', 'brains', 'cfr']),
+  layer('talk', ['cards', 'equity'], ['engine']),
+  layer('talk', ['cards', 'equity', 'engine'], [], ['src/talk/**/*.test.ts']),
+  layer('game', ['cards', 'equity', 'engine', 'brains', 'cfr', 'talk']),
   layer('ui', ['game']),
   layer('main', ['game', 'ui'], [], ['src/main.tsx']),
   arenaLayer,
