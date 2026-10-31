@@ -172,12 +172,21 @@ pub extern "C" fn hole_cards(bot: i32, a: u32, b: u32) {
 }
 
 #[no_mangle]
-pub extern "C" fn bot_style(bot: i32, aggression: f64, bluff: f64, tightness: f64) {
+pub extern "C" fn bot_style(
+    bot: i32,
+    aggression: f64,
+    bluff: f64,
+    tightness: f64,
+    sizing: f64,
+    stickiness: f64,
+) {
     with_seat(bot, (), |s| {
         s.bot.set_style(Style {
             aggression,
             bluff,
             tightness,
+            sizing,
+            stickiness,
         });
     });
 }

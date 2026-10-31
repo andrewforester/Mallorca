@@ -11,7 +11,7 @@ use crate::cards::Card;
 use crate::strategy::{StrategyError, StrategyFile};
 use crate::tree::{ActionKind, Node, NodeId, Street};
 use style::choose;
-pub use style::{reweight, sample_weighted, Style};
+pub use style::{reweight, sample_weighted, size_position, Situation, Style};
 use translate::{fraction, nearest, pseudo_harmonic, scaled_raise};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

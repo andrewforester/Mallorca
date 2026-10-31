@@ -1,3 +1,4 @@
+use super::style::styled;
 use super::*;
 use crate::measure::fixtures::{trained, trained_multi_open};
 use crate::pairs::{pair_cards, pair_index, PAIRS};
@@ -360,6 +361,7 @@ fn random_hands_at_any_depth_and_blind_get_legal_moves() {
         aggression: 1.25,
         bluff: 1.3,
         tightness: 0.85,
+        ..Style::NEUTRAL
     };
     for _ in 0..400 {
         play_random_hand(&mut rng, &[tilted]);
@@ -412,11 +414,106 @@ fn aggressive_style_raises_more() {
         aggression: 1.25,
         bluff: 1.0,
         tightness: 1.0,
+        ..Style::NEUTRAL
     }));
     assert!(
         aggressive > neutral,
         "{aggressive} raises, {neutral} neutral"
     );
+}
+
+fn flop_bets(style: Style) -> Vec<u32> {
+    let mut rng = Rng::new(11);
+    let legal = Legal {
+        fold: false,
+        check: true,
+        call: None,
+        raise: Some((20, 360)),
+    };
+    let mut bets = Vec::new();
+    for _ in 0..3000 {
+        let mut deck: Vec<Card> = (0..52).collect();
+        rng.shuffle(&mut deck);
+        let mut bot = Bot::new();
+        bot.set_style(style);
+        bot.hand_started(model(), false, [400, 400], [10, 20]);
+        bot.hole_cards([deck[0], deck[1]]);
+        bot.acted(model(), false, Move::Call, 0.0);
+        bot.acted(model(), true, Move::Check, 0.0);
+        bot.street(model(), &deck[2..5]);
+        match bot.decide(model(), &legal, rng.next_f64()) {
+            Move::RaiseTo(to) => bets.push(to),
+            _ => bets.push(0),
+        }
+    }
+    bets
+}
+
+#[test]
+fn sizing_bets_bigger_as_often_on_an_open_flop() {
+    let neutral = flop_bets(Style::NEUTRAL);
+    let big = flop_bets(Style {
+        sizing: 1.6,
+        ..Style::NEUTRAL
+    });
+    let count = |bets: &[u32]| bets.iter().filter(|&&b| b > 0).count();
+    let mean = |bets: &[u32]| {
+        let made: Vec<f64> = bets
+            .iter()
+            .filter(|&&b| b > 0)
+            .map(|&b| f64::from(b))
+            .collect();
+        made.iter().sum::<f64>() / made.len() as f64
+    };
+    assert_eq!(count(&big), count(&neutral));
+    assert!(
+        mean(&big) > mean(&neutral),
+        "{} vs {}",
+        mean(&big),
+        mean(&neutral)
+    );
+}
+
+fn flop_folds(style: Style) -> usize {
+    let mut rng = Rng::new(13);
+    let legal = Legal {
+        fold: true,
+        check: false,
+        call: Some(40),
+        raise: Some((80, 360)),
+    };
+    let mut folds = 0;
+    for _ in 0..3000 {
+        let mut deck: Vec<Card> = (0..52).collect();
+        rng.shuffle(&mut deck);
+        let mut bot = Bot::new();
+        bot.set_style(style);
+        bot.hand_started(model(), true, [400, 400], [10, 20]);
+        bot.hole_cards([deck[0], deck[1]]);
+        bot.acted(model(), true, Move::Call, 0.0);
+        bot.acted(model(), false, Move::Check, 0.0);
+        bot.street(model(), &deck[2..5]);
+        bot.acted(model(), false, Move::RaiseTo(40), 0.0);
+        if bot.decide(model(), &legal, rng.next_f64()) == Move::Fold {
+            folds += 1;
+        }
+    }
+    folds
+}
+
+#[test]
+fn stickiness_folds_less_to_a_flop_bet() {
+    let neutral = flop_folds(Style::NEUTRAL);
+    let sticky = flop_folds(Style {
+        stickiness: 1.6,
+        ..Style::NEUTRAL
+    });
+    let tight_preflop = flop_folds(Style {
+        tightness: 1.6,
+        ..Style::NEUTRAL
+    });
+    assert!(sticky < neutral, "{sticky} folds, {neutral} neutral");
+    assert_eq!(tight_preflop, neutral);
 }
 
 #[test]
@@ -426,6 +523,7 @@ fn a_style_is_kept_across_hands() {
         aggression: 0.9,
         bluff: 0.9,
         tightness: 1.2,
+        ..Style::NEUTRAL
     };
     bot.set_style(style);
     bot.hand_started(model(), true, [400, 400], [10, 20]);
@@ -1017,6 +1115,7 @@ fn a_styled_range_follows_the_styled_strategy() {
         aggression: 1.25,
         bluff: 1.3,
         tightness: 0.85,
+        ..Style::NEUTRAL
     };
     let root = model().file.tree.root();
     let hole = [48, 49];
@@ -1025,21 +1124,17 @@ fn a_styled_range_follows_the_styled_strategy() {
     let mv = bot.decide(model(), &facing_blind(20, 400), 0.99);
     bot.acted(model(), true, mv, 0.0);
     let step = bot.history()[0].clone();
-    let Node::Decision { actions, .. } = model().file.tree.node(root) else {
-        panic!("not a decision");
-    };
-    let kinds: Vec<ActionKind> = actions.iter().map(|a| a.0).collect();
     let range = bot.range(model());
     for (i, &w) in range.iter().enumerate() {
         let bucket = model()
             .abstraction
             .bucket(Street::Preflop, pair_cards(i), &[]);
-        let weights = reweight(
+        let weights = styled(
+            model(),
+            &model().spot(root).unwrap(),
             model().file.probabilities(root, bucket),
-            &kinds,
+            bucket,
             &style,
-            false,
-            false,
         );
         let expected = weights[step.action] / weights.iter().sum::<f64>();
         assert!(
