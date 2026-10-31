@@ -62,10 +62,11 @@ coach (#5) will be a second role on the same foundation; it is not part of this 
    `tightness = 1 + 0.2 caution − 0.1 cheer`, each clamped: aggression to [0.8, 1.6], bluff to [0.8, 1.8],
    tightness to [0.85, 1.2]. The first clamps, aggression to 1.25 and bluff to 1.3, lost -0.2 ± 2.6 bb/100 to the
    fixed `cfr` blueprint but moved her bet and raise frequencies after the flop by less than 3 percentage points, so
-   tilt was not visible in her play (Task 14, arena README). The clamps were widened to the bound of that task, and
-   the tilt coefficients with them (0.25 to 0.5, 0.3 to 0.8) so that a fully tilted mood reaches the corner. The
-   arena checks their cost (goal above); if the most tilted style costs more than 5 bb/100 against `cfr`, the clamps
-   narrow before the game uses them.
+   tilt was not visible in her play (arena README, "Is tilt noticeable"). The clamps were widened to aggression 1.6
+   and bluff 1.8, and the tilt coefficients with them (0.25 to 0.5, 0.3 to 0.8) so that a fully tilted mood reaches
+   the corner. The steeper coefficients also make a mild negative tilt reach the floor of 0.8 sooner (bluff at tilt
+   −0.25, aggression at tilt −0.4 with neutral confidence and form). The arena checks their cost (goal above); if
+   the most tilted style costs more than 5 bb/100 against `cfr`, the clamps narrow before the game uses them.
 8. **Style in the CFR bot.** `mallorca-core::bot` gets `Style { aggression, bluff, tightness }`, neutral by
    default. In `decide`, between `probabilities` and `sample`, the weights of the node are reweighted in `f64`:
    bets, raises and all-ins times `aggression`, checks and calls divided by it, fold times `tightness`, and on the
@@ -85,6 +86,10 @@ coach (#5) will be a second role on the same foundation; it is not part of this 
    - `reader`: the math bot, except when it faces a bet. If the opponent spoke after betting, it turns a math fold
      into a call when the call is at most half the pot; if the opponent was silent, it turns a math call into a
      fold. It exploits the base profile's habit of chatter when bluffing.
+   - `tilt-exploiter`: the math bot, except that facing a bet or raise it turns a math fold into a call when the call
+     is at most half the pot (the pot including the bet), and it turns a math bet or raise with a weak strength class
+     into a check or call. It does not know her mood; the cost of tilt is its result against `cfr-tilted` minus its
+     result against `cfr` with the same seed (arena README, "Is tilt noticeable").
 10. **Server on Supabase.** A `supabase/` directory at the root: `config.toml`, migrations and the Edge Function
     `talk` in Deno. The player signs in anonymously with supabase-js on first load, invisibly; a real sign-in screen
     is a later project, and an anonymous user can be linked to an account later without losing data.

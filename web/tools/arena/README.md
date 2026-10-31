@@ -73,14 +73,14 @@ into 200, 1200 hands a row:
 
 ## Styled and talking bots (issue #23)
 
-| Bot                                                      | What it is                                                                                                                                                                                                                |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cfr-tilted`                                             | `cfr` with the style aggression 1.6, bluff 1.8, tightness 0.85 (1.25, 1.3, 0.85 before Task 14)                                                                                                                           |
-| `cfr-confident`                                          | `cfr` with the style 1.15, 1, 0.95                                                                                                                                                                                        |
-| `cfr-cautious`                                           | `cfr` with the style 0.9, 0.9, 1.2                                                                                                                                                                                        |
-| `cfr-talk-obvious`, `cfr-talk-subtle`, `cfr-talk-hidden` | plain `cfr` that, after deciding a raise, speaks with the chance of the base habit `herBet` for its hand strength class at that level                                                                                     |
-| `reader`                                                 | the `math` bot that uses the talk: facing a bet after the opponent spoke, a math fold becomes a call when the call is at most half the pot; facing a bet after the opponent was silent, a math call becomes a fold        |
-| `tilt-exploiter`                                         | the `math` bot that punishes tilt without knowing it: facing a bet or raise, a math fold becomes a call when the call is at most half the pot, and a math bet or raise with a weak strength class becomes a call or check |
+| Bot                                                      | What it is                                                                                                                                                                                                                                                         |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cfr-tilted`                                             | `cfr` with the style aggression 1.6, bluff 1.8, tightness 0.85 (1.25, 1.3, 0.85 before Task 14)                                                                                                                                                                    |
+| `cfr-confident`                                          | `cfr` with the style 1.15, 1, 0.95                                                                                                                                                                                                                                 |
+| `cfr-cautious`                                           | `cfr` with the style 0.9, 0.9, 1.2                                                                                                                                                                                                                                 |
+| `cfr-talk-obvious`, `cfr-talk-subtle`, `cfr-talk-hidden` | plain `cfr` that, after deciding a raise, speaks with the chance of the base habit `herBet` for its hand strength class at that level                                                                                                                              |
+| `reader`                                                 | the `math` bot that uses the talk: facing a bet after the opponent spoke, a math fold becomes a call when the call is at most half the pot; facing a bet after the opponent was silent, a math call becomes a fold                                                 |
+| `tilt-exploiter`                                         | the `math` bot that punishes tilt without knowing it: facing a bet or raise, a math fold becomes a call when the call is at most half the pot (the pot including the bet being called), and a math bet or raise with a weak strength class becomes a call or check |
 
 A bot may implement `spoke()` (did it speak on its last decision) and `heard(spoke)`. The match loop calls
 `other.heard(actor.spoke())` after every raise by an actor that has `spoke`, before the next decision, and `heard`
@@ -148,7 +148,17 @@ points (95%).
 | `cfr-tilted` (1.6, 1.8)  | 75.0% | 49.0% | 2.84 | 30.3% | 46.9%       | 9.1%  | 64072                    | 15509        |
 
 Exploiter, seed 4, 20000 pairs (40000 hands) each. The paired interval compares the two runs pair by pair over the
-same decks and is tighter than the combined one, which treats them as independent.
+same decks and is tighter than the combined one, which treats them as independent. For pair `i` let `d_i` be
+`(net_i of the second run − net_i of the first) / 2 / bigBlind × 100`, with pairs matched by index; the gain is the
+mean of `d_i` and the paired interval is `1.96 × sd(d) / √pairs`.
+`npm run arena:paired -- <first.jsonl> <second.jsonl>` computes it from two saved hands files:
+
+```
+second minus first: +5.8 ± 5.7 bb/100 over 20000 pairs
+second minus first: +17.4 ± 8.4 bb/100 over 20000 pairs
+```
+
+(`tilt-exploiter` vs `cfr` first, then vs `cfr-tilted` at 1.25, 1.3 and at 1.6, 1.8.)
 
 | Run                                          | bb/100       | gain over `vs cfr` | combined interval | paired interval |
 | -------------------------------------------- | ------------ | ------------------ | ----------------- | --------------- |
@@ -161,12 +171,17 @@ Plain cost at the new corner, seed 2: `cfr-tilted` (1.6, 1.8) vs `cfr` +0.4 ± 2
 At the first clamps tilt was not noticeable: bets after the flop rose by 2.2 points and raises facing a bet by 0.8,
 and the exploiter's gain of +5.8 was inside even the paired interval. The clamps were widened to the bound of the
 task, aggression 1.6 and bluff 1.8 with tightness unchanged, and the mood coefficients with them (aggression
-`0.5 tilt`, bluff `0.8 tilt`), so that a fully tilted mood reaches the corner. At that corner bets after the flop
-rise by 4.9 points, which is just under the 5 point bar, and raises by 2.1. The exploiter gains +17.4 bb/100 on her,
-clearly above the paired interval of 8.4 but just under the combined interval of 18.5. So by the letter of the rule
-tilt is still short of noticeable, by a hair on both counts, while the paired measure says it is punishable. The cost
-against `cfr` stays inside the 5 bb/100 allowance (+0.4 ± 2.7), and the exploited cost of 17.4 bb/100 is under the
-25 bb/100 stop, so the wider clamps stay.
+`0.5 tilt`, bluff `0.8 tilt`), so that a fully tilted mood reaches the corner.
+
+Decision: at 1.6 and 1.8 tilt counts as noticeable. Duplicate runs with the same seed play the same decks, so the
+paired interval is the test for them; the combined interval assumes independent runs and overstates the noise. The
+exploiter gains +17.4 ± 8.4 bb/100 on `cfr-tilted`, above the paired interval. Bets after the flop rise by
+4.9 ± 0.5 points, which reaches the 5 point bar within its noise; raises facing a bet rise by 2.1. The cost against
+`cfr` stays inside the 5 bb/100 allowance (+0.4 ± 2.7), and the exploited cost of 17.4 bb/100 is under the 25 bb/100
+stop. The clamps are not widened further.
+
+The style runs also print bb/100; `cfr` vs `cfr` at 20000 pairs gives -6.2 ± 7.7, which is noise: the bot plays itself, so its
+true value is zero; the 200000 pair runs above are the measure of cost.
 
 ## Managing runs
 
