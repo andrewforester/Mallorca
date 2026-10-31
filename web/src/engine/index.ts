@@ -25,7 +25,6 @@ export {
   startingStack,
   toAct,
   TOURNAMENT,
-  TOURNAMENT_STACK,
 } from './table.ts';
 export { rulesOf } from './rules.ts';
 export type { LogEntry } from './history.ts';
