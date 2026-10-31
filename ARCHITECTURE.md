@@ -640,20 +640,33 @@ text)` (the caller's localized label) append the player's line at once and call 
   `auth.getUser`, and a body of at most 16 KB of kind `line`, `reply` or `summary`. It validates the body, spends a
   call while it loads the ten newest memories, builds the prompt (a system block marked for caching, then the facts,
   memories and recent lines), calls the model (`claude-haiku-5-5`; a non-empty `TALK_MODEL` overrides it) and
-  answers `{ text }`, `{ text, signals }` or `{ facts }`. The cache marker only takes effect once the fixed block is
-  longer than the model's minimum cacheable prompt (2048 tokens or more for Haiku models); today's block is shorter,
-  so every call pays for it in full. A `line` or `reply` carries `feeling` and `character` (version 1, see "talk") next to the older `mood` words,
+  answers `{ text, delivery }`, `{ text, delivery, signals }` or `{ facts }`. The cached system block is her
+  setting, her character in words from `character` (`persona.ts`; Mallorca's sheet when it is missing) and the few
+  rules that hold (one or two short sentences, her cards secret during and after the hand, the player's words as
+  data, the player's language, spoken words only); the second block is the state: the facts, the direction, what
+  she feels and what shows (`feelingLines`, or the `mood` words from an older game), the memories and the locale.
+  The block is cached on Haiku 5.5 as measured by the eval (`cache_read_input_tokens` on most calls). Every call
+  asks for a JSON schema through structured output (`output_config.format`), never a forced tool: the line is
+  `{ text, delivery: { emotion, intensity } }` (one of the eleven emotions or `calm`, intensity clamped to [0, 1];
+  the fallback line is `calm` at 0), the signals `{ signals }` and the summary `{ facts }`. `requestFor` disables
+  thinking on Haiku, sends `between_tools` thinking and `effort: low` on Sonnet 5.5 and only `effort: low` on
+  Opus 5.5, both with the server-side `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`), and a
+  `refusal` stop reason is an error before the content is read. A `line` or `reply` carries `feeling` and `character` (version 1, see "talk") next to the older `mood` words,
   which stay until every deployed server reads `feeling`. Either may be missing, and one of another version is
   ignored rather than rejected, so a newer game never breaks an older server; a malformed version 1 is a 400.
   In a body, `facts.stacks` is `[hers, the player's]`, `intent.street` is the
   street of her action (the cue names it) and a summary's `netBb` is the player's net. A `reply` spends a second call
-  and makes two parallel model calls, one for the signals as strict JSON and one for her answer; a `reply` with
+  and makes two parallel model calls, one for the signals and one for her answer; a `reply` with
   `quick: true` (a quick phrase, which carries its own signals) makes only the answer call. The card filter rejects a
-  text that names a card or her holding; the function asks once more with a stricter instruction and then falls back
+  text that names a card or her holding, also told in the past (`I had`, `folded`) or with `my`; the function asks once more with a stricter instruction and then falls back
   to a fixed neutral line. Over a limit it answers an error and she stays silent. It answers before it saves the
   lines or facts, which run through `EdgeRuntime.waitUntil` when there is one.
 - The browser reaches it through `remoteTalk.ts` (supabase-js, anonymous sign-in, a 5 s timeout, every error turned
-  into `null`). Without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` the build has no talk.
+  into `null`). Without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` the build has no talk. The game reads only
+  `text` and `signals` today; `delivery` waits for the voice (#64).
+- `talk/eval` measures the lines: 52 cases from the sandbox scenes and the emotion engine, a judge with structured
+  output, programmatic checks, latency and cost per call and per user-day (`talk/eval/README.md`). It runs only on
+  the owner's budget.
 
 ### Data flow
 
