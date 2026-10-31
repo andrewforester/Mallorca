@@ -93,7 +93,7 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
 ## cards
 
 - `Card` is a number 0..51, `rank * 4 + suit`. `rankOf` returns 2..14, `suitOf` returns 0..3 for `c d h s`.
-- `parseCard("As")`, `parseCards("As Kd")`, `formatCard`, `fullDeck()`.
+- `cardOf(rank, suit)`, `parseCard("As")`, `parseCards("As Kd")`, `formatCard`, `fullDeck()`.
 - `Rng` has `next(): number` in [0, 1). `mulberry32(seed)` implements it. `shuffle(items, rng)` is Fisher-Yates
   and returns a copy.
 
