@@ -65,6 +65,26 @@ The play file of checkpoint 10 in the web arena (`cfr:<play file>`), 100 bb, bli
 - Against the math bot `v2` wins as much as `v1` (+32.8 ± 9.2 on the same seed): the lower LBR does not show
   against this opponent.
 
+## Against Slumbot (200 bb, 2026-10-31)
+
+`v2` checkpoint 10 (`cfr:solver/data/v2/v2-10-play.mlcs`) against [Slumbot](https://www.slumbot.com) over its API,
+with `npm run arena:external` (issue #15, `web/tools/arena/external/`). Slumbot plays 200 bb (blinds 50/100), twice
+the depth of the blueprint, so the bot plays the deeper half of every hand through off-tree translation. Not
+duplicated, so the interval is wide; all-in EV and the baseline that Slumbot returns cut it.
+
+| date | strategy | stack | hands | raw bb/100 | all-in EV bb/100 | baseline bb/100 | commit |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-31 | v2 ckpt 10 | 200 bb | 2,058 | +32.5 ± 80.6 | -13.7 ± 72.2 | -9.3 ± 75.4 | 791ca85 |
+
+- An interim figure: every interval contains 0. The run continues to about 110,000 hands, where all-in EV reaches
+  about ±10 (standard deviation per hand 1671 bb/100, 107,000 hands projected). The final row replaces this one.
+- Standard deviation per hand: raw 1866, all-in EV 1671, baseline 1746. The Slumbot baseline (its own result in our
+  seat with our cards) correlates only about 0.5 with ours, so it removes less variance than all-in EV; its mean,
+  +41.8 ± 78.9, is consistent with 0, as the estimate needs.
+- No hand abandoned, no mismatch between the engine and Slumbot's `winnings` over the 2058 hands.
+- Reproduce from the log: the first 2058 lines of `web/arena-out/cfr-v2-10-play-slumbot-s1-20261031.jsonl` (main
+  checkout) through `npm run arena:external -- --report <file>` give the row above exactly.
+
 ## Arena against the math bot (2026-10-24)
 
 The play file of checkpoint 18 (`export --streets play`, 7.37 MB raw, 3.61 MB gzipped) in the web arena, through

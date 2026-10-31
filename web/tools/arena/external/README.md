@@ -26,7 +26,9 @@ cfr-v2-10-play vs slumbot (200 bb): baseline +12.3 ± 6.1, all-in EV +10.1 ± 14
   board (exact enumeration) instead of the real runout.
 - `baseline`: `winnings - baseline_winnings`, where `baseline_winnings` is what Slumbot reports it would have won
   in our seat with the same cards against itself. Unbiased while both positions are played equally often (Slumbot
-  alternates them; the report counts each); the lowest variance of the three.
+  alternates them; the report counts each). Its mean, `baselineMean` in the report, should be near 0. Over the
+  first 2058 hands it cut the variance less than all-in EV did (standard deviation per hand 1746 against 1671, raw
+  1866), because Slumbot's own result correlates only about 0.5 with ours.
 
 The report is a function of the log only, so `--report` on the same log always gives the same numbers.
 
