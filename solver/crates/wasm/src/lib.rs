@@ -59,7 +59,7 @@ fn to_move(kind: u32, to: u32) -> Move {
 }
 
 fn card(c: u32) -> Card {
-    (c % 52) as Card
+    Card::try_from(c).unwrap_or(Card::MAX)
 }
 
 #[no_mangle]
