@@ -1,11 +1,12 @@
-import { basename } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { basename, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import type { Action, LegalActions } from '../../src/engine/index.ts';
 import type { Observation } from '../../src/brains/index.ts';
 import { createMathBrain, randomVillainModel } from '../../src/brains/index.ts';
 import type { Rng } from '../../src/cards/index.ts';
-import type { CfrModel } from '../../src/cfr/index.ts';
-import { createCfrBrain } from '../../src/cfr/index.ts';
-import { loadCfrModel } from './cfrModel.ts';
+import type { CfrModel, ShippedStrategyKey } from '../../src/cfr/index.ts';
+import { SHIPPED_STRATEGIES, createCfrBrain, loadCfrModel } from '../../src/cfr/index.ts';
 
 export interface ArenaBot {
   observe(o: Observation): void;
@@ -56,8 +57,9 @@ const random: BotFactory = (rng) => ({
 });
 
 const CFR_FILE = 'cfr:';
-const SHIPPED = 'cfr';
+const SHIPPED: ShippedStrategyKey = 'cfr';
 const cfrModels = new Map<string, CfrModel>();
+const read = (url: URL) => readFile(url);
 
 function cfrBot(key: string): BotFactory {
   return (rng) => {
@@ -115,11 +117,15 @@ export function botLabel(name: string): string {
   return `cfr-${base}`;
 }
 
+function strategyUrl(name: string): URL | null {
+  if (name === SHIPPED) return SHIPPED_STRATEGIES[SHIPPED].url;
+  const file = cfrFile(name);
+  return file === null ? null : pathToFileURL(resolve(file));
+}
+
 export async function prepareBots(names: readonly string[]): Promise<void> {
   for (const name of names) {
-    if (cfrModels.has(name)) continue;
-    const file = cfrFile(name);
-    if (name === SHIPPED) cfrModels.set(name, await loadCfrModel());
-    else if (file !== null) cfrModels.set(name, await loadCfrModel(file));
+    const url = strategyUrl(name);
+    if (url !== null && !cfrModels.has(name)) cfrModels.set(name, await loadCfrModel(url, read));
   }
 }

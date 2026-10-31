@@ -2,15 +2,15 @@ import { readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { Action, LegalActions } from '../engine/index.ts';
 import type { CfrBot, CfrModel } from './index.ts';
-import { createCfrModel, inflate } from './index.ts';
+import { SHIPPED_STRATEGIES, WASM_URL, createCfrModel, inflate } from './index.ts';
 
-const wasm = readFileSync(new URL('./mallorca.wasm', import.meta.url));
+const wasm = readFileSync(WASM_URL);
 
 let play: Uint8Array;
 let model: CfrModel;
 
 beforeAll(async () => {
-  play = await inflate(readFileSync(new URL('./v1.mlcs.gz', import.meta.url)));
+  play = await inflate(readFileSync(SHIPPED_STRATEGIES.cfr.url));
   model = await createCfrModel(wasm, play);
 });
 
