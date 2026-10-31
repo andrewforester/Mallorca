@@ -124,7 +124,7 @@ class Wiring implements SessionTalk {
   }
 
   style(): Style | undefined {
-    return this.client.enabled && this.solver ? this.talk?.style() : undefined;
+    return this.solver ? this.talk?.style() : undefined;
   }
 
   say(text: string): void {
