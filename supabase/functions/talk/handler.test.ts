@@ -160,6 +160,20 @@ Deno.test("a failed text call answers 502", async () => {
   assertEquals(f.saved.length, 0);
 });
 
+Deno.test("a failed text call is logged with its error", async () => {
+  const f = fake({ texts: [new Error("model down")] });
+  const original = console.error;
+  const logged: unknown[][] = [];
+  console.error = (...args: unknown[]) => void logged.push(args);
+  try {
+    assertEquals((await handle(post(fixture("line")), f.deps)).status, 502);
+  } finally {
+    console.error = original;
+  }
+  assertEquals(logged.length, 1);
+  assertEquals((logged[0][1] as Error).message, "model down");
+});
+
 Deno.test("an empty model text answers 502", async () => {
   const f = fake({ texts: ["   "] });
   assertEquals((await handle(post(fixture("line")), f.deps)).status, 502);

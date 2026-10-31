@@ -192,7 +192,8 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
     if (parsed.kind === "line") return await handleLine(parsed, user, memories, deps);
     if (parsed.kind === "reply") return await handleReply(parsed, user, memories, deps);
     return await handleSummary(parsed, user, memories, deps);
-  } catch {
+  } catch (error) {
+    console.error("talk: model failed", error);
     return badGateway();
   }
 }
