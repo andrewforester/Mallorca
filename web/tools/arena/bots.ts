@@ -4,9 +4,11 @@ import { createMathBrain, randomVillainModel } from '../../src/brains/index.ts';
 import type { Rng } from '../../src/cards/index.ts';
 import type { CfrModel } from '../../src/cfr/index.ts';
 import { createCfrBrain } from '../../src/cfr/index.ts';
+import { strengthOf } from '../../src/talk/index.ts';
 import type { Level } from '../../src/talk/index.ts';
 import type { ArenaBot } from './arenaBot.ts';
 import { loadCfrModel } from './cfrModel.ts';
+import { createExploiter } from './exploiter.ts';
 import { createReader } from './reader.ts';
 import { createTalkingBot } from './talking.ts';
 
@@ -83,6 +85,9 @@ const talking =
 
 const reader: BotFactory = (rng) => createReader(math(rng));
 
+const tiltExploiter: BotFactory = (rng) =>
+  createExploiter(math(rng), (hole, board) => strengthOf(hole, board, rng));
+
 export const BOTS: Record<
   | 'math'
   | 'cfr'
@@ -93,6 +98,7 @@ export const BOTS: Record<
   | 'cfr-talk-subtle'
   | 'cfr-talk-hidden'
   | 'reader'
+  | 'tilt-exploiter'
   | 'always-call'
   | 'always-raise'
   | 'min-bettor'
@@ -108,6 +114,7 @@ export const BOTS: Record<
   'cfr-talk-subtle': talking('subtle'),
   'cfr-talk-hidden': talking('hidden'),
   reader,
+  'tilt-exploiter': tiltExploiter,
   'always-call': alwaysCall,
   'always-raise': alwaysRaise,
   'min-bettor': minBettor,
