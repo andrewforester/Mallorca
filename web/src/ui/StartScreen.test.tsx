@@ -27,6 +27,22 @@ describe('StartScreen', () => {
     expect(onStart).toHaveBeenLastCalledWith(CASH, 'cfr');
   });
 
+  it('offers the v2 solver where a fine pointer is present', () => {
+    const onStart = vi.fn();
+    render(<StartScreen seed={42} onStart={onStart} finePointer />);
+    fireEvent.click(screen.getByTestId('opponent-cfr-v2'));
+    expect(screen.getByTestId('opponent-cfr-v2').textContent).toBe(en.start.opponents['cfr-v2']);
+    fireEvent.click(screen.getByTestId('start-cash'));
+    expect(onStart).toHaveBeenLastCalledWith(CASH, 'cfr-v2');
+    expect(screen.getByTestId('start-loading')).toBeTruthy();
+  });
+
+  it('hides the v2 solver on a touch screen', () => {
+    render(<StartScreen seed={42} onStart={vi.fn()} finePointer={false} />);
+    expect(screen.queryByTestId('opponent-cfr-v2')).toBeNull();
+    expect(screen.getByTestId('opponent-cfr')).toBeTruthy();
+  });
+
   it('shows the farewell line in place of the tagline', () => {
     const { container } = render(<StartScreen seed={1} onStart={vi.fn()} farewell />);
     expect(screen.getByTestId('farewell').textContent).toBe('Sleep well. The table will be here.');
