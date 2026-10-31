@@ -16,6 +16,7 @@ export interface HandSummary {
   street: EndStreet;
   showdown: boolean;
   pot: number;
+  bigBlind: number;
 }
 
 export interface Slice {
@@ -68,18 +69,19 @@ function stacks(events: EngineEvent[]): { start: number[]; end: number[] } {
 export function summarize(record: HandRecord, line: number): HandSummary {
   const k = (record.handNumber - 1) % 2;
   const aSeat = k === 0 ? 0 : 1;
-  const button = record.events.find((e) => e.type === 'handStarted')?.button ?? 0;
+  const started = record.events.find((e) => e.type === 'handStarted');
   const { start, end } = stacks(record.events);
   return {
     line,
     handNumber: record.handNumber,
     pair: Math.floor((record.handNumber - 1) / 2),
     aSeat,
-    position: aSeat === button ? 'button' : 'bigBlind',
+    position: aSeat === (started?.button ?? 0) ? 'button' : 'bigBlind',
     aNet: (end[aSeat] ?? 0) - (start[aSeat] ?? 0),
     street: lastActionStreet(record.events),
     showdown: record.events.some((e) => e.type === 'showdown'),
     pot: record.events.reduce((sum, e) => (e.type === 'potAwarded' ? sum + e.amount : sum), 0),
+    bigBlind: started?.bigBlind ?? 0,
   };
 }
 

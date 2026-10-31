@@ -403,8 +403,9 @@ files directly, including in workers. `tools/` may use the clock and Node APIs.
   `legal.raise.min` when it can, else checks or calls) and `random` (uniform over the legal kinds, a raise to the
   minimum, from its seeded `Rng`).
 - `match.ts`: `playPair(a, b, seed, index)` plays one deck twice with the seats swapped: the deck is shuffled by
-  `mulberry32((Math.imul(seed, 0x9e3779b1) + index) >>> 0)`; hand `k` (0, 1) starts both seats at 2000, button
-  seat 0, blinds 10/20, `handNumber = index * 2 + k + 1`, with `a` on seat 0 in hand 0 and `b` in hand 1. Each hand
+  `mulberry32((Math.imul(seed, 0x9e3779b1) + index) >>> 0)`; hand `k` (0, 1) starts both seats at the cash stakes
+  (the stacks of `createTable` with `CASH`, the blinds of `rulesOf(CASH)`), button seat 0,
+  `handNumber = index * 2 + k + 1`, with `a` on seat 0 in hand 0 and `b` in hand 1. Each hand
   gets fresh bots, the bot on `seat` seeded by `mulberry32((seed ^ (index * 4 + k * 2 + seat)) >>> 0)`, and each
   bot receives `toObservations` of the new events for its seat after every step. It returns `net`, the chips of
   `a` over both hands, and the events of both hands. The math bot against itself nets exactly 0 per pair.
@@ -417,7 +418,7 @@ files directly, including in workers. `tools/` may use the clock and Node APIs.
 - `run.ts`: `runArena({ a, b, pairs, seed, workers, saveHands?, reportDir? })` splits the pair indices into
   contiguous chunks,
   runs them in process (`workers: 1`) or in `worker_threads` (`worker.ts`), gathers the results in index order and
-  returns the `Report` (`a`, `b`, `pairs`, `hands`, `seed`, `bbPer100`, `ci95`, `durationMs`, `commit` from
+  returns the `Report` (`a`, `b`, `pairs`, `hands`, `seed`, `bbPer100` in the big blind of `CASH`, `ci95`, `durationMs`, `commit` from
   `git rev-parse --short HEAD` or `unknown`, `finishedAt`, and `handsFile`, the `saveHands` path relative to
   `reportDir`, or null); the result depends only on the seed, not on the worker count.
   `saveHands` writes one `HandRecord` per line (JSONL) with `humanSeat: null`, `sessionId: arena-<seed>`,
@@ -453,11 +454,12 @@ types.
   with the gzip magic bytes (`decodeHands`, so a host that sent `Content-Encoding: gzip` works too), parses the
   JSONL, skips unreadable lines and keeps the raw lines for `record(line)`.
 - `analysis.ts`: `summarize(record, line)` takes A's seat from the hand number (`k = (handNumber - 1) % 2`, A on
-  seat `k`), so a bot against itself works; `pairNets`, `cumulative` (at most 600 points), `slices` (position,
+  seat `k`), so a bot against itself works, and the big blind of the hand from its `handStarted` event; the views
+  show amounts in that big blind; `pairNets`, `cumulative` (at most 600 points), `slices` (position,
   street of the last action, showdown) and `pairRows`: a pair is kept when either hand passes the filter, its
   `matches` mark which, and a filtered list is sorted by the matching hands.
-- Components: `App`, `RunList`, `RunView` (warns when the hands do not give the report's pairs and bb/100 within
-  0.05), `Curve`, `Slices`, `HandList`, `PairPanel` (both hands of a pair as PokerStars text). Tests run under
+- Components: `App`, `RunList`, `RunView` (warns when the hands do not give the report's pairs and bb/100 of
+  `summarize` in `stats.ts` within 0.05, and says so when the hands file holds no readable hand), `Curve`, `Slices`, `HandList`, `PairPanel` (both hands of a pair as PokerStars text). Tests run under
   happy-dom in the `ui` Vitest project.
 
 ## Conventions
