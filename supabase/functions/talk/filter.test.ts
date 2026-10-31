@@ -35,6 +35,15 @@ const LEAKS: [string, readonly string[]][] = [
   ["у меня тут каре", SUITED],
   ["король пик у меня", KING_QUEEN],
   ["дама бубен", KING_QUEEN],
+  ["Well, I had two queens and still gave you the pot.", KING_QUEEN],
+  ["I went and folded queens to a bluff.", KING_QUEEN],
+  ["I folded a set, can you believe it.", SUITED],
+  ["My aces deserved better.", ACES],
+  ["and I was holding aces of all things", ACES],
+  ["I held kings and still lost", KING_QUEEN],
+  ["and that was a perfectly good pair of kings", KING_QUEEN],
+  ["я сбросила дам, представляешь", KING_QUEEN],
+  ["у меня были тузы", ACES],
 ];
 
 const CLEAN: [string, readonly string[]][] = [
@@ -54,6 +63,12 @@ const CLEAN: [string, readonly string[]][] = [
   ["Я держу себя в руках.", KING_QUEEN],
   ["красивый ривер", KING_QUEEN],
   ["Ты сегодня в ударе.", KING_QUEEN],
+  ["I had a lovely evening anyway.", KING_QUEEN],
+  ["I was holding my breath on the river.", KING_QUEEN],
+  ["I folded, fair enough.", KING_QUEEN],
+  ["My tea is cold and my luck is colder.", KING_QUEEN],
+  ["My hands are a bit shaky tonight.", KING_QUEEN],
+  ["Я сбросила, и правильно.", KING_QUEEN],
 ];
 
 for (const [text, hole] of LEAKS) {

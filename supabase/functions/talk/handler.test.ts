@@ -1,10 +1,14 @@
 import { assert, assertEquals } from "../_shared/testing.ts";
 import { FALLBACK_LINES } from "./filter.ts";
-import { handle, handleSafely, inBackground } from "./handler.ts";
+import { handle, handleSafely, inBackground, parseSpoken } from "./handler.ts";
+import { FACTS_SCHEMA, LINE_SCHEMA } from "./prompt.ts";
+import { SIGNAL_SCHEMA } from "./signals.ts";
 import type { Deps } from "./handler.ts";
 import { fixture } from "./fixtures/fixtures.ts";
 
 type Input = Parameters<Deps["complete"]>[0];
+
+const DELIVERY = { emotion: "joy", intensity: 0.4 };
 
 interface Fake {
   deps: Deps;
@@ -56,17 +60,17 @@ function fake(options: Options = {}): Fake {
     background: (task) => void state.tasks.push(task),
     complete: (input) => {
       state.inputs.push(input);
-      if (input.tool?.name === "signals") {
+      if (input.purpose === "signals") {
         if (options.signals instanceof Error) return Promise.reject(options.signals);
-        return Promise.resolve({ text: "", toolInput: options.signals ?? { signals: [] } });
+        return Promise.resolve({ text: "", data: options.signals ?? { signals: [] } });
       }
-      if (input.tool?.name === "facts") {
-        return Promise.resolve({ text: "", toolInput: options.facts ?? { facts: [] } });
+      if (input.purpose === "summary") {
+        return Promise.resolve({ text: "", data: options.facts ?? { facts: [] } });
       }
       const next = texts.length > 1 ? texts.shift()! : texts[0];
-      return next instanceof Error
-        ? Promise.reject(next)
-        : Promise.resolve({ text: next, toolInput: undefined });
+      if (next instanceof Error) return Promise.reject(next);
+      const data = { text: next, delivery: DELIVERY };
+      return Promise.resolve({ text: JSON.stringify(data), data });
     },
   };
   return state;
@@ -121,21 +125,25 @@ Deno.test("a line answers its text and saves it", async () => {
   const f = fake({ texts: ["  Your move.  "] });
   const res = await handle(post(fixture("line")), f.deps);
   assertEquals(res.status, 200);
-  assertEquals(await json(res), { text: "Your move." });
+  assertEquals(await json(res), { text: "Your move.", delivery: DELIVERY });
   assertEquals(f.inputs.length, 1);
-  assertEquals(f.inputs[0].tool, undefined);
+  assertEquals(f.inputs[0].schema, LINE_SCHEMA);
   assertEquals(f.saved, [[{ speaker: "mallorca", text: "Your move." }]]);
   assertEquals(f.consumed, 1);
 });
 
-Deno.test("a reply returns signals from the tool input and saves both speakers", async () => {
+Deno.test("a reply returns signals from their schema and saves both speakers", async () => {
   const f = fake({ signals: { signals: ["tease", "bogus"] } });
   const body = fixture("reply");
   const res = await handle(post(body), f.deps);
   assertEquals(res.status, 200);
-  assertEquals(await json(res), { text: "Nice try, friend.", signals: ["tease"] });
+  assertEquals(await json(res), {
+    text: "Nice try, friend.",
+    delivery: DELIVERY,
+    signals: ["tease"],
+  });
   assertEquals(f.inputs.length, 2);
-  assertEquals(f.inputs.filter((i) => i.tool?.name === "signals").length, 1);
+  assertEquals(f.inputs.filter((i) => i.schema === SIGNAL_SCHEMA).length, 1);
   assertEquals(f.consumed, 2);
   assertEquals(f.saved, [[
     { speaker: "player", text: (body.text as string).trim() },
@@ -147,7 +155,7 @@ Deno.test("a failed signals call still answers the text with no signals", async 
   const f = fake({ signals: new Error("boom") });
   const res = await handle(post(fixture("reply")), f.deps);
   assertEquals(res.status, 200);
-  assertEquals(await json(res), { text: "Nice try, friend.", signals: [] });
+  assertEquals(await json(res), { text: "Nice try, friend.", delivery: DELIVERY, signals: [] });
 });
 
 Deno.test("a failed text call answers 502", async () => {
@@ -186,7 +194,7 @@ Deno.test("a leak then a clean text returns the clean text after two calls", asy
   assert(her !== null);
   const f = fake({ texts: [leak, "Clean line."] });
   const res = await handle(post(fixture("line")), f.deps);
-  assertEquals(await json(res), { text: "Clean line." });
+  assertEquals(await json(res), { text: "Clean line.", delivery: DELIVERY });
   assertEquals(f.inputs.length, 2);
   assert(f.inputs[1].system[1].text !== f.inputs[0].system[1].text);
   assertEquals(f.consumed, 2);
@@ -216,12 +224,12 @@ Deno.test("a reply costs two calls and a leak retry one more", async () => {
   assertEquals(f.consumed, 3);
 });
 
-Deno.test("a summary forces the facts tool, caps at three and saves", async () => {
+Deno.test("a summary asks for facts by their schema, caps at three and saves", async () => {
   const f = fake({ facts: { facts: ["a", "b", "c", "d"] } });
   const res = await handle(post(fixture("summary")), f.deps);
   assertEquals(res.status, 200);
   assertEquals(await json(res), { facts: ["a", "b", "c"] });
-  assertEquals(f.inputs[0].tool?.name, "facts");
+  assertEquals(f.inputs[0].schema, FACTS_SCHEMA);
   assertEquals(f.facts, [["a", "b", "c"]]);
   assertEquals(f.consumed, 1);
 });
@@ -283,9 +291,9 @@ Deno.test("a quick reply makes one model call and spends one call", async () => 
   const f = fake({ signals: { signals: ["tease"] } });
   const res = await handle(post({ ...fixture("reply"), quick: true }), f.deps);
   assertEquals(res.status, 200);
-  assertEquals(await json(res), { text: "Nice try, friend.", signals: [] });
+  assertEquals(await json(res), { text: "Nice try, friend.", delivery: DELIVERY, signals: [] });
   assertEquals(f.inputs.length, 1);
-  assertEquals(f.inputs[0].tool, undefined);
+  assertEquals(f.inputs[0].schema, LINE_SCHEMA);
   assertEquals(f.consumed, 1);
 });
 
@@ -334,4 +342,28 @@ Deno.test("background work goes to the edge runtime when there is one", async ()
   assertEquals(kept, [task]);
   inBackground(undefined)(Promise.resolve());
   await task;
+});
+
+Deno.test("a fallback line is delivered calm", async () => {
+  const leak = "I have pocket kings, sorry.";
+  const f = fake({ texts: [leak, leak] });
+  const res = await handle(post(fixture("line")), f.deps);
+  const body = await json(res);
+  assert(FALLBACK_LINES.includes(body.text as string));
+  assertEquals(body.delivery, { emotion: "calm", intensity: 0 });
+});
+
+Deno.test("a spoken answer clamps its intensity and falls back on an unknown emotion", () => {
+  assertEquals(parseSpoken({ text: " Hi. ", delivery: { emotion: "joy", intensity: 3 } }, ""), {
+    text: "Hi.",
+    delivery: { emotion: "joy", intensity: 1 },
+  });
+  assertEquals(parseSpoken({ text: "Hi.", delivery: { emotion: "glee", intensity: 0.5 } }, ""), {
+    text: "Hi.",
+    delivery: { emotion: "calm", intensity: 0 },
+  });
+  assertEquals(parseSpoken(undefined, " plain "), {
+    text: "plain",
+    delivery: { emotion: "calm", intensity: 0 },
+  });
 });
