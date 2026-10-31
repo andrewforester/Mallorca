@@ -45,6 +45,7 @@ import { silentTalkClient } from './talkClient.ts';
 import type { Style } from '../talk/index.ts';
 import { COACH_OFF, createCoach } from './coach.ts';
 import type { Coach } from './coach.ts';
+import type { CoachDecision } from '../coach/index.ts';
 
 export { resolveIntent, toIntent } from './intent.ts';
 export type { Intent } from './intent.ts';
@@ -155,12 +156,22 @@ function conclude(rt: Runtime, step: Step): void {
   });
 }
 
-function play(rt: Runtime, action: Action, decision: Decision | null = null, style?: Style): void {
+interface Played {
+  decision?: Decision | null;
+  style?: Style;
+  coached?: CoachDecision | null;
+}
+
+function play(rt: Runtime, action: Action, played: Played = {}): void {
+  const { decision = null, style, coached = null } = played;
   const { hand } = rt.get().table;
   const opens = hand !== null && isOpeningBet(hand, action);
   const step = apply(rt.get().table, action);
   if (decision !== null) {
     rt.recorder.decided(decision, step.events, style);
+  }
+  if (coached !== null) {
+    rt.recorder.coached(coached, step.events);
   }
   rt.set({ table: step.state });
   record(rt, step.events, opens);
@@ -194,7 +205,7 @@ async function botTurn(rt: Runtime, myEpoch: number): Promise<boolean> {
     }
   }
   const intent: Intent = decision === null ? { kind: 'passive' } : toIntent(decision.action);
-  play(rt, resolveIntent(intent, legal), decision, style);
+  play(rt, resolveIntent(intent, legal), { decision, style });
   return true;
 }
 
@@ -256,6 +267,14 @@ function restart(rt: Runtime, options: SessionOptions): Promise<void> {
   return beginHand(rt);
 }
 
+function switchCoach(rt: Runtime, on: boolean): void {
+  rt.coach.setOn(on);
+  const { phase, table } = rt.get();
+  if (on && phase === 'humanToAct' && table.hand !== null) {
+    rt.coach.ask(legalActionsOf(table), table.hand.pot);
+  }
+}
+
 function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
   return {
     start(next, opponent) {
@@ -296,8 +315,10 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
       if (phase !== 'humanToAct' || toAct(table) !== rt.humanSeat) {
         return Promise.resolve();
       }
+      const action = resolveIntent(intent, legalActionsOf(table));
+      const coached = rt.coach.played(action);
       rt.coach.acted();
-      play(rt, resolveIntent(intent, legalActionsOf(table)));
+      play(rt, action, { coached });
       return drive(rt, rt.epoch);
     },
     say: (text) => rt.talk.say(text),
@@ -306,13 +327,7 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
     setTells: (level) => rt.talk.setLevel(level),
     attachTalk: (client) => rt.talk.attach(client),
     pageHidden: () => rt.talk.pageHidden(),
-    setCoach(on) {
-      rt.coach.setOn(on);
-      const { phase, table } = rt.get();
-      if (on && phase === 'humanToAct' && table.hand !== null) {
-        rt.coach.ask(legalActionsOf(table), table.hand.pot);
-      }
-    },
+    setCoach: (on) => switchCoach(rt, on),
   };
 }
 

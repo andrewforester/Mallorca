@@ -75,7 +75,7 @@ describe('Coach', () => {
       ['waiting', 'thinking'],
       ['unavailable', 'not available'],
     ] as const) {
-      render(<Coach state={{ status, facts: null }} />);
+      render(<Coach state={{ status, facts: null, review: [], log: [] }} />);
       expect(screen.getByTestId('coach-status').textContent).toContain(text);
       cleanup();
     }
@@ -102,7 +102,7 @@ describe('Coach tab', () => {
   it('keeps the chosen tab across the player turns', () => {
     const { rerender } = render(<Coach state={readyCoach()} />);
     fireEvent.click(screen.getByTestId('coach-tab-numbers'));
-    rerender(<Coach state={{ status: 'idle', facts: null }} />);
+    rerender(<Coach state={{ status: 'idle', facts: null, review: [], log: [] }} />);
     rerender(<Coach state={readyCoach()} />);
     expect(screen.getByTestId('coach-tab-numbers').getAttribute('aria-selected')).toBe('true');
   });
@@ -134,5 +134,56 @@ describe('Coach insights', () => {
     expect(text).toContain('4%');
     expect(text).toContain('8%');
     expect(screen.getByTestId('coach-blockers').textContent).toContain('12%');
+  });
+});
+
+describe('Coach review and leaks', () => {
+  const moves = [
+    { label: 'fold' as const, amount: 0, tone: 'fold' as const },
+    { label: 'call' as const, amount: 10, tone: 'passive' as const },
+    { label: 'raise' as const, amount: 60, tone: 'small' as const },
+  ];
+  const decision = {
+    street: 'preflop' as const,
+    action: { kind: 'call' as const },
+    moves,
+    mine: [0.02, 0.18, 0.8],
+    approximate: false,
+    chosen: 1,
+    frequency: 0.18,
+    grade: 'rare' as const,
+    spot: 'open' as const,
+  };
+
+  it('reviews the hand between turns', () => {
+    render(<Coach state={{ status: 'idle', facts: null, review: [decision], log: [decision] }} />);
+    const text = screen.getByTestId('coach-review').textContent ?? '';
+    expect(text).toContain('Preflop');
+    expect(text).toContain('Call 10');
+    expect(text).toContain('Rare in the strategy');
+    expect(text).toContain('Raise to 60 80%');
+  });
+
+  it('leaves out shares that round to nothing', () => {
+    const tiny = { ...decision, mine: [0.004, 0.196, 0.8] };
+    render(<Coach state={{ status: 'idle', facts: null, review: [tiny], log: [] }} />);
+    expect(screen.getByTestId('coach-review').textContent).not.toContain('Fold 0%');
+  });
+
+  it('shows leaks once a spot has ten decisions', () => {
+    const log = Array.from({ length: 10 }, () => decision);
+    render(<Coach state={{ ...readyCoach(), log }} />);
+    fireEvent.click(screen.getByTestId('coach-tab-session'));
+    const text = screen.getByTestId('coach-leaks').textContent ?? '';
+    expect(text).toContain('Raise first in from the button');
+    expect(text).toContain('You 0%');
+    expect(text).toContain('strategy 80%');
+    expect(text).toContain('10 spots');
+  });
+
+  it('says how leaks appear before there are enough spots', () => {
+    render(<Coach state={{ ...readyCoach(), log: [decision] }} />);
+    fireEvent.click(screen.getByTestId('coach-tab-session'));
+    expect(screen.getByTestId('coach-leaks').textContent).toContain('10 spots of one kind');
   });
 });

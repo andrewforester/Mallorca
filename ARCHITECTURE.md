@@ -324,6 +324,15 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   shows, and leave the player ahead of more than half of the range; `nextCard` is their share of the unseen cards and `byRiver` the chance over two cards on the flop.
   `blockers` (`blockers.ts`) is the share of the range's `strong` and `twoPair` weight whose pairs hold a player's
   card. Composition and blockers are null without a range, all three before the flop.
+- Review (`review.ts`): `reviewDecision(hint, action, street, spot)` finds the hint's move of the player's action (a
+  raise goes to the nearest sized move, all-in included) and grades its frequency: `strategy` from 25 %, `rare` from
+  5 %, `off` below. `spotOf(events, seat)` (`spots.ts`) names the leak spot of a decision from the hand's events
+  before it: `open` (the button's first preflop action, no raise), `threeBet` (the big blind facing one raise),
+  `foldToThreeBet` (the opener facing one re-raise; a four-bet is no spot), `cbet` (the last preflop raiser on the flop with no bet yet), `foldToCbet`, `turnBet` and
+  `riverBet` (nothing to face) and `riverFold` (facing a river bet), or null. `leaks(decisions)` (`leaks.ts`) gives,
+  per spot in that order, the number of decisions, the player's share of the spot's kind (raises, or folds for the
+  three folding spots) and the strategy's mean share of moves of that kind; the panel shows a spot from `MIN_SPOTS`
+  (10) decisions.
 - `odds` (`odds.ts`) is null with nothing to call, else `requiredEquity = toCall / (pot + toCall)`,
   `mdf = (pot - toCall) / pot` and `bluffShare`, the bluff share the bet can hold, equal to `requiredEquity`.
 
@@ -382,11 +391,13 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   or `dispose`.
   Its `select` answers `math` without asking a client that has no `select`; when the client's `select` rejects or
   takes longer than 60 s, it falls back the same way and answers `math`.
-- Coach (`coach.ts`): `SessionOptions.coach` and `setCoach(on)` switch it; `SessionState.coach` is `{ status, facts }`
+- Coach (`coach.ts`): `SessionOptions.coach` and `setCoach(on)` switch it; `SessionState.coach` is `{ status, facts, review, log }`
   with status `off`, `idle` (on, nothing to show), `waiting`, `ready` or `unavailable`. At every `humanToAct`, and
   when it is switched on at the player's turn, the session sends every observation of the hand from the player's
   seat with the legal actions and the pot. A reply after the player acted, a new hand, `setCoach` or `dispose` is
-  dropped; facts clear when the player acts and when a hand starts. A rejection, or a client without `coach`, is
+  dropped; facts clear when the player acts and when a hand starts. When the player acts on ready facts with a
+  hint, the action becomes a `CoachDecision` in `review` (this hand, cleared when a hand starts) and `log` (the
+  session), and the recorder keeps it for the hand record. A rejection, or a client without `coach`, is
   `unavailable`.
 - `toViewModel(state, humanSeat)` returns the `ViewModel`: per seat the name, stack, street bet, button, whether
   it is to act, the cards (`'back'` for the bot's cards until a showdown), the last action tag and the closing
@@ -445,7 +456,8 @@ text)` (the caller's localized label) append the player's line at once and call 
   `playedAt` (ISO time), `names`, `humanSeat` (null for arena hands, where both seats are bots), `bot`
   (`{ id, version }`), `holeCards` of both seats and `board` as two-character strings, every engine `events` of
   the hand from `toppedUp` on, and `decisions` (`{ eventIndex, solverChoice, evByAction }`, a non-finite EV
-  stored as null since JSON has no infinity). `handRecord(events, decisions, meta)` is pure; the caller passes
+  stored as null since JSON has no infinity) and, when the player was coached, `coach`: each `CoachDecision` with the
+  `eventIndex` of the player's `acted` event. `handRecord(events, decisions, meta)` is pure; the caller passes
   the time in `meta.playedAt`.
 - `toPokerStars(records)` (`pokerstars.ts`) returns PokerStars hand history text, hands separated by two blank
   lines. The hand number is `Date.parse(playedAt) * 1000 + handNumber % 1000`. Seat `n + 1` is seat index `n`;
@@ -510,8 +522,10 @@ text)` (the caller's localized label) append the player's line at once and call 
   gets the sheet). `Coach` shows the hint line (shares of 0.5 % and more, a mixed-strategy line when
   two moves reach 10 %, an approximate line), then tabs: the strategy grid (each cell striped by its moves' shares,
   the player's cell outlined), the bot range grid (shaded by weight relative to the heaviest cell) or the math-bot
-  line with the composition (`coach-composition`) under it, and the numbers with the outs (`coach-outs`)
-  and the blockers (`coach-blockers`). Fold, passive and all-in have their own colour tokens; sized bets and raises are shaded
+  line with the composition (`coach-composition`) under it, the numbers with the outs (`coach-outs`)
+  and the blockers (`coach-blockers`), and the session leaks (`coach-tab-session`, `coach-leaks`). Outside the
+  player's turn the panel shows the hand's review (`coach-review`: street, action, grade and the strategy's top
+  shares) and the leaks. Fold, passive and all-in have their own colour tokens; sized bets and raises are shaded
   from `--color-coach-small` to `--color-coach-large` by size.
 - The hand log is a drawer grouped by street (`groupHand` of `game`), opened by the status bar toggle
   `hand-log-toggle` (`aria-expanded`). Opening moves focus to `hand-log-close`; closing, by the close button,
@@ -549,7 +563,7 @@ text)` (the caller's localized label) append the player's line at once and call 
   `preset-half`, `preset-pot`, `preset-allin`, `hand-log-toggle`, `sound-toggle`, `simple-table`, `auto-next`,
   `sound`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`, `coach-mode`, `start-coach`, `coach-toggle`,
   `coach-close`, `coach-scrim`, `coach-status`, `coach-hint`, `coach-tab-hint`, `coach-tab-range`, `coach-tab-numbers`,
-  `coach-strategy`, `coach-range`, `coach-numbers`, `coach-composition`, `coach-outs`, `coach-blockers`, `live-region`, `tournament-over`, `leave-tonight`,
+  `coach-strategy`, `coach-range`, `coach-numbers`, `coach-composition`, `coach-outs`, `coach-blockers`, `coach-tab-session`, `coach-review`, `coach-leaks`, `live-region`, `tournament-over`, `leave-tonight`,
   `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and `export-text` (the session
   dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu). Table talk adds
   `bubble-mallorca`, `bubble-player`, `talk-region`, `chat-panel`, `chat-open`, `chat-sheet`, `chat-close`,

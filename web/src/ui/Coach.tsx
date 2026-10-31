@@ -2,12 +2,13 @@ import { useState } from 'preact/hooks';
 import type { CoachFacts, CoachState, Hint } from '../game/index.ts';
 import { RangeGrid, StrategyGrid, moveColor } from './CoachGrid.tsx';
 import { BlockersView, CompositionView, OutsView } from './CoachInsights.tsx';
+import { HandReview, LeaksView } from './CoachReview.tsx';
 import { isMixed, moveText, percent, shares } from './coachPhrases.ts';
 import { t } from './i18n.ts';
 
-type Tab = 'hint' | 'range' | 'numbers';
+type Tab = 'hint' | 'range' | 'numbers' | 'session';
 
-const TABS: readonly Tab[] = ['hint', 'range', 'numbers'];
+const TABS: readonly Tab[] = ['hint', 'range', 'numbers', 'session'];
 
 function HintLine({ hint }: { hint: Hint | null }) {
   return (
@@ -116,11 +117,12 @@ function NumbersTab({ facts }: { facts: CoachFacts }) {
 
 interface FactsProps {
   facts: CoachFacts;
+  log: CoachState['log'];
   tab: Tab;
   setTab: (tab: Tab) => void;
 }
 
-function Facts({ facts, tab, setTab }: FactsProps) {
+function Facts({ facts, log, tab, setTab }: FactsProps) {
   return (
     <>
       <HintLine hint={facts.hint} />
@@ -143,6 +145,7 @@ function Facts({ facts, tab, setTab }: FactsProps) {
         {tab === 'hint' && <StrategyTab facts={facts} />}
         {tab === 'range' && <RangeTab facts={facts} />}
         {tab === 'numbers' && <NumbersTab facts={facts} />}
+        {tab === 'session' && <LeaksView log={log} />}
       </div>
     </>
   );
@@ -154,11 +157,15 @@ export function Coach({ state }: { state: CoachState }) {
   return (
     <section class="coach-panel glass" aria-label={t('coach.label')}>
       {state.status === 'ready' && state.facts !== null ? (
-        <Facts facts={state.facts} tab={tab} setTab={setTab} />
+        <Facts facts={state.facts} log={state.log} tab={tab} setTab={setTab} />
       ) : (
-        <p class="coach-status" data-testid="coach-status">
-          {t(`coach.${status === 'ready' ? 'idle' : status}`)}
-        </p>
+        <>
+          <p class="coach-status" data-testid="coach-status">
+            {t(`coach.${status === 'ready' ? 'idle' : status}`)}
+          </p>
+          {state.review.length > 0 && <HandReview review={state.review} />}
+          {state.log.length > 0 && <LeaksView log={state.log} />}
+        </>
       )}
     </section>
   );

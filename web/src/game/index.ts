@@ -15,7 +15,8 @@ export type {
   SessionState,
 } from './session.ts';
 export type { CoachFacts, CoachMove, Hint, MoveTone, SpotOdds } from '../coach/index.ts';
-export { CELLS, HAND_CLASSES, cellName } from '../coach/index.ts';
+export { CELLS, HAND_CLASSES, MIN_SPOTS, cellName, leaks } from '../coach/index.ts';
+export type { CoachDecision, Leak } from '../coach/index.ts';
 export type { Composition, HandClass, Outs } from '../coach/index.ts';
 export { createSession } from './session.ts';
 export type { LogEntry, SeatIndex, TableMode } from '../engine/index.ts';

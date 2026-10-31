@@ -74,3 +74,21 @@ test('on the flop the range tab shows what the bot range is made of', async ({ p
   await byId(page, 'coach-tab-numbers').click();
   await expect(byId(page, 'coach-numbers')).toBeVisible();
 });
+
+test('after a coached hand the coach reviews it', async ({ page }) => {
+  test.setTimeout(COACH_TIMEOUT_MS);
+  await page.goto(FAST_URL);
+  await byId(page, 'start-coach').check();
+  await byId(page, 'opponent-cfr').click();
+  await byId(page, 'start-cash').click();
+  const toggle = byId(page, 'coach-toggle');
+  while ((await waitForWaypoint(page)) === 'act') {
+    if (await toggle.isVisible()) await toggle.click();
+    await expect(byId(page, 'coach-hint')).toBeVisible({ timeout: COACH_TIMEOUT_MS });
+    if (await toggle.isVisible()) await page.keyboard.press('Escape');
+    await byId(page, 'passive').click();
+  }
+  if (await toggle.isVisible()) await toggle.click();
+  await expect(byId(page, 'coach-review')).toBeVisible();
+  await expect(byId(page, 'coach-review')).toContainText('Preflop');
+});
