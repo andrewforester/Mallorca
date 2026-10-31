@@ -205,3 +205,108 @@ fn unknown_handles_are_harmless() {
     hand_started(9999, 1, 400, 400, 10, 20);
     assert_eq!(decide(9999, 1, 0, 10, -1, -1, 0.5), KIND_NONE);
 }
+
+fn read(ptr: *const f32, len: usize) -> Vec<f32> {
+    assert!(!ptr.is_null());
+    unsafe { std::slice::from_raw_parts(ptr, len) }.to_vec()
+}
+
+fn core_bot(hole: [u8; 2]) -> (mallorca_core::bot::Model, Bot) {
+    let model = Model::new(play_strategy()).unwrap();
+    let mut bot = Bot::new();
+    bot.hand_started(&model, true, [400, 400], [10, 20]);
+    bot.hole_cards(hole);
+    (model, bot)
+}
+
+const OPEN: Legal = Legal {
+    fold: true,
+    check: false,
+    call: Some(10),
+    raise: Some((40, 400)),
+};
+
+#[test]
+fn range_of_a_fresh_hand_is_uniform() {
+    let bot = seated([48, 49]);
+    let range = read(bot_range(bot), 1326);
+    assert!(range.iter().all(|&w| w == 1.0));
+    bot_free(bot);
+}
+
+#[test]
+fn spot_layout_matches_the_core_spot() {
+    let (model, core) = core_bot([48, 49]);
+    let expected = core.spot(&model, &OPEN).unwrap();
+    let bot = seated([48, 49]);
+    let n = expected.moves.len();
+    let head = read(bot_spot(bot, 1, 0, 10, 40, 400), 2 + 2 * n);
+    assert_eq!(head[0], 0.0);
+    assert_eq!(head[1], n as f32);
+    for (k, mv) in expected.moves.iter().enumerate() {
+        let (kind, to) = match *mv {
+            Move::Fold => (KIND_FOLD, 0),
+            Move::Check => (KIND_CHECK, 0),
+            Move::Call => (KIND_CALL, 0),
+            Move::RaiseTo(to) => (KIND_RAISE, to),
+        };
+        assert_eq!(head[2 + 2 * k], kind as f32, "{mv:?}");
+        assert_eq!(head[3 + 2 * k], to as f32, "{mv:?}");
+    }
+    bot_free(bot);
+}
+
+#[test]
+fn grid_matches_the_core_grid() {
+    let (model, core) = core_bot([48, 49]);
+    let spot = core.spot(&model, &OPEN).unwrap();
+    let expected = core.strategy_grid(&model, &spot);
+    let bot = seated([48, 49]);
+    assert!(!bot_spot(bot, 1, 0, 10, 40, 400).is_null());
+    assert_eq!(read(bot_spot_grid(bot), expected.len()), expected);
+    bot_free(bot);
+}
+
+#[test]
+fn the_range_narrows_after_a_decision() {
+    let bot = seated([48, 49]);
+    let kind = decide(bot, 1, 0, 10, 40, 400, 0.99);
+    acted(bot, 1, kind, decided_to(bot), 0.5);
+    let range = read(bot_range(bot), 1326);
+    assert!(range.iter().any(|&w| w != 1.0));
+    bot_free(bot);
+}
+
+#[test]
+fn unknown_seat_gives_null() {
+    assert!(bot_range(9999).is_null());
+    assert!(bot_spot(9999, 1, 0, 10, 40, 400).is_null());
+    assert!(bot_spot_grid(9999).is_null());
+}
+
+#[test]
+fn freed_seat_gives_null() {
+    let bot = seated([48, 49]);
+    assert!(!bot_spot(bot, 1, 0, 10, 40, 400).is_null());
+    bot_free(bot);
+    assert!(bot_range(bot).is_null());
+    assert!(bot_spot(bot, 1, 0, 10, 40, 400).is_null());
+    assert!(bot_spot_grid(bot).is_null());
+}
+
+#[test]
+fn no_spot_gives_null_and_clears_the_grid() {
+    let bot = seated([48, 48]);
+    assert!(bot_spot(bot, 1, 0, 10, 40, 400).is_null());
+    assert!(bot_spot_grid(bot).is_null());
+    bot_free(bot);
+}
+
+#[test]
+fn the_grid_needs_a_fresh_spot_after_the_hand_moves() {
+    let bot = seated([48, 49]);
+    assert!(!bot_spot(bot, 1, 0, 10, 40, 400).is_null());
+    acted(bot, 1, KIND_CALL, 0, 0.5);
+    assert!(bot_spot_grid(bot).is_null());
+    bot_free(bot);
+}

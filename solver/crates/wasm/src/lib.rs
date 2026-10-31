@@ -1,4 +1,4 @@
-use mallorca_core::bot::{Bot, Legal, Model, Move};
+use mallorca_core::bot::{Bot, Legal, Model, Move, SpotView};
 use mallorca_core::cards::Card;
 use mallorca_core::strategy::{StrategyError, StrategyFile};
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -13,6 +13,10 @@ struct Seat {
     model: Arc<Model>,
     bot: Bot,
     to: u32,
+    range: Vec<f32>,
+    spot: Option<SpotView>,
+    head: Vec<f32>,
+    grid: Vec<f32>,
 }
 
 #[derive(Default)]
@@ -58,6 +62,26 @@ fn to_move(kind: u32, to: u32) -> Move {
     }
 }
 
+fn from_move(mv: Move) -> (u32, u32) {
+    match mv {
+        Move::Fold => (KIND_FOLD, 0),
+        Move::Check => (KIND_CHECK, 0),
+        Move::Call => (KIND_CALL, 0),
+        Move::RaiseTo(to) => (KIND_RAISE, to),
+    }
+}
+
+fn legal_of(fold: i32, check: i32, call: i32, raise_min: i32, raise_max: i32) -> Legal {
+    Legal {
+        fold: fold != 0,
+        check: check != 0,
+        call: u32::try_from(call).ok(),
+        raise: u32::try_from(raise_min)
+            .ok()
+            .zip(u32::try_from(raise_max).ok()),
+    }
+}
+
 fn card(c: u32) -> Card {
     Card::try_from(c).unwrap_or(Card::MAX)
 }
@@ -94,6 +118,10 @@ pub extern "C" fn bot_new(model: i32) -> i32 {
         model: Arc::clone(model),
         bot: Bot::new(),
         to: 0,
+        range: Vec::new(),
+        spot: None,
+        head: Vec::new(),
+        grid: Vec::new(),
     };
     r.bots.push(Some(seat));
     (r.bots.len() - 1) as i32
@@ -117,6 +145,7 @@ pub extern "C" fn hand_started(
     big_blind: u32,
 ) {
     with_seat(bot, (), |s| {
+        s.spot = None;
         s.bot.hand_started(
             &s.model,
             hero_button != 0,
@@ -128,19 +157,26 @@ pub extern "C" fn hand_started(
 
 #[no_mangle]
 pub extern "C" fn hole_cards(bot: i32, a: u32, b: u32) {
-    with_seat(bot, (), |s| s.bot.hole_cards([card(a), card(b)]));
+    with_seat(bot, (), |s| {
+        s.spot = None;
+        s.bot.hole_cards([card(a), card(b)]);
+    });
 }
 
 #[no_mangle]
 pub extern "C" fn street(bot: i32, count: u32, c0: u32, c1: u32, c2: u32, c3: u32, c4: u32) {
     let all = [c0, c1, c2, c3, c4].map(card);
     let board = &all[..(count as usize).clamp(3, 5)];
-    with_seat(bot, (), |s| s.bot.street(&s.model, board));
+    with_seat(bot, (), |s| {
+        s.spot = None;
+        s.bot.street(&s.model, board);
+    });
 }
 
 #[no_mangle]
 pub extern "C" fn acted(bot: i32, hero: i32, kind: u32, to: u32, draw: f64) {
     with_seat(bot, (), |s| {
+        s.spot = None;
         s.bot.acted(&s.model, hero != 0, to_move(kind, to), draw);
     });
 }
@@ -155,22 +191,10 @@ pub extern "C" fn decide(
     raise_max: i32,
     draw: f64,
 ) -> u32 {
-    let legal = Legal {
-        fold: fold != 0,
-        check: check != 0,
-        call: u32::try_from(call).ok(),
-        raise: u32::try_from(raise_min)
-            .ok()
-            .zip(u32::try_from(raise_max).ok()),
-    };
+    let legal = legal_of(fold, check, call, raise_min, raise_max);
     with_seat(bot, KIND_NONE, |s| {
-        let mv = s.bot.decide(&s.model, &legal, draw);
-        let (kind, to) = match mv {
-            Move::Fold => (KIND_FOLD, 0),
-            Move::Check => (KIND_CHECK, 0),
-            Move::Call => (KIND_CALL, 0),
-            Move::RaiseTo(to) => (KIND_RAISE, to),
-        };
+        s.spot = None;
+        let (kind, to) = from_move(s.bot.decide(&s.model, &legal, draw));
         s.to = to;
         kind
     })
@@ -179,6 +203,53 @@ pub extern "C" fn decide(
 #[no_mangle]
 pub extern "C" fn decided_to(bot: i32) -> u32 {
     with_seat(bot, 0, |s| s.to)
+}
+
+#[no_mangle]
+pub extern "C" fn bot_range(bot: i32) -> *const f32 {
+    with_seat(bot, std::ptr::null(), |s| {
+        s.range = s.bot.range(&s.model);
+        s.range.as_ptr()
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn bot_spot(
+    bot: i32,
+    fold: i32,
+    check: i32,
+    call: i32,
+    raise_min: i32,
+    raise_max: i32,
+) -> *const f32 {
+    let legal = legal_of(fold, check, call, raise_min, raise_max);
+    with_seat(bot, std::ptr::null(), |s| {
+        s.spot = s.bot.spot(&s.model, &legal);
+        s.grid.clear();
+        let Some(spot) = &s.spot else {
+            return std::ptr::null();
+        };
+        s.head.clear();
+        s.head.push(f32::from(u8::from(spot.approximate)));
+        s.head.push(spot.moves.len() as f32);
+        for &mv in &spot.moves {
+            let (kind, to) = from_move(mv);
+            s.head.push(kind as f32);
+            s.head.push(to as f32);
+        }
+        s.head.as_ptr()
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn bot_spot_grid(bot: i32) -> *const f32 {
+    with_seat(bot, std::ptr::null(), |s| {
+        let Some(spot) = &s.spot else {
+            return std::ptr::null();
+        };
+        s.grid = s.bot.strategy_grid(&s.model, spot);
+        s.grid.as_ptr()
+    })
 }
 
 #[cfg(test)]
