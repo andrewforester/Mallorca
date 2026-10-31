@@ -85,7 +85,7 @@ describe('handRecord', () => {
       solverChoice: 'passive',
       evByAction: { fold: 0, passive: 0, aggressive: 0 },
     };
-    const style = { aggression: 1.2, bluff: 0.9, tightness: 1 };
+    const style = { aggression: 1.2, bluff: 0.9, tightness: 1, sizing: 1, stickiness: 1 };
     expect(recordDecision(decision, 3, style).style).toEqual(style);
     expect('style' in recordDecision(decision, 3)).toBe(false);
   });

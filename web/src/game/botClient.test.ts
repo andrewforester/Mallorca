@@ -198,7 +198,7 @@ describe('workerBot', () => {
 
   it('sends the style with the decide request', async () => {
     const bot = workerBot();
-    const style = { aggression: 1.1, bluff: 1, tightness: 0.9 };
+    const style = { aggression: 1.1, bluff: 1, tightness: 0.9, sizing: 1, stickiness: 1 };
     const pending = bot.decide(legal, style);
     await settle();
     const sent = currentWorker().sent.at(-1);
@@ -211,7 +211,7 @@ describe('workerBot', () => {
     vi.useFakeTimers();
     const bot = workerBot();
     bot.observe(hand);
-    const style = { aggression: 1.3, bluff: 1.2, tightness: 0.8 };
+    const style = { aggression: 1.3, bluff: 1.2, tightness: 0.8, sizing: 1.1, stickiness: 1.2 };
     const pending = bot.decide(legal, style);
     const settled = expect(pending).resolves.toMatchObject({ action: expect.any(Object) });
     await vi.advanceTimersByTimeAsync(BOT_TIMEOUT_MS);

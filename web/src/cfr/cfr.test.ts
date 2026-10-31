@@ -130,7 +130,7 @@ describe('CfrBrain', () => {
       let count = 0;
       for (let seed = 0; seed < 500; seed++) {
         const brain = createCfrBrain(model, mulberry32(seed));
-        brain.setStyle?.({ aggression, bluff: 1, tightness: 1 });
+        brain.setStyle?.({ aggression, bluff: 1, tightness: 1, sizing: 1, stickiness: 1 });
         brain.observe({
           type: 'handStarted',
           handNumber: 1,

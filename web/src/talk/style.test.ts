@@ -9,7 +9,13 @@ const axis = fc.double({ min: -1, max: 1, noNaN: true });
 describe('styleOf', () => {
   it('is exactly neutral when calm', () => {
     expect(styleOf(CALM)).toEqual(NEUTRAL_STYLE);
-    expect(NEUTRAL_STYLE).toEqual({ aggression: 1, bluff: 1, tightness: 1 });
+    expect(NEUTRAL_STYLE).toEqual({
+      aggression: 1,
+      bluff: 1,
+      tightness: 1,
+      sizing: 1,
+      stickiness: 1,
+    });
   });
 
   it('follows the formulas inside the clamps', () => {
@@ -25,12 +31,22 @@ describe('styleOf', () => {
       aggression: 1.6,
       bluff: 1.8,
       tightness: 1.2,
+      sizing: 1,
+      stickiness: 1 / 1.2,
     });
     expect(styleOf({ cheer: 1, confidence: -1, tilt: -1, caution: -1, form: -1 })).toEqual({
       aggression: 0.8,
       bluff: 0.8,
       tightness: 0.85,
+      sizing: 1,
+      stickiness: 1 / 0.85,
     });
+  });
+
+  it('keeps folds after the flop as before: stickiness undoes tightness there', () => {
+    const style = styleOf({ cheer: -0.4, confidence: 0, tilt: 0, caution: 0.6, form: 0 });
+    expect(style.stickiness * style.tightness).toBeCloseTo(1, 12);
+    expect(style.sizing).toBe(1);
   });
 
   it('stays inside the clamps for any mood', () => {

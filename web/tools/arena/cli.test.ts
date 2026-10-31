@@ -131,7 +131,7 @@ describe('default output', () => {
     expect(report.styleStats.pfr).toBe(0);
     expect(report.styleStats.betFrequency).toBe(0);
     expect(r.stdout.split('\n')[1]).toMatch(
-      /^always-call style: vpip 100\.0% pfr 0\.0% af \d+\.\d\d bet 0\.0% fold to bet \d+\.\d% raise \d+\.\d% over 8 hands, \d+ decisions after the flop, \d+ facing a bet$/,
+      /^always-call style: vpip 100\.0% pfr 0\.0% af \d+\.\d\d bet 0\.0% fold to bet \d+\.\d% raise \d+\.\d% bet size 0\.00 pot, preflop raise 0\.00 pot over 8 hands, \d+ decisions after the flop, \d+ facing a bet$/,
     );
   });
 

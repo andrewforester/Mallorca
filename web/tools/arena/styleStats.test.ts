@@ -33,6 +33,8 @@ describe('styleStats', () => {
       raiseFrequency: 0,
       postflopDecisions: 2,
       facedBets: 1,
+      betSize: 60 / 120,
+      preflopRaiseSize: 50 / 30,
     });
   });
 
@@ -47,6 +49,8 @@ describe('styleStats', () => {
       raiseFrequency: 1,
       postflopDecisions: 2,
       facedBets: 1,
+      betSize: 180 / 180,
+      preflopRaiseSize: 0,
     });
   });
 

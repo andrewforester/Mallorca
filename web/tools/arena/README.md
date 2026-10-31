@@ -6,7 +6,7 @@ Duplicate matches between two bots, reported in bb/100 with a 95% confidence int
 npm run arena -- --a math --b always-call --pairs 2000
 ```
 
-Flags: `--a`, `--b` (`math`, `cfr`, `cfr:<play file>`, `cfr-tilted`, `cfr-confident`, `cfr-cautious`, `cfr-talk-obvious`, `cfr-talk-subtle`, `cfr-talk-hidden`, `reader`, `tilt-exploiter`, `always-call`, `always-raise`, `min-bettor`, `random`), `--pairs` (1000), `--seed` (1), `--workers` (available cores), `--dir <path>` (results directory), `--out <file>` (JSON report), `--save-hands <file>` (JSONL hand records), `--no-hands`, `--stats` (adds `styleStats` of bot A to the report and prints it).
+Flags: `--a`, `--b` (`math`, `cfr`, `cfr:<play file>`, a cfr bot with a style after `@` such as `cfr:src/cfr/v2.mlcs.gz@sizing=1.5,stickiness=1.4` (axes `aggression`, `bluff`, `tightness`, `sizing`, `stickiness`, the rest 1; labelled `cfr-v2-sizing1.5-stickiness1.4`), `cfr-tilted`, `cfr-confident`, `cfr-cautious`, `cfr-talk-obvious`, `cfr-talk-subtle`, `cfr-talk-hidden`, `reader`, `tilt-exploiter`, `always-call`, `always-raise`, `min-bettor`, `random`), `--pairs` (1000), `--seed` (1), `--workers` (available cores), `--dir <path>` (results directory), `--out <file>` (JSON report), `--save-hands <file>` (JSONL hand records), `--no-hands`, `--stats` (adds `styleStats` of bot A to the report and prints it).
 
 Every run is saved. The report goes to `<dir>/<a>-<b>-<pairs>-s<seed>-<YYYYMMDD-HHMMSS>.json` and the hands next to
 it as `.jsonl`, unless `--out` or `--save-hands` name other paths; `--no-hands` skips the hands. The default
@@ -133,7 +133,9 @@ speech changes nothing for a bot that does not listen, so the two runs play the 
 
 `--stats` counts, for bot A over all its hands: `vpip` and `pfr` (hands with a call or raise, and with a raise,
 before the flop), and after the flop `aggressionFactor` (bets and raises over calls), `betFrequency` (bets and
-raises over decisions), `foldToBet` and `raiseFrequency` (folds and raises over decisions facing a bet or raise).
+raises over decisions), `foldToBet` and `raiseFrequency` (folds and raises over decisions facing a bet or raise),
+`betSize` (the mean of chips put in by a bet or raise after the flop over the pot before it) and `preflopRaiseSize`
+(the same for raises before the flop).
 These runs were made at commit `9c94cc8`; those at the second corner also had the clamp change of the next commit.
 Noticeable means: `betFrequency` or `raiseFrequency` of `cfr-tilted` differs from `cfr` by at least 5 percentage
 points, and the gain of `tilt-exploiter` on `cfr-tilted` over its result on `cfr` is larger than the paired 95%
