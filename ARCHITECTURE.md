@@ -59,7 +59,8 @@ web/src/
 | `game`   | `cards`, `equity`, `engine`, `brains`, `cfr` |
 | `ui`     | `game`                                       |
 
-`brains` takes only types from `engine`: `Action`, `LegalActions` and the events it turns into observations.
+`brains` takes only types from `engine`: `Action`, `LegalActions`, the events it turns into observations and
+`BoardSize`, which pins its board sizes to the engine's.
 `ui` imports only from `game`; for the table, `game` re-exports `Card`, `formatCard`, `rankOf`, `suitOf`,
 `SeatIndex`, `LogEntry`, `HandCategory`, `TableMode`, `CASH` and `TOURNAMENT`, for the opponent choice `Opponent`
 and `opponentsFor`, and for the history `HandRecord`, `HandStore`, `openHandStore`, `memoryStore` and
@@ -127,6 +128,9 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
   seat after the button: `deck[0]` and `deck[2]` go to the big blind seat, `deck[1]` and `deck[3]` to the button.
   The board follows in order with no burn cards: flop `deck[4..6]`, turn `deck[7]`, river `deck[8]`. `Hand.deck`
   holds the undealt cards.
+- `Street` (`types.ts`) is the one list of street names; `BettingStreet` drops `showdown` and `complete`,
+  `DealtStreet` also drops `preflop`, and every other street type in `src` and `tools/` derives from them.
+  `BOARD_SIZE` (`streets.ts`) is the board length per betting street, and its type `BoardSize` is exported.
 - `Hand.bets` is the street bet per seat, `committed` the total per seat for the hand, `pot` is the sum of
   `committed`. `canRaise` is false for a seat that faces a short all-in raise.
 - `seats` stacks are the chips behind. `LegalActions` is `{ fold, check, call, raise }`: `call` is the amount the

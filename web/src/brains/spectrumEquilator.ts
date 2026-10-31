@@ -1,11 +1,12 @@
 import type { Card } from '../cards/index.ts';
 import { fullDeck } from '../cards/index.ts';
+import type { BoardSize } from '../engine/index.ts';
 import { pheEvaluator } from '../equity/index.ts';
 import { holeCardsHash } from './javaCard.ts';
 import type { HoleCards, Spectrum } from './spectrum.ts';
 
-const FLOP_SIZE = 3;
-const TURN_SIZE = 4;
+const FLOP_SIZE: BoardSize['flop'] = 3;
+const TURN_SIZE: BoardSize['turn'] = 4;
 
 interface Outcomes {
   wins: number;

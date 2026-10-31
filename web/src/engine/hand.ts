@@ -1,6 +1,7 @@
 import type { Card } from '../cards/index.ts';
 import { isLegal, legalActions, otherSeat } from './legal.ts';
 import { awardShowdown, evaluateShowdown } from './showdown.ts';
+import { BOARD_SIZE } from './streets.ts';
 import type { Action, EngineEvent, Hand, Seat, SeatIndex, Step } from './types.ts';
 
 export class IllegalActionError extends Error {
@@ -24,8 +25,11 @@ interface Payout {
   refund: Stacks;
 }
 
-const STREET_BY_BOARD_SIZE = { 0: 'flop', 3: 'turn', 4: 'river' } as const;
-const CARDS_BY_STREET = { flop: 3, turn: 1, river: 1 } as const;
+const STREET_BY_BOARD_SIZE = {
+  [BOARD_SIZE.preflop]: 'flop',
+  [BOARD_SIZE.flop]: 'turn',
+  [BOARD_SIZE.turn]: 'river',
+} as const;
 
 function pair<T>(first: T, second: T): [T, T] {
   return [first, second];
@@ -133,8 +137,8 @@ function settle(table: Table, last: SeatIndex): Step {
 }
 
 function dealStreet(hand: Hand, events: EngineEvent[], pot: number): Hand {
-  const street = STREET_BY_BOARD_SIZE[hand.board.length as 0 | 3 | 4];
-  const count = CARDS_BY_STREET[street];
+  const street = STREET_BY_BOARD_SIZE[hand.board.length as keyof typeof STREET_BY_BOARD_SIZE];
+  const count = BOARD_SIZE[street] - hand.board.length;
   const cards = hand.deck.slice(0, count);
   const board = [...hand.board, ...cards];
   events.push({ type: 'streetDealt', street, cards, board, pot });
@@ -174,7 +178,7 @@ function showdown(table: Table): Step {
   }
   const pot = committed[0] + committed[1];
   let current: Hand = hand;
-  while (current.board.length < 5) {
+  while (current.board.length < BOARD_SIZE.river) {
     current = dealStreet(current, events, pot);
   }
   const hands = evaluateShowdown(current.holeCards, current.board);

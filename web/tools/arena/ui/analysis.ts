@@ -1,10 +1,9 @@
-import type { EngineEvent } from '../../../src/engine/index.ts';
+import type { BettingStreet, EngineEvent } from '../../../src/engine/index.ts';
 import type { HandRecord } from '../../../src/game/records/record.ts';
 
 export type Position = 'button' | 'bigBlind';
-export type EndStreet = 'preflop' | 'flop' | 'turn' | 'river';
 
-export const STREETS: EndStreet[] = ['preflop', 'flop', 'turn', 'river'];
+export const STREETS: BettingStreet[] = ['preflop', 'flop', 'turn', 'river'];
 
 export interface HandSummary {
   line: number;
@@ -13,7 +12,7 @@ export interface HandSummary {
   aSeat: 0 | 1;
   position: Position;
   aNet: number;
-  street: EndStreet;
+  street: BettingStreet;
   showdown: boolean;
   pot: number;
   bigBlind: number;
@@ -34,7 +33,7 @@ export interface Slices {
 
 export interface HandFilter {
   position?: Position;
-  street?: EndStreet;
+  street?: BettingStreet;
   showdown?: boolean;
 }
 
@@ -46,9 +45,9 @@ export interface PairRow {
   matches: [boolean, boolean];
 }
 
-function lastActionStreet(events: EngineEvent[]): EndStreet {
-  let current: EndStreet = 'preflop';
-  let acted: EndStreet = 'preflop';
+function lastActionStreet(events: EngineEvent[]): BettingStreet {
+  let current: BettingStreet = 'preflop';
+  let acted: BettingStreet = 'preflop';
   for (const event of events) {
     if (event.type === 'streetDealt') current = event.street;
     else if (event.type === 'acted') acted = current;
