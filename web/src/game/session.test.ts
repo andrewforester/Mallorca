@@ -35,6 +35,17 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+function callsThenFolds(): BotClient {
+  let decisions = 0;
+  return scriptedBot((legal) => {
+    decisions += 1;
+    if (decisions === 1 || !legal.fold) {
+      return legal.check ? { kind: 'check' } : { kind: 'call' };
+    }
+    return { kind: 'fold' };
+  });
+}
+
 describe('session', () => {
   it('starts idle', () => {
     const session = open(inProcessBot());
@@ -70,7 +81,7 @@ describe('session', () => {
   });
 
   it('clamps a raise below the minimum to the minimum', async () => {
-    const session = open(callingBot());
+    const session = open(callsThenFolds());
     await session.getState().start();
     const legal = legalActionsOf(session.getState().table);
     await session.getState().act({ kind: 'raise', to: 1 });
@@ -81,7 +92,7 @@ describe('session', () => {
   });
 
   it('rounds a fractional raise and clamps it to the maximum', async () => {
-    const first = open(callingBot());
+    const first = open(callsThenFolds());
     await first.getState().start();
     const legal = legalActionsOf(first.getState().table);
     const target = (legal.raise?.min ?? 0) + 10.6;
@@ -91,17 +102,66 @@ describe('session', () => {
       params: { amount: Math.round(target) },
     });
 
-    const second = open(callingBot());
+    const second = open(callsThenFolds());
     await second.getState().start();
     await second.getState().act({ kind: 'raise', to: 999999 });
     expect(second.getState().lastActions[1]).toEqual({ key: 'allIn', params: {} });
+  });
+
+  it('clears the last actions when a street is dealt', async () => {
+    const session = open(callingBot());
+    await session.getState().start();
+    expect(session.getState().lastActions[0]).not.toBeNull();
+    await session.getState().act({ kind: 'passive' });
+    expect(session.getState().table.hand?.street).toBe('flop');
+    expect(session.getState().lastActions).toEqual([null, null]);
+  });
+
+  it('keeps the actions that closed a street when the next one is dealt', async () => {
+    const session = open(callingBot());
+    await session.getState().start();
+    await session.getState().act({ kind: 'passive' });
+    expect(session.getState().table.hand?.street).toBe('flop');
+    await session.getState().act({ kind: 'raise', to: 80 });
+    const state = session.getState();
+    expect(state.table.hand?.street).toBe('turn');
+    expect(state.lastActions).toEqual([null, null]);
+    expect(state.closingActions).toEqual([
+      { key: 'call', params: { amount: 80 } },
+      { key: 'bet', params: { amount: 80 } },
+    ]);
+  });
+
+  it('forgets the closing actions when a new hand starts', async () => {
+    const session = open(callsThenFolds());
+    await session.getState().start();
+    await session.getState().act({ kind: 'passive' });
+    expect(session.getState().closingActions[0]).not.toBeNull();
+    await session.getState().act({ kind: 'raise', to: 40 });
+    expect(session.getState().phase).toBe('handOver');
+    await session.getState().nextHand();
+    expect(session.getState().closingActions).toEqual([null, null]);
+  });
+
+  it('labels a raise that opens the flop as a bet', async () => {
+    const session = open(callsThenFolds());
+    await session.getState().start();
+    await session.getState().act({ kind: 'passive' });
+    expect(session.getState().table.hand?.street).toBe('flop');
+    await session.getState().act({ kind: 'raise', to: 40 });
+    const state = session.getState();
+    expect(state.lastActions[1]).toEqual({ key: 'bet', params: { amount: 40 } });
+    expect(state.log.find((entry) => entry.key === 'bet')).toEqual({
+      key: 'bet',
+      params: { seat: 1, amount: 40 },
+    });
   });
 
   it('turns a fold into a check when checking is free', async () => {
     const session = open(callingBot());
     await session.getState().start();
     await session.getState().act({ kind: 'fold' });
-    expect(session.getState().lastActions[1]).toEqual({ key: 'check', params: {} });
+    expect(session.getState().log).toContainEqual({ key: 'check', params: { seat: 1 } });
     expect(session.getState().table.hand?.street).toBe('flop');
   });
 
@@ -584,6 +644,25 @@ describe('session opponent', () => {
     await session.getState().act({ kind: 'fold' });
     const records = await store.list();
     expect(records[0]?.bot).toEqual({ id: 'cfr', version: 'v1-18' });
+  });
+
+  it('records the v2 blueprint as its own bot version', async () => {
+    const { bot } = selecting((o) => Promise.resolve(o));
+    const store = memoryStore();
+    const session = createSession({
+      bot,
+      seed: 7,
+      botDelayMs: 0,
+      humanSeat: 1,
+      names: ['Mallorca', 'You'],
+      mode: CASH,
+      records: { store, sessionId: 's1', now: () => '2026-10-24T18:00:00.000Z' },
+    });
+    await session.getState().start(CASH, 'cfr-v2');
+    expect(session.getState().opponent).toBe('cfr-v2');
+    await session.getState().act({ kind: 'fold' });
+    const records = await store.list();
+    expect(records[0]?.bot).toEqual({ id: 'cfr', version: 'v2-10' });
   });
 
   it('shows the math bot when the chosen opponent could not load', async () => {

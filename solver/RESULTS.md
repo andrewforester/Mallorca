@@ -16,6 +16,9 @@ at a time (see "How to improve").
 | 2026-10-24 | v1 ckpt 18 | b93c4ff8 | 2000 | 29,469,934,361 | 9 | 18.08 | +1001 ± 34 (1M hands) | +190.1 ± 4.0 | +114.6 ± 8.0 | +143.5 ± 7.1 | 0.93 MB |
 | 2026-10-24 | v1 ckpt 18 | b93c4ff8 | 2500 | 29,469,934,361 | 9 | 18.08 | +988 ± 82 (200k hands) | +201.4 ± 4.6 | +176.8 ± 10.0 | +208.9 ± 8.6 | 0.93 MB |
 | 2026-10-24 | v1 ckpt 18 | b93c4ff8 | 3000 | 29,469,934,361 | 9 | 18.08 | +1170 ± 89 (200k hands) | +212.7 ± 5.2 | +238.9 ± 12.0 | +274.4 ± 10.2 | 0.93 MB |
+| 2026-10-31 | v2 ckpt 4 | 1bee68fc | 2000 | 1,479,135,769 | 2 | 581.88 | +665 ± 82 (200k hands) |  |  |  |  |
+| 2026-10-31 | v2 ckpt 8 | 1bee68fc | 2000 | 2,908,585,385 | 4 | 410.40 | +647 ± 83 (200k hands) |  |  |  |  |
+| 2026-10-31 | v2 ckpt 10 | 1bee68fc | 2000 | 3,305,238,419 | 4.6 | 384.04 | +713 ± 37 (1M hands) | +222.8 ± 5.0 | +129.4 ± 8.3 | +191.0 ± 7.7 | 2.31 MB |
 
 ## First run (v1, 2026-10-24)
 
@@ -31,6 +34,36 @@ at a time (see "How to improve").
 - The browser file (preflop and flop) is 2.16 MB raw, 0.93 MB gzipped.
 - Next run: lever 2 (256 buckets) or lever 3 (better buckets), measured against the 1M-hand figure of checkpoint
   18.
+
+## Second run (v2, 2026-10-31)
+
+- Code at 9bb2312, preset `v2` (256 buckets per street, potential-aware buckets, the new preflop and postflop sizes),
+  M3 Pro on 6 of 12 threads at normal priority, so the fans stay low. Buckets took 11 minutes on 6 threads.
+- About 0.2M iterations per second, 4.6 hours, 3.3e9 iterations: 9 times fewer than the `v1` night on a tree with
+  12 times as many action slots (65.8M). The average positive regret is not comparable with `v1`: it falls from
+  1135 at checkpoint 1 to 384 at checkpoint 10.
+- LBR is +713 ± 37 mbb/hand over 1M hands, against +1001 ± 34 for `v1` ckpt 18: about 29% lower with fewer
+  iterations. Checkpoints 4 and 8 (+665 and +647 over the same 200k hands) are inside each other's intervals, so
+  LBR is flat after 2 hours, as in `v1`. A second night on `v2` is not expected to move it much; the next lever is
+  the abstraction or the bet sizes again (levers 3 and 5).
+- `match` beats every baseline by more than `v1` does: +222.8 against call (`v1` +190.1), +129.4 against raise
+  (+114.6), +191.0 against random (+143.5).
+- The browser file (preflop and flop) is 6.91 MB raw, 2.31 MB gzipped. The play file is 72.0 MB raw, 51.2 MB
+  gzipped, 40.8 MB with brotli at quality 11 and 41.1 MB with `xz -9e`; `v1` was 7.37 MB raw and 3.61 MB gzipped.
+
+### Arena (2026-10-31)
+
+The play file of checkpoint 10 in the web arena (`cfr:<play file>`), 100 bb, blinds 10/20, duplicate pairs:
+
+| a | b | hands | seed | bb/100 (95% interval) |
+| --- | --- | --- | --- | --- |
+| v2 ckpt 10 | v1 ckpt 18 (`cfr`) | 400,000 | 2 | +10.3 ± 3.2 |
+| v2 ckpt 10 | v1 ckpt 18 (`cfr`) | 40,000 | 1 | +12.7 ± 10.0 |
+| v2 ckpt 10 | math | 40,000 | 1 | +33.1 ± 10.2 |
+
+- `v2` beats `v1` head to head with the interval above zero.
+- Against the math bot `v2` wins as much as `v1` (+32.8 ± 9.2 on the same seed): the lower LBR does not show
+  against this opponent.
 
 ## Arena against the math bot (2026-10-24)
 

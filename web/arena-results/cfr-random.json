@@ -1,0 +1,13 @@
+{
+  "a": "cfr",
+  "b": "random",
+  "pairs": 5000,
+  "hands": 10000,
+  "seed": 3,
+  "bbPer100": 57.2165,
+  "ci95": 23.22569048557449,
+  "durationMs": 883,
+  "commit": "179bd56",
+  "finishedAt": "2026-10-24T14:41:03.871Z",
+  "handsFile": null
+}

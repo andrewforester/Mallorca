@@ -1,0 +1,13 @@
+{
+  "a": "cfr",
+  "b": "always-raise",
+  "pairs": 5000,
+  "hands": 10000,
+  "seed": 3,
+  "bbPer100": 250.654,
+  "ci95": 48.854634691175974,
+  "durationMs": 836,
+  "commit": "179bd56",
+  "finishedAt": "2026-10-24T14:41:02.906Z",
+  "handsFile": null
+}

@@ -1,13 +1,65 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Sizes(pub Vec<f64>);
+
+impl Sizes {
+    pub fn values(&self) -> &[f64] {
+        &self.0
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum SizesRepr {
+    One(f64),
+    Many(Vec<f64>),
+}
+
+impl<'de> Deserialize<'de> for Sizes {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        Ok(match SizesRepr::deserialize(deserializer)? {
+            SizesRepr::One(x) => Sizes(vec![x]),
+            SizesRepr::Many(xs) => Sizes(xs),
+        })
+    }
+}
+
+impl Serialize for Sizes {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self.0.as_slice() {
+            [x] => serializer.serialize_f64(*x),
+            xs => xs.serialize(serializer),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Bucketing {
+    #[default]
+    Hs2,
+    Potential,
+}
+
+impl Bucketing {
+    fn is_hs2(&self) -> bool {
+        *self == Bucketing::Hs2
+    }
+}
+
+fn is_false(b: &bool) -> bool {
+    !*b
+}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PreflopSizes {
-    pub open_bb: f64,
-    pub iso_vs_limp_bb: f64,
-    pub three_bet_x: f64,
-    pub four_bet_x: f64,
+    pub open_bb: Sizes,
+    pub iso_vs_limp_bb: Sizes,
+    pub three_bet_x: Sizes,
+    pub four_bet_x: Sizes,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -17,6 +69,8 @@ pub struct PostflopSizes {
     pub first_raise_pot: Vec<f64>,
     pub max_aggressive: u8,
     pub all_in_threshold: f64,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub min_raise: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -36,6 +90,8 @@ pub struct Preset {
     pub big_blind: u32,
     pub stack: u32,
     pub buckets: [u16; 3],
+    #[serde(default, skip_serializing_if = "Bucketing::is_hs2")]
+    pub bucketing: Bucketing,
     pub memory_limit_gb: f64,
     pub threads: usize,
     pub checkpoint_minutes: u64,
@@ -50,6 +106,8 @@ struct AbstractionIdentity<'a> {
     big_blind: u32,
     stack: u32,
     buckets: [u16; 3],
+    #[serde(skip_serializing_if = "Bucketing::is_hs2")]
+    bucketing: Bucketing,
     preflop: &'a PreflopSizes,
     postflop: &'a PostflopSizes,
 }
@@ -88,6 +146,7 @@ impl Preset {
             big_blind: self.big_blind,
             stack: self.stack,
             buckets: self.buckets,
+            bucketing: self.bucketing,
             preflop: &self.preflop,
             postflop: &self.postflop,
         };
@@ -110,8 +169,18 @@ impl Preset {
             return invalid("bucket counts must be in 1..=256, the range of the u8 bucket tables");
         }
         let pf = &self.preflop;
-        if [pf.open_bb, pf.iso_vs_limp_bb, pf.three_bet_x, pf.four_bet_x]
+        let lists = [
+            &pf.open_bb,
+            &pf.iso_vs_limp_bb,
+            &pf.three_bet_x,
+            &pf.four_bet_x,
+        ];
+        if lists.iter().any(|l| l.values().is_empty()) {
+            return invalid("preflop size lists must not be empty");
+        }
+        if lists
             .iter()
+            .flat_map(|l| l.values())
             .any(|&x| !x.is_finite() || x <= 1.0)
         {
             return invalid("preflop sizes must be greater than 1");
@@ -161,10 +230,10 @@ mod tests {
         assert_eq!(
             p.preflop,
             PreflopSizes {
-                open_bb: 2.5,
-                iso_vs_limp_bb: 3.5,
-                three_bet_x: 3.0,
-                four_bet_x: 2.2
+                open_bb: Sizes(vec![2.5]),
+                iso_vs_limp_bb: Sizes(vec![3.5]),
+                three_bet_x: Sizes(vec![3.0]),
+                four_bet_x: Sizes(vec![2.2])
             }
         );
         assert_eq!(p.postflop.first_bet_pot, vec![0.5, 0.75, 1.0, 1.5, 2.0]);
@@ -262,5 +331,83 @@ mod tests {
         let reformatted = V1.replace(" = ", "=").replace("2.0]", "2.00]");
         let q = Preset::from_toml(&reformatted).unwrap();
         assert_eq!(p.canonical_toml(), q.canonical_toml());
+    }
+
+    #[test]
+    fn v1_abstraction_toml_is_pinned() {
+        let p = Preset::from_toml(V1).unwrap();
+        assert_eq!(
+            p.abstraction_toml(),
+            "small_blind = 10\nbig_blind = 20\nstack = 2000\nbuckets = [128, 128, 128]\n\n[preflop]\nopen_bb = 2.5\niso_vs_limp_bb = 3.5\nthree_bet_x = 3.0\nfour_bet_x = 2.2\n\n[postflop]\nfirst_bet_pot = [0.5, 0.75, 1.0, 1.5, 2.0]\nfirst_raise_pot = [1.0]\nmax_aggressive = 3\nall_in_threshold = 0.6667\n"
+        );
+    }
+
+    #[test]
+    fn preflop_lists_parse() {
+        let s = V1.replace("open_bb = 2.5", "open_bb = [2.0, 3.0, 4.0]");
+        let p = Preset::from_toml(&s).unwrap();
+        assert_eq!(p.preflop.open_bb.values(), [2.0, 3.0, 4.0]);
+    }
+
+    #[test]
+    fn scalar_size_is_a_list_of_one() {
+        let p = Preset::from_toml(V1).unwrap();
+        assert_eq!(p.preflop.open_bb.values(), [2.5]);
+    }
+
+    #[test]
+    fn empty_or_small_preflop_list_is_rejected() {
+        for to in ["open_bb = []", "open_bb = [1.0]", "open_bb = [2.0, 1.0]"] {
+            let s = V1.replace("open_bb = 2.5", to);
+            assert!(
+                matches!(Preset::from_toml(&s), Err(PresetError::Invalid(_))),
+                "{to}"
+            );
+        }
+    }
+
+    #[test]
+    fn list_of_one_round_trips_as_scalar() {
+        let p = Preset::from_toml(V1).unwrap();
+        assert!(p.canonical_toml().contains("open_bb = 2.5\n"));
+        let s = V1.replace("open_bb = 2.5", "open_bb = [2.0, 3.0]");
+        let q = Preset::from_toml(&s).unwrap();
+        assert!(q.canonical_toml().contains("open_bb = [2.0, 3.0]"));
+        assert_eq!(Preset::from_toml(&q.canonical_toml()).unwrap(), q);
+    }
+
+    #[test]
+    fn min_raise_defaults_to_false_and_parses() {
+        let p = Preset::from_toml(V1).unwrap();
+        assert!(!p.postflop.min_raise);
+        let s = V1.replace(
+            "all_in_threshold = 0.6667",
+            "all_in_threshold = 0.6667\nmin_raise = true",
+        );
+        let q = Preset::from_toml(&s).unwrap();
+        assert!(q.postflop.min_raise);
+        assert!(q.abstraction_toml().contains("min_raise = true"));
+        assert!(!p.abstraction_toml().contains("min_raise"));
+    }
+
+    #[test]
+    fn bucketing_defaults_to_hs2_and_parses_potential() {
+        let p = Preset::from_toml(V1).unwrap();
+        assert_eq!(p.bucketing, Bucketing::Hs2);
+        let s = V1.replace("threads = 12", "threads = 12\nbucketing = \"potential\"");
+        let q = Preset::from_toml(&s).unwrap();
+        assert_eq!(q.bucketing, Bucketing::Potential);
+    }
+
+    #[test]
+    fn bucketing_changes_the_abstraction_toml() {
+        let hs2 = Preset::from_toml(V1).unwrap();
+        let s = V1.replace("threads = 12", "threads = 12\nbucketing = \"potential\"");
+        let potential = Preset::from_toml(&s).unwrap();
+        assert_ne!(hs2.abstraction_toml(), potential.abstraction_toml());
+        assert!(!hs2.abstraction_toml().contains("bucketing"));
+        assert!(potential
+            .abstraction_toml()
+            .contains("bucketing = \"potential\""));
     }
 }

@@ -2,6 +2,7 @@ import { render } from 'preact';
 import { createSession, openHandStore, TOURNAMENT, workerBot } from './game/index.ts';
 import type { Session } from './game/index.ts';
 import { App } from './ui/App.tsx';
+import { createSynthPlayer } from './ui/sound/player.ts';
 import { t } from './ui/i18n.ts';
 import '@fontsource/cormorant-garamond/latin-500.css';
 import '@fontsource/cormorant-garamond/latin-600.css';
@@ -31,6 +32,7 @@ function randomSeed(): number {
 
 const botDelay = numberParam('botDelay') ?? DEFAULT_BOT_DELAY;
 const autoNext = params.get('autoNext') !== 'off';
+const player = createSynthPlayer();
 let nextSeed: number | null = numberParam('seed');
 let session: Session | null = null;
 const store = await openHandStore();
@@ -64,6 +66,7 @@ function mount(farewell = false): void {
       humanSeat={HUMAN_SEAT}
       farewell={farewell}
       autoNext={autoNext}
+      player={player}
       onNewGame={() => mount()}
       onLeaveTonight={() => mount(true)}
     />,

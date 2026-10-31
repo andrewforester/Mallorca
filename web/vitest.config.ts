@@ -15,7 +15,7 @@ export default defineConfig({
         plugins: [preact()],
         test: {
           name: 'ui',
-          include: ['src/ui/**/*.test.tsx', 'src/ui/**/*.test.ts'],
+          include: ['src/ui/**/*.test.tsx', 'src/ui/**/*.test.ts', 'tools/**/*.test.tsx'],
           environment: 'happy-dom',
         },
       },

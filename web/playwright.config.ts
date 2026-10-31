@@ -26,7 +26,7 @@ export default defineConfig({
     {
       name: 'small-phone',
       use: { ...devices['Pixel 7'], viewport: { width: 360, height: 740 } },
-      testMatch: '**/layout.spec.ts',
+      testMatch: ['**/layout.spec.ts', '**/table.spec.ts'],
     },
     {
       name: 'desktop',

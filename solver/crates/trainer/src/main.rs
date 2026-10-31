@@ -1,10 +1,14 @@
 mod buckets;
 mod export;
+mod kmeans;
 mod lbr;
 mod measure;
+mod parallel;
+mod potential;
 mod thresholds;
 mod train;
 mod tree;
+mod verify;
 
 use clap::{Parser, Subcommand};
 use std::process::ExitCode;

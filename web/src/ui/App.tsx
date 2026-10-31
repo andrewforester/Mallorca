@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { toViewModel } from '../game/index.ts';
 import type { HandStore, Intent, Phase, Session, SeatIndex, ViewModel } from '../game/index.ts';
-import { HandLog } from './HandLog.tsx';
+import { HandLogDrawer } from './HandLogDrawer.tsx';
 import { HistoryMenu } from './HistoryMenu.tsx';
 import { Scene } from './Scene.tsx';
 import { SessionOver } from './SessionOver.tsx';
+import { silentPlayer } from './sound/player.ts';
+import type { SoundPlayer } from './sound/player.ts';
+import { useSoundCues } from './sound/useSoundCues.ts';
 import { Settings } from './Settings.tsx';
 import { StartScreen } from './StartScreen.tsx';
 import { StatusBar } from './StatusBar.tsx';
@@ -12,6 +15,7 @@ import { Table } from './Table.tsx';
 import { TournamentOver } from './TournamentOver.tsx';
 import { useAutoNext } from './useAutoNext.ts';
 import { usePreferences } from './usePreferences.ts';
+import type { Preferences } from './usePreferences.ts';
 
 export interface AppProps {
   session: Session;
@@ -21,6 +25,7 @@ export interface AppProps {
   onLeaveTonight: () => void;
   farewell?: boolean;
   autoNext?: boolean;
+  player?: SoundPlayer;
 }
 
 function useSessionState(session: Session) {
@@ -32,16 +37,53 @@ function useSessionState(session: Session) {
   return state;
 }
 
-export function App(props: AppProps) {
-  const { session, store, humanSeat, onNewGame } = props;
-  const state = useSessionState(session);
+function useLogDrawer(phase: Phase) {
+  const [open, setOpen] = useState(false);
+  const ended = phase === 'idle' || phase === 'sessionOver' || phase === 'tournamentOver';
+  useEffect(() => {
+    if (ended) {
+      setOpen(false);
+    }
+  }, [ended]);
+  const toggle = useRef<HTMLButtonElement>(null);
+  const close = useCallback(() => {
+    setOpen(false);
+    toggle.current?.focus();
+  }, []);
+  const flip = useCallback(() => (open ? close() : setOpen(true)), [open, close]);
+  const dismiss = useCallback(() => setOpen(false), []);
+  return { open: open && !ended, toggle, close, flip, dismiss };
+}
+
+type UnlockingPreferences = Preferences & { unlock: () => void };
+
+function useUnlockingPreferences(player: SoundPlayer): UnlockingPreferences {
   const preferences = usePreferences();
+  return {
+    ...preferences,
+    unlock: () => {
+      if (preferences.sound) player.unlock();
+    },
+    toggleSound: () => {
+      if (!preferences.sound) player.unlock();
+      preferences.toggleSound();
+    },
+  };
+}
+
+export function App(props: AppProps) {
+  const { session, humanSeat } = props;
+  const state = useSessionState(session);
+  const player = props.player ?? silentPlayer;
+  const preferences = useUnlockingPreferences(player);
+  const drawer = useLogDrawer(state.phase);
+  useSoundCues(session, player, preferences.sound);
   const vm = state.phase === 'idle' ? null : toViewModel(state, humanSeat);
   const handOver = state.phase === 'handOver' ? vm : null;
   const autoNextMs = useAutoNext(
     session,
     handOver,
-    (props.autoNext ?? true) && preferences.autoNext,
+    (props.autoNext ?? true) && preferences.autoNext && !drawer.open,
   );
   if (vm === null) {
     return (
@@ -49,42 +91,68 @@ export function App(props: AppProps) {
         seed={state.seed}
         simple={preferences.simple}
         farewell={props.farewell ?? false}
-        onStart={(mode, opponent) => void session.getState().start(mode, opponent)}
+        onStart={(mode, opponent) => {
+          preferences.unlock();
+          void session.getState().start(mode, opponent);
+        }}
       />
     );
   }
-  const act = (intent: Intent) => void session.getState().act(intent);
-  const names: [string, string] = [vm.seats[0].name, vm.seats[1].name];
+  const act = (intent: Intent) => {
+    preferences.unlock();
+    void session.getState().act(intent);
+  };
   return (
     <Scene simple={preferences.simple}>
       <div class="app">
-        <StatusBar
-          vm={vm}
-          canLeave={state.phase === 'handOver'}
-          onLeave={() => session.getState().leave()}
-        >
-          <HistoryMenu seed={state.seed} store={store} onNewGame={onNewGame}>
-            <Settings preferences={preferences} />
-            <HandLog
-              entries={state.log}
-              names={names}
-              humanSeat={humanSeat}
-              testId="hand-log-menu"
-            />
-          </HistoryMenu>
-        </StatusBar>
+        <Header app={props} vm={vm} seed={state.seed} drawer={drawer} preferences={preferences} />
         <Table
           vm={vm}
           phase={state.phase}
           humanSeat={humanSeat}
-          log={state.log}
           autoNextMs={autoNextMs}
           onAct={act}
           onNextHand={() => void session.getState().nextHand()}
         />
+        {drawer.open && (
+          <HandLogDrawer
+            entries={state.log}
+            names={[vm.seats[0].name, vm.seats[1].name]}
+            humanSeat={humanSeat}
+            onClose={drawer.close}
+          />
+        )}
         <GameOver props={props} vm={vm} phase={state.phase} sessionId={state.sessionId} />
       </div>
     </Scene>
+  );
+}
+
+interface HeaderProps {
+  app: AppProps;
+  vm: ViewModel;
+  seed: number;
+  drawer: ReturnType<typeof useLogDrawer>;
+  preferences: Preferences;
+}
+
+function Header({ app, vm, seed, drawer, preferences }: HeaderProps) {
+  const phase = app.session.getState().phase;
+  return (
+    <StatusBar
+      vm={vm}
+      canLeave={phase === 'handOver'}
+      onLeave={() => app.session.getState().leave()}
+      logOpen={drawer.open}
+      logToggle={drawer.toggle}
+      onToggleLog={drawer.flip}
+      sound={preferences.sound}
+      onToggleSound={preferences.toggleSound}
+    >
+      <HistoryMenu seed={seed} store={app.store} onNewGame={app.onNewGame} onOpen={drawer.dismiss}>
+        <Settings preferences={preferences} />
+      </HistoryMenu>
+    </StatusBar>
   );
 }
 

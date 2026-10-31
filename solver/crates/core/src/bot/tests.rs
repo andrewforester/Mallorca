@@ -1,5 +1,5 @@
 use super::*;
-use crate::measure::fixtures::trained;
+use crate::measure::fixtures::{trained, trained_multi_open};
 use crate::rng::Rng;
 use crate::subgame::combos::COMBOS;
 use crate::subgame::range::Range;
@@ -552,6 +552,34 @@ fn a_short_stack_turn_still_answers() {
     }
 }
 
+fn smallest_raise(id: NodeId) -> (f64, ActionKind, NodeId) {
+    let spot = model().spot(id).unwrap();
+    spot.actions
+        .iter()
+        .filter_map(|&(kind, child)| {
+            let to = model().raise_to(&spot, kind)?;
+            let f = fraction(to, spot.street_bets[1 - spot.seat], spot.pot_after_call());
+            Some((f, kind, child))
+        })
+        .min_by(|a, b| a.0.total_cmp(&b.0))
+        .unwrap()
+}
+
+fn after_small_open_raise(draw: f64) -> Bot {
+    let mut bot = started(false, [400, 400], [10, 20], [48, 49]);
+    bot.acted(model(), false, Move::RaiseTo(40), draw);
+    bot
+}
+
+fn facing_small_open_raise() -> Legal {
+    Legal {
+        fold: true,
+        check: false,
+        call: Some(20),
+        raise: Some((60, 400)),
+    }
+}
+
 #[test]
 fn no_solver_means_no_evs() {
     let mut bot = limped_to_the_turn(false, [400, 400], None);
@@ -641,4 +669,208 @@ fn an_on_tree_second_decision_reuses_the_street_solve() {
     assert!(bot.last_evs().is_some());
     let solve = bot.hand.as_ref().unwrap().sub.solve.as_ref().unwrap();
     assert_eq!(solve.iterations(), marked);
+}
+
+#[test]
+fn a_raise_below_the_smallest_size_maps_to_the_call_or_that_size() {
+    let root = model().file.tree.root();
+    let (smallest, _, raised) = smallest_raise(root);
+    assert!(smallest > 0.5, "the fixture opens smaller than a min-raise");
+    assert_eq!(
+        after_small_open_raise(0.0).cursor(),
+        Some(child(root, ActionKind::Call))
+    );
+    assert_eq!(after_small_open_raise(0.999).cursor(), Some(raised));
+}
+
+#[test]
+fn a_small_raise_taken_as_a_call_is_never_folded() {
+    let root = model().file.tree.root();
+    let limped = child(root, ActionKind::Call);
+    let legal = facing_small_open_raise();
+    for i in 0..100 {
+        let mut bot = after_small_open_raise(0.0);
+        let mv = bot.decide(model(), &legal, f64::from(i) / 100.0);
+        assert!(is_legal(mv, &legal), "{mv:?}");
+        assert_ne!(mv, Move::Fold);
+        assert_eq!(bot.cursor(), Some(limped));
+    }
+}
+
+#[test]
+fn a_tree_bet_over_a_small_raise_taken_as_a_call_keeps_its_fraction() {
+    let root = model().file.tree.root();
+    let limped = child(root, ActionKind::Call);
+    let hole = [48, 49];
+    let bucket = model().abstraction.bucket(Street::Preflop, hole, &[]);
+    let (f, kind, bet) = smallest_raise(limped);
+    let draw = draw_for(limped, bucket, kind);
+    assert!(
+        draw >= 0.0,
+        "the fixture never raises this hand after a limp"
+    );
+    let legal = facing_small_open_raise();
+    let mut bot = after_small_open_raise(0.0);
+    let mv = bot.decide(model(), &legal, draw);
+    assert_eq!(mv, Move::RaiseTo(scaled_raise(f, 40, 80, (60, 400))));
+    bot.acted(model(), true, mv, 0.0);
+    assert_eq!(bot.cursor(), Some(bet));
+}
+
+#[test]
+fn a_small_raise_taken_as_a_street_closing_call_is_called() {
+    let root = model().file.tree.root();
+    let opened = child(root, ActionKind::RaiseTo(50));
+    let (smallest, _, _) = smallest_raise(opened);
+    assert!(
+        smallest > 0.3,
+        "the fixture re-raises smaller than a min-raise"
+    );
+    let flop = child(opened, ActionKind::Call);
+    let mut bot = started(true, [400, 400], [10, 20], [48, 49]);
+    bot.acted(model(), true, Move::RaiseTo(50), 0.0);
+    bot.acted(model(), false, Move::RaiseTo(80), 0.0);
+    assert_eq!(bot.cursor(), Some(flop));
+    let legal = Legal {
+        fold: true,
+        check: false,
+        call: Some(30),
+        raise: Some((110, 400)),
+    };
+    let mv = bot.decide(model(), &legal, 0.5);
+    assert_eq!(mv, Move::Call);
+    bot.acted(model(), true, mv, 0.0);
+    bot.street(model(), &[10, 20, 30]);
+    assert_eq!(bot.cursor(), Some(flop));
+}
+
+#[test]
+fn a_small_bet_after_a_lost_cursor_is_rarely_folded() {
+    let flop_bet = Legal {
+        fold: true,
+        check: false,
+        call: Some(20),
+        raise: Some((40, 1800)),
+    };
+    let mut folds = 0;
+    for i in 0..100 {
+        let mut bot = started(false, [2000, 2000], [10, 20], [48, 49]);
+        bot.acted(model(), false, Move::Check, 0.0);
+        bot.acted(model(), false, Move::RaiseTo(200), 0.0);
+        bot.acted(model(), true, Move::Call, 0.0);
+        bot.street(model(), &[10, 20, 30]);
+        bot.acted(model(), true, Move::Check, 0.0);
+        bot.acted(model(), false, Move::RaiseTo(20), 0.0);
+        assert_eq!(bot.cursor(), None);
+        let mv = bot.decide(model(), &flop_bet, f64::from(i) / 100.0);
+        assert!(is_legal(mv, &flop_bet), "{mv:?}");
+        if mv == Move::Fold {
+            folds += 1;
+        }
+        if i == 0 {
+            let spot = model().spot(bot.cursor().unwrap()).unwrap();
+            assert_eq!(spot.to_call(), 0);
+        }
+    }
+    assert!(folds <= 15, "{folds} folds to a twentieth of the pot");
+}
+
+fn multi_model() -> &'static Model {
+    static M: OnceLock<Model> = OnceLock::new();
+    M.get_or_init(|| Model::new(trained_multi_open().clone()).unwrap())
+}
+
+const DRAWS: usize = 2000;
+
+fn draw_at(k: usize) -> f64 {
+    (k as f64 + 0.5) / DRAWS as f64
+}
+
+fn open_children() -> Vec<(ActionKind, NodeId)> {
+    let tree = &multi_model().file.tree;
+    let Node::Decision { actions, .. } = tree.node(tree.root()) else {
+        panic!("not a decision");
+    };
+    actions
+        .iter()
+        .copied()
+        .filter(|a| matches!(a.0, ActionKind::RaiseTo(_) | ActionKind::AllIn))
+        .collect()
+}
+
+fn open_child(kind: ActionKind) -> NodeId {
+    open_children().iter().find(|a| a.0 == kind).unwrap().1
+}
+
+fn opponent_opens(to: u32, draw: f64) -> Bot {
+    let mut bot = Bot::new();
+    bot.hand_started(multi_model(), false, [2000, 2000], [10, 20]);
+    bot.hole_cards([0, 5]);
+    bot.acted(multi_model(), false, Move::RaiseTo(to), draw);
+    bot
+}
+
+fn root_fraction(to: u32) -> f64 {
+    fraction(to, 20, 40)
+}
+
+#[test]
+fn the_multi_open_tree_has_three_opens_and_an_all_in() {
+    let kinds: Vec<ActionKind> = open_children().iter().map(|a| a.0).collect();
+    assert_eq!(
+        kinds,
+        vec![
+            ActionKind::RaiseTo(40),
+            ActionKind::RaiseTo(60),
+            ActionKind::RaiseTo(80),
+            ActionKind::AllIn
+        ]
+    );
+}
+
+#[test]
+fn a_five_bb_open_maps_to_the_four_bb_child_mostly() {
+    let four = open_child(ActionKind::RaiseTo(80));
+    let hits = (0..DRAWS)
+        .filter(|&k| opponent_opens(100, draw_at(k)).cursor() == Some(four))
+        .count();
+    let share = hits as f64 / DRAWS as f64;
+    let expected = pseudo_harmonic(root_fraction(80), root_fraction(2000), root_fraction(100));
+    assert!((share - expected).abs() < 0.03, "{share} vs {expected}");
+    assert!(share >= 0.8, "{share}");
+}
+
+#[test]
+fn a_two_and_a_half_bb_open_splits_between_two_and_three() {
+    let two = open_child(ActionKind::RaiseTo(40));
+    let three = open_child(ActionKind::RaiseTo(60));
+    let (mut twos, mut threes) = (0, 0);
+    for k in 0..DRAWS {
+        let cursor = opponent_opens(50, draw_at(k)).cursor();
+        if cursor == Some(two) {
+            twos += 1;
+        } else if cursor == Some(three) {
+            threes += 1;
+        }
+    }
+    assert!(twos > 0 && threes > 0, "{twos} {threes}");
+    assert_eq!(twos + threes, DRAWS);
+}
+
+#[test]
+fn a_ten_bb_open_is_answered_legally() {
+    let legal = Legal {
+        fold: true,
+        check: false,
+        call: Some(180),
+        raise: Some((380, 2000)),
+    };
+    let mut on_tree = 0;
+    for k in 0..DRAWS {
+        let mut bot = opponent_opens(200, draw_at(k));
+        on_tree += usize::from(bot.cursor().is_some());
+        let mv = bot.decide(multi_model(), &legal, draw_at((k * 7919) % DRAWS));
+        assert!(is_legal(mv, &legal), "{mv:?}");
+    }
+    assert_eq!(on_tree, DRAWS);
 }

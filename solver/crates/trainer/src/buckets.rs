@@ -1,17 +1,17 @@
+use crate::parallel::{atomic_cells, parallel_chunks};
+use crate::potential;
 use crate::tree::load_preset;
 use clap::Args;
 use mallorca_core::abstraction::{aggregate_hs2, encode_table, percentile_buckets, river_strength};
 use mallorca_core::cards::Card;
 use mallorca_core::iso::{board_indexer, street_indexers, HandIndexer};
+use mallorca_core::preset::{Bucketing, Preset};
 use mallorca_core::tree::Street;
 use std::fs::File;
 use std::io::{BufWriter, Write};
-use std::ops::Range;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::Instant;
-
-const CHUNK: usize = 512;
 
 #[derive(Args)]
 pub struct BucketsArgs {
@@ -21,41 +21,6 @@ pub struct BucketsArgs {
     pub out: PathBuf,
 }
 
-fn parallel_chunks<F>(label: &str, total: usize, threads: usize, work: F)
-where
-    F: Fn(Range<usize>) + Sync,
-{
-    let next = AtomicUsize::new(0);
-    let done = AtomicUsize::new(0);
-    let printed = AtomicUsize::new(0);
-    let start = Instant::now();
-    std::thread::scope(|scope| {
-        for _ in 0..threads.max(1) {
-            scope.spawn(|| loop {
-                let from = next.fetch_add(CHUNK, Ordering::Relaxed);
-                if from >= total {
-                    break;
-                }
-                let to = (from + CHUNK).min(total);
-                work(from..to);
-                let finished = done.fetch_add(to - from, Ordering::Relaxed) + (to - from);
-                let step = finished * 20 / total;
-                if printed.fetch_max(step, Ordering::Relaxed) < step {
-                    println!(
-                        "{label}: {}% ({:.0}s)",
-                        step * 5,
-                        start.elapsed().as_secs_f64()
-                    );
-                }
-            });
-        }
-    });
-}
-
-fn atomic_cells(n: usize, value: f32) -> Vec<AtomicU32> {
-    (0..n).map(|_| AtomicU32::new(value.to_bits())).collect()
-}
-
 fn into_floats(cells: Vec<AtomicU32>) -> Vec<f32> {
     cells
         .into_iter()
@@ -63,11 +28,11 @@ fn into_floats(cells: Vec<AtomicU32>) -> Vec<f32> {
         .collect()
 }
 
-fn write_bytes(path: &Path, bytes: &[u8]) -> Result<(), String> {
+pub(crate) fn write_bytes(path: &Path, bytes: &[u8]) -> Result<(), String> {
     std::fs::write(path, bytes).map_err(|e| format!("cannot write {}: {e}", path.display()))
 }
 
-fn write_floats(path: &Path, values: &[f32]) -> Result<(), String> {
+pub(crate) fn write_floats(path: &Path, values: &[f32]) -> Result<(), String> {
     let file = File::create(path).map_err(|e| format!("cannot write {}: {e}", path.display()))?;
     let mut writer = BufWriter::new(file);
     for chunk in values.chunks(1 << 16) {
@@ -96,26 +61,22 @@ pub fn turn_values(indexers: &[HandIndexer; 4], river_hs: &[f32], threads: usize
     into_floats(turn_cells)
 }
 
-pub fn run(args: &BucketsArgs) -> Result<(), String> {
-    let preset = load_preset(&args.preset)?;
-    let threads = preset.threads;
-    std::fs::create_dir_all(&args.out)
-        .map_err(|e| format!("cannot create {}: {e}", args.out.display()))?;
-    let started = Instant::now();
-    let indexers = street_indexers();
+pub(crate) fn canonical_board(boards: &HandIndexer, b: usize) -> [Card; 5] {
+    boards
+        .unindex(0, b as u64)
+        .try_into()
+        .expect("five board cards")
+}
+
+pub(crate) fn river_pass(indexers: &[HandIndexer; 4], threads: usize) -> Result<Vec<f32>, String> {
     let boards = board_indexer(5);
     let board_count = boards.size(0) as usize;
     let river_count = indexers[3].size(1) as usize;
-    let turn_count = indexers[2].size(1) as usize;
-    let flop_count = indexers[1].size(1) as usize;
-
     println!("river: {board_count} canonical boards, {river_count} classes, {threads} threads");
     let river_cells = atomic_cells(river_count, f32::NAN);
     parallel_chunks("river", board_count, threads, |range| {
         for b in range {
-            let cards = boards.unindex(0, b as u64);
-            let board: [Card; 5] = cards.try_into().expect("five board cards");
-            for (index, hs) in river_strength(&board) {
+            for (index, hs) in river_strength(&canonical_board(&boards, b)) {
                 river_cells[index as usize].store(hs.to_bits(), Ordering::Relaxed);
             }
         }
@@ -124,6 +85,26 @@ pub fn run(args: &BucketsArgs) -> Result<(), String> {
     if let Some(missing) = river_hs.iter().position(|v| v.is_nan()) {
         return Err(format!("river class {missing} was never computed"));
     }
+    Ok(river_hs)
+}
+
+pub fn run(args: &BucketsArgs) -> Result<(), String> {
+    let preset = load_preset(&args.preset)?;
+    std::fs::create_dir_all(&args.out)
+        .map_err(|e| format!("cannot create {}: {e}", args.out.display()))?;
+    match preset.bucketing {
+        Bucketing::Hs2 => run_hs2(&preset, &args.out),
+        Bucketing::Potential => potential::run(&preset, &args.out),
+    }
+}
+
+fn run_hs2(preset: &Preset, out: &Path) -> Result<(), String> {
+    let threads = preset.threads;
+    let started = Instant::now();
+    let indexers = street_indexers();
+    let turn_count = indexers[2].size(1) as usize;
+    let flop_count = indexers[1].size(1) as usize;
+    let river_hs = river_pass(&indexers, threads)?;
 
     println!("turn: {turn_count} classes");
     let turn_values = turn_values(&indexers, &river_hs, threads);
@@ -145,10 +126,10 @@ pub fn run(args: &BucketsArgs) -> Result<(), String> {
     ];
     for (name, street, values, buckets) in tables {
         let table = encode_table(street, buckets, &percentile_buckets(values, buckets));
-        write_bytes(&args.out.join(name), &table)?;
+        write_bytes(&out.join(name), &table)?;
         println!("wrote {name}: {} bytes", table.len());
     }
-    write_floats(&args.out.join("river_hs.f32"), &river_hs)?;
+    write_floats(&out.join("river_hs.f32"), &river_hs)?;
     println!("wrote river_hs.f32: {} bytes", river_hs.len() * 4);
     println!("total {:.1}s", started.elapsed().as_secs_f64());
     Ok(())

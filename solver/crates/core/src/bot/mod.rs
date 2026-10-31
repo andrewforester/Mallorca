@@ -9,7 +9,7 @@ use crate::cards::Card;
 use crate::strategy::{StrategyError, StrategyFile};
 use crate::subgame::range::Range;
 use crate::tree::{ActionKind, Node, NodeId, Street};
-use translate::{fraction, nearest, sample, scaled_raise};
+use translate::{fraction, nearest, pseudo_harmonic, sample, scaled_raise};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Move {
@@ -130,6 +130,7 @@ struct Hand {
     ranges: [Range; 2],
     big_blind: u32,
     sub: solve::Subgame,
+    shifted: bool,
 }
 
 impl Hand {
@@ -210,6 +211,7 @@ impl Bot {
             ranges: [Range::uniform(), Range::uniform()],
             big_blind: blinds[1],
             sub: solve::Subgame::new(),
+            shifted: false,
         });
         self.last_evs = None;
     }
@@ -240,6 +242,7 @@ impl Bot {
             .map(|r| r.without(board).or_uniform(board));
         hand.bets = [0, 0];
         hand.pending = None;
+        hand.shifted = false;
         let on_street = hand
             .node
             .and_then(|id| model.spot(id))
@@ -255,8 +258,8 @@ impl Bot {
             return;
         };
         let seat = if hero { hand.hero } else { 1 - hand.hero };
-        let next = match hand.pending.take() {
-            Some(child) if hero => Some(child),
+        let (next, shifted) = match hand.pending.take() {
+            Some(child) if hero => (Some(child), false),
             _ => follow(model, hand, seat, mv, draw),
         };
         ranges::track(
@@ -271,6 +274,7 @@ impl Bot {
         solve::record(hand, seat, mv);
         hand.apply(seat, mv);
         hand.node = next;
+        hand.shifted = shifted;
     }
 
     pub fn decide(&mut self, model: &Model, legal: &Legal, draw: f64) -> Move {
@@ -293,16 +297,28 @@ impl Bot {
     }
 }
 
-fn blueprint(model: &Model, hand: &mut Hand, legal: &Legal, draw: f64) -> Move {
+fn blueprint(model: &Model, hand: &mut Hand, legal: &Legal, mut draw: f64) -> Move {
     let Some(hole) = hand.hole else {
         return passive(legal);
     };
     let facing = legal.call.is_some();
-    let valid = hand.node.and_then(|id| model.spot(id)).is_some_and(|s| {
-        s.seat == hand.hero && s.street == hand.street && (s.to_call() > 0) == facing
+    let here = hand
+        .node
+        .and_then(|id| model.spot(id))
+        .filter(|s| s.seat == hand.hero && s.street == hand.street);
+    if hand.shifted && facing && here.is_none() && hand.node.is_some() {
+        hand.pending = hand.node;
+        return passive(legal);
+    }
+    let valid = here.is_some_and(|s| {
+        let free = hand.shifted && facing && s.to_call() == 0;
+        free || (s.to_call() > 0) == facing
     });
     if !valid {
         hand.node = resync(model, hand, facing);
+        if facing {
+            draw = resync_to_check(model, hand, draw);
+        }
     }
     let Some(id) = hand.node else {
         return passive(legal);
@@ -314,17 +330,20 @@ fn blueprint(model: &Model, hand: &mut Hand, legal: &Legal, draw: f64) -> Move {
     to_real(model, &spot, hand, chosen.0, legal)
 }
 
-fn follow(model: &Model, hand: &Hand, seat: usize, mv: Move, draw: f64) -> Option<NodeId> {
-    let spot = model.spot(hand.node?)?;
+fn follow(model: &Model, hand: &Hand, seat: usize, mv: Move, draw: f64) -> (Option<NodeId>, bool) {
+    let Some(spot) = hand.node.and_then(|id| model.spot(id)) else {
+        return (None, false);
+    };
     if spot.seat != seat || spot.street != hand.street {
-        return None;
+        return (None, false);
     }
+    let passive = spot
+        .child(ActionKind::Call)
+        .or_else(|| spot.child(ActionKind::Check));
     match mv {
-        Move::Fold => spot.child(ActionKind::Fold),
-        Move::Check => spot.child(ActionKind::Check),
-        Move::Call => spot
-            .child(ActionKind::Call)
-            .or_else(|| spot.child(ActionKind::Check)),
+        Move::Fold => (spot.child(ActionKind::Fold), false),
+        Move::Check => (spot.child(ActionKind::Check), false),
+        Move::Call => (passive, false),
         Move::RaiseTo(to) => {
             let mut sizes: Vec<(f64, NodeId)> = spot
                 .actions
@@ -336,12 +355,16 @@ fn follow(model: &Model, hand: &Hand, seat: usize, mv: Move, draw: f64) -> Optio
                 })
                 .collect();
             if sizes.is_empty() {
-                return None;
+                return (None, false);
             }
             sizes.sort_by(|a, b| a.0.total_cmp(&b.0));
+            if let Some(child) = passive {
+                sizes.insert(0, (0.0, child));
+            }
             let x = fraction(to, hand.bets[1 - seat], hand.pot_after_call(seat));
             let fractions: Vec<f64> = sizes.iter().map(|s| s.0).collect();
-            Some(sizes[nearest(&fractions, x, draw)].1)
+            let i = nearest(&fractions, x, draw);
+            (Some(sizes[i].1), i == 0 && passive.is_some())
         }
     }
 }
@@ -359,6 +382,31 @@ fn resync(model: &Model, hand: &Hand, facing: bool) -> Option<NodeId> {
         .iter()
         .copied()
         .min_by(|&a, &b| distance(a).total_cmp(&distance(b)))
+}
+
+fn resync_to_check(model: &Model, hand: &mut Hand, draw: f64) -> f64 {
+    let Some(spot) = hand.node.and_then(|id| model.spot(id)) else {
+        return draw;
+    };
+    let tree_pot = f64::from(spot.committed[0] + spot.committed[1] - spot.to_call());
+    let to_call = hand.to_call(hand.hero);
+    let pot = f64::from(hand.committed[0] + hand.committed[1] - to_call);
+    let p = pseudo_harmonic(
+        0.0,
+        f64::from(spot.to_call()) / tree_pot,
+        f64::from(to_call) / pot,
+    );
+    if p <= 0.0 {
+        return draw;
+    }
+    if draw >= p {
+        return (draw - p) / (1.0 - p);
+    }
+    if let Some(id) = resync(model, hand, false) {
+        hand.node = Some(id);
+        hand.shifted = true;
+    }
+    draw / p
 }
 
 fn to_real(model: &Model, spot: &Spot<'_>, hand: &Hand, kind: ActionKind, legal: &Legal) -> Move {

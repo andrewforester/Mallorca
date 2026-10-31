@@ -21,3 +21,4 @@ solver/target/
 solver/data/
 web/arena-out/
 web/src/cfr/mallorca.wasm
+web/.vercel/

@@ -1,6 +1,7 @@
 pub mod abstraction;
 pub mod bot;
 pub mod cards;
+pub mod centroids;
 pub mod cfr;
 pub mod checkpoint;
 pub mod eval;
@@ -9,6 +10,7 @@ pub mod games;
 pub mod holdem;
 pub mod iso;
 pub mod measure;
+pub mod potential;
 pub mod preset;
 pub mod rng;
 pub mod strategy;

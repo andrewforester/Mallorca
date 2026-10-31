@@ -49,9 +49,10 @@ function playHand(
   stacks: [number, number],
   big: number,
   options?: BotOptions,
+  using = model,
 ): Action[] {
   const rng = mulberry32(seed);
-  const brain = createCfrBrain(model, mulberry32(seed + 1), options);
+  const brain = createCfrBrain(using, mulberry32(seed + 1), options);
   const seats: [Seat, Seat] = [
     { name: 'cfr', stack: stacks[0] },
     { name: 'random', stack: stacks[1] },
@@ -101,6 +102,16 @@ describe('CfrBrain', () => {
       playHand(seed, [depth(), depth()], big);
     }
   });
+
+  it('plays the v2 blueprint legally', async () => {
+    const v2 = await createCfrModel(
+      wasm,
+      await inflate(readFileSync(new URL('./v2.mlcs.gz', import.meta.url))),
+    );
+    for (let seed = 1; seed <= 30; seed++) {
+      playHand(seed, [2000, 2000], 20, undefined, v2);
+    }
+  }, 60_000);
 
   it('is reproducible from its seed', () => {
     expect(playHand(7, [2000, 2000], 20)).toEqual(playHand(7, [2000, 2000], 20));

@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { CASH, OPPONENTS, TOURNAMENT } from '../game/index.ts';
+import { CASH, opponentsFor, TOURNAMENT } from '../game/index.ts';
 import type { Opponent, TableMode } from '../game/index.ts';
 import { t } from './i18n.ts';
 import { Scene } from './Scene.tsx';
@@ -9,19 +9,22 @@ export interface StartScreenProps {
   seed: number;
   farewell?: boolean;
   simple?: boolean;
+  finePointer?: boolean;
 }
 
 function OpponentChoice({
   value,
   onChange,
+  opponents,
 }: {
   value: Opponent;
   onChange: (opponent: Opponent) => void;
+  opponents: readonly Opponent[];
 }) {
   return (
     <div class="start-opponent" role="group" aria-label={t('start.opponent')}>
       <span class="start-opponent-label">{t('start.opponent')}</span>
-      {OPPONENTS.map((opponent) => (
+      {opponents.map((opponent) => (
         <button
           key={opponent}
           type="button"
@@ -37,7 +40,17 @@ function OpponentChoice({
   );
 }
 
-export function StartScreen({ onStart, seed, farewell = false, simple = false }: StartScreenProps) {
+function hasFinePointer(): boolean {
+  return globalThis.matchMedia?.('(pointer: fine)').matches ?? true;
+}
+
+export function StartScreen({
+  onStart,
+  seed,
+  farewell = false,
+  simple = false,
+  finePointer = hasFinePointer(),
+}: StartScreenProps) {
   const [opponent, setOpponent] = useState<Opponent>('math');
   const [starting, setStarting] = useState(false);
   const start = (mode: TableMode) => {
@@ -55,7 +68,11 @@ export function StartScreen({ onStart, seed, farewell = false, simple = false }:
         ) : (
           <p class="start-tagline">{t('start.tagline')}</p>
         )}
-        <OpponentChoice value={opponent} onChange={setOpponent} />
+        <OpponentChoice
+          value={opponent}
+          onChange={setOpponent}
+          opponents={opponentsFor(finePointer)}
+        />
         <div class="start-actions">
           <button
             type="button"
@@ -74,7 +91,7 @@ export function StartScreen({ onStart, seed, farewell = false, simple = false }:
             {t('start.tournament')}
           </button>
         </div>
-        {starting && opponent === 'cfr' ? (
+        {starting && opponent !== 'math' ? (
           <p class="start-seed" role="status" data-testid="start-loading">
             {t('start.loading')}
           </p>

@@ -38,7 +38,7 @@ export function ActionBar({ controls, onAct }: ActionBarProps) {
         <BetSlider raise={raise} value={amount} disabled={!enabled} onChange={setChosen} />
       )}
       <ActionButtons
-        state={{ enabled, fold, passive, canRaise, amount }}
+        state={{ enabled, fold, passive, canRaise, amount, raiseKind: raise?.kind ?? 'raise' }}
         onFold={doFold}
         onPassive={doPassive}
         onRaise={doRaise}
@@ -54,6 +54,7 @@ interface ActionButtonsProps {
     passive: ViewModel['controls']['passive'];
     canRaise: boolean;
     amount: number;
+    raiseKind: 'bet' | 'raise';
   };
   onFold: () => void;
   onPassive: () => void;
@@ -61,7 +62,7 @@ interface ActionButtonsProps {
 }
 
 function ActionButtons({ state, onFold, onPassive, onRaise }: ActionButtonsProps) {
-  const { enabled, fold, passive, canRaise, amount } = state;
+  const { enabled, fold, passive, canRaise, amount, raiseKind } = state;
   return (
     <div class="action-buttons">
       <button
@@ -91,7 +92,9 @@ function ActionButtons({ state, onFold, onPassive, onRaise }: ActionButtonsProps
         disabled={!canRaise}
         onClick={onRaise}
       >
-        {canRaise ? t('actions.raiseTo', { amount }) : t('actions.raise')}
+        {canRaise
+          ? t(raiseKind === 'bet' ? 'actions.bet' : 'actions.raiseTo', { amount })
+          : t('actions.raise')}
       </button>
     </div>
   );

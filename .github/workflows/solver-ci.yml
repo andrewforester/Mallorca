@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'solver/**'
+      - 'web/src/cfr/v1.mlcs.gz'
       - '.github/workflows/solver-*.yml'
   workflow_dispatch:
 
@@ -33,6 +34,19 @@ jobs:
           workspaces: solver
       - run: cargo fmt --all --check
       - run: cargo clippy --all-targets -- -D warnings
-      - run: cargo test --release -- --include-ignored
+      - run: cargo test --release --workspace --exclude mallorca-trainer -- --include-ignored
+      - run: cargo test --release -p mallorca-trainer --bins -- --include-ignored
       - run: cargo build -p mallorca-core --target wasm32-unknown-unknown
       - run: cargo build --release -p mallorca-wasm --target wasm32-unknown-unknown
+
+  end-to-end:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.99.1
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: solver
+      - run: cargo test --release -p mallorca-trainer --test end_to_end -- --include-ignored

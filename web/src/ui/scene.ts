@@ -15,7 +15,7 @@ export const LANDSCAPE: PlateGeometry = {
   opponentY: '51%',
   boardY: '70%',
   heroBottom: '16px',
-  cardScale: 'clamp(48px, 4.6vw, 72px)',
+  cardScale: 'clamp(48px, 3.9vw, 72px)',
 };
 
 export const PORTRAIT: PlateGeometry = {
@@ -23,8 +23,8 @@ export const PORTRAIT: PlateGeometry = {
   focusY: '55%',
   feltTilt: '50deg',
   opponentY: '42%',
-  boardY: '58%',
-  heroBottom: '132px',
+  boardY: '61%',
+  heroBottom: '120px',
   cardScale: 'clamp(44px, 12vw, 56px)',
 };
 

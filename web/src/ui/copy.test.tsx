@@ -6,6 +6,7 @@ import en from '../locales/en.json';
 import { ActionBar } from './ActionBar.tsx';
 import { fixtureResult } from './fixtures.ts';
 import { StartScreen } from './StartScreen.tsx';
+import { HandLogDrawer } from './HandLogDrawer.tsx';
 import { Table } from './Table.tsx';
 import { SessionOver } from './SessionOver.tsx';
 import { TournamentOver } from './TournamentOver.tsx';
@@ -82,14 +83,7 @@ describe('copy', () => {
     const vm = viewModel();
     vm.board = [48, 41, 25];
     const { container } = render(
-      <Table
-        vm={vm}
-        phase="humanToAct"
-        humanSeat={0}
-        log={log}
-        onAct={vi.fn()}
-        onNextHand={vi.fn()}
-      />,
+      <Table vm={vm} phase="humanToAct" humanSeat={0} onAct={vi.fn()} onNextHand={vi.fn()} />,
     );
     expectFromLocale(container);
   });
@@ -97,14 +91,7 @@ describe('copy', () => {
   it('result and thinking strings come from en.json', () => {
     const vm = fixtureResult();
     const { container } = render(
-      <Table
-        vm={vm}
-        phase="handOver"
-        humanSeat={0}
-        log={[]}
-        onAct={vi.fn()}
-        onNextHand={vi.fn()}
-      />,
+      <Table vm={vm} phase="handOver" humanSeat={0} onAct={vi.fn()} onNextHand={vi.fn()} />,
     );
     expectFromLocale(container);
     expect(container.querySelector('[data-testid="result"]')?.textContent).toContain(
@@ -114,14 +101,7 @@ describe('copy', () => {
     const youWin = fixtureResult();
     youWin.result = { winner: 0, category: 'flush', amount: 120 };
     const won = render(
-      <Table
-        vm={youWin}
-        phase="handOver"
-        humanSeat={0}
-        log={[]}
-        onAct={vi.fn()}
-        onNextHand={vi.fn()}
-      />,
+      <Table vm={youWin} phase="handOver" humanSeat={0} onAct={vi.fn()} onNextHand={vi.fn()} />,
     );
     expectFromLocale(won.container);
     expect(won.container.querySelector('[data-testid="result"]')?.textContent).toContain(
@@ -136,7 +116,6 @@ describe('copy', () => {
         vm={thinking}
         phase="botThinking"
         humanSeat={0}
-        log={[]}
         onAct={vi.fn()}
         onNextHand={vi.fn()}
       />,
@@ -171,18 +150,10 @@ describe('copy', () => {
   });
 
   it('the hand log is checked and text outside en.json fails the check', () => {
-    const vm = viewModel();
     const { container } = render(
-      <Table
-        vm={vm}
-        phase="humanToAct"
-        humanSeat={0}
-        log={log}
-        onAct={vi.fn()}
-        onNextHand={vi.fn()}
-      />,
+      <HandLogDrawer entries={log} names={['You', 'Mallorca']} humanSeat={0} onClose={vi.fn()} />,
     );
-    const lines = [...container.querySelectorAll('.hand-log-lines li')].map((li) => li.textContent);
+    const lines = [...container.querySelectorAll('.log-token')].map((token) => token.textContent);
     expect(lines).toContain('Uncalled bet of 40 returned to Mallorca');
     expect(lines).toContain('You are all-in');
     expect(visibleStrings(container)).toEqual(expect.arrayContaining(lines));

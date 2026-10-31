@@ -4,7 +4,12 @@ import { BetSlider } from './BetSlider.tsx';
 
 afterEach(cleanup);
 
-const raise = { min: 160, max: 2000, presets: { halfPot: 250, pot: 400, allIn: 2000 } };
+const raise = {
+  kind: 'raise' as const,
+  min: 160,
+  max: 2000,
+  presets: { halfPot: 250, pot: 400, allIn: 2000 },
+};
 
 describe('BetSlider', () => {
   it('spans minimum raise to all-in', () => {
