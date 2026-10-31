@@ -1,7 +1,9 @@
 use super::*;
 use crate::measure::fixtures::{trained, trained_multi_open};
+use crate::pairs::{pair_cards, PAIRS};
 use crate::rng::Rng;
 use crate::tree::{ActionKind, Node};
+use range::range_of;
 use std::sync::OnceLock;
 
 fn model() -> &'static Model {
@@ -624,4 +626,115 @@ fn huge_stacks_do_not_overflow_the_pot() {
     };
     let mv = bot.decide(model(), &legal, 0.5);
     assert!(is_legal(mv, &legal), "{mv:?}");
+}
+
+fn p_of(id: NodeId, bucket: u16, kind: ActionKind) -> f32 {
+    let Node::Decision { actions, .. } = model().file.tree.node(id) else {
+        panic!("not a decision");
+    };
+    let p = model().file.probabilities(id, bucket);
+    let i = actions.iter().position(|a| a.0 == kind).unwrap();
+    let sum: u32 = p.iter().map(|&x| u32::from(x)).sum();
+    f32::from(p[i]) / sum as f32
+}
+
+fn opened(hole: [Card; 2]) -> Bot {
+    let root = model().file.tree.root();
+    let bucket = model().abstraction.bucket(Street::Preflop, hole, &[]);
+    let draw = draw_for(root, bucket, ActionKind::RaiseTo(50));
+    assert!(draw >= 0.0, "the fixture never opens this hand");
+    let mut bot = started(true, [400, 400], [10, 20], hole);
+    let mv = bot.decide(model(), &facing_blind(20, 400), draw);
+    bot.acted(model(), true, mv, 0.0);
+    bot
+}
+
+#[test]
+fn a_new_hand_has_a_uniform_range() {
+    let bot = started(true, [400, 400], [10, 20], [0, 5]);
+    assert!(bot.history().is_empty());
+    let range = bot.range(model());
+    assert_eq!(range.len(), PAIRS);
+    assert!(range.iter().all(|&w| w == 1.0));
+}
+
+#[test]
+fn a_sampled_decision_adds_one_step() {
+    let root = model().file.tree.root();
+    let bot = opened([48, 49]);
+    let Node::Decision { actions, .. } = model().file.tree.node(root) else {
+        panic!("not a decision");
+    };
+    let open = actions
+        .iter()
+        .position(|a| a.0 == ActionKind::RaiseTo(50))
+        .unwrap();
+    assert_eq!(bot.history().len(), 1);
+    let step = &bot.history()[0];
+    assert_eq!(
+        (step.node, step.action, step.street),
+        (root, open, Street::Preflop)
+    );
+    assert!(step.board.is_empty());
+}
+
+#[test]
+fn the_range_follows_the_strategy() {
+    let root = model().file.tree.root();
+    let range = opened([48, 49]).range(model());
+    for (i, &w) in range.iter().enumerate() {
+        let bucket = model()
+            .abstraction
+            .bucket(Street::Preflop, pair_cards(i), &[]);
+        let p = p_of(root, bucket, ActionKind::RaiseTo(50));
+        assert!((w - p).abs() < 1e-6, "{:?}: {w} vs {p}", pair_cards(i));
+    }
+    assert!(range.iter().any(|&w| w != range[0]));
+}
+
+#[test]
+fn board_pairs_leave_the_range() {
+    let mut bot = opened([48, 49]);
+    let board = [10, 20, 30];
+    bot.street(model(), &board);
+    let range = bot.range(model());
+    for (i, &w) in range.iter().enumerate() {
+        let c = pair_cards(i);
+        if board.contains(&c[0]) || board.contains(&c[1]) {
+            assert_eq!(w, 0.0, "{c:?}");
+        }
+    }
+}
+
+#[test]
+fn a_passive_play_off_the_tree_adds_no_step() {
+    let mut bot = started(true, [400, 400], [10, 20], [48, 48]);
+    bot.decide(model(), &facing_blind(20, 400), 0.5);
+    assert!(bot.history().is_empty());
+    let mut bot = started(false, [400, 400], [10, 20], [0, 5]);
+    bot.acted(model(), false, Move::Check, 0.3);
+    bot.street(model(), &[10, 20, 30]);
+    assert!(bot.history().is_empty());
+}
+
+fn impossible_step() -> Step {
+    let root = model().file.tree.root();
+    let Node::Decision { actions, .. } = model().file.tree.node(root) else {
+        panic!("not a decision");
+    };
+    Step {
+        node: root,
+        action: actions.len(),
+        street: Street::Preflop,
+        board: Vec::new(),
+    }
+}
+
+#[test]
+fn an_impossible_step_keeps_the_previous_range() {
+    let bot = opened([48, 49]);
+    let mut steps = bot.history().to_vec();
+    let before = range_of(model(), &steps, &[]);
+    steps.push(impossible_step());
+    assert_eq!(range_of(model(), &steps, &[]), before);
 }

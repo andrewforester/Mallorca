@@ -1,4 +1,7 @@
+mod range;
 mod translate;
+
+pub use range::Step;
 
 use crate::abstraction::Abstraction;
 use crate::cards::Card;
@@ -131,6 +134,7 @@ struct Hand {
     node: Option<NodeId>,
     pending: Option<NodeId>,
     shifted: bool,
+    history: Vec<Step>,
 }
 
 impl Hand {
@@ -199,6 +203,7 @@ impl Bot {
             node: Some(model.file.tree.root()),
             pending: None,
             shifted: false,
+            history: Vec::new(),
         });
     }
 
@@ -280,7 +285,14 @@ impl Bot {
         let Some(probabilities) = model.file.try_probabilities(id, bucket) else {
             return passive(legal);
         };
-        let chosen = spot.actions[sample(probabilities, draw)];
+        let action = sample(probabilities, draw);
+        let chosen = spot.actions[action];
+        hand.history.push(Step {
+            node: id,
+            action,
+            street: hand.street,
+            board: hand.board.clone(),
+        });
         hand.pending = Some(chosen.1);
         to_real(&spot, hand, chosen.0, legal)
     }
