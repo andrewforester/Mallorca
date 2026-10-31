@@ -1,13 +1,6 @@
 import { fullDeck, mulberry32, shuffle } from '../../src/cards/index.ts';
-import type { EngineEvent, SeatIndex, Step } from '../../src/engine/index.ts';
-import {
-  applyAction,
-  CASH,
-  createTable,
-  legalActions,
-  rulesOf,
-  startHandWith,
-} from '../../src/engine/index.ts';
+import type { EngineEvent, Step } from '../../src/engine/index.ts';
+import { CASH, createTable, playToEnd, rulesOf, startHandWith } from '../../src/engine/index.ts';
 import { toObservations } from '../../src/brains/index.ts';
 import type { ArenaBot, BotFactory } from './bots.ts';
 
@@ -33,20 +26,14 @@ function playHand(
     }
   };
   const handNumber = index * 2 + k + 1;
-  let step = startHandWith(
+  const start = startHandWith(
     SEATS,
     { button: 0, blinds: rulesOf(CASH).blinds(handNumber), handNumber },
     deck,
   );
-  feed(step);
-  while (step.hand.street !== 'complete') {
-    const seat = step.hand.toAct as SeatIndex;
-    const action = bots[seat].decide(legalActions(step.hand, step.seats));
-    step = applyAction(step.hand, step.seats, action);
-    feed(step);
-  }
+  const end = playToEnd(start, (seat, legal) => bots[seat].decide(legal), feed);
   for (const bot of bots) bot.dispose?.();
-  return { events, stacks: [step.seats[0].stack, step.seats[1].stack] };
+  return { events, stacks: [end.seats[0].stack, end.seats[1].stack] };
 }
 
 export function playPair(

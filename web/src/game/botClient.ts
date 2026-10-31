@@ -1,4 +1,4 @@
-import { createMathBrain, randomVillainModel } from '../brains/index.ts';
+import { createMathBrain } from '../brains/index.ts';
 import type { Decision, Observation } from '../brains/index.ts';
 import type { LegalActions } from '../engine/index.ts';
 import type { Opponent } from './opponent.ts';
@@ -16,7 +16,7 @@ export const BOT_TIMEOUT_MS = 5000;
 export const SELECT_TIMEOUT_MS = 60_000;
 
 function newBrain() {
-  return createMathBrain({ villainModel: randomVillainModel });
+  return createMathBrain();
 }
 
 export function inProcessBot(): BotClient {

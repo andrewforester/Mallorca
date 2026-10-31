@@ -2,8 +2,9 @@ import { readFile } from 'node:fs/promises';
 import { basename, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Action, LegalActions } from '../../src/engine/index.ts';
-import type { Observation } from '../../src/brains/index.ts';
-import { createMathBrain, randomVillainModel } from '../../src/brains/index.ts';
+import { checkOrCall } from '../../src/engine/index.ts';
+import type { Brain, Observation } from '../../src/brains/index.ts';
+import { createMathBrain } from '../../src/brains/index.ts';
 import type { Rng } from '../../src/cards/index.ts';
 import type { CfrModel, ShippedStrategyKey } from '../../src/cfr/index.ts';
 import { SHIPPED_STRATEGIES, createCfrBrain, loadCfrModel } from '../../src/cfr/index.ts';
@@ -16,32 +17,32 @@ export interface ArenaBot {
 
 export type BotFactory = (rng: Rng) => ArenaBot;
 
-function passive(legal: LegalActions): Action {
-  return legal.check ? { kind: 'check' } : { kind: 'call' };
-}
-
-const math: BotFactory = () => {
-  const brain = createMathBrain({ villainModel: randomVillainModel });
+export function fromBrain(brain: Brain): ArenaBot {
   return {
     observe: (o) => brain.observe(o),
     decide: (legal) => brain.decide(legal).action,
+    dispose: () => brain.dispose?.(),
   };
-};
+}
+
+const math: BotFactory = () => fromBrain(createMathBrain());
 
 const alwaysCall: BotFactory = () => ({
   observe: () => undefined,
-  decide: passive,
+  decide: checkOrCall,
 });
 
 const alwaysRaise: BotFactory = () => ({
   observe: () => undefined,
-  decide: (legal) => (legal.raise ? { kind: 'raise', to: legal.raise.min } : passive(legal)),
+  decide: (legal) => (legal.raise ? { kind: 'raise', to: legal.raise.min } : checkOrCall(legal)),
 });
 
 const minBettor: BotFactory = () => ({
   observe: () => undefined,
   decide: (legal) =>
-    legal.call === null && legal.raise ? { kind: 'raise', to: legal.raise.min } : passive(legal),
+    legal.call === null && legal.raise
+      ? { kind: 'raise', to: legal.raise.min }
+      : checkOrCall(legal),
 });
 
 const random: BotFactory = (rng) => ({
@@ -52,7 +53,7 @@ const random: BotFactory = (rng) => ({
     if (legal.check) options.push({ kind: 'check' });
     if (legal.call !== null) options.push({ kind: 'call' });
     if (legal.raise) options.push({ kind: 'raise', to: legal.raise.min });
-    return options[Math.floor(rng.next() * options.length)] ?? passive(legal);
+    return options[Math.floor(rng.next() * options.length)] ?? checkOrCall(legal);
   },
 });
 
@@ -67,12 +68,7 @@ function cfrBot(key: string): BotFactory {
     if (model === undefined) {
       throw new Error('The cfr bot needs prepareBots before it plays');
     }
-    const brain = createCfrBrain(model, rng);
-    return {
-      observe: (o) => brain.observe(o),
-      decide: (legal) => brain.decide(legal).action,
-      dispose: () => brain.dispose(),
-    };
+    return fromBrain(createCfrBrain(model, rng));
   };
 }
 

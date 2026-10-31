@@ -5,17 +5,15 @@ export type {
   LegalActions,
   Seat,
   SeatIndex,
-  ShowdownHand,
   Step,
   Street,
 } from './types.ts';
-export { applyAction, IllegalActionError, startHandWith } from './hand.ts';
-export { legalActions } from './legal.ts';
+export { applyAction, startHandWith } from './hand.ts';
+export { checkOrCall, isLegal } from './legal.ts';
+export { playToEnd } from './play.ts';
 export type { Table, TableMode } from './table.ts';
 export {
   apply,
-  BIG_BLINDS,
-  blindsFor,
   CASH,
   createTable,
   legalActionsOf,
@@ -24,7 +22,6 @@ export {
   TOURNAMENT,
   TOURNAMENT_STACK,
 } from './table.ts';
-export type { Rules } from './rules.ts';
 export { rulesOf } from './rules.ts';
 export type { LogEntry } from './history.ts';
 export { handHistory } from './history.ts';

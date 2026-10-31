@@ -1,4 +1,4 @@
-import type { Hand, LegalActions, Seat, SeatIndex } from './types.ts';
+import type { Action, Hand, LegalActions, Seat, SeatIndex } from './types.ts';
 
 const NOTHING: LegalActions = { fold: false, check: false, call: null, raise: null };
 
@@ -27,4 +27,26 @@ export function legalActions(hand: Hand, seats: readonly [Seat, Seat]): LegalAct
     call: toCall > 0 ? Math.min(toCall, stack) : null,
     raise,
   };
+}
+
+export function isLegal(legal: LegalActions, action: Action): boolean {
+  switch (action.kind) {
+    case 'fold':
+      return legal.fold;
+    case 'check':
+      return legal.check;
+    case 'call':
+      return legal.call !== null;
+    case 'raise':
+      return (
+        legal.raise !== null &&
+        Number.isInteger(action.to) &&
+        action.to >= legal.raise.min &&
+        action.to <= legal.raise.max
+      );
+  }
+}
+
+export function checkOrCall(legal: LegalActions): Action {
+  return legal.check ? { kind: 'check' } : { kind: 'call' };
 }

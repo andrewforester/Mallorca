@@ -61,9 +61,16 @@ web/src/
 
 `brains` takes only types from `engine`: `Action`, `LegalActions` and the events it turns into observations.
 `ui` imports only from `game`; for the table, `game` re-exports `Card`, `formatCard`, `rankOf`, `suitOf`,
-`SeatIndex`, `LogEntry`, `HandCategory`, `TableMode`, `CASH` and `TOURNAMENT`, for the opponent choice `Opponent`,
-`OPPONENTS` and `opponentsFor`, and for the history `HandRecord`, `HandStore`, `openHandStore`, `memoryStore` and
+`SeatIndex`, `LogEntry`, `HandCategory`, `TableMode`, `CASH` and `TOURNAMENT`, for the opponent choice `Opponent`
+and `opponentsFor`, and for the history `HandRecord`, `HandStore`, `openHandStore`, `memoryStore` and
 `toPokerStars`.
+
+Each layer's `index.ts` exports only what other layers and `tools/` import; a test reaches the internals of its
+own layer by path. `brains/index.ts` holds `Brain`, `Decision`, `Observation`, `createMathBrain` and
+`toObservations`; `engine/index.ts` the types of a hand and a table, the reducers (`startHandWith`, `applyAction`,
+`startHand`, `apply`, `legalActionsOf`, `toAct`), `isLegal`, `checkOrCall`, `playToEnd`, `createTable`, `rulesOf`,
+the modes and `handHistory`; `game/index.ts` is the surface of `ui` (with `createSession`, `toViewModel`,
+`groupHand`, `workerBot` and `inProcessBot`).
 
 ESLint enforces the table with a `@typescript-eslint/no-restricted-imports` rule per directory. For `brains` the
 rule sets `allowTypeImports` on `engine`; the tests in `brains` (`*.test.ts`) may also import `engine` code to
@@ -91,10 +98,9 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
 - `HandEvaluator` has `rank(cards)` for 5 to 7 cards, higher is better, and `category(rank)`, a `HandCategory`:
   `high-card`, `pair`, `two-pair`, `trips`, `straight`, `flush`, `full-house`, `quads`, `straight-flush`.
   `pheEvaluator` implements it over `phe`.
-- `StreetEquity` (`strength`, `positivePotential`, `negativePotential`) and `WeightedHands` (hole cards with a
-  weight) are the types `brains` computes equity with; the computation itself lives in `brains` (`strength.ts`,
-  `spectrumEquilator.ts`, `preflopEquilator.ts`).
-- `index.ts` exports `pheEvaluator`, `HandCategory`, `StreetEquity` and `WeightedHands`.
+- `WeightedHands` (hole cards with a weight) is the type `brains` computes equity with; the computation itself
+  lives in `brains` (`spectrumEquilator.ts`, `preflopEquilator.ts`).
+- `index.ts` exports `pheEvaluator`, `HandCategory` and `WeightedHands`.
 - `npm run bench` (`evaluator.bench.test.ts`, outside `npm test`) ranks one million seven-card hands and expects
   under 1500 ms outside CI.
 
@@ -112,7 +118,11 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
   Both return `{ state, events }`. `legalActionsOf(t)` and `toAct(t)` read the current hand.
 - `startHandWith(seats, { button, blinds, handNumber }, deck)`, `applyAction(hand, seats, action)` and
   `legalActions(hand, seats)` are the hand-level reducer; `applyAction` throws `IllegalActionError` for anything
-  `legalActions` does not offer.
+  `legalActions` does not offer, as `isLegal(legal, action)` (`legal.ts`) decides. `checkOrCall(legal)` is the
+  passive action.
+- `playToEnd(start, act, onStep)` (`play.ts`) plays a hand from a `Step`: while a seat is to act it applies
+  `act(seat, legal)` (an `Actor`) and calls `onStep` with the start and every later step, then returns the last.
+  The arena and the cfr tests drive their bots through it.
 - `startHandWith` takes an already shuffled deck and deals from its front. Hole cards alternate starting with the
   seat after the button: `deck[0]` and `deck[2]` go to the big blind seat, `deck[1]` and `deck[3]` to the button.
   The board follows in order with no burn cards: flop `deck[4..6]`, turn `deck[7]`, river `deck[8]`. `Hand.deck`
@@ -170,13 +180,12 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 | `observation.ts`       | `Observation`, `toObservations(events, heroSeat)`, `parseObservation`            |
 | `handState.ts`         | `HandState`, `GameContext`, `HandStateObserver`: the bot's view of the hand      |
 | `spectrum.ts`          | `Spectrum`: a weight per villain hole-card pair                                  |
-| `villainModel.ts`      | `VillainModel`, `randomVillainModel`, `VillainSpectrumTracker`                   |
-| `strength.ts`          | `StrengthManager`: hero equity per street against the spectrum and at random     |
+| `villainModel.ts`      | `randomAdvice`, `VillainSpectrumTracker`                                         |
 | `spectrumEquilator.ts` | `SpectrumEquilator`: hero strength against a spectrum on a board, with its cache |
 | `preflopEquilator.ts`  | Preflop strength from `data/preflop-strength.json`                               |
-| `solver.ts`            | `NLGameSolver`, `ShowdownGameSolver`: the game tree, as `SolverNode`s            |
+| `solver.ts`            | `NLGameSolver`: the game tree, as `SolverNode`s                                  |
 | `profit.ts`            | `profitMap`, `SolverRequest`, `HeroKnowledge`, `RandomVariable`, raise sizing    |
-| `adviceFromMap.ts`     | `LessVarianceActionFromMap`: picks the action class from the action distribution |
+| `adviceFromMap.ts`     | `lessVarianceAction`: picks the action class from the action distribution        |
 | `preprocess.ts`        | `preprocessAction`, `toLegalAction`: resizes and clamps the chosen action        |
 | `brain.ts`             | `createMathBrain`, `Brain`, `Decision`                                           |
 | `javaCard.ts`          | The Java card numbering, for hashes that must match the original                 |
@@ -184,13 +193,14 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - `Observation` is the bot's view of engine events: `handStarted` (hand number, `heroOnButton`, both stacks,
   blinds), `holeCards` (its own), `acted` (`who` is `hero` or `villain`, the `Action` and the chips added) and
   `street` with the board. `toObservations` drops the villain's hole cards and the showdown.
-- `createMathBrain({ villainModel })` returns a `Brain` with `observe(o)` and `decide(legal)`. It enumerates
-  equities exactly and takes no `Rng`.
-- `randomVillainModel` returns the probabilities the Java `RandomBot` samples from: facing a bet fold, passive and
-  aggressive 1/3 each, otherwise passive and aggressive 1/2 each. It is never sampled.
+- A `Brain` has `observe(o)`, `decide(legal)` and an optional `dispose()`. `createMathBrain()` returns one without
+  `dispose`; it enumerates equities exactly and takes no `Rng`.
+- The villain is modelled as the Java `RandomBot`: `randomAdvice(state)` returns the probabilities it samples from,
+  facing a bet fold, passive and aggressive 1/3 each, otherwise passive and aggressive 1/2 each. It is never
+  sampled.
 - `profitMap(solver, game, situation, knowledge)` builds the `ActionDistribution`; `knowledge` is the
-  `HeroKnowledge` (`hero`, `spectrum`, `strength`). The solver gets one `SolverRequest` per call (game, hand
-  state, effective stack, pot, spectrum, hero, strength, button).
+  `HeroKnowledge` (`hero`, `spectrum`). The solver gets one `SolverRequest` per call (game, hand state, effective
+  stack, pot, spectrum, hero, button).
 - `decide` returns `{ action, solverChoice, evByAction }`. `action` is always legal under `legal`. `solverChoice`
   is the class (`fold`, `passive`, `aggressive`) the advice creator picked, before preprocessing and clamping.
 - `evByAction` holds the expected profit of each class in chips, relative to folding now: `fold` is 0 at the top
@@ -227,7 +237,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - `inflate(bytes)` gunzips with `DecompressionStream` when the bytes start with the gzip magic and returns other
   bytes as they are. `createCfrModel(wasm, strategy)` instantiates the module and loads the strategy; a bad file
   rejects with the reader's reason. `model.newBot()` returns a `CfrBot` handle, freed with `free()`.
-- `createCfrBrain(model, rng)` is a `Brain` with `dispose()`. It forwards every `Observation` to the bot and draws
+- `createCfrBrain(model, rng)` is a `Brain` whose `dispose()` is always present. It forwards every `Observation` to the bot and draws
   one `rng.next()` per observed action (the off-tree raise mapping) and one per decision (sampling the strategy),
   so a seed fixes its play. `solverChoice` is the kind of the action; `evByAction` is `NaN` for every class.
 - Translation lives in Rust (`mallorca-core::bot`): chips scale by the big blind, an opponent raise maps to one of
@@ -277,7 +287,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   split. It equals the `win` entry of the log; an uncalled bet is its own `returned` entry.
 - `BotClient` has `observe(observations)`, `decide(legal)`, `reset()`, an optional `select(opponent, seed)` and an
   optional `dispose()`. `workerBot()` runs the brain in `bot.worker.ts` over the `WorkerRequest` and `WorkerReply`
-  messages in `workerProtocol.ts`; `createWorkerHandler(newBrain, post, load?)` in `workerHandler.ts` is the worker's
+  messages in `workerProtocol.ts`; `createWorkerHandler(newBrain, post, load)` in `workerHandler.ts` is the worker's
   message handling as a plain function. A `select` request queues every later request until the opponent's brain
   factory is ready, then replies `{ id, opponent }` or `{ id, error }` and keeps the old brain on an error. The worker
   loads the model of each cfr opponent once, on its first `select` (`loadCfrModel` with `fetch` of `WASM_URL` and the
@@ -440,8 +450,9 @@ imports `engine`, `brains`, `cards`, `cfr` and `game/records/record.ts` and noth
 `.ts` files directly, including in workers. `tools/` may use the clock and Node APIs.
 
 - `bots.ts`: `BOTS`, the `BotFactory` (`(rng) => ArenaBot` with `observe`, `decide` and an optional `dispose`)
-  of each name: `math` (`createMathBrain` with `randomVillainModel`), `cfr` (`createCfrBrain` over the model that
-  `prepareBots` loads from `SHIPPED_STRATEGIES.cfr` once per process or worker; it throws before that),
+  of each name: `fromBrain(brain)` plays a `Brain`'s action and disposes it, for `math` (`createMathBrain()`) and
+  `cfr` (`createCfrBrain` over the model that `prepareBots` loads from `SHIPPED_STRATEGIES.cfr` once per process
+  or worker; it throws before that),
   `always-call` (checks or calls), `always-raise` (raises to `legal.raise.min` when it can, else checks or calls),
   `min-bettor` (bets the minimum when nobody has bet, else checks or calls) and `random` (uniform over the legal
   kinds, a raise to the minimum, from its seeded `Rng`). `cfr:<play file>` plays any play file the same way and is
@@ -450,8 +461,8 @@ imports `engine`, `brains`, `cards`, `cfr` and `game/records/record.ts` and noth
   `mulberry32((Math.imul(seed, 0x9e3779b1) + index) >>> 0)`; hand `k` (0, 1) starts both seats at the cash stakes
   (the stacks of `createTable` with `CASH`, the blinds of `rulesOf(CASH)`), button seat 0,
   `handNumber = index * 2 + k + 1`, with `a` on seat 0 in hand 0 and `b` in hand 1. Each hand
-  gets fresh bots, the bot on `seat` seeded by `mulberry32((seed ^ (index * 4 + k * 2 + seat)) >>> 0)`, and each
-  bot receives `toObservations` of the new events for its seat after every step. It returns `net`, the chips of
+  gets fresh bots, the bot on `seat` seeded by `mulberry32((seed ^ (index * 4 + k * 2 + seat)) >>> 0)`, the hand is
+  played by `playToEnd`, and each bot receives `toObservations` of the new events for its seat after every step. It returns `net`, the chips of
   `a` over both hands, and the events of both hands. The math bot against itself nets exactly 0 per pair.
 - `stats.ts`: `summarize(nets, bigBlind)`. The per-pair value is `v = net / 2 / bigBlind * 100`; `bbPer100` is the
   mean of `v` and `ci95 = 1.96 * sd(v) / sqrt(n)` with the sample standard deviation (n - 1). With fewer than 2
