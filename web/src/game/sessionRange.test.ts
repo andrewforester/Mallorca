@@ -34,16 +34,24 @@ interface Asked {
 interface Table {
   session: Session;
   asked: Asked[];
+  calls: string[];
 }
 
 function open(): Table {
   given.length = 0;
   const asked: Asked[] = [];
+  const calls: string[] = [];
+  const calling = callingBot();
   const bot: ScriptedBot = {
-    ...callingBot(),
+    ...calling,
     select: (opponent) => Promise.resolve(opponent),
+    decide: (legal) => {
+      calls.push('decide');
+      return calling.decide(legal);
+    },
     opponentRange: () =>
       new Promise<Float32Array | null>((resolve, reject) => {
+        calls.push('range');
         asked.push({ resolve, reject: () => reject(new Error('gone')) });
       }),
   };
@@ -56,7 +64,7 @@ function open(): Table {
     mode: CASH,
     talk: silentTalkClient,
   });
-  return { session, asked };
+  return { session, asked, calls };
 }
 
 const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -102,6 +110,15 @@ describe("the player's range in the session", () => {
     table.asked[3]?.reject();
     await flush();
     expect(given).toEqual([]);
+  });
+
+  it('is asked after the decision his action gives the bot', async () => {
+    const table = open();
+    await begin(table, 'cfr');
+    await playerCalls(table);
+    table.calls.length = 0;
+    await playerCalls(table);
+    expect(table.calls.slice(0, 2)).toEqual(['decide', 'range']);
   });
 
   it('is never asked against the math bot', async () => {

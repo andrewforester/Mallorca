@@ -230,12 +230,18 @@ class Wiring implements SessionTalk {
     const mine = this.rangeAsks;
     const epoch = this.host.epoch();
     const { handNumber } = this.host.table();
-    void attempt(playerRange).then((range) => {
-      const current = mine === this.rangeAsks && epoch === this.host.epoch() && talk === this.talk;
-      if (range !== null && current) {
-        talk.playerRange(range, handNumber);
+    const current = () =>
+      mine === this.rangeAsks && epoch === this.host.epoch() && talk === this.talk;
+    setTimeout(() => {
+      if (!current()) {
+        return;
       }
-    });
+      void attempt(playerRange).then((range) => {
+        if (range !== null && current()) {
+          talk.playerRange(range, handNumber);
+        }
+      });
+    }, 0);
   }
 
   private quickSignals(id: QuickPhrase): Signal[] {

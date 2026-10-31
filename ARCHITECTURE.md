@@ -486,9 +486,10 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   talk on, or when talk is switched on in one, and its client is attached; a silent client hides the talk. Each
   `start` makes a `Talk` for the bot's seat with `mulberry32(seed ^ 0x7a1c)` when the opponent is a Solver; it lives
   across hands, and every step's events reach `Talk.observe` after the bot, also with talk off. After a step with an
-  action of the player, the session asks `bot.opponentRange()` without waiting and passes the answer to
-  `Talk.playerRange` with the hand number of that step, if the epoch and the `Talk` are the same and no later
-  request was made; null or an error keeps the range she has. A line intent calls
+  action of the player that does not end the hand, the session asks `bot.opponentRange()` once the current task is
+  done, so a decision the step leads to reaches the bot first, and passes the answer to `Talk.playerRange` with the
+  hand number of that step, if the epoch and the `Talk` are the same and no later request was made; null or an
+  error keeps the range she has. A line intent calls
   `client.line` without waiting. Its text is kept only if the epoch matches, talk is still available and on, and the
   hand number and street still match; a hand-end line (`handWon`, `handLost`, `bluffCaught`) is kept until the next
   hand's first action. `say(text)` (trimmed, at most 200 characters) and `quick(niceHand | bluffing | notThisTime,
@@ -674,8 +675,10 @@ range     player action -> bot.observe -> bot.opponentRange() (worker, after the
           -> Talk.playerRange(weights, handNumber) -> her equity against his range -> feeling
 ```
 
-The player's range reaches her feeling a worker round trip after his action, so the bot's next decision may still
-use the style from before it; nothing in the hand waits for it. The session never waits for the server: a line is requested without awaiting it, a late or missing answer is
+The player's range reaches her feeling after the bot's next decision and a worker round trip, so that decision uses
+the style from before it; nothing in the hand waits for it. The read buckets each street of the hand once: the first
+read on the turn costs about 30 ms on a desktop and 130 to 170 ms at a 4 to 6 times slower CPU (v1), every other
+read under 4 ms; her equity against the range costs up to 4 ms on a desktop and 17 ms at 6 times slower. The session never waits for the server: a line is requested without awaiting it, a late or missing answer is
 dropped, and an error leaves the game as it is. The style path is the only way talk touches a move, and it is
 bounded by the clamps above.
 
