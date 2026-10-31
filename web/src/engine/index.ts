@@ -22,6 +22,7 @@ export {
   createTable,
   legalActionsOf,
   startHand,
+  startingStack,
   toAct,
   TOURNAMENT,
   TOURNAMENT_STACK,

@@ -117,7 +117,7 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
 - `createTable(names, mode, firstButton = 0)` (`table.ts`) returns a `Table`:
   `{ mode, seats, button, handNumber, hand, winner }`. A `Seat` is `{ name, stack }`. `TableMode` is
   `{ kind: 'tournament' }` (`TOURNAMENT`) or `{ kind: 'cash', bigBlind, buyIn }` (`CASH` is 20 and 2000). Both
-  seats start with `TOURNAMENT_STACK` (2000) in a tournament and with `buyIn` in cash.
+  seats start with `startingStack(mode)`: `TOURNAMENT_STACK` (2000) in a tournament and `buyIn` in cash.
 - `rulesOf(mode)` (`rules.ts`) returns the `Rules` of a mode: `blinds(handNumber)`, `beforeHand(seats)`, which
   returns the seats and events before the deal, and `isOver(seats)`, the winner or null. The table stays plain
   data; `startHand` and `apply` take the blinds, the top-up and the winner from the rules.
@@ -301,9 +301,9 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   session from `handOver` to `sessionOver`, where `act` and `nextHand` do nothing; in any other mode or phase it
   is ignored.
 - `session` is `{ hands, net }` for the human seat: `hands` counts completed hands and
-  `net = stack - buyIn - top-ups` in chips, where `buyIn` is the mode's in cash and 2000 in a tournament and
-  top-ups are the human's `toppedUp` amounts since `start`. Mid-hand `net` uses the stack at the start of the hand
-  (after any top-up, blinds included), so it changes only when a hand completes.
+  `net = stack - startingStack(mode) - top-ups` in chips, where the top-ups are the human's `toppedUp` amounts
+  since `start`. Mid-hand `net` uses the stack at the start of the hand (after any top-up, blinds included), so it
+  changes only when a hand completes.
 - Turn loop: after each step the session forwards the events to the bot as observations, then either waits for
   the human or asks the bot to decide and applies its action after `botDelayMs`.
 - `Intent` is `fold`, `passive` (check or call) or `raise` with a target. `resolveIntent` turns it into a legal
