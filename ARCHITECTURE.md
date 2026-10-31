@@ -46,23 +46,25 @@ web/src/
   engine/   heads-up NLHE rules as a pure reducer, table with a mode and its rules, hand history
   brains/   port of the Mallorca math bot
   cfr/      the CFR bot: the WASM module, the strategy file and a Brain over them
+  emotion/  the opponent's emotions: personality, appraisal, mood, overload and the play style they give
   talk/     table talk: hand-strength class, tells, mood and the style it maps to
   coach/    the coach's facts: hint, strategy and range grids, equity, odds
   game/     session store, turn loop, bot worker client, view-model, hand records
   ui/       Preact components, layout, tokens, i18n
 ```
 
-| Layer    | May import from                                               |
-| -------- | ------------------------------------------------------------- |
-| `cards`  | nothing                                                       |
-| `equity` | `cards`                                                       |
-| `engine` | `cards`, `equity`                                             |
-| `brains` | `cards`, `equity`, `engine`                                   |
-| `cfr`    | `cards`, types from `engine`, `brains`                        |
-| `talk`   | `cards`, `equity`, types from `engine`                        |
-| `coach`  | `cards`, `equity`, `brains`, types from `engine`, `cfr`       |
-| `game`   | `cards`, `equity`, `engine`, `brains`, `cfr`, `talk`, `coach` |
-| `ui`     | `game`                                                        |
+| Layer     | May import from                                               |
+| --------- | ------------------------------------------------------------- |
+| `cards`   | nothing                                                       |
+| `equity`  | `cards`                                                       |
+| `engine`  | `cards`, `equity`                                             |
+| `brains`  | `cards`, `equity`, `engine`                                   |
+| `cfr`     | `cards`, types from `engine`, `brains`                        |
+| `emotion` | nothing                                                       |
+| `talk`    | `cards`, `equity`, types from `engine`                        |
+| `coach`   | `cards`, `equity`, `brains`, types from `engine`, `cfr`       |
+| `game`    | `cards`, `equity`, `engine`, `brains`, `cfr`, `talk`, `coach` |
+| `ui`      | `game`                                                        |
 
 `brains` takes only types from `engine`: `Action`, `LegalActions`, the events it turns into observations and
 `BoardSize`, which pins its board sizes to the engine's.
@@ -87,7 +89,7 @@ types from `engine`; `tools/evaluator-golden/**` only `cards` and `equity`. `imp
 
 ### Purity
 
-`cards`, `equity`, `engine`, `brains`, `cfr`, `talk` and `coach` use no DOM (`document`, `window`, `self`, `navigator`), no
+`cards`, `equity`, `engine`, `brains`, `cfr`, `emotion`, `talk` and `coach` use no DOM (`document`, `window`, `self`, `navigator`), no
 `Math.random` or `crypto`, no `Date` or `performance`, no timers (`setTimeout`, `setInterval`), no `fetch` and no
 storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-globals` and
 `no-restricted-properties`. Randomness enters as an `Rng` argument, bytes through a reader passed in; `cfr`'s
@@ -283,6 +285,36 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   call, or to that size. A resync facing a bet below the nearest facing node's price can land on a node without a
   bet by the same mapping. In such a node the bot faces a real bet the tree does not see: a tree check is a real
   call, a tree bet a raise of the same pot fraction, and when the tree already closed the street the bot calls.
+
+## emotion
+
+The opponent's emotional state is the source of truth for how her play, and later her face, voice and lines, are
+coloured. The model and the origin of every formula and number are in `docs/emotion/README.md` (on the
+`spike/avatar-face` branch until the sandbox moves here); the code is the contract.
+
+- `createEngine(personality, config = GAME_MOOD)` returns an `Engine`. `event(e)` appraises one `TableEvent` and
+  returns the `Impulse`s it gave (emotion, amount, an English reason); `step(dt)` advances time in seconds;
+  `snapshot()` reads the state; `reset()` starts a session over. The engine holds no clock and no randomness.
+- `Personality` is the Big Five in [-1, 1] plus `suppression` (habitual poker face) and `experience`, both in
+  [0, 1]. `traitsOf` derives the default mood (Mehrabian's weights, as in ALMA), the gain and the half-life factor of
+  every emotion, `composure` (the overload threshold), `discipline`, `expressiveness`, `mask` and `talkativeness`.
+  `MALLORCA` is the personality of the shipped opponent.
+- Eleven emotions in [0, 1] (`EMOTIONS`): ten OCC types with their PAD point from ALMA and `injustice` and
+  `surprise` of our own. An impulse adds with saturation, `1 - (1 - e)(1 - a)`; every emotion decays with its own
+  half-life. Hope and fear follow targets while a hand runs: equity times what can still be won, and the missed
+  share times what can still be lost, both counting the streets ahead (`stakesOf`).
+- `TableEvent`s: `deal` and `street` (her perceived equity and the money: pot, invested, stack behind, streets
+  left), `opponentBet` (with `raise` for a raise against her, which also builds a session `pressure`), `result`
+  (judged by her equity before the deciding card), `bluff`, `mistake` and `chat` (a `ChatSignal`). A `street` after
+  the hand is over is ignored.
+- Mood is a PAD point moved by ALMA's pull and push toward the intensity weighted centre of the active emotions and
+  back to the default mood when none is active (`GAME_MOOD`: 600 s to change, 1200 s to return).
+- No tilt state: `loadOf` sums the negative emotions, the bad mood and the session loss; `overload` is a logistic
+  step around `composure`; `leakage = (1 - discipline)(0.3 + 0.7 overload)` is the share of emotion that reaches
+  the play.
+- `snapshot().style` is a `PlayStyle` of five multipliers (`aggression`, `looseness`, `bluff`, `sizing`,
+  `stickiness`), `clamp(1 + leakage * sum of coefficient * driver, 0.5, 2)`; all ones when calm. The bot's
+  `BotStyle` reads `tightness` as `1 / looseness`.
 
 ## talk
 
