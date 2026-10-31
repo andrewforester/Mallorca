@@ -20,6 +20,8 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 | `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena"              |
 | `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                              |
 | `web/prototypes/emotion-lab/`                                       | Emotion sandbox: the `emotion` engine with a face and a voice, see `docs/emotion`  |
+| `web/public/avatar/`                                                | Her 3D model `mallorca.glb`, its still `portrait.webp` and `LICENSE.md` (MIT)      |
+| `web/tools/avatar/`                                                 | Blender script that converts the Rocketbox source into `mallorca.glb`, see README  |
 | `docs/emotion/`                                                     | Emotion model document, its screenshots and generated tables                       |
 | `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`               |
 | `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`               |
@@ -27,8 +29,7 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 | `.github/workflows/`                                                | `web-ci.yml`, `talk-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master` |
 
 Generated and never committed: `web/dist`, `web/test-results`, `web/playwright-report`, `web/e2e/contact/`,
-`web/tools/golden/build`, `web/prototypes/emotion-lab/avatar.glb` (a non-commercial model), `web/arena-out/` (the
-arena results, see "arena") and `web/src/cfr/mallorca.wasm`, which
+`web/tools/golden/build`, `web/arena-out/` (the arena results, see "arena") and `web/src/cfr/mallorca.wasm`, which
 `npm run wasm` builds with cargo (the toolchain pinned in `solver/`) before `dev`, `test`, `build` and `arena`.
 
 `tsc` (`web/tsconfig.json`) type-checks `src`, `scripts`, `e2e`, `playwright.config.ts`, `tools/arena`,
@@ -50,24 +51,26 @@ web/src/
   brains/   port of the Mallorca math bot
   cfr/      the CFR bot: the WASM module, the strategy file and a Brain over them
   emotion/  the opponent's emotions: personality, appraisal, mood, overload and the play style they give
+  face/     her face and voice as numbers: expression, poker face, reactions, idle tells, visemes, prosody
   talk/     table talk: hand-strength class, tells, mood and the style it maps to
   coach/    the coach's facts: hint, strategy and range grids, equity, odds
   game/     session store, turn loop, bot worker client, view-model, hand records
   ui/       Preact components, layout, tokens, i18n
 ```
 
-| Layer     | May import from                                               |
-| --------- | ------------------------------------------------------------- |
-| `cards`   | nothing                                                       |
-| `equity`  | `cards`                                                       |
-| `engine`  | `cards`, `equity`                                             |
-| `brains`  | `cards`, `equity`, `engine`                                   |
-| `cfr`     | `cards`, types from `engine`, `brains`                        |
-| `emotion` | nothing                                                       |
-| `talk`    | `cards`, `equity`, `emotion`, types from `engine`             |
-| `coach`   | `cards`, `equity`, `brains`, types from `engine`, `cfr`       |
-| `game`    | `cards`, `equity`, `engine`, `brains`, `cfr`, `talk`, `coach` |
-| `ui`      | `game`                                                        |
+| Layer     | May import from                                                       |
+| --------- | --------------------------------------------------------------------- |
+| `cards`   | nothing                                                               |
+| `equity`  | `cards`                                                               |
+| `engine`  | `cards`, `equity`                                                     |
+| `brains`  | `cards`, `equity`, `engine`                                           |
+| `cfr`     | `cards`, types from `engine`, `brains`                                |
+| `emotion` | nothing                                                               |
+| `face`    | `emotion`                                                             |
+| `talk`    | `cards`, `equity`, `emotion`, types from `engine`                     |
+| `coach`   | `cards`, `equity`, `brains`, types from `engine`, `cfr`               |
+| `game`    | `cards`, `equity`, `engine`, `brains`, `cfr`, `talk`, `coach`, `face` |
+| `ui`      | `game`                                                                |
 
 `brains` takes only types from `engine`: `Action`, `LegalActions`, the events it turns into observations and
 `BoardSize`, which pins its board sizes to the engine's.
@@ -92,7 +95,7 @@ types from `engine`; `tools/evaluator-golden/**` only `cards` and `equity`. `imp
 
 ### Purity
 
-`cards`, `equity`, `engine`, `brains`, `cfr`, `emotion`, `talk` and `coach` use no DOM (`document`, `window`, `self`, `navigator`), no
+`cards`, `equity`, `engine`, `brains`, `cfr`, `emotion`, `face`, `talk` and `coach` use no DOM (`document`, `window`, `self`, `navigator`), no
 `Math.random` or `crypto`, no `Date` or `performance`, no timers (`setTimeout`, `setInterval`), no `fetch` and no
 storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-globals` and
 `no-restricted-properties`. Randomness enters as an `Rng` argument, bytes through a reader passed in; `cfr`'s
@@ -264,7 +267,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   after the flop by `1 / stickiness`, a check or a call by `1 / aggression`, a raise or an all-in by `aggression`
   (times `bluff` for a low bucket on the turn or the river). `sizing` then moves weight between the raises of the
   node, bets and opens included: each raise is multiplied by `sizing ^ t`, `t = clamp(log2(chips added / pot), -1,
-  1)` (half the pot -1, the pot 0, twice the pot and more +1), and the raises are scaled back to their total, so
+1)` (half the pot -1, the pot 0, twice the pot and more +1), and the raises are scaled back to their total, so
   `sizing` changes how big she bets, not how often.
 - The coach reads the strategy through two more `CfrBot` methods. Hole-card pairs are indexed
   `b * (b - 1) / 2 + a` for cards `a < b`, 1326 in all. `range()` is the bot's own range: 1 per pair at the start of
@@ -297,7 +300,8 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
 
 - `createEngine(personality, config = GAME_MOOD)` returns an `Engine`. `event(e)` appraises one `TableEvent` and
   returns the `Impulse`s it gave (emotion, amount, an English reason); `step(dt)` advances time in seconds;
-  `snapshot()` reads the state; `reset()` starts a session over. The engine holds no clock and no randomness.
+  `snapshot()` reads the state; `ahead(dt)` is the snapshot `dt` seconds later without changing the engine;
+  `reset()` starts a session over. The engine holds no clock and no randomness.
 - `Personality` is the Big Five in [-1, 1] plus `suppression` (habitual poker face) and `experience`, both in
   [0, 1]. `traitsOf` derives the default mood (Mehrabian's weights, as in ALMA), the gain and the half-life factor of
   every emotion, `composure` (the overload threshold), `discipline`, `expressiveness`, `mask` and `talkativeness`.
@@ -319,7 +323,33 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   `stickiness`), `clamp(1 + leakage * sum of coefficient * driver, 0.5, 2)`; all ones when calm. The bot's
   `BotStyle` reads `tightness` as `1 / looseness`.
 
-## talk
+## face
+
+Her face and voice as plain numbers, ported from the sandbox; the formulas and their sources are in
+`docs/emotion/README.md` ("Лицо", "Голос"). The layer decides nothing about play and draws nothing: `ui` renders
+what it returns.
+
+- `FaceLook` is the face of a character: gains of `brows`, `eyes` and `mouth`, `smileSide` (smile asymmetry),
+  `blink` (blink rate), `lettersPerSecond` (speech pace) and `leak` (`1 + 0.5 N`, how hard a masked reaction leaks).
+  `MALLORCA_LOOK` is hers.
+- `ANCHORS` are eleven expressions placed in PAD, each a set of ARKit blendshape `Weights`. `blendOf(pad)` weighs
+  them by `exp(-d² / 0.27²)` and normalises; `faceOf(mix, look, expressiveness)` sums the anchors and scales each
+  shape by its region gain, the smile side and `expressiveness * 1.4`.
+- `maskOf(habit, effort, overload)` is the poker face, `(habit + (1 - habit) effort)(1 - 0.6 overload)`;
+  `feltPadOf(snapshot)` is half the mood plus every emotion's PAD point (surprise left out); `shownPadOf(felt,
+mask, acted)` blends the felt point toward the acted one (neutral when null).
+- `STANCES` turns a `Stance` (`bluff`, `hide`) into `effort` and `acted`: a bluff is effort 0.6 acting confident
+  `(0.2, 0, 0.6)`, a hidden strong hand effort 0.5 with a neutral face.
+- `faceFrame(snapshot, stance, look)` returns a `FaceFrame`: `felt`, `shown`, `mask`, the blendshape `weights`,
+  `idle` (`nervous = 0.7 fear + 0.4 shame + 0.3 max(0, -D of mood)`, `arousal` of the felt point and the look's
+  `blinkRate`) and the `prosody` of her voice. Nervousness reads the felt state, so the mask never hides it.
+- `pulsesOf(impulses, mask, look)` gives a `Pulse` (`weights`, `amp`, `attack`, `hold`, `release`, `delay`,
+  `blinks`) for the strongest impulse of each reaction face of at least 0.12: long and open with an open face, a
+  micro-expression of about 0.3 s behind a mask, followed 0.3 s later by a control pulse of pressed lips with two
+  blinks.
+- `prosodyOf(shown, overload, sadness)` gives the `rate`, `pitch` and `volume` of speech;
+  `visemesOf(text, lettersPerSecond)` the `VisemeCue`s (one of the 15 Oculus visemes, its time and character
+  index) of a line, and `speechOf(text, prosody)` those of her line at her pace times `prosody.rate`.
 
 - `createTalk({ seat, rng, level, luckRng?, habits? })` returns a `Talk` for one session against the CFR bot.
   `observe(events, nowMs)` follows the engine events of a hand (`handTracker.ts`) and returns a `LineIntent` or null:
@@ -344,6 +374,10 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   `feeling()` is the engine's snapshot, `moodWords()` up to three words for the prompt (`on tilt` at overload 0.6
   and more, then the emotions of 0.25 and more, strongest first), and the chance to speak is scaled by
   `1 + 0.25 clamp((arousal above her default + overload) / 2, -1, 1)`.
+- For the face, `impulses()` returns the `Impulse`s the engine gave since the last call and forgets them,
+  `feelingAt(nowMs)` is the snapshot at `nowMs` (the engine's `ahead` from the last `observe`, never moving it), and
+  `stance()` is what her face acts: `bluff` after her bet or raise with a weak hand until the street or the hand
+  changes, `hide` while she holds a strong hand in a live hand, else null.
 - `style()` maps the engine's `PlayStyle` to the bot: aggression, bluff, sizing and stickiness as they are and
   tightness `1 / looseness`. A calm feeling gives the neutral style, all ones. Her words never decide a move.
 
@@ -470,8 +504,9 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   a `connectTalk` has not answered yet; `lines` are the last 100 `ChatLine`s (`id`, `speaker`, `text`, `handNumber`,
   optional `undelivered`) and `bubbles` the latest line per seat. `connectTalk` runs when a Solver session starts with
   talk on, or when talk is switched on in one, and its client is attached; a silent client hides the talk. Each
-  `start` makes a `Talk` for the bot's seat with `mulberry32(seed ^ 0x7a1c)` when the opponent is a Solver; it lives
-  across hands, and every step's events reach `Talk.observe` after the bot, also with talk off. A line intent calls
+  `start` makes a `Talk` for the bot's seat with `mulberry32(seed ^ 0x7a1c)` for every opponent (her face needs her
+  feeling against the math bot too); only a Solver opponent makes talk available, connects a client or plays a
+  style. The `Talk` lives across hands, and every step's events reach `Talk.observe` after the bot, also with talk off. A line intent calls
   `client.line` without waiting. Its text is kept only if the epoch matches, talk is still available and on, and the
   hand number and street still match; a hand-end line (`handWon`, `handLost`, `bluffCaught`) is kept until the next
   hand's first action. `say(text)` (trimmed, at most 200 characters) and `quick(niceHand | bluffing | notThisTime,
@@ -485,6 +520,15 @@ text)` (the caller's localized label) append the player's line at once and call 
   `pageHidden()` (with `keepalive`), only when a hand completed since the last one, and it holds what changed since
   the last summary. Nothing is sent when talk is off or unavailable, and every client error is ignored. `toViewModel`
   adds `talk` with `herBubble` and `playerBubble`.
+- Face (`sessionFace.ts`): `SessionOptions.faceOn` (default true) and `setFace(on)` switch it;
+  `SessionState.face` is `{ on, cues }`. While it is on, every step's events, after `Talk.observe`, add `FaceCue`s
+  with increasing `id` (the last 24 are kept): a `pulse` for each `Pulse` of `pulsesOf(Talk.impulses(), mask)`, the
+  mask of the frame at that moment, and a `gaze` from the events (`gazeOf` in `faceCues.ts`): her hole cards `cards`,
+  a dealt street `board`, her bet, call or raise `chips` with `then: 'player'`, the player's action `player`, the
+  hand end `player`. Impulses are drained also while it is off, so switching it on shows no old reaction.
+  `faceNow()` is `faceFrame(Talk.feelingAt(now()), Talk.stance(), MALLORCA_LOOK)`, or null while it is off or before
+  `start`; it never moves the engine, so the face changes no move and no seed. `toViewModel` adds `face` (`on`,
+  `cues`). `game` re-exports `FaceFrame`, `FaceCue`, `GazeTarget`, `Pulse`, `Weights`, `VisemeCue` and `speechOf`.
 - The payload builders (`talkClient.ts`) send `facts.stacks` as `[hers, the player's]` from the bot seat, the intent
   street as `actionStreet`, `quick` on a reply, and the summary `netBb` as the player's net (the negated net of hers).
   `loadTalkClient({ url, anonKey })` (`talkLoader.ts`) imports `remoteTalk.ts`, the only module that uses
@@ -527,7 +571,7 @@ text)` (the caller's localized label) append the player's line at once and call 
   and hold no game rules.
 - Components: `App`, `Scene`, `StatusBar`, `HistoryMenu`, `Settings`, `StartScreen`, `Table`, `Seat`, `BetChips`,
   `DealerButton`, `ActionBubble`, `Card` (SVG), `BoardRow`, `Board`, `Pot`, `ActionBar`, `BetSlider`,
-  `HandLogDrawer`, `TournamentOver`, `SessionOver`, `Chat`, `ChatSheet`, `Bubble`. `ui/suits.ts` `suitFace(card)`
+  `HandLogDrawer`, `TournamentOver`, `SessionOver`, `Chat`, `ChatSheet`, `Bubble`, `FaceSeat`. `ui/suits.ts` `suitFace(card)`
   gives the glyph and whether the suit is red for a card value or its text, for `Card` and the hand log.
 - `Scene` wraps the start screen and the table: the attic photo (`ui/scene/*.webp`, a portrait and a landscape plate
   over a blurred copy as the background) under a vignette, or with `simple` a flat felt without the photo (class
@@ -602,6 +646,20 @@ text)` (the caller's localized label) append the player's line at once and call 
   `App` calls on the click of a start button. The `mallorca.sound` preference (`readSound`, `writeSound`; on unless
   stored as `off`) is switched by the status bar button `sound-toggle` (`aria-pressed`) and the menu checkbox
   `sound`; off silences every cue.
+- Live face (`ui/face/`): `FaceSeat` takes the opponent's seat area above her plaque, head and shoulders behind the
+  table rail, on every layout. With the face preference on (`mallorca.face`, on unless stored `off`, the menu
+  checkbox `face`) it shows the still `portrait.webp` at once and, when `canRender()` finds WebGL and a device that
+  is not weak (more than 2 cores and more than 2 GB when the browser tells), imports `ui/face/avatar.ts` on demand,
+  so three.js and `mallorca.glb` are a separate chunk and a request made only then. The `Avatar` renders the model
+  over 52 ARKit blendshapes and 15 Oculus visemes: every frame it eases toward `faceNow()` (read about ten times a
+  second), plays new `FaceCue`s once (pulses, gaze with a glance back), blinks, saccades and glances away from
+  `idle`, poses the head from the shown PAD and breathes; `thinking` turns her gaze away to think. It pauses while
+  the document is hidden, calms the idle motion under `prefers-reduced-motion`, and falls back to the portrait when
+  the model fails to load or WebGL is lost. Off, the seat is the plaque as before.
+- Voice (`ui/face/voice.ts`): the `mallorca.voice` preference (off unless stored `on`, the menu checkbox `voice`)
+  speaks each new line of hers with the browser's `speechSynthesis`, an English voice from a preferred list, the
+  `prosody` of `faceNow()`, and her lips follow `speechOf` resynced on every word boundary. Without
+  `speechSynthesis` the checkbox is not shown.
 - Keyboard: `f` folds, `c` checks or calls, `r` raises, the arrow keys move the raise amount.
 - `data-testid` contract for e2e and contact sheets: `scene`, `start-cash`, `start-tournament`, `opponent-<key>`,
   `start-loading`, `farewell`, `blinds`, `session-result`, `hand-number`, `leave`, `new-game`, `seat-<i>`, `stack-<i>`
@@ -615,7 +673,8 @@ text)` (the caller's localized label) append the player's line at once and call 
   `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and `export-text` (the session
   dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu). Table talk adds
   `bubble-mallorca`, `bubble-player`, `talk-region`, `chat-panel`, `chat-open`, `chat-sheet`, `chat-close`,
-  `chat-line`, `chat-input`, `chat-send`, `quick-<id>`, `table-talk` and `tells`.
+  `chat-line`, `chat-input`, `chat-send`, `quick-<id>`, `table-talk` and `tells`. The face adds `face-seat` (with
+  `data-face` = `portrait`, `live` or `off`), `face` and `voice`.
 
 ## Table talk server
 
@@ -679,7 +738,9 @@ bounded by the clamps above.
   it is a full-height sheet on a 900 × 500 screen.
 - `scene.spec.ts`: the table stays playable on the felt colour when the plates fail to load, the showdown result
   covers neither shown hand nor the board, the simple table is flat, loads no plate and is remembered across a reload,
-  and the deal animation follows `prefers-reduced-motion`. `solver.spec.ts`: the `cfr` opponent loads the module and
+  and the deal animation follows `prefers-reduced-motion`. `face.spec.ts`: the live face mounts on desktop and
+  phone and loads its chunk only then, falls back to the portrait without WebGL, and can be turned off and stays
+  off across a reload. `solver.spec.ts`: the `cfr` opponent loads the module and
   its strategy in the worker and plays cash hands recorded as `cfr`, `cfr-v2` loads its own file on desktop and is
   recorded as `v2-10`, and a phone is not offered `cfr-v2`. `arena.spec.ts`: the published arena page lists the runs,
   a run with hands opens and shows a pair as PokerStars text. `coach.spec.ts`: in coach mode the hint, both grids
