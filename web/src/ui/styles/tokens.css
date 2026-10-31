@@ -66,6 +66,14 @@
   --action-bar-reserve: 220px;
   --color-token: rgba(246, 236, 218, 0.08);
   --color-token-aggressive: rgba(227, 176, 110, 0.22);
+  --color-coach-fold: #6f7f86;
+  --color-coach-passive: #4f9a82;
+  --color-coach-small: #d9a35b;
+  --color-coach-large: #c46a3c;
+  --color-coach-all-in: #9a3434;
+  --color-coach-range: #e3b06e;
+  --coach-cell-font: 8px;
+  --sheet-max-height: 85dvh;
 }
 
 @media (prefers-color-scheme: dark) {

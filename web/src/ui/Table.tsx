@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import type { Intent, Phase, SeatIndex, ViewModel } from '../game/index.ts';
 import { ActionBar } from './ActionBar.tsx';
 import { BetChips } from './BetChips.tsx';
@@ -17,6 +18,7 @@ export interface TableProps {
   autoNextMs?: number | null;
   onAct: (intent: Intent) => void;
   onNextHand: () => void;
+  coach?: ComponentChildren;
 }
 
 function resultText(vm: ViewModel, humanSeat: SeatIndex): string | null {
@@ -130,7 +132,15 @@ function Result({ text, canContinue, autoNextMs, onNextHand }: ResultProps) {
   );
 }
 
-export function Table({ vm, phase, humanSeat, autoNextMs = null, onAct, onNextHand }: TableProps) {
+export function Table({
+  vm,
+  phase,
+  humanSeat,
+  autoNextMs = null,
+  onAct,
+  onNextHand,
+  coach,
+}: TableProps) {
   const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
   const botWaiting = phase === 'botThinking' || phase === 'animating';
   const text = resultText(vm, humanSeat);
@@ -173,7 +183,9 @@ export function Table({ vm, phase, humanSeat, autoNextMs = null, onAct, onNextHa
       />
       <ActionBar key={barKey} controls={vm.controls} onAct={onAct} />
       <div class="table-side">
-        <aside class="coach" data-testid="coach" aria-label={t('coach.label')} />
+        <aside class="coach" data-testid="coach" aria-label={t('coach.label')}>
+          {coach}
+        </aside>
       </div>
     </div>
   );

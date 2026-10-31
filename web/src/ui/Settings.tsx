@@ -31,6 +31,15 @@ export function Settings({ preferences }: { preferences: Preferences }) {
         />
         <span>{t('status.sound')}</span>
       </label>
+      <label class="menu-toggle">
+        <input
+          type="checkbox"
+          data-testid="coach-mode"
+          checked={preferences.coach}
+          onChange={preferences.toggleCoach}
+        />
+        <span>{t('coach.mode')}</span>
+      </label>
     </>
   );
 }

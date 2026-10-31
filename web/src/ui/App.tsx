@@ -14,6 +14,8 @@ import { StatusBar } from './StatusBar.tsx';
 import { Table } from './Table.tsx';
 import { TournamentOver } from './TournamentOver.tsx';
 import { useAutoNext } from './useAutoNext.ts';
+import { useCoach } from './useCoach.tsx';
+import type { CoachView } from './useCoach.tsx';
 import { usePreferences } from './usePreferences.ts';
 import type { Preferences } from './usePreferences.ts';
 
@@ -78,6 +80,7 @@ export function App(props: AppProps) {
   const preferences = useUnlockingPreferences(player);
   const drawer = useLogDrawer(state.phase);
   useSoundCues(session, player, preferences.sound);
+  const coach = useCoach(session, state, preferences);
   const vm = state.phase === 'idle' ? null : toViewModel(state, humanSeat);
   const handOver = state.phase === 'handOver' ? vm : null;
   const autoNextMs = useAutoNext(
@@ -86,17 +89,7 @@ export function App(props: AppProps) {
     (props.autoNext ?? true) && preferences.autoNext && !drawer.open,
   );
   if (vm === null) {
-    return (
-      <StartScreen
-        seed={state.seed}
-        simple={preferences.simple}
-        farewell={props.farewell ?? false}
-        onStart={(mode, opponent) => {
-          preferences.unlock();
-          void session.getState().start(mode, opponent);
-        }}
-      />
-    );
+    return <Start app={props} seed={state.seed} preferences={preferences} />;
   }
   const act = (intent: Intent) => {
     preferences.unlock();
@@ -105,7 +98,14 @@ export function App(props: AppProps) {
   return (
     <Scene simple={preferences.simple}>
       <div class="app">
-        <Header app={props} vm={vm} seed={state.seed} drawer={drawer} preferences={preferences} />
+        <Header
+          app={props}
+          vm={vm}
+          seed={state.seed}
+          drawer={drawer}
+          preferences={preferences}
+          coach={coach}
+        />
         <Table
           vm={vm}
           phase={state.phase}
@@ -113,7 +113,9 @@ export function App(props: AppProps) {
           autoNextMs={autoNextMs}
           onAct={act}
           onNextHand={() => void session.getState().nextHand()}
+          coach={coach.panel}
         />
+        {coach.sheet}
         {drawer.open && (
           <HandLogDrawer
             entries={state.log}
@@ -128,15 +130,40 @@ export function App(props: AppProps) {
   );
 }
 
+function Start({
+  app,
+  seed,
+  preferences,
+}: {
+  app: AppProps;
+  seed: number;
+  preferences: UnlockingPreferences;
+}) {
+  return (
+    <StartScreen
+      seed={seed}
+      simple={preferences.simple}
+      farewell={app.farewell ?? false}
+      coach={preferences.coach}
+      onToggleCoach={preferences.toggleCoach}
+      onStart={(mode, opponent) => {
+        preferences.unlock();
+        void app.session.getState().start(mode, opponent);
+      }}
+    />
+  );
+}
+
 interface HeaderProps {
   app: AppProps;
   vm: ViewModel;
   seed: number;
   drawer: ReturnType<typeof useLogDrawer>;
   preferences: Preferences;
+  coach: CoachView;
 }
 
-function Header({ app, vm, seed, drawer, preferences }: HeaderProps) {
+function Header({ app, vm, seed, drawer, preferences, coach }: HeaderProps) {
   const phase = app.session.getState().phase;
   return (
     <StatusBar
@@ -148,6 +175,7 @@ function Header({ app, vm, seed, drawer, preferences }: HeaderProps) {
       onToggleLog={drawer.flip}
       sound={preferences.sound}
       onToggleSound={preferences.toggleSound}
+      coach={coach.toggle}
     >
       <HistoryMenu seed={seed} store={app.store} onNewGame={app.onNewGame} onOpen={drawer.dismiss}>
         <Settings preferences={preferences} />
