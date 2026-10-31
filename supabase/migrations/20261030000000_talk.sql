@@ -37,9 +37,9 @@ alter table public.memories enable row level security;
 alter table public.usage enable row level security;
 alter table public.usage_total enable row level security;
 
-revoke insert, update, delete on public.talk_lines, public.memories, public.usage, public.usage_total
+revoke all on public.talk_lines, public.memories, public.usage, public.usage_total
   from anon, authenticated;
-revoke select on public.usage, public.usage_total from anon, authenticated;
+grant select on public.talk_lines, public.memories to authenticated;
 
 create policy talk_lines_select_own on public.talk_lines
   for select to authenticated

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(24);
+select plan(28);
 
 select has_table('public', 'talk_lines', 'talk_lines exists');
 select has_table('public', 'memories', 'memories exists');
@@ -100,6 +100,35 @@ select throws_ok(
   '42501',
   null,
   'authenticated cannot call consume_call'
+);
+
+select throws_ok(
+  $$update public.talk_lines set text = 'changed'$$,
+  '42501',
+  null,
+  'authenticated cannot update lines'
+);
+select throws_ok(
+  $$truncate public.memories$$,
+  '42501',
+  null,
+  'authenticated cannot truncate memories'
+);
+
+reset role;
+set local role anon;
+
+select throws_ok(
+  $$select count(*) from public.talk_lines$$,
+  '42501',
+  null,
+  'anon cannot read lines'
+);
+select throws_ok(
+  $$select count(*) from public.memories$$,
+  '42501',
+  null,
+  'anon cannot read memories'
 );
 
 reset role;
