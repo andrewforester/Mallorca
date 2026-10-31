@@ -11,11 +11,23 @@ const pure = [
   'src/engine',
   'src/brains',
   'src/cfr',
+  'src/emotion',
   'src/talk',
   'src/coach',
 ];
 
-const LAYERS = ['cards', 'equity', 'engine', 'brains', 'cfr', 'talk', 'coach', 'game', 'ui'];
+const LAYERS = [
+  'cards',
+  'equity',
+  'engine',
+  'brains',
+  'cfr',
+  'emotion',
+  'talk',
+  'coach',
+  'game',
+  'ui',
+];
 
 const layer = (
   dir,
@@ -136,8 +148,9 @@ export default tseslint.config(
   layer('brains', ['cards', 'equity', 'engine'], [], ['src/brains/**/*.test.ts']),
   layer('cfr', ['cards'], ['engine', 'brains']),
   layer('cfr', ['cards', 'engine', 'brains'], [], ['src/cfr/**/*.test.ts']),
-  layer('talk', ['cards', 'equity'], ['engine']),
-  layer('talk', ['cards', 'equity', 'engine'], [], ['src/talk/**/*.test.ts']),
+  layer('emotion', []),
+  layer('talk', ['cards', 'equity', 'emotion'], ['engine']),
+  layer('talk', ['cards', 'equity', 'emotion', 'engine'], [], ['src/talk/**/*.test.ts']),
   layer('coach', ['cards', 'equity', 'brains'], ['engine', 'cfr']),
   layer('coach', ['cards', 'equity', 'brains', 'engine', 'cfr'], [], ['src/coach/**/*.test.ts']),
   layer('game', ['cards', 'equity', 'engine', 'brains', 'cfr', 'talk', 'coach']),

@@ -1,11 +1,13 @@
 export type { Habit, Habits, Level, Situation } from './habits.ts';
 export { BASE_HABITS, habitsAt } from './habits.ts';
-export type { Mood, Outcome, Signal } from './mood.ts';
-export { CALM, SIGNALS, afterHand, afterSignals, moodWords, speakFactor } from './mood.ts';
+export type { Feeling } from './feeling.ts';
+export { createFeeling } from './feeling.ts';
+export type { Signal } from './signals.ts';
+export { SIGNALS } from './signals.ts';
 export type { StrengthClass } from './strength.ts';
 export { strengthOf } from './strength.ts';
 export type { Style } from './style.ts';
-export { NEUTRAL_STYLE, styleOf } from './style.ts';
+export { NEUTRAL_STYLE } from './style.ts';
 export type { SessionSummary } from './summary.ts';
 export { EMPTY_SUMMARY, since } from './summary.ts';
 export type { Draw, HandFacts, LineIntent, Spot, Talk, TalkOptions } from './talk.ts';

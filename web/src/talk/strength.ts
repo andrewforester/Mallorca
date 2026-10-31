@@ -21,7 +21,7 @@ function allHands(): WeightedHands {
   return hands;
 }
 
-const ALL_HANDS = allHands();
+export const ALL_HANDS = allHands();
 
 export function strengthOf(
   hole: readonly [Card, Card],
