@@ -77,6 +77,12 @@ function selectOrFallBack(
   });
 }
 
+function timedCoach(ask: Promise<CoachFacts> | undefined, ms: number): Promise<CoachFacts> {
+  return ask === undefined
+    ? Promise.reject(new Error('The coach is not available'))
+    : withTimeout(ask, ms);
+}
+
 export function withFallback(primary: BotClient, timeoutMs = BOT_TIMEOUT_MS): BotClient {
   if (guarded.has(primary)) {
     return primary;
@@ -117,10 +123,7 @@ export function withFallback(primary: BotClient, timeoutMs = BOT_TIMEOUT_MS): Bo
         return fallBack().decide(legal);
       }
     },
-    coach(observations, legal, pot) {
-      const ask = usedFallback ? undefined : active.coach?.(observations, legal, pot);
-      return ask ?? Promise.reject(new Error('The coach is not available'));
-    },
+    coach: (...args) => timedCoach(usedFallback ? undefined : active.coach?.(...args), timeoutMs),
     select: (opponent, seed) =>
       selectOrFallBack(active.select?.(opponent, seed), () => {
         if (!usedFallback) {

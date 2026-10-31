@@ -65,11 +65,37 @@ function replay(bot: CfrBot, observations: Observation[]): Seen {
   return seen;
 }
 
-function hintOf(spot: CfrSpot, seen: Seen, request: CoachRequest): Hint {
+interface Merged {
+  moves: CoachMove[];
+  grid: Float32Array;
+  approximate: boolean;
+}
+
+function merge(spot: CfrSpot, request: CoachRequest): Merged {
+  const moves: CoachMove[] = [];
+  const slot = spot.moves.map((action) => {
+    const move = coachMove(action, request.legal, request.pot);
+    const found = moves.findIndex((m) => m.label === move.label && m.amount === move.amount);
+    if (found >= 0) return found;
+    moves.push(move);
+    return moves.length - 1;
+  });
+  const n = spot.moves.length;
+  const grid = new Float32Array(PAIRS * moves.length);
+  for (let i = 0; i < PAIRS; i++) {
+    for (let k = 0; k < n; k++) {
+      const at = i * moves.length + (slot[k] ?? 0);
+      grid[at] = (grid[at] ?? 0) + (spot.grid[i * n + k] ?? 0);
+    }
+  }
+  return { moves, grid, approximate: spot.approximate };
+}
+
+function hintOf(spot: Merged, seen: Seen): Hint {
   const n = spot.moves.length;
   const row = pairIndex(seen.hero[0], seen.hero[1]);
   return {
-    moves: spot.moves.map((m) => coachMove(m, request.legal, request.pot)),
+    moves: spot.moves,
     mine: Array.from(spot.grid.subarray(row * n, (row + 1) * n)),
     approximate: spot.approximate,
     heroCell: cellOf(seen.hero[0], seen.hero[1]),
@@ -91,11 +117,12 @@ export function coachFacts(request: CoachRequest): CoachFacts {
   const bot = request.model.newBot();
   try {
     const seen = replay(bot, request.observations);
-    const spot = bot.spot(request.legal);
+    const raw = bot.spot(request.legal);
+    const spot = raw === null ? null : merge(raw, request);
     const dead = [...seen.hero, ...seen.board];
     const range = liveRange(request.range, dead);
     return {
-      hint: spot === null ? null : hintOf(spot, seen, request),
+      hint: spot === null ? null : hintOf(spot, seen),
       strategy: spot === null ? null : foldGrid(spot.grid, spot.moves.length, seen.board),
       range: range === null ? null : foldGrid(range, 1, dead).map((cell) => cell?.[0] ?? null),
       combos: range === null ? null : range.reduce((a, b) => a + b, 0),

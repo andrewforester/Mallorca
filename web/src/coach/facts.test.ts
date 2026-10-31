@@ -121,3 +121,28 @@ describe('coachFacts', () => {
     expect(coachFacts(request)).toEqual(coachFacts(request));
   });
 });
+
+describe('coachFacts on a short stack', () => {
+  it('merges tree sizes that land on the same real move', () => {
+    const observations: Observation[] = [
+      {
+        type: 'handStarted',
+        handNumber: 1,
+        heroOnButton: true,
+        heroStack: 40,
+        villainStack: 2000,
+        smallBlind: 10,
+        bigBlind: 20,
+      },
+      { type: 'holeCards', cards: ACES },
+    ];
+    const legal: LegalActions = { fold: true, check: false, call: 10, raise: { min: 40, max: 40 } };
+    const facts = coachFacts({ model, observations, legal, pot: 30, range: null });
+    const keys = facts.hint?.moves.map((m) => `${m.label}-${m.amount}`) ?? [];
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(facts.hint?.mine.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 5);
+    const cell = facts.strategy?.find((c) => c !== null) ?? [];
+    expect(cell).toHaveLength(keys.length);
+    expect(cell.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 5);
+  });
+});

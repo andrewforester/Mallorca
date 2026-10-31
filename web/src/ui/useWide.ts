@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 
-const WIDE = '(min-aspect-ratio: 1/1)';
+const WIDE = '(min-aspect-ratio: 1/1) and (min-height: 561px)';
 
 function matches(): boolean {
   return globalThis.matchMedia?.(WIDE).matches ?? true;

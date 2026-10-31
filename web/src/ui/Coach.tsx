@@ -110,8 +110,13 @@ function NumbersTab({ facts }: { facts: CoachFacts }) {
   );
 }
 
-function Facts({ facts }: { facts: CoachFacts }) {
-  const [tab, setTab] = useState<Tab>('hint');
+interface FactsProps {
+  facts: CoachFacts;
+  tab: Tab;
+  setTab: (tab: Tab) => void;
+}
+
+function Facts({ facts, tab, setTab }: FactsProps) {
   return (
     <>
       <HintLine hint={facts.hint} />
@@ -140,11 +145,12 @@ function Facts({ facts }: { facts: CoachFacts }) {
 }
 
 export function Coach({ state }: { state: CoachState }) {
+  const [tab, setTab] = useState<Tab>('hint');
   const status = state.status === 'off' ? 'idle' : state.status;
   return (
     <section class="coach-panel glass" aria-label={t('coach.label')}>
       {state.status === 'ready' && state.facts !== null ? (
-        <Facts facts={state.facts} />
+        <Facts facts={state.facts} tab={tab} setTab={setTab} />
       ) : (
         <p class="coach-status" data-testid="coach-status">
           {t(`coach.${status === 'ready' ? 'idle' : status}`)}

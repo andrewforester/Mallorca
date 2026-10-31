@@ -97,3 +97,13 @@ describe('Coach colours', () => {
     expect(colours[3]).toContain('100%');
   });
 });
+
+describe('Coach tab', () => {
+  it('keeps the chosen tab across the player turns', () => {
+    const { rerender } = render(<Coach state={readyCoach()} />);
+    fireEvent.click(screen.getByTestId('coach-tab-numbers'));
+    rerender(<Coach state={{ status: 'idle', facts: null }} />);
+    rerender(<Coach state={readyCoach()} />);
+    expect(screen.getByTestId('coach-tab-numbers').getAttribute('aria-selected')).toBe('true');
+  });
+});
