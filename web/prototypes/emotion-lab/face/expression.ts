@@ -1,16 +1,12 @@
 import { EMOTIONS, EMOTION_PAD } from '../../../src/emotion/index.ts';
+export { OVERLOAD_MASK_LOSS, maskOf } from '../../../src/emotion/index.ts';
 import type { Impulse, Pad, Snapshot } from '../../../src/emotion/index.ts';
-import { clamp, clamp01, smoothstep } from '../lab.ts';
+import { clamp, smoothstep } from '../lab.ts';
 import { EMOTION_PULSE } from './anchors.ts';
 
 export const EMOTION_DISPLAY_GAIN = 1;
 export const MOOD_DISPLAY_GAIN = 0.5;
-export const OVERLOAD_MASK_LOSS = 0.6;
 export const PULSE_THRESHOLD = 0.12;
-
-export function maskOf(habit: number, effort: number, overload: number): number {
-  return clamp01(habit + (1 - habit) * effort) * (1 - OVERLOAD_MASK_LOSS * overload);
-}
 
 export function feltPadOf(s: Snapshot): Pad {
   let [pleasure, arousal, dominance] = s.mood.map((v) => v * MOOD_DISPLAY_GAIN) as [
