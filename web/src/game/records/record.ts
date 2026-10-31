@@ -2,6 +2,7 @@ import type { Decision } from '../../brains/index.ts';
 import type { EngineEvent, SeatIndex, TableMode } from '../../engine/index.ts';
 import { SHIPPED_STRATEGIES } from '../../cfr/index.ts';
 import type { BotRecord } from '../../cfr/index.ts';
+import type { CoachDecision } from '../../coach/index.ts';
 import { formatCard } from '../cards.ts';
 import type { Opponent } from '../opponent.ts';
 
@@ -10,6 +11,8 @@ export interface RecordedDecision {
   solverChoice: string;
   evByAction: Record<string, number | null>;
 }
+
+export type RecordedCoach = CoachDecision & { eventIndex: number };
 
 export interface RecordMeta {
   sessionId: string;
@@ -34,6 +37,7 @@ export interface HandRecord {
   board: string[];
   events: EngineEvent[];
   decisions: RecordedDecision[];
+  coach?: RecordedCoach[];
 }
 
 export const MATH_BOT: BotRecord = { id: 'math', version: '1' };
@@ -63,6 +67,7 @@ export function handRecord(
   events: EngineEvent[],
   decisions: RecordedDecision[],
   meta: RecordMeta,
+  coach: RecordedCoach[] = [],
 ): HandRecord {
   const holeCards: HandRecord['holeCards'] = [
     ['', ''],
@@ -93,5 +98,6 @@ export function handRecord(
     board,
     events,
     decisions,
+    ...(coach.length > 0 ? { coach } : {}),
   };
 }

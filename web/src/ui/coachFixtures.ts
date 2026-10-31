@@ -30,5 +30,5 @@ export function coachFacts(overrides: Partial<CoachFacts> = {}): CoachFacts {
 }
 
 export function readyCoach(overrides: Partial<CoachFacts> = {}): CoachState {
-  return { status: 'ready', facts: coachFacts(overrides) };
+  return { status: 'ready', facts: coachFacts(overrides), review: [], log: [] };
 }

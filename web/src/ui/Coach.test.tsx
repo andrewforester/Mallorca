@@ -75,7 +75,7 @@ describe('Coach', () => {
       ['waiting', 'thinking'],
       ['unavailable', 'not available'],
     ] as const) {
-      render(<Coach state={{ status, facts: null }} />);
+      render(<Coach state={{ status, facts: null, review: [], log: [] }} />);
       expect(screen.getByTestId('coach-status').textContent).toContain(text);
       cleanup();
     }
@@ -102,7 +102,7 @@ describe('Coach tab', () => {
   it('keeps the chosen tab across the player turns', () => {
     const { rerender } = render(<Coach state={readyCoach()} />);
     fireEvent.click(screen.getByTestId('coach-tab-numbers'));
-    rerender(<Coach state={{ status: 'idle', facts: null }} />);
+    rerender(<Coach state={{ status: 'idle', facts: null, review: [], log: [] }} />);
     rerender(<Coach state={readyCoach()} />);
     expect(screen.getByTestId('coach-tab-numbers').getAttribute('aria-selected')).toBe('true');
   });

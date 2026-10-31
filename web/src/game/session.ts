@@ -41,6 +41,7 @@ import { botRecord } from './records/record.ts';
 import type { Opponent } from './opponent.ts';
 import { COACH_OFF, createCoach } from './coach.ts';
 import type { Coach, CoachState } from './coach.ts';
+import type { CoachDecision } from '../coach/index.ts';
 
 export { resolveIntent, toIntent } from './intent.ts';
 export type { Intent } from './intent.ts';
@@ -209,12 +210,20 @@ function conclude(rt: Runtime, step: Step): void {
   });
 }
 
-function play(rt: Runtime, action: Action, decision: Decision | null = null): void {
+function play(
+  rt: Runtime,
+  action: Action,
+  decision: Decision | null = null,
+  coached: CoachDecision | null = null,
+): void {
   const { hand } = rt.get().table;
   const opens = hand !== null && isOpeningBet(hand, action);
   const step = apply(rt.get().table, action);
   if (decision !== null) {
     rt.recorder.decided(decision, step.events);
+  }
+  if (coached !== null) {
+    rt.recorder.coached(coached, step.events);
   }
   rt.set({ table: step.state });
   record(rt, step.events, opens);
@@ -346,8 +355,10 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
       if (phase !== 'humanToAct' || toAct(table) !== rt.humanSeat) {
         return Promise.resolve();
       }
+      const action = resolveIntent(intent, legalActionsOf(table));
+      const coached = rt.coach.played(action);
       rt.coach.acted();
-      play(rt, resolveIntent(intent, legalActionsOf(table)));
+      play(rt, action, null, coached);
       return drive(rt, rt.epoch);
     },
     setCoach(on) {
