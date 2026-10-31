@@ -1,6 +1,11 @@
+mod buffers;
+mod slots;
+
+use buffers::Buffers;
 use mallorca_core::bot::{Bot, Legal, Model, Move, Style};
 use mallorca_core::cards::Card;
 use mallorca_core::strategy::{StrategyError, StrategyFile};
+use slots::Slots;
 use std::sync::{Arc, Mutex, MutexGuard};
 
 pub const KIND_FOLD: u32 = 0;
@@ -8,6 +13,8 @@ pub const KIND_CHECK: u32 = 1;
 pub const KIND_CALL: u32 = 2;
 pub const KIND_RAISE: u32 = 3;
 pub const KIND_NONE: u32 = 9;
+pub const NO_MODEL_SLOT: i32 = -7;
+pub const NOT_ALLOCATED: i32 = -8;
 
 struct Seat {
     model: Arc<Model>,
@@ -15,15 +22,16 @@ struct Seat {
     to: u32,
 }
 
-#[derive(Default)]
 struct Registry {
-    models: Vec<Arc<Model>>,
-    bots: Vec<Option<Seat>>,
+    buffers: Buffers,
+    models: Slots<Arc<Model>>,
+    bots: Slots<Seat>,
 }
 
 static REGISTRY: Mutex<Registry> = Mutex::new(Registry {
-    models: Vec::new(),
-    bots: Vec::new(),
+    buffers: Buffers::new(),
+    models: Slots::new(),
+    bots: Slots::new(),
 });
 
 fn registry() -> MutexGuard<'static, Registry> {
@@ -31,10 +39,9 @@ fn registry() -> MutexGuard<'static, Registry> {
 }
 
 fn with_seat<T>(bot: i32, fallback: T, f: impl FnOnce(&mut Seat) -> T) -> T {
-    let mut r = registry();
-    match usize::try_from(bot).ok().and_then(|i| r.bots.get_mut(i)) {
-        Some(Some(seat)) => f(seat),
-        _ => fallback,
+    match registry().bots.get_mut(bot) {
+        Some(seat) => f(seat),
+        None => fallback,
     }
 }
 
@@ -64,30 +71,34 @@ fn card(c: u32) -> Card {
 
 #[no_mangle]
 pub extern "C" fn alloc(len: u32) -> *mut u8 {
-    let buffer = vec![0u8; len as usize].into_boxed_slice();
-    Box::into_raw(buffer).cast::<u8>()
+    registry().buffers.alloc(len as usize)
 }
 
 #[no_mangle]
 pub extern "C" fn load(ptr: *mut u8, len: u32) -> i32 {
-    let raw = std::ptr::slice_from_raw_parts_mut(ptr, len as usize);
-    let bytes = unsafe { Box::from_raw(raw) };
+    let Some(bytes) = registry().buffers.take(ptr, len as usize) else {
+        return NOT_ALLOCATED;
+    };
     let model = StrategyFile::from_bytes(&bytes).and_then(Model::new);
     drop(bytes);
     match model {
-        Ok(model) => {
-            let mut r = registry();
-            r.models.push(Arc::new(model));
-            (r.models.len() - 1) as i32
-        }
+        Ok(model) => registry()
+            .models
+            .insert(Arc::new(model))
+            .unwrap_or(NO_MODEL_SLOT),
         Err(e) => error_code(e),
     }
 }
 
 #[no_mangle]
+pub extern "C" fn model_free(model: i32) {
+    registry().models.remove(model);
+}
+
+#[no_mangle]
 pub extern "C" fn bot_new(model: i32) -> i32 {
     let mut r = registry();
-    let Some(model) = usize::try_from(model).ok().and_then(|i| r.models.get(i)) else {
+    let Some(model) = r.models.get(model) else {
         return -1;
     };
     let seat = Seat {
@@ -95,16 +106,12 @@ pub extern "C" fn bot_new(model: i32) -> i32 {
         bot: Bot::new(),
         to: 0,
     };
-    r.bots.push(Some(seat));
-    (r.bots.len() - 1) as i32
+    r.bots.insert(seat).unwrap_or(-1)
 }
 
 #[no_mangle]
 pub extern "C" fn bot_free(bot: i32) {
-    let mut r = registry();
-    if let Some(slot) = usize::try_from(bot).ok().and_then(|i| r.bots.get_mut(i)) {
-        *slot = None;
-    }
+    registry().bots.remove(bot);
 }
 
 #[no_mangle]

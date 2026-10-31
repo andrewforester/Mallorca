@@ -231,3 +231,39 @@ fn a_styled_bot_keeps_its_style_and_plays_legal_moves() {
     bot_free(bot);
     bot_style(bot, 1.0, 1.0, 1.0);
 }
+
+#[test]
+fn a_freed_model_keeps_its_bots_and_refuses_new_ones() {
+    let model = loaded(&play_file());
+    let bot = bot_new(model);
+    model_free(model);
+    assert_eq!(bot_new(model), -1);
+    hand_started(bot, 1, 400, 400, 10, 20);
+    hole_cards(bot, 48, 49);
+    assert_eq!(decide(bot, 1, 0, 10, 40, 400, 0.99), KIND_RAISE);
+    bot_free(bot);
+    model_free(model);
+    model_free(-1);
+}
+
+#[test]
+fn a_freed_bot_handle_stays_dead_when_its_slot_is_reused() {
+    let first = seated([48, 49]);
+    bot_free(first);
+    let second = seated([48, 49]);
+    assert_ne!(first, second);
+    assert_eq!(decide(first, 1, 0, 10, 40, 400, 0.99), KIND_NONE);
+    assert_eq!(decide(second, 1, 0, 10, 40, 400, 0.99), KIND_RAISE);
+    bot_free(second);
+}
+
+#[test]
+fn a_buffer_that_alloc_did_not_hand_out_is_refused_untouched() {
+    let mut bytes = play_file();
+    assert_eq!(load(bytes.as_mut_ptr(), bytes.len() as u32), -8);
+    let ptr = alloc(16);
+    assert_eq!(load(ptr, 8), -8);
+    assert_eq!(load(ptr, 16), -1);
+    assert_eq!(load(ptr, 16), -8);
+    assert_eq!(load(std::ptr::null_mut(), 0), -8);
+}
