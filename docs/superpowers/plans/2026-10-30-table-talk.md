@@ -253,3 +253,20 @@
 - [ ] **Step 3: Update ARCHITECTURE.md and the workflows.**
 - [ ] **Step 4: Full check**: `npm run lint`, `npx tsc --noEmit`, `npm test`, `npm run test:golden`, `npm run build`, `npm run test:e2e`, the Rust checks, the Deno checks.
 - [ ] **Step 5: Commit** `docs: table talk results and deploy variables (issue #23)`.
+
+### Task 14: Is tilt noticeable, and what does it cost when exploited
+
+Asked by the owner on 2026-10-30 after the style-cost result (cfr-tilted vs cfr −0.2 ± 2.6 bb/100): a near-equilibrium opponent does not punish shifted frequencies, so that number says nothing about whether tilt is visible or exploitable.
+
+**Files:**
+- Create: `web/tools/arena/stats.ts` (+ test), `web/tools/arena/exploiter.ts` (+ test)
+- Modify: `web/tools/arena/bots.ts`, `web/tools/arena/run.ts` and/or `cli.ts` (a `--stats` flag or a separate script `npm run arena:stats`), `web/tools/arena/README.md`, possibly `web/src/talk/style.ts` and the spec decision 7 (only if the clamps change, in its own commit)
+
+**Interfaces:**
+- Produces: `styleStats(hands: EngineEvent[][], seat selector) -> { hands, vpip, pfr, aggressionFactor, betFrequency (bets+raises / decisions postflop), foldToBet, raiseFrequency }` for bot A; bot `tilt-exploiter`.
+
+- Run every arena match with `taskpolicy -b` (owner: quiet, efficiency cores).
+- [ ] **Step 1: Behaviour shift.** Compute the stats for bot A over saved hands (`--save-hands` jsonl or in-memory) for `cfr` vs `cfr`, `cfr-tilted` vs `cfr`, `cfr-confident` vs `cfr`, `cfr-cautious` vs `cfr`, 20,000 pairs each. Unit-test the stats on scripted hands first.
+- [ ] **Step 2: Exploiter.** `tilt-exploiter`: the math bot, but facing a bet or raise it calls (instead of folding) when the call is at most half the pot, and it never bluff-raises into her (turns a math raise with a weak strength class into a call). It does not know whether the opponent is tilted: the cost of tilt is `tilt-exploiter vs cfr-tilted` minus `tilt-exploiter vs cfr` (same seed, 20,000 pairs each). Unit tests for its decision rule.
+- [ ] **Step 3: Decide.** Noticeable means: raiseFrequency or betFrequency of cfr-tilted differs from cfr by at least 5 percentage points, and the exploiter gains on cfr-tilted more than on cfr by more than the combined 95% interval. If not noticeable, widen the clamps of decision 7 (aggression up to 1.6, bluff up to 1.8, keep tightness), update `cfr-tilted` to the new corner, update the spec in the same commit, rerun steps 1 and 2. Stop widening when the exploited cost of the corner exceeds 25 bb/100.
+- [ ] **Step 4: Record** the tables in the arena README, commit `feat(arena): tilt stats and exploiter (issue #23)` (and `feat(talk): wider style clamps (issue #23)` if changed).
