@@ -7,7 +7,7 @@
     "dev": "npm run wasm && vite",
     "wasm": "node scripts/wasm.ts",
     "prebuild": "npm run wasm",
-    "build": "tsc && vite build && vite build --config tools/arena/ui/vite.config.ts",
+    "build": "tsc && vite build && vite build --config tools/arena/ui/vite.config.ts && node scripts/check-dist.ts",
     "preview": "vite preview",
     "pretest": "npm run wasm",
     "test": "vitest run --project node --project ui",

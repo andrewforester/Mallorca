@@ -703,7 +703,8 @@ text)` (the caller's localized label) append the player's line at once and call 
   `debug-load`), play style (`debug-style`, the five multipliers around 1 and the style sent), the last decision
   (`debug-decision`, her cards, each move with its blueprint and styled probability, the chosen one marked) and the
   journal (`debug-journal`, newest first). Its colours follow `ui/styles/tokens.css`.
-- `scripts/check-dist.ts` runs at the end of `npm run build` and fails when any file in `dist` contains
+- `scripts/check-dist.ts` (over `distTraces` in `scripts/distTraces.ts`, tested under `npm test`) runs at the end
+  of `npm run build` and fails when any file in `dist` contains
   `emotion-debug` (the panel and its copy), `sentStyle` (the session's debug state) or `engineStyle`
   (`toDebugView`), so none of them reaches production.
 - The hand log is a drawer grouped by street (`groupHand` of `game`), opened by the status bar toggle
