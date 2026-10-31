@@ -284,6 +284,16 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   cards and the board are removed, and `combos` is its total weight. Both are null without a spot or a range.
 - `equity` is the player's equity against that range, or against a random hand when there is none (`versus`
   `range` or `random`), through `SpectrumEquilator` on a board and the preflop table before it (`equity.ts`).
+- After the flop, `composition` (`composition.ts`) splits the bot's range by `classify`: `strong` (a straight, flush,
+  full house or better, or trips and sets that use a hole card), `twoPair` (both hole ranks pair), `topPair` (a hole
+  pair at or above the top board rank), `pair`, `draw` (flop and turn: a flush draw with a hole card, or two or more
+  ranks that complete a straight with a hole card) and `air`; a pair or trips on the board alone is not the bot's
+  hand. `ahead` is the weighted share of live range pairs the player's current hand beats, ties half. `outs`
+  (`outs.ts`, flop and turn, against the range or a random hand) are the cards that lift the player's category above
+  both its current one and what the board alone gives everyone, and leave the player ahead of more than half of the
+  range; `nextCard` is their share of the unseen cards and `byRiver` the chance over two cards on the flop.
+  `blockers` (`blockers.ts`) is the share of the range's `strong` and `twoPair` weight whose pairs hold a player's
+  card. Composition and blockers are null without a range, all three before the flop.
 - `odds` (`odds.ts`) is null with nothing to call, else `requiredEquity = toCall / (pot + toCall)`,
   `mdf = (pot - toCall) / pot` and `bluffShare`, the bluff share the bet can hold, equal to `requiredEquity`.
 
@@ -432,7 +442,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   gets the sheet). `Coach` shows the hint line (shares of 0.5 % and more, a mixed-strategy line when
   two moves reach 10 %, an approximate line), then tabs: the strategy grid (each cell striped by its moves' shares,
   the player's cell outlined), the bot range grid (shaded by weight relative to the heaviest cell) or the math-bot
-  line, and the numbers. Fold, passive and all-in have their own colour tokens; sized bets and raises are shaded
+  line with the composition (`coach-composition`) under it, and the numbers with the outs (`coach-outs`)
+  and the blockers (`coach-blockers`). Fold, passive and all-in have their own colour tokens; sized bets and raises are shaded
   from `--color-coach-small` to `--color-coach-large` by size.
 - The hand log is a drawer grouped by street (`groupHand` of `game`), opened by the status bar toggle
   `hand-log-toggle` (`aria-expanded`). Opening moves focus to `hand-log-close`; closing, by the close button,
@@ -470,7 +481,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   `preset-half`, `preset-pot`, `preset-allin`, `hand-log-toggle`, `sound-toggle`, `simple-table`, `auto-next`,
   `sound`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`, `coach-mode`, `start-coach`, `coach-toggle`,
   `coach-close`, `coach-scrim`, `coach-status`, `coach-hint`, `coach-tab-hint`, `coach-tab-range`, `coach-tab-numbers`,
-  `coach-strategy`, `coach-range`, `coach-numbers`, `live-region`, `tournament-over`, `leave-tonight`,
+  `coach-strategy`, `coach-range`, `coach-numbers`, `coach-composition`, `coach-outs`, `coach-blockers`, `live-region`, `tournament-over`, `leave-tonight`,
   `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and `export-text` (the session
   dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu).
 
