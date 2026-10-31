@@ -1,7 +1,7 @@
 export type { Habit, Habits, Level, Situation } from './habits.ts';
 export { BASE_HABITS, habitsAt } from './habits.ts';
 export type { Feeling } from './feeling.ts';
-export { createFeeling } from './feeling.ts';
+export { createFeeling, wordsOf } from './feeling.ts';
 export type { Signal } from './signals.ts';
 export { SIGNALS } from './signals.ts';
 export type { StrengthClass } from './strength.ts';

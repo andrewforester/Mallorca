@@ -30,11 +30,36 @@ export function requestFor(
   };
 }
 
-export function createComplete(apiKey: string | undefined): Deps["complete"] {
-  const client = new Anthropic({ apiKey });
-  const model = modelFrom(Deno.env.get("TALK_MODEL"));
+export interface Observed {
+  purpose: Purpose;
+  model: string;
+  usage: Anthropic.Usage;
+  stop_reason: string | null;
+  ms: number;
+  request: Anthropic.MessageCreateParamsNonStreaming;
+  content: Anthropic.ContentBlock[];
+}
+
+type Create = (request: Anthropic.MessageCreateParamsNonStreaming) => Promise<Anthropic.Message>;
+
+export function completeWith(
+  create: Create,
+  model: string,
+  observe?: (call: Observed) => void,
+): Deps["complete"] {
   return async (input: CompleteInput) => {
-    const response = await client.messages.create(requestFor(model, input));
+    const request = requestFor(model, input);
+    const start = performance.now();
+    const response = await create(request);
+    observe?.({
+      purpose: input.purpose,
+      model: response.model,
+      usage: response.usage,
+      stop_reason: response.stop_reason,
+      ms: performance.now() - start,
+      request,
+      content: response.content,
+    });
     let text = "";
     let toolInput: unknown = undefined;
     for (const block of response.content) {
@@ -43,4 +68,10 @@ export function createComplete(apiKey: string | undefined): Deps["complete"] {
     }
     return { text, toolInput };
   };
+}
+
+export function createComplete(apiKey: string | undefined): Deps["complete"] {
+  const client = new Anthropic({ apiKey });
+  const model = modelFrom(Deno.env.get("TALK_MODEL"));
+  return completeWith((request) => client.messages.create(request), model);
 }

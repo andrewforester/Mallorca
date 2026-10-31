@@ -1,5 +1,6 @@
 import { assert, assertEquals } from "../_shared/testing.ts";
-import { modelFrom, requestFor } from "./model.ts";
+import type Anthropic from "@anthropic-ai/sdk";
+import { completeWith, modelFrom, requestFor } from "./model.ts";
 import { SIGNAL_TOOL } from "./signals.ts";
 
 Deno.test("an unset or empty TALK_MODEL falls back to the default model", () => {
@@ -36,4 +37,27 @@ Deno.test("a tool request names the tool it needs", () => {
   assertEquals(request.tools?.length, 1);
   assertEquals(request.tool_choice, { type: "tool", name: "signals" });
   assertEquals(request.thinking, { type: "disabled" });
+});
+
+Deno.test("an observed call reports the served model, usage, stop reason and time", async () => {
+  const seen: unknown[] = [];
+  const complete = completeWith(
+    () =>
+      Promise.resolve({
+        model: "claude-haiku-5-5",
+        stop_reason: "end_turn",
+        usage: { input_tokens: 10, output_tokens: 3 },
+        content: [{ type: "text", text: "Hi there." }],
+      } as unknown as Anthropic.Message),
+    "claude-haiku-5-5",
+    (call) => seen.push(call),
+  );
+  const result = await complete({ purpose: "line", system, messages });
+  assertEquals(result.text, "Hi there.");
+  const call = seen[0] as Record<string, unknown>;
+  assertEquals(call.model, "claude-haiku-5-5");
+  assertEquals(call.purpose, "line");
+  assertEquals(call.stop_reason, "end_turn");
+  assertEquals((call.usage as Record<string, number>).output_tokens, 3);
+  assert(typeof call.ms === "number");
 });
