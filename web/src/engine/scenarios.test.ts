@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { legalActions } from './legal.ts';
+import type { EngineEvent } from './types.ts';
 import { call, check, deckOf, fold, play, playEvents, raiseTo, startHand } from './testDeck.ts';
 
 const aaWins = deckOf('Ah Ad', '7c 2d', 'Kc 9d 4s 6h Jc');
@@ -272,5 +273,36 @@ describe('scenario table', () => {
       amount: 15,
     });
     expect(stacksOf(allIn)[0]! + stacksOf(allIn)[1]!).toBe(2005);
+  });
+  it('every dealt street and the showdown carry the pot of the matched chips', () => {
+    const pots = (events: EngineEvent[]) =>
+      events.flatMap((e) =>
+        e.type === 'streetDealt' || e.type === 'showdown' ? [[e.type, e.pot]] : [],
+      );
+    const played = playEvents(
+      startHand([2000, 2000], aaWins),
+      raiseTo(60),
+      call,
+      check,
+      raiseTo(80),
+      call,
+      check,
+      check,
+      check,
+      check,
+    );
+    expect(pots(played.events)).toEqual([
+      ['streetDealt', 120],
+      ['streetDealt', 280],
+      ['streetDealt', 280],
+      ['showdown', 280],
+    ]);
+    const allIn = playEvents(startHand([1000, 400], aaWins), raiseTo(1000), call);
+    expect(pots(allIn.events)).toEqual([
+      ['streetDealt', 800],
+      ['streetDealt', 800],
+      ['streetDealt', 800],
+      ['showdown', 800],
+    ]);
   });
 });

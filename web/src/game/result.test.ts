@@ -9,6 +9,7 @@ function showdown(ranks: [number, number]): EngineEvent {
       { cards: [0, 1], rank: ranks[0], category: 'pair' },
       { cards: [2, 3], rank: ranks[1], category: 'flush' },
     ],
+    pot: 4000,
   };
 }
 
