@@ -4,13 +4,15 @@ import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { BASE_HABITS, habitsAt } from './habits.ts';
 import type { Habit, Habits, Level, Situation } from './habits.ts';
 import { MALLORCA } from '../emotion/index.ts';
-import type { Impulse, Snapshot } from '../emotion/index.ts';
+import type { Impulse, Personality, Snapshot } from '../emotion/index.ts';
 import { createFeeling } from './feeling.ts';
 import { characterOf, feelingState } from './state.ts';
 import type { Character, FeelingState } from './state.ts';
 import type { Feeling } from './feeling.ts';
 import { NO_HAND, netOf, playerCardsShown, track } from './handTracker.ts';
 import type { HandState } from './handTracker.ts';
+import { Journal } from './journal.ts';
+import type { JournalEntry } from './journal.ts';
 import type { Signal } from './signals.ts';
 import { strengthOf } from './strength.ts';
 import type { StrengthClass } from './strength.ts';
@@ -51,6 +53,9 @@ export interface Talk {
   stance(): Stance | null;
   feelingFor(intent: LineIntent): FeelingState;
   character(): Character;
+  setPersonality(p: Personality): void;
+  resetFeeling(): void;
+  journal(): JournalEntry[];
   style(): Style;
   summary(): SessionSummary;
   setLevel(level: Level): void;
@@ -151,6 +156,8 @@ class TableTalk implements Talk {
   private readonly usedStreets = new Set<string>();
   private readonly strengths = new Map<number, StrengthClass>();
   private bluffKey: string | null = null;
+  private readonly felt = new Journal();
+  private personality: Personality = MALLORCA;
 
   constructor(options: TalkOptions) {
     this.seat = options.seat;
@@ -167,17 +174,21 @@ class TableTalk implements Talk {
     for (const event of events) {
       candidate = this.step(event) ?? candidate;
     }
-    return candidate === null ? null : this.unprompted(candidate, nowMs);
+    const intent = candidate === null ? null : this.unprompted(candidate, nowMs);
+    this.felt.add(this.heart.takeFelt(), this.heart.words(), intent !== null);
+    return intent;
   }
 
   hear(signals: readonly Signal[]): void {
     this.heart.hear(signals);
+    this.felt.add(this.heart.takeFelt(), this.heart.words(), false);
     this.session = withSignals(this.session, signals);
   }
 
   playerRange(weights: ArrayLike<number>, handNumber: number): void {
     if (handNumber === this.hand.handNumber) {
       this.heart.narrow(weights, this.hand);
+      this.felt.add(this.heart.takeFelt(), this.heart.words(), false);
     }
   }
 
@@ -240,7 +251,21 @@ class TableTalk implements Talk {
   }
 
   character(): Character {
-    return characterOf(MALLORCA);
+    return characterOf(this.personality);
+  }
+
+  setPersonality(p: Personality): void {
+    this.personality = p;
+    this.heart.setPersonality(p);
+  }
+
+  resetFeeling(): void {
+    this.heart.reset();
+    this.felt.clear();
+  }
+
+  journal(): JournalEntry[] {
+    return this.felt.list();
   }
 
   style(): Style {
