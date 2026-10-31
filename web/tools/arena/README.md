@@ -88,6 +88,37 @@ holds only for the next decision.
 Cost of a style: `cfr-tilted vs cfr` should lose at most 5 bb/100. Readability of the habits: `reader` should win
 against `cfr-talk-obvious` by more than the interval above what it wins against `cfr-talk-hidden`.
 
+### Table talk results
+
+Measured at commit `74659d2` (the arena bots have not changed since). Results are the first bot's bb/100 with a 95%
+interval. A negative number is a loss.
+
+| Run                            | Seed | Pairs  | Hands  | bb/100       |
+| ------------------------------ | ---- | ------ | ------ | ------------ |
+| `cfr-tilted` vs `cfr`          | 2    | 200000 | 400000 | -0.2 ± 2.6   |
+| `cfr-confident` vs `cfr`       | 2    | 200000 | 400000 | -0.3 ± 2.5   |
+| `cfr-cautious` vs `cfr`        | 2    | 200000 | 400000 | -0.4 ± 2.4   |
+| `reader` vs `cfr-talk-obvious` | 1    | 5000   | 10000  | -28.3 ± 14.5 |
+| `reader` vs `cfr-talk-subtle`  | 1    | 5000   | 10000  | -37.6 ± 14.2 |
+| `reader` vs `cfr-talk-hidden`  | 1    | 5000   | 10000  | -50.1 ± 14.7 |
+| `math` vs `cfr-talk-obvious`   | 1    | 5000   | 10000  | -34.9 ± 19.1 |
+| `reader` vs `cfr-talk-obvious` | 3    | 20000  | 40000  | -26.2 ± 7.2  |
+| `reader` vs `cfr-talk-hidden`  | 3    | 20000  | 40000  | -42.4 ± 7.3  |
+| `math` vs `cfr-talk-obvious`   | 3    | 20000  | 40000  | -32.3 ± 9.1  |
+| `math` vs `cfr-talk-hidden`    | 3    | 20000  | 40000  | -32.3 ± 9.1  |
+
+Cost of a style: the goal holds. The most tilted style, `cfr-tilted`, loses -0.2 ± 2.6 bb/100 to `cfr`, far inside the
+5 bb/100 allowance, so the clamps of the style stay as they are.
+
+Readability: the goal holds. At seed 3, `reader` scores -26.2 ± 7.2 against `cfr-talk-obvious` and -42.4 ± 7.3
+against `cfr-talk-hidden`. The difference is 16.2 bb/100 against a combined interval of about 10.3, and the 5000 pair
+run at seed 1 points the same way (-28.3 against -50.1). The cleaner measure is the reader's edge over `math`, which
+ignores the talk: +6.1 bb/100 against obvious habits and -10.1 against hidden ones. The reader gains from obvious
+habits, but the gain over `math` against obvious habits alone (+6.1) is inside its own noise, and against hidden
+habits the reader does worse than `math`, because its rule of folding after silence has no basis there. `math`
+scores the same -32.3 ± 9.1 against both opponents: a talking bot plays exactly as plain `cfr` does and the speech
+changes nothing for a bot that does not listen, so the two runs play the same hands.
+
 ## Managing runs
 
 Local runs live in the results directory (`web/arena-out` of the main checkout), each as `<name>.json` and

@@ -7,20 +7,21 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 
 ## Repository layout
 
-| Path                                                                | Owns                                                                  |
-| ------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `MallorcaBrains/`, `MallorcaCore/`, `MallorcaEquilator/`, `Tools/`  | Java bot, game model and equilator; the source of the golden fixtures |
-| Other Gradle modules (`MallorcaUI/`, `PokerRobot/`, `HHParser/`, …) | Java archive, not used by `web/`                                      |
-| `web/src/`                                                          | The game, in layers (see "Layers")                                    |
-| `web/src/locales/en.json`                                           | Every string the UI shows                                             |
-| `web/e2e/`                                                          | Playwright tests and the contact sheet script                         |
-| `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                   |
-| `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`      |
-| `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena" |
-| `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                 |
-| `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`  |
-| `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`  |
-| `.github/workflows/`                                                | `web-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master`   |
+| Path                                                                | Owns                                                                               |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `MallorcaBrains/`, `MallorcaCore/`, `MallorcaEquilator/`, `Tools/`  | Java bot, game model and equilator; the source of the golden fixtures              |
+| Other Gradle modules (`MallorcaUI/`, `PokerRobot/`, `HHParser/`, …) | Java archive, not used by `web/`                                                   |
+| `web/src/`                                                          | The game, in layers (see "Layers")                                                 |
+| `web/src/locales/en.json`                                           | Every string the UI shows                                                          |
+| `web/e2e/`                                                          | Playwright tests and the contact sheet script                                      |
+| `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                                |
+| `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`                   |
+| `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena"              |
+| `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                              |
+| `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`               |
+| `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`               |
+| `supabase/`                                                         | Table talk server: schema, limits and the `talk` Edge Function                     |
+| `.github/workflows/`                                                | `web-ci.yml`, `talk-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master` |
 
 Generated and never committed: `web/dist`, `web/test-results`, `web/playwright-report`, `web/e2e/contact/`,
 `web/tools/golden/build`, `web/arena-out/` (the arena results, see "arena") and `web/src/cfr/mallorca.wasm`, which
@@ -220,6 +221,24 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   bet by the same mapping. In such a node the bot faces a real bet the tree does not see: a tree check is a real
   call, a tree bet a raise of the same pot fraction, and when the tree already closed the street the bot calls.
 
+## talk
+
+- `createTalk({ rng, seat })` returns a `Talk` for one session against the CFR bot. `observe(events, nowMs)` follows
+  the engine events of a hand (`handTracker.ts`) and returns a `LineIntent` or null: the situation (`herBet`,
+  `herCall`, `playerBet`, `handWon`, `handLost`, `bluffCaught`), the hint (her hand-strength class `strong`, `medium`
+  or `weak`, or null for a neutral line), whether the hint is honest, and the street and hand number the line
+  belongs to. `hear(signals)` moves the mood with what the player said, `replyIntent()` is the intent for an answer,
+  `facts()` the hand as the server sees it (her cards included) and `summary()` the session summary.
+- `strengthOf` classifies her hand from equity against a random hand, not from the blueprint. The habits
+  (`habits.ts`) give, for a situation and a class, the chance she speaks and the chance the hint is honest, and the
+  tells level (`obvious`, `subtle`, `hidden`) moves both toward the class-blind mean. Code draws every chance from
+  the `Rng` it was given; the model only words the line. Pace limits her to one unprompted line per street and
+  none in the 1.5 s after a line.
+- `mood.ts` keeps four axes in [-1, 1] (`cheer`, `confidence`, `tilt`, `caution`) and `form`, an exponential mean of
+  the recent results. A hand result and the player's signals move it and it decays toward calm. `styleOf(mood)`
+  maps it to the CFR style `{ aggression, bluff, tightness }`, clamped to [0.8, 1.25], [0.8, 1.3] and [0.85, 1.2]. A
+  calm mood gives the neutral style 1, 1, 1. Her words never decide a move.
+
 ## game
 
 - `createSession({ bot, seed, botDelayMs, humanSeat, names, mode, startingStacks?, records? })` returns a
@@ -361,6 +380,39 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   `tournament-over`, `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and
   `export-text` (the session dialog, current session), and `export-all-json`, `export-all-text` and
   `clear-history` (the menu).
+
+## Table talk server
+
+`supabase/` holds the whole server; `supabase/README.md` lists the deploy steps and the owner's part.
+
+- Tables: `talk_lines` (the conversation), `memories` (the facts a `summary` leaves), `usage` and `usage_total` (the
+  call counts per user and day, and per day). Row Level Security lets a user read their own lines and memories and
+  nothing else; the function writes with the service role. `consume_call(user_limit, global_limit)` counts one call
+  against both limits in one transaction and returns false over a limit; only the service role can run it. The
+  defaults are 200 calls per user and 5000 in total per day (`TALK_DAILY_LIMIT`, `TALK_GLOBAL_DAILY_LIMIT`).
+- The Edge Function `talk` (Deno, `supabase/functions/talk/`) takes a `POST` with the user's JWT, checked with
+  `auth.getUser`, and a body of kind `line`, `reply` or `summary`. It validates the body, spends a call, loads the
+  ten newest memories, builds the prompt (a cached system block, then the facts, memories and recent lines), calls
+  the model (`claude-haiku-5-5`, `TALK_MODEL` overrides it) and answers `{ text }`, `{ text, signals }` or
+  `{ facts }`. A `reply` makes two parallel calls, one for the signals as strict JSON and one for her answer. The
+  card filter rejects a text that names a card or her holding; the function asks once more with a stricter
+  instruction and then falls back to a fixed neutral line. Over a limit it answers an error and she stays silent.
+- The browser reaches it through `remoteTalk.ts` (supabase-js, anonymous sign-in, a 5 s timeout, every error turned
+  into `null`). Without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` the build has no talk.
+
+### Data flow
+
+```
+style     talk.observe -> Talk.style() -> session decide(legal, style) -> worker -> CfrBot.setStyle -> bot_style (wasm)
+line      engine events -> Talk.observe -> LineIntent -> client.line(facts, intent, mood) -> function -> text
+          -> session (kept if epoch, hand and street match) -> bubble and chat
+reply     say(text) -> client.reply -> function (signals + answer) -> { text, signals }
+          -> Talk.hear(signals) moves the mood -> her line in the chat
+```
+
+The session never waits for the server: a line is requested without awaiting it, a late or missing answer is
+dropped, and an error leaves the game as it is. The style path is the only way talk touches a move, and it is
+bounded by the clamps above.
 
 ## e2e
 
