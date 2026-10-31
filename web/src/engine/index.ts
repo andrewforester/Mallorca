@@ -10,7 +10,9 @@ export type {
   Street,
 } from './types.ts';
 export { applyAction, IllegalActionError, startHandWith } from './hand.ts';
-export { legalActions } from './legal.ts';
+export { checkOrCall, isLegal, legalActions } from './legal.ts';
+export type { Actor } from './play.ts';
+export { playToEnd } from './play.ts';
 export type { Table, TableMode } from './table.ts';
 export {
   apply,

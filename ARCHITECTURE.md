@@ -111,7 +111,11 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
   Both return `{ state, events }`. `legalActionsOf(t)` and `toAct(t)` read the current hand.
 - `startHandWith(seats, { button, blinds, handNumber }, deck)`, `applyAction(hand, seats, action)` and
   `legalActions(hand, seats)` are the hand-level reducer; `applyAction` throws `IllegalActionError` for anything
-  `legalActions` does not offer.
+  `legalActions` does not offer, as `isLegal(legal, action)` (`legal.ts`) decides. `checkOrCall(legal)` is the
+  passive action.
+- `playToEnd(start, act, onStep)` (`play.ts`) plays a hand from a `Step`: while a seat is to act it applies
+  `act(seat, legal)` (an `Actor`) and calls `onStep` with the start and every later step, then returns the last.
+  The arena and the cfr tests drive their bots through it.
 - `startHandWith` takes an already shuffled deck and deals from its front. Hole cards alternate starting with the
   seat after the button: `deck[0]` and `deck[2]` go to the big blind seat, `deck[1]` and `deck[3]` to the button.
   The board follows in order with no burn cards: flop `deck[4..6]`, turn `deck[7]`, river `deck[8]`. `Hand.deck`
@@ -449,8 +453,8 @@ imports `engine`, `brains`, `cards`, `cfr` and `game/records/record.ts` and noth
   `mulberry32((Math.imul(seed, 0x9e3779b1) + index) >>> 0)`; hand `k` (0, 1) starts both seats at the cash stakes
   (the stacks of `createTable` with `CASH`, the blinds of `rulesOf(CASH)`), button seat 0,
   `handNumber = index * 2 + k + 1`, with `a` on seat 0 in hand 0 and `b` in hand 1. Each hand
-  gets fresh bots, the bot on `seat` seeded by `mulberry32((seed ^ (index * 4 + k * 2 + seat)) >>> 0)`, and each
-  bot receives `toObservations` of the new events for its seat after every step. It returns `net`, the chips of
+  gets fresh bots, the bot on `seat` seeded by `mulberry32((seed ^ (index * 4 + k * 2 + seat)) >>> 0)`, the hand is
+  played by `playToEnd`, and each bot receives `toObservations` of the new events for its seat after every step. It returns `net`, the chips of
   `a` over both hands, and the events of both hands. The math bot against itself nets exactly 0 per pair.
 - `stats.ts`: `summarize(nets, bigBlind)`. The per-pair value is `v = net / 2 / bigBlind * 100`; `bbPer100` is the
   mean of `v` and `ci95 = 1.96 * sd(v) / sqrt(n)` with the sample standard deviation (n - 1). With fewer than 2
