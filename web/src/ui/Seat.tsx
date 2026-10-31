@@ -10,10 +10,12 @@ export interface SeatProps {
   thinking: boolean;
   winner: boolean;
   position: 'top' | 'bottom';
+  portrait?: ComponentChildren;
   children?: ComponentChildren;
 }
 
-export function Seat({ index, view, action, thinking, winner, position, children }: SeatProps) {
+export function Seat(props: SeatProps) {
+  const { index, view, action, thinking, winner, position, portrait, children } = props;
   const className = [
     'seat',
     `seat-${position}`,
@@ -24,6 +26,7 @@ export function Seat({ index, view, action, thinking, winner, position, children
     .join(' ');
   return (
     <section class={className} data-testid={`seat-${index}`} data-winner={winner}>
+      {portrait}
       <div class="seat-plaque">
         <div class="seat-bubble">
           <ActionBubble seat={index} entry={action} thinking={thinking} />

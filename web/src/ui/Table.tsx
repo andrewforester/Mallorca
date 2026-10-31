@@ -25,6 +25,7 @@ export interface TableProps {
   coach?: ComponentChildren;
   onSay?: (text: string) => void;
   onQuick?: (id: QuickPhrase, text: string) => void;
+  face?: (thinking: boolean) => ComponentChildren;
 }
 
 const ignore = () => undefined;
@@ -186,9 +187,10 @@ interface SeatsProps {
   held: HeldActions;
   thinking: boolean;
   chat: ChatProps | null;
+  face?: (thinking: boolean) => ComponentChildren;
 }
 
-function Seats({ vm, humanSeat, held, thinking, chat }: SeatsProps) {
+function Seats({ vm, humanSeat, held, thinking, chat, face }: SeatsProps) {
   const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
   const winner = vm.result?.winner ?? null;
   return (
@@ -200,6 +202,7 @@ function Seats({ vm, humanSeat, held, thinking, chat }: SeatsProps) {
         thinking={thinking}
         winner={winner === botSeat}
         position="top"
+        portrait={face?.(thinking)}
       >
         {chat !== null && <Bubble line={vm.talk.herBubble} />}
         {chat !== null && <ChatSheet {...chat} />}
@@ -241,7 +244,14 @@ export function Table(props: TableProps) {
           onNextHand={onNextHand}
         />
       )}
-      <Seats vm={vm} humanSeat={humanSeat} held={held} thinking={thinking} chat={chat} />
+      <Seats
+        vm={vm}
+        humanSeat={humanSeat}
+        held={held}
+        thinking={thinking}
+        chat={chat}
+        face={props.face}
+      />
       <ActionBar key={barKey} controls={vm.controls} onAct={onAct} />
       <TableSide chat={chat} coach={props.coach} />
     </div>

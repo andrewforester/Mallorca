@@ -646,17 +646,17 @@ text)` (the caller's localized label) append the player's line at once and call 
   `App` calls on the click of a start button. The `mallorca.sound` preference (`readSound`, `writeSound`; on unless
   stored as `off`) is switched by the status bar button `sound-toggle` (`aria-pressed`) and the menu checkbox
   `sound`; off silences every cue.
-- Live face (`ui/face/`): `FaceSeat` takes the opponent's seat area above her plaque, head and shoulders behind the
+- Live face (`ui/avatar/`): `FaceSeat` takes the opponent's seat area above her plaque, head and shoulders behind the
   table rail, on every layout. With the face preference on (`mallorca.face`, on unless stored `off`, the menu
   checkbox `face`) it shows the still `portrait.webp` at once and, when `canRender()` finds WebGL and a device that
-  is not weak (more than 2 cores and more than 2 GB when the browser tells), imports `ui/face/avatar.ts` on demand,
+  is not weak (more than 2 cores and more than 2 GB when the browser tells), imports `ui/avatar/avatar.ts` on demand,
   so three.js and `mallorca.glb` are a separate chunk and a request made only then. The `Avatar` renders the model
   over 52 ARKit blendshapes and 15 Oculus visemes: every frame it eases toward `faceNow()` (read about ten times a
   second), plays new `FaceCue`s once (pulses, gaze with a glance back), blinks, saccades and glances away from
   `idle`, poses the head from the shown PAD and breathes; `thinking` turns her gaze away to think. It pauses while
   the document is hidden, calms the idle motion under `prefers-reduced-motion`, and falls back to the portrait when
   the model fails to load or WebGL is lost. Off, the seat is the plaque as before.
-- Voice (`ui/face/voice.ts`): the `mallorca.voice` preference (off unless stored `on`, the menu checkbox `voice`)
+- Voice (`ui/avatar/voice.ts`): the `mallorca.voice` preference (off unless stored `on`, the menu checkbox `voice`)
   speaks each new line of hers with the browser's `speechSynthesis`, an English voice from a preferred list, the
   `prosody` of `faceNow()`, and her lips follow `speechOf` resynced on every word boundary. Without
   `speechSynthesis` the checkbox is not shown.

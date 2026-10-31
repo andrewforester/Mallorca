@@ -109,3 +109,38 @@ export function writeCoach(on: boolean): void {
     return;
   }
 }
+
+const FACE_KEY = 'mallorca.face';
+const VOICE_KEY = 'mallorca.voice';
+
+export function readFace(): boolean {
+  try {
+    return localStorage.getItem(FACE_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
+export function writeFace(on: boolean): void {
+  try {
+    localStorage.setItem(FACE_KEY, on ? 'on' : 'off');
+  } catch {
+    return;
+  }
+}
+
+export function readVoice(): boolean {
+  try {
+    return localStorage.getItem(VOICE_KEY) === 'on';
+  } catch {
+    return false;
+  }
+}
+
+export function writeVoice(on: boolean): void {
+  try {
+    localStorage.setItem(VOICE_KEY, on ? 'on' : 'off');
+  } catch {
+    return;
+  }
+}

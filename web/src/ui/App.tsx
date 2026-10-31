@@ -20,6 +20,7 @@ import { useSoundCues } from './sound/useSoundCues.ts';
 import { Settings } from './Settings.tsx';
 import { StartScreen } from './StartScreen.tsx';
 import { StatusBar } from './StatusBar.tsx';
+import { FaceSeat } from './avatar/FaceSeat.tsx';
 import { Table } from './Table.tsx';
 import { TournamentOver } from './TournamentOver.tsx';
 import { useAutoNext } from './useAutoNext.ts';
@@ -58,6 +59,27 @@ function talkActions(session: Session, vm: ViewModel) {
     onSay: (text: string) => session.getState().say(text),
     onQuick: (id: QuickPhrase, text: string) => session.getState().quick(id, text),
   };
+}
+
+function useFaceSwitch(session: Session, on: boolean) {
+  useEffect(() => {
+    session.getState().setFace(on);
+  }, [session, on]);
+}
+
+function faceSlot(session: Session, vm: ViewModel, preferences: Preferences) {
+  if (!preferences.face) {
+    return undefined;
+  }
+  return (thinking: boolean) => (
+    <FaceSeat
+      session={session}
+      cues={vm.face.cues}
+      thinking={thinking}
+      line={vm.talk.herBubble}
+      voice={preferences.voice}
+    />
+  );
 }
 
 function useLogDrawer(phase: Phase) {
@@ -102,6 +124,7 @@ export function App(props: AppProps) {
   const drawer = useLogDrawer(state.phase);
   useSoundCues(session, player, preferences.sound);
   const coach = useCoach(session, state, preferences);
+  useFaceSwitch(session, preferences.face);
   const vm = state.phase === 'idle' ? null : toViewModel(state, humanSeat);
   const handOver = state.phase === 'handOver' ? vm : null;
   const autoNextMs = useAutoNext(
@@ -137,6 +160,7 @@ export function App(props: AppProps) {
           onSay={(text) => session.getState().say(text)}
           onQuick={(id, text) => session.getState().quick(id, text)}
           coach={coach.panel}
+          face={faceSlot(session, vm, preferences)}
         />
         {coach.sheet}
         {drawer.open && (

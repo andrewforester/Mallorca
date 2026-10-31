@@ -1928,3 +1928,54 @@ button {
   display: flex;
   flex-direction: column;
 }
+
+.face-seat {
+  position: absolute;
+  bottom: calc(100% - var(--face-overlap));
+  left: 50%;
+  width: var(--face-width);
+  aspect-ratio: 4 / 5;
+  transform: translateX(-50%);
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, #000 70%, transparent 98%);
+}
+
+.seat-top:has(.face-seat) {
+  --face-width: clamp(112px, max(calc(var(--card-width) * 4), 26vh), 300px);
+  --face-overlap: calc(var(--card-width) * 1.1);
+}
+
+.face-portrait,
+.face-stage,
+.face-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.face-portrait {
+  object-fit: contain;
+  object-position: bottom;
+  transition: opacity 400ms ease;
+}
+
+.face-stage .face-canvas {
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
+.face-seat.face-mode-live .face-portrait {
+  opacity: 0;
+}
+
+.face-seat.face-mode-live .face-canvas {
+  opacity: 1;
+}
+
+.seat-top:has(.face-seat) .seat-bubble {
+  bottom: auto;
+  top: 50%;
+  left: calc(100% + var(--space-2));
+  transform: translateY(-50%);
+}
