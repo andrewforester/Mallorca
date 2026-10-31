@@ -1,13 +1,12 @@
 use crate::bytes::{ByteReader, Truncated};
 use crate::cards::Card;
 use crate::eval::rank;
-use crate::iso::{street_indexers, HandIndexer};
+use crate::iso::{street_indexer, street_indexers, HandIndexer};
 use crate::potential::{histogram, nearest, ochs_live, turn_counts, Metric};
 use crate::strategy::{centroid_dimension, StrategyError, StrategyFile};
 use crate::strength::{bucket_of, percentile_thresholds, river_hs, turn_value};
 use crate::tree::Street;
 use std::fmt;
-use std::sync::OnceLock;
 
 pub const TABLE_MAGIC: &[u8; 4] = b"MLCB";
 pub const TABLE_FORMAT_VERSION: u16 = 1;
@@ -93,11 +92,6 @@ pub fn decode_table(mut bytes: Vec<u8>) -> Result<(TableHeader, Vec<u8>), TableE
 pub(crate) const LIVE_HOLES: usize = 1081;
 pub(crate) const LIVE_OPPONENTS: f32 = 990.0;
 
-pub(crate) fn river_indexer() -> &'static HandIndexer {
-    static INDEXER: OnceLock<HandIndexer> = OnceLock::new();
-    INDEXER.get_or_init(|| HandIndexer::new(&[2, 5]))
-}
-
 pub(crate) fn below_and_equal(sorted: &[u16], r: u16) -> (usize, usize) {
     let below = sorted.partition_point(|&x| x < r);
     let at_most = sorted.partition_point(|&x| x <= r);
@@ -126,7 +120,7 @@ pub fn river_strength(board: &[Card; 5]) -> Vec<(u64, f32)> {
     for ranks in per_card.iter_mut() {
         ranks.sort_unstable();
     }
-    let indexer = river_indexer();
+    let indexer = street_indexer(Street::River);
     holes
         .iter()
         .map(|&(i, j, r)| {
@@ -197,7 +191,7 @@ pub enum BucketSource {
 }
 
 pub struct Abstraction {
-    indexers: [HandIndexer; 4],
+    indexers: &'static [HandIndexer; 4],
     sources: [BucketSource; 3],
 }
 
@@ -358,10 +352,6 @@ mod tests {
     use crate::rng::Rng;
     use std::collections::HashMap;
 
-    fn river_indexer() -> HandIndexer {
-        HandIndexer::new(&[2, 5])
-    }
-
     fn deal(rng: &mut Rng, n: usize) -> Vec<Card> {
         let mut deck: Vec<Card> = (0..52).collect();
         rng.shuffle(&mut deck);
@@ -427,7 +417,7 @@ mod tests {
 
     #[test]
     fn river_strength_matches_brute_force() {
-        let indexer = river_indexer();
+        let indexer = street_indexer(Street::River);
         let mut rng = Rng::new(41);
         for _ in 0..200 {
             let cards = deal(&mut rng, 7);
@@ -459,7 +449,7 @@ mod tests {
 
     #[test]
     fn river_strength_orders_aces_above_trash() {
-        let indexer = river_indexer();
+        let indexer = street_indexer(Street::River);
         let board: [Card; 5] = parse_cards("2c 7d 9h Js Kc").unwrap().try_into().unwrap();
         let strengths: HashMap<u64, f32> = river_strength(&board).into_iter().collect();
         let mut aces = parse_cards("As Ad").unwrap();
@@ -588,7 +578,7 @@ mod tests {
             expected += v * v;
         }
         expected /= 46.0;
-        let got = aggregate_hs2(&indexers, Street::Turn, turn_index, &next);
+        let got = aggregate_hs2(indexers, Street::Turn, turn_index, &next);
         assert!((got - expected).abs() < 1e-6, "{got} vs {expected}");
     }
 
@@ -764,7 +754,7 @@ mod tests {
     #[ignore]
     fn river_buckets_are_monotone_in_strength_on_tiny() {
         let boards = board_indexer(5);
-        let river = river_indexer();
+        let river = street_indexer(Street::River);
         let mut hs = vec![f32::NAN; river.size(1) as usize];
         for b in 0..boards.size(0) {
             let cards = boards.unindex(0, b);

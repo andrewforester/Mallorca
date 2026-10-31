@@ -59,7 +59,7 @@ pub fn play_thresholds(
 ) -> Result<Vec<(Street, Vec<f32>)>, String> {
     let indexers = street_indexers();
     let river = read_river_hs(data, abstraction.class_count(Street::River) as usize)?;
-    let turn = turn_values(&indexers, &river, preset.threads);
+    let turn = turn_values(indexers, &river, preset.threads);
     let turn_t = verified(
         Street::Turn,
         &turn,

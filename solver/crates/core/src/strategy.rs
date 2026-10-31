@@ -1,5 +1,5 @@
 use crate::bytes::{ByteReader, Truncated};
-use crate::iso::street_indexers;
+use crate::iso::street_indexer;
 use crate::potential::{BINS, CLUSTERS};
 use crate::tree::{Node, NodeId, Street, Tree};
 use std::fmt;
@@ -177,7 +177,7 @@ fn read_clusters(t: &mut ByteReader<'_>) -> Result<[u8; CLUSTER_MAP_LEN], Strate
 
 fn read_table(t: &mut ByteReader<'_>, street: Street) -> Result<Vec<u8>, StrategyError> {
     let table = t.prefixed().map_err(|_| StrategyError::Inconsistent)?;
-    if table.len() as u64 != street_indexers()[street.as_index()].size(1) {
+    if table.len() as u64 != street_indexer(street).size(1) {
         return Err(StrategyError::Inconsistent);
     }
     Ok(table.to_vec())

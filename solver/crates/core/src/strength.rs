@@ -1,13 +1,8 @@
 use crate::abstraction::{aggregate_squares, LIVE_OPPONENTS};
 use crate::cards::Card;
 use crate::eval::rank;
-use crate::iso::HandIndexer;
-use std::sync::OnceLock;
-
-fn turn_indexer() -> &'static HandIndexer {
-    static INDEXER: OnceLock<HandIndexer> = OnceLock::new();
-    INDEXER.get_or_init(|| HandIndexer::new(&[2, 4]))
-}
+use crate::iso::street_indexer;
+use crate::tree::Street;
 
 pub fn percentile_thresholds(values: &[f32], buckets: u16) -> Vec<f32> {
     assert!((1..=256).contains(&buckets));
@@ -51,7 +46,7 @@ pub fn turn_value(hole: [Card; 2], board: &[Card; 4]) -> f32 {
     let mut six = [0 as Card; 6];
     six[..2].copy_from_slice(&hole);
     six[2..].copy_from_slice(board);
-    let indexer = turn_indexer();
+    let indexer = street_indexer(Street::Turn);
     let canonical = indexer.unindex(1, indexer.index(&six));
     aggregate_squares(canonical, |c| {
         river_hs([c[0], c[1]], c[2..7].try_into().expect("five board cards"))
@@ -108,7 +103,7 @@ mod tests {
                     next[i as usize] = hs;
                 }
             }
-            let expected = aggregate_hs2(&indexers, Street::Turn, index, &next);
+            let expected = aggregate_hs2(indexers, Street::Turn, index, &next);
             let got = turn_value([cards[0], cards[1]], &cards[2..6].try_into().unwrap());
             assert_eq!(got.to_bits(), expected.to_bits(), "{got} vs {expected}");
         }
