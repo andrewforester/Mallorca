@@ -12,7 +12,7 @@ use mallorca_core::preset::{CfrParams, Preset};
 use mallorca_core::rng::{splitmix64, Rng};
 use mallorca_core::tree::{Street, Tree};
 use std::fs::File;
-use std::io::Write;
+use std::io::BufWriter;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
@@ -200,9 +200,9 @@ fn save(dir: &Path, header: &CheckpointHeader, storage: &Storage) -> Result<Path
     let path = checkpoint_path(dir, header.checkpoint);
     let tmp = dir.join(format!("{}.ckpt.tmp", header.checkpoint));
     let failed = |e: std::io::Error| format!("cannot write {}: {e}", tmp.display());
-    let bytes = write_checkpoint(header, storage);
-    let mut file = File::create(&tmp).map_err(failed)?;
-    file.write_all(&bytes).map_err(failed)?;
+    let mut out = BufWriter::new(File::create(&tmp).map_err(failed)?);
+    write_checkpoint(&mut out, header, storage).map_err(failed)?;
+    let file = out.into_inner().map_err(|e| failed(e.into_error()))?;
     file.sync_all().map_err(failed)?;
     drop(file);
     std::fs::rename(&tmp, &path)
@@ -650,11 +650,9 @@ pub mod tests {
             elapsed_seconds: 0,
             checkpoint: 3,
         };
-        std::fs::write(
-            ckpts.join("3.ckpt"),
-            write_checkpoint(&header, &Storage::new(4)),
-        )
-        .unwrap();
+        let mut bytes = Vec::new();
+        write_checkpoint(&mut bytes, &header, &Storage::new(4)).unwrap();
+        std::fs::write(ckpts.join("3.ckpt"), bytes).unwrap();
         let err = go(&session(&dir, Some(10), 0, None)).err().unwrap();
         assert!(
             err.contains("3.ckpt") && err.contains("another preset"),
