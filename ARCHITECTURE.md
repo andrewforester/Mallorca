@@ -57,8 +57,9 @@ web/src/
 
 `brains` takes only types from `engine`: `Action`, `LegalActions` and the events it turns into observations.
 `ui` imports only from `game`; for the table, `game` re-exports `Card`, `formatCard`, `rankOf`, `suitOf`,
-`SeatIndex`, `LogEntry`, `HandCategory`, `TableMode`, `CASH` and `TOURNAMENT`, and for the history `HandRecord`,
-`HandStore`, `openHandStore`, `memoryStore` and `toPokerStars`.
+`SeatIndex`, `LogEntry`, `HandCategory`, `TableMode`, `CASH` and `TOURNAMENT`, for the opponent choice `Opponent`,
+`OPPONENTS` and `opponentsFor`, and for the history `HandRecord`, `HandStore`, `openHandStore`, `memoryStore` and
+`toPokerStars`.
 
 ESLint enforces the table with a `@typescript-eslint/no-restricted-imports` rule per directory. For `brains` the
 rule sets `allowTypeImports` on `engine`; the tests in `brains` (`*.test.ts`) may also import `engine` code to
@@ -262,12 +263,13 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   split. It equals the `win` entry of the log; an uncalled bet is its own `returned` entry.
 - `BotClient` has `observe(observations)`, `decide(legal)`, `reset()`, an optional `select(opponent, seed)` and an
   optional `dispose()`. `workerBot()` runs the brain in `bot.worker.ts` over the `WorkerRequest` and `WorkerReply`
-  messages in `workerProtocol.ts`; `createWorkerHandler(newBrain, post, load?)` in `workerHandler.ts` is the
-  worker's message handling as a plain function. A `select` request queues every later request until the
-  opponent's brain factory is ready, then replies `{ id, opponent }` or `{ id, error }` and keeps the old brain on
-  an error. The worker loads the CFR model once (`fetch` of the two `new URL(..., import.meta.url)` assets) and
-  seeds its brains with `mulberry32(seed)`. Replacing a brain disposes it. `inProcessBot()` runs the math brain on
-  the main thread and rejects `select('cfr')`.
+  messages in `workerProtocol.ts`; `createWorkerHandler(newBrain, post, load?)` in `workerHandler.ts` is the worker's
+  message handling as a plain function. A `select` request queues every later request until the opponent's brain
+  factory is ready, then replies `{ id, opponent }` or `{ id, error }` and keeps the old brain on an error. The worker
+  loads the model of each cfr opponent once, on its first `select` (`loadCfrModel` with `fetch` of `WASM_URL` and the
+  opponent's `SHIPPED_STRATEGIES` url; a failed load is retried on the next `select`), and seeds its brains with
+  `mulberry32(seed)`. Replacing a brain disposes it. `inProcessBot()` runs the math brain on the main thread and
+  rejects `select('cfr')`.
 - `withFallback` wraps a client: when `decide` rejects or takes longer than 5 s, it disposes the primary, replays
   the observations of the hand into an in-process bot and uses it from then on. It falls back once, and a failure
   from before `reset` or `dispose` does not trigger it. The session drops a decision that arrives after `start`
@@ -287,7 +289,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   completes, calls `store.add(handRecord(...))` without awaiting it; a rejection, a synchronous throw or a failing
   `now()` is ignored and the game goes on. A bot `Decision` is recorded with `recordDecision`; its `eventIndex` is
   the index of the resulting `acted` event in the hand's events. The timeout fallback plays without a decision
-  and records none. `bot` is `MATH_BOT`, `playedAt` is `now()` at completion.
+  and records none. `bot` is `botRecord` of the session's opponent (`MATH_BOT` by default), `playedAt` is `now()`
+  at completion.
 - `simulation.test.ts` plays full tournaments between the bot and a seeded random human through the session and
   checks that chips are conserved, the session never stalls and the winner holds every chip.
 
@@ -319,9 +322,26 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 
 - Preact components render only the `ViewModel`, the session phase and the log; they call the session actions
   and hold no game rules.
-- Components: `App`, `StatusBar`, `HistoryMenu`, `StartScreen`, `Table`, `Seat`, `BetChips`, `DealerButton`,
-  `ActionBubble`, `Card` (SVG), `BoardRow`, `Board`, `Pot`, `ActionBar`, `BetSlider`, `HandLogDrawer`,
-  `TournamentOver`, `SessionOver`.
+- Components: `App`, `Scene`, `StatusBar`, `HistoryMenu`, `Settings`, `StartScreen`, `Table`, `Seat`, `BetChips`,
+  `DealerButton`, `ActionBubble`, `Card` (SVG), `BoardRow`, `Board`, `Pot`, `ActionBar`, `BetSlider`,
+  `HandLogDrawer`, `TournamentOver`, `SessionOver`.
+- `Scene` wraps the start screen and the table: the attic photo (`ui/scene/*.webp`, a portrait and a landscape plate
+  over a blurred copy as the background) under a vignette, or with `simple` a flat felt without the photo (class
+  `scene-simple`); `dimmed` blurs the plate behind the start screen. `ui/scene.ts` holds the `PlateGeometry` of each
+  plate (`LANDSCAPE`, `PORTRAIT`, `SIMPLE_LANDSCAPE`, `SIMPLE_PORTRAIT`: focus point, felt tilt, seat and board
+  heights, card size), which `geometryStyle` turns into the CSS variables the layout reads.
+- Preferences: `ui/preferences.ts` reads and writes `localStorage` (`mallorca.tableStyle` `room` or `simple`,
+  `mallorca.autoNext` and `mallorca.sound`, on unless stored as `off`) and falls back to the default when storage
+  throws. `usePreferences()` holds them as state with a toggle each; `Settings` renders the three menu checkboxes
+  `simple-table`, `auto-next` and `sound` inside `HistoryMenu`.
+- Auto next hand: in a tournament `nextHandDelay(vm)` (`ui/autoNext.ts`) is 1000 ms after a hand won without a
+  showdown and 2000 ms after a showdown, and null in cash, before a result and after the tournament ends.
+  `useAutoNext(session, vm, enabled)` calls `nextHand` after that delay while the phase is still `handOver`; it is
+  enabled when `main.tsx` allows it, the `mallorca.autoNext` preference is on and the hand log drawer is closed.
+  The delay drives the countdown style of the next hand button.
+- The start screen offers the opponents of `opponentsFor` (buttons `opponent-<key>` with `aria-pressed`, `math`
+  by default) and shows a loading line while a cfr opponent starts. `leave-tonight` in the tournament-over dialog
+  mounts a new game whose start screen shows a farewell line.
 - Hooks: `useSweep(bets, collected)` keeps half of the newly collected chips on each seat for `SWEEP_MS`
   (300 ms) when a street closes, so the bets slide into the pot; new bets or a new hand show at once.
   `useHeldActions(actions, closing, board)` keeps the closing action tags, and hides the thinking bubble, for
@@ -343,8 +363,9 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - Every string comes from `src/locales/en.json` through i18next (`ui/i18n.ts`). `ui/phrases.ts` words log
   entries, action tags and hand categories; an entry with the human seat uses the `log.you` keys, any other seat
   the `log.other` keys with `{{name}}`.
-- `main.tsx` picks a random seed per game and reads two query parameters: `?seed=<n>` fixes the seed and
-  `?botDelay=<ms>` sets the bot pause (700 ms by default). The human sits in seat 0.
+- `main.tsx` picks a random seed per game and reads three query parameters: `?seed=<n>` fixes the seed of the first
+  game, `?botDelay=<ms>` sets the bot pause (700 ms by default) and `?autoNext=off` turns off the automatic next
+  hand whatever the preference. The human sits in seat 0.
 - History: `main.tsx` awaits `openHandStore()` once, gives every `mount()` a fresh `crypto.randomUUID()` session
   id and passes the store to `App`. The menu exports every hand as JSON or text and clears the history after a
   second click on the same button. `ui/history.ts` reads the store and calls `ui/download.ts` (a Blob and a
@@ -360,42 +381,54 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   stored as `off`) is switched by the status bar button `sound-toggle` (`aria-pressed`) and the menu checkbox
   `sound`; off silences every cue.
 - Keyboard: `f` folds, `c` checks or calls, `r` raises, the arrow keys move the raise amount.
-- `data-testid` contract for e2e and contact sheets: `start-cash`, `start-tournament`, `blinds`,
-  `session-result`, `hand-number`, `leave`, `new-game`, `seat-<i>`, `stack-<i>` (with `data-stack`), `bet-<i>`,
-  `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`, `bubble-aggressive` or `bubble-fold`),
-  `thinking-<i>`, `card` (with `data-card`), `card-back`, `board`, `pot` (with `data-amount` = total and
-  `data-collected`), `result`, `next-hand`, `fold`, `passive`, `raise`, `raise-amount`, `preset-half`,
-  `preset-pot`, `preset-allin`, `hand-log-toggle`, `sound-toggle`, `sound`, `hand-log`, `hand-log-close`,
-  `hand-log-scrim`, `coach`,
-  `live-region`, `tournament-over`, `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and
-  `export-text` (the session dialog, current session), and `export-all-json`, `export-all-text` and
-  `clear-history` (the menu).
+- `data-testid` contract for e2e and contact sheets: `scene`, `start-cash`, `start-tournament`, `opponent-<key>`,
+  `start-loading`, `farewell`, `blinds`, `session-result`, `hand-number`, `leave`, `new-game`, `seat-<i>`, `stack-<i>`
+  (with `data-stack`), `bet-<i>`, `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`,
+  `bubble-aggressive` or `bubble-fold`), `thinking-<i>`, `card` (with `data-card`), `card-back`, `board`, `pot` (with
+  `data-amount` = total and `data-collected`), `result`, `next-hand`, `fold`, `passive`, `raise`, `raise-amount`,
+  `preset-half`, `preset-pot`, `preset-allin`, `hand-log-toggle`, `sound-toggle`, `simple-table`, `auto-next`,
+  `sound`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`, `live-region`, `tournament-over`, `leave-tonight`,
+  `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and `export-text` (the session
+  dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu).
 
 ## e2e
 
-- Playwright runs against the production build (`vite preview`) on three projects: `phone` 390 × 844,
-  `small-phone` 360 × 740 and `desktop` 1440 × 900.
+- Playwright runs against the production build (`vite preview`) on three projects: `phone` 390 × 844, `small-phone`
+  360 × 740 and `desktop` 1440 × 900. `layout.spec.ts` runs only on `small-phone`, which runs only `layout.spec.ts`
+  and `table.spec.ts`. Most tests open `FAST_URL` (`fixtures.ts`), `/?seed=42&botDelay=0&autoNext=off`, and fail on
+  any console error or warning.
 - `game.spec.ts`: a passive hand keeps the chips, all-in every hand ends the tournament and "Play again" returns
-  to a fresh table, a reload mid-hand shows the start screen, a cash hand is played and left with one hand in the
-  summary, and the hand history is exported, persists across a reload and is cleared. `layout.spec.ts`: the start
-  screen, the table, the cash table, the session summary and a cash status bar with long values fit the viewport
-  without horizontal scroll. `table.spec.ts`: on the human's first turn the dealer button, both bets, the pot
-  and the board are inside the viewport on every project, and the hand log drawer opens inside the viewport
-  with its close button, without horizontal scroll, and Escape hides it.
+  to a fresh table, `leave-tonight` shows the farewell start screen, the next hand starts by itself after a
+  fold, a reload mid-hand shows the start screen, a cash hand is played and left with one hand in the summary, and
+  the hand history is exported, persists across a reload and is cleared. `layout.spec.ts`: the start screen, the
+  table, the cash table, the session summary and a cash status bar with long values fit the viewport without
+  horizontal scroll, and every control stays visible on the simple table and on short landscape screens.
+  `table.spec.ts`: on the human's first turn the dealer button, both bets, the pot and the board are inside the
+  viewport on every project, the hand log drawer opens inside the viewport with its close button, without
+  horizontal scroll, and Escape hides it, the floating log stops above the action bar on a 1280 × 720 screen, and
+  it is a full-height sheet on a 900 × 500 screen.
+- `scene.spec.ts`: the table stays playable on the felt colour when the plates fail to load, the showdown result
+  covers neither shown hand nor the board, the simple table is flat, loads no plate and is remembered across a reload,
+  and the deal animation follows `prefers-reduced-motion`. `solver.spec.ts`: the `cfr` opponent loads the module and
+  its strategy in the worker and plays cash hands recorded as `cfr`, `cfr-v2` loads its own file on desktop and is
+  recorded as `v2-10`, and a phone is not offered `cfr-v2`. `arena.spec.ts`: the published arena page lists the runs,
+  a run with hands opens and shows a pair as PokerStars text.
 - `e2e/contact.ts` (`npm run contact`) captures every view state of a seeded game on `phone` and `desktop` and
   composes one sheet per device into `e2e/contact/`.
 
 ## arena
 
 `web/tools/arena/` is a Node script outside the app bundle, run as `npm run arena -- --a <bot> --b <bot>`. It
-imports `engine`, `brains`, `cards` and `game/records/record.ts` and nothing from `ui`; Node 24 runs the `.ts`
-files directly, including in workers. `tools/` may use the clock and Node APIs.
+imports `engine`, `brains`, `cards`, `cfr` and `game/records/record.ts` and nothing from `ui`; Node 24 runs the
+`.ts` files directly, including in workers. `tools/` may use the clock and Node APIs.
 
 - `bots.ts`: `BOTS`, the `BotFactory` (`(rng) => ArenaBot` with `observe`, `decide` and an optional `dispose`)
   of each name: `math` (`createMathBrain` with `randomVillainModel`), `cfr` (`createCfrBrain` over the model that
-  `prepareBots` loads from `src/cfr` once per process or worker; it throws before that), `always-call` (checks or calls), `always-raise` (raises to
-  `legal.raise.min` when it can, else checks or calls) and `random` (uniform over the legal kinds, a raise to the
-  minimum, from its seeded `Rng`).
+  `prepareBots` loads from `SHIPPED_STRATEGIES.cfr` once per process or worker; it throws before that),
+  `always-call` (checks or calls), `always-raise` (raises to `legal.raise.min` when it can, else checks or calls),
+  `min-bettor` (bets the minimum when nobody has bet, else checks or calls) and `random` (uniform over the legal
+  kinds, a raise to the minimum, from its seeded `Rng`). `cfr:<play file>` plays any play file the same way and is
+  labelled `cfr-<file name>` in the report (`botLabel`).
 - `match.ts`: `playPair(a, b, seed, index)` plays one deck twice with the seats swapped: the deck is shuffled by
   `mulberry32((Math.imul(seed, 0x9e3779b1) + index) >>> 0)`; hand `k` (0, 1) starts both seats at 2000, button
   seat 0, blinds 10/20, `handNumber = index * 2 + k + 1`, with `a` on seat 0 in hand 0 and `b` in hand 1. Each hand
