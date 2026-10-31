@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { BOTS } from './bots.ts';
+import { BOTS, botLabel, isBotName } from './bots.ts';
 import { resultsDir, runName } from './paths.ts';
 import { runArena } from './run.ts';
 
@@ -28,9 +28,9 @@ const { values } = parseArgs({
   },
 });
 
-const names = Object.keys(BOTS);
+const names = [...Object.keys(BOTS), 'cfr:<play file>'];
 for (const name of [values.a, values.b]) {
-  if (!names.includes(name)) {
+  if (!isBotName(name)) {
     console.error(`unknown bot "${name}", choose from: ${names.join(', ')}`);
     process.exit(1);
   }
@@ -50,7 +50,7 @@ const seed = integerFlag('seed', values.seed, 0);
 const workers = integerFlag('workers', values.workers, 1);
 
 const dir = values.dir === undefined ? resultsDir(process.cwd()) : resolve(values.dir);
-const name = runName(values.a, values.b, pairs, seed, new Date());
+const name = runName(botLabel(values.a), botLabel(values.b), pairs, seed, new Date());
 const out = values.out === undefined ? join(dir, `${name}.json`) : resolve(values.out);
 const saveHands = values['no-hands']
   ? undefined

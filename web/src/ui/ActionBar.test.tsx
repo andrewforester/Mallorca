@@ -13,6 +13,13 @@ describe('ActionBar', () => {
     expect(screen.getByTestId('raise').textContent).toBe('Raise to 160');
   });
 
+  it('names the raise button Bet when opening the betting', () => {
+    const base = viewModel().controls;
+    const controls = { ...base, raise: { ...base.raise!, kind: 'bet' as const, min: 60 } };
+    render(<ActionBar controls={controls} onAct={vi.fn()} />);
+    expect(screen.getByTestId('raise').textContent).toBe('Bet 60');
+  });
+
   it('shows Check when nothing is owed', () => {
     const controls = viewModel({ passive: { kind: 'check', amount: 0 } }).controls;
     render(<ActionBar controls={controls} onAct={vi.fn()} />);

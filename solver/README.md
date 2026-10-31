@@ -46,7 +46,8 @@ mkdir -p $D
      (all streets, needed by `lbr` and `match`)
    - play file for the arena and the browser, version 2: `$T export --preset $P --data $D --checkpoint N --streets play --out $D/v1-N-play.mlcs`
      (all streets, the flop table and turn and river thresholds; needs `river_hs.f32` from step 1 and checks the
-     thresholds against the tables)
+     thresholds against the tables). On a `bucketing = "potential"` preset the file is version 3: the flop table and
+     the turn and river centroids from `centroids.bin`, checked against the tables on every class
    - exploitability: `$T lbr --strategy $D/v1-N-all.bin --hands 1000000`
 6. Strength against fixed opponents, on the last checkpoint:
    `$T match --strategy $D/v1-last-all.bin --opponent all --deals 200000`
@@ -84,3 +85,36 @@ iterations from it; `--minutes` or `--iterations` apply to the new session. A ch
 fingerprint matches (blinds, stack, buckets, bet sizes, tree and bucket tables); a mismatch is an error, never a
 silent restart. `name`, `threads`, `checkpoint_minutes`, `memory_limit_gb` and the `[cfr]` parameters may change
 between resumes. To start over, use a new `--data` directory or remove `$D/checkpoints`.
+
+## `v2`: potential-aware buckets
+
+`presets/v2.toml` keeps stack 2000 and 12 threads and changes the abstraction: 256 buckets per street,
+`bucketing = "potential"`, opens of 2, 3 and 4 bb, iso raises of 3 and 4.5 bb, 3-bets of 3 and 4 times, a 4-bet of
+2.2 times, and postflop bets of 0.25, 0.66, 1, 1.5 and 2 pots with a pot-sized raise and min-raises. It needs its own
+`--data` directory, because the bucket tables and the tree differ from `v1`.
+
+```
+P=presets/v2.toml
+D=data/v2
+mkdir -p $D
+$T buckets --preset $P --out $D
+$T tree --preset $P
+caffeinate -dims $T train --preset $P --data $D --minutes 540
+$T export --preset $P --data $D --checkpoint N --streets play --out $D/v2-N-play.mlcs
+$T export --preset $P --data $D --checkpoint N --streets all --out $D/v2-N-all.bin
+```
+
+`buckets` writes `flop.bkt`, `turn.bkt`, `river.bkt` and `river_hs.f32` with the sizes in the table above, and
+`centroids.bin` (59,575 bytes: 256 turn centroids of 50 histogram bins, 256 river centroids of 8 opponent clusters
+and the 169-class cluster map). The flop and turn are clustered by earth mover's distance on equity histograms,
+the river by Euclidean distance on equity against 8 opponent clusters. On an M3 Pro with 12 threads `v2` takes
+about 16 minutes (931 s, most of it k-means on the turn) and peaks at about 1.7 GB; `tiny-potential` (8 buckets per
+street, 2 threads) takes about 200 s.
+
+The `v2` tree (`tree --preset presets/v2.toml`): 257,096 nodes, 23,802,790 infosets, 65,802,487 action slots, a
+memory estimate of 0.790 GB, so a checkpoint is 789,629,910 bytes.
+
+The play file is strategy format 3: the flop table, the turn and river centroids and the cluster map, checked by
+`export` against the tables on every class. A turn decision costs one live bucket, about 1 ms in release WebAssembly
+under Node, a river decision under 0.1 ms. `lbr` and `match` accept the play file, but `lbr` buckets every
+opponent hand live on it (about 4 hands/s on `tiny-potential` with 2 threads), so measure with the `all` file.

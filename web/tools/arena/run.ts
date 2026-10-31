@@ -4,8 +4,7 @@ import { dirname, relative } from 'node:path';
 import { Worker } from 'node:worker_threads';
 import { CASH } from '../../src/engine/index.ts';
 import { handRecord } from '../../src/game/records/record.ts';
-import { BOTS, prepareBots } from './bots.ts';
-import type { BotName } from './bots.ts';
+import { botFactory, botLabel, prepareBots } from './bots.ts';
 import { playPair } from './match.ts';
 import { summarize } from './stats.ts';
 import { styleStats } from './styleStats.ts';
@@ -62,7 +61,7 @@ function chunks(count: number, parts: number): number[][] {
 
 function runInProcess(input: WorkerInput): WorkerResult[] {
   return input.indices.map((index) => {
-    const { net, hands } = playPair(BOTS[input.a], BOTS[input.b], input.seed, index);
+    const { net, hands } = playPair(botFactory(input.a), botFactory(input.b), input.seed, index);
     return input.withHands ? { index, net, hands } : { index, net };
   });
 }
@@ -82,19 +81,20 @@ export function runInWorker(input: WorkerInput): Promise<WorkerResult[]> {
 function writeHands(
   path: string,
   results: WorkerResult[],
-  run: { a: string; b: string; seed: number; started: number },
+  run: { labels: [string, string]; seed: number; started: number },
 ): void {
   const lines: string[] = [];
   for (const result of results) {
     (result.hands ?? []).forEach((events, k) => {
-      const names: [string, string] = k === 0 ? [run.a, run.b] : [run.b, run.a];
+      const [a, b] = run.labels;
+      const names: [string, string] = k === 0 ? [a, b] : [b, a];
       const playedAt = new Date(run.started + (result.index * 2 + k) * 1000).toISOString();
       const record = handRecord(events, [], {
         sessionId: `arena-${run.seed}`,
         mode: CASH,
         names,
         humanSeat: null,
-        bot: { id: `${run.a}-vs-${run.b}`, version: '1' },
+        bot: { id: `${a}-vs-${b}`, version: '1' },
         playedAt,
       });
       lines.push(JSON.stringify(record));
@@ -110,14 +110,11 @@ function styleOfA(results: WorkerResult[]): StyleStats {
 }
 
 export async function runArena(options: ArenaOptions): Promise<Report> {
-  for (const name of [options.a, options.b]) {
-    if (!Object.hasOwn(BOTS, name)) {
-      throw new Error(`unknown bot "${name}", choose from: ${Object.keys(BOTS).join(', ')}`);
-    }
-  }
+  botFactory(options.a);
+  botFactory(options.b);
   const started = Date.now();
-  const a = options.a as BotName;
-  const b = options.b as BotName;
+  const { a, b } = options;
+  const labels: [string, string] = [botLabel(a), botLabel(b)];
   const withHands = options.saveHands !== undefined || options.stats === true;
   const inputs: WorkerInput[] = chunks(options.pairs, Math.max(1, options.workers)).map(
     (indices) => ({ a, b, seed: options.seed, indices, withHands }),
@@ -133,11 +130,11 @@ export async function runArena(options: ArenaOptions): Promise<Report> {
     BIG_BLIND,
   );
   if (options.saveHands !== undefined) {
-    writeHands(options.saveHands, results, { a, b, seed: options.seed, started });
+    writeHands(options.saveHands, results, { labels, seed: options.seed, started });
   }
   return {
-    a,
-    b,
+    a: labels[0],
+    b: labels[1],
     pairs: stats.pairs,
     hands: stats.hands,
     seed: options.seed,

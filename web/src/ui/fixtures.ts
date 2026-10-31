@@ -11,6 +11,7 @@ export function viewModel(overrides: Partial<ViewModel['controls']> = {}): ViewM
         isToAct: true,
         cards: [48, 41],
         lastAction: null,
+        closingAction: null,
       },
       {
         name: 'Mallorca',
@@ -20,14 +21,20 @@ export function viewModel(overrides: Partial<ViewModel['controls']> = {}): ViewM
         isToAct: false,
         cards: ['back', 'back'],
         lastAction: { key: 'raiseTo', params: { amount: 100 } },
+        closingAction: null,
       },
     ],
     board: [],
-    pot: 140,
+    pot: { collected: 0, total: 140 },
     controls: {
       fold: true,
       passive: { kind: 'call', amount: 60 },
-      raise: { min: 160, max: 2000, presets: { halfPot: 250, pot: 400, allIn: 2000 } },
+      raise: {
+        kind: 'raise',
+        min: 160,
+        max: 2000,
+        presets: { halfPot: 250, pot: 400, allIn: 2000 },
+      },
       enabled: true,
       ...overrides,
     },
@@ -56,7 +63,7 @@ export function fixtureResult(): ViewModel {
     passive: { kind: 'check', amount: 0 },
   });
   vm.board = [48, 41, 25, 10, 5];
-  vm.pot = 0;
+  vm.pot = { collected: 0, total: 0 };
   vm.seats[1].cards = [44, 40];
   vm.seats[0].isToAct = false;
   vm.result = { winner: 1, category: 'two-pair', amount: 120 };

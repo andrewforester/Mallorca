@@ -11,7 +11,8 @@
     "opponent": "Opponent",
     "opponents": {
       "math": "Classic",
-      "cfr": "Solver"
+      "cfr": "Solver",
+      "cfr-v2": "Solver v2"
     },
     "loading": "Bringing the solver to the table"
   },
@@ -24,7 +25,8 @@
     "result": "{{sign}}{{bb}} bb",
     "leave": "Leave table",
     "simpleTable": "Simple table",
-    "autoNext": "Auto next hand"
+    "autoNext": "Auto next hand",
+    "sound": "Sound"
   },
   "seat": {
     "you": "You",
@@ -43,7 +45,8 @@
   },
   "pot": {
     "label": "Pot",
-    "amount": "Pot {{amount}}"
+    "amount": "Pot {{amount}}",
+    "total": "Total {{amount}}"
   },
   "actions": {
     "fold": "Fold",
@@ -51,6 +54,7 @@
     "call": "Call {{amount}}",
     "raise": "Raise",
     "raiseTo": "Raise to {{amount}}",
+    "bet": "Bet {{amount}}",
     "amount": "Raise amount",
     "half": "Half pot",
     "pot": "Pot",
@@ -67,6 +71,16 @@
   },
   "log": {
     "title": "Hand log",
+    "hand": "Hand {{number}}",
+    "close": "Close hand log",
+    "open": "Hand log",
+    "street": {
+      "preflop": "Preflop",
+      "flop": "Flop",
+      "turn": "Turn",
+      "river": "River",
+      "showdown": "Showdown"
+    },
     "handStarted": "Hand {{number}}, blinds {{small}}/{{big}}",
     "flop": "Flop {{cards}}",
     "turn": "Turn {{cards}}",
@@ -77,6 +91,7 @@
       "check": "You check",
       "call": "You call {{amount}}",
       "raise": "You raise to {{amount}}",
+      "bet": "You bet {{amount}}",
       "allIn": "You are all-in",
       "show": "You show {{cards}} ({{hand}})",
       "returned": "Uncalled bet of {{amount}} returned to you",
@@ -90,6 +105,7 @@
       "check": "{{name}} checks",
       "call": "{{name}} calls {{amount}}",
       "raise": "{{name}} raises to {{amount}}",
+      "bet": "{{name}} bets {{amount}}",
       "allIn": "{{name}} is all-in",
       "show": "{{name}} shows {{cards}} ({{hand}})",
       "returned": "Uncalled bet of {{amount}} returned to {{name}}",
@@ -136,7 +152,6 @@
   },
   "talk": {
     "tab": "Chat",
-    "log": "Log",
     "placeholder": "Say something to Mallorca",
     "send": "Send",
     "open": "Chat with Mallorca",
@@ -156,7 +171,6 @@
       }
     },
     "undelivered": "Not delivered",
-    "tabs": "Side panel",
     "message": "Message"
   }
 }

@@ -96,17 +96,33 @@ for (const viewport of [
   });
 }
 
-test('the cash status bar stays on one line when the text runs wider', async ({ page }) => {
+test('the cash status bar shows every value without clipping when the text runs wider', async ({
+  page,
+}) => {
   await page.goto(FAST_URL);
   await byId(page, 'start-cash').click();
   await expect(byId(page, 'passive')).toBeEnabled();
   await page.addStyleTag({ content: '.status-bar { letter-spacing: 0.12em; }' });
   const leave = await byId(page, 'leave').boundingBox();
   const bar = await page.locator('.status-bar').boundingBox();
-  if (leave === null || bar === null) {
+  const info = await page.locator('.status-info').boundingBox();
+  const values = await Promise.all(
+    ['blinds', 'session-result', 'hand-number'].map((id) => byId(page, id).boundingBox()),
+  );
+  if (leave === null || bar === null || info === null || values.includes(null)) {
     throw new Error('status bar is not rendered');
   }
+  const tops = values.map((box) => box?.y ?? 0);
+  expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(2);
   expect(bar.height).toBeLessThan(leave.height * 2);
+  expect(info.height).toBeLessThan(leave.height);
+  const clipped = await page.evaluate(() =>
+    ['blinds', 'session-result', 'hand-number'].filter((id) => {
+      const node = document.querySelector(`[data-testid="${id}"]`);
+      return node === null || node.scrollWidth > node.clientWidth;
+    }),
+  );
+  expect(clipped).toEqual([]);
   for (const id of [...CONTROLS, 'session-result', 'leave']) {
     await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
   }

@@ -45,9 +45,9 @@ function randomAction(legal: LegalActions, rng: Rng): Action {
   return options[Math.floor(rng.next() * options.length)] ?? { kind: 'check' };
 }
 
-function playHand(seed: number, stacks: [number, number], big: number): Action[] {
+function playHand(seed: number, stacks: [number, number], big: number, using = model): Action[] {
   const rng = mulberry32(seed);
-  const brain = createCfrBrain(model, mulberry32(seed + 1));
+  const brain = createCfrBrain(using, mulberry32(seed + 1));
   const seats: [Seat, Seat] = [
     { name: 'cfr', stack: stacks[0] },
     { name: 'random', stack: stacks[1] },
@@ -97,6 +97,16 @@ describe('CfrBrain', () => {
       playHand(seed, [depth(), depth()], big);
     }
   });
+
+  it('plays the v2 blueprint legally', async () => {
+    const v2 = await createCfrModel(
+      wasm,
+      await inflate(readFileSync(new URL('./v2.mlcs.gz', import.meta.url))),
+    );
+    for (let seed = 1; seed <= 30; seed++) {
+      playHand(seed, [2000, 2000], 20, v2);
+    }
+  }, 60_000);
 
   it('is reproducible from its seed', () => {
     expect(playHand(7, [2000, 2000], 20)).toEqual(playHand(7, [2000, 2000], 20));

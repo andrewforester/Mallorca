@@ -75,6 +75,15 @@ export function Settings(props: SettingsProps) {
         />
         <span>{t('status.autoNext')}</span>
       </label>
+      <label class="menu-toggle">
+        <input
+          type="checkbox"
+          data-testid="sound"
+          checked={preferences.sound}
+          onChange={preferences.toggleSound}
+        />
+        <span>{t('status.sound')}</span>
+      </label>
       {props.talk === true && <TalkSettings {...props} />}
     </>
   );

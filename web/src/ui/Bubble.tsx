@@ -61,15 +61,15 @@ function Typed({ line, elapsed }: { line: ChatLine; elapsed: number }) {
   }
   return (
     <p
-      class={`bubble bubble-${line.speaker} glass`}
+      class={`talk-bubble talk-bubble-${line.speaker} glass`}
       style={{ '--bubble-elapsed': `${elapsed}ms` }}
       data-testid={`bubble-${line.speaker}`}
     >
       <span class="visually-hidden">{line.text}</span>
-      <span class="bubble-typed" aria-hidden="true">
+      <span class="talk-bubble-typed" aria-hidden="true">
         {shown}
       </span>
-      <span class="bubble-rest" aria-hidden="true">
+      <span class="talk-bubble-rest" aria-hidden="true">
         {line.text.slice(shown.length)}
       </span>
     </p>

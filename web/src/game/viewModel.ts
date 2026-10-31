@@ -13,9 +13,11 @@ export interface SeatView {
   isToAct: boolean;
   cards: (Card | 'back')[];
   lastAction: LogEntry | null;
+  closingAction: LogEntry | null;
 }
 
 export interface RaiseControl {
+  kind: 'bet' | 'raise';
   min: number;
   max: number;
   presets: { halfPot: number; pot: number; allIn: number };
@@ -33,7 +35,7 @@ export interface TalkView {
 export interface ViewModel {
   seats: [SeatView, SeatView];
   board: Card[];
-  pot: number;
+  pot: { collected: number; total: number };
   controls: {
     fold: boolean;
     passive: { kind: 'check' | 'call'; amount: number };
@@ -72,6 +74,7 @@ function seatView(state: SessionState, seat: SeatIndex, humanSeat: SeatIndex): S
     isToAct: hand?.toAct === seat,
     cards,
     lastAction: state.lastActions[seat],
+    closingAction: state.closingActions[seat],
   };
 }
 
@@ -87,6 +90,7 @@ function raiseControl(
   const currentBet = Math.max(hand.bets[0], hand.bets[1]);
   const potAfterCall = hand.pot + (call ?? 0);
   return {
+    kind: hand.bets[0] === 0 && hand.bets[1] === 0 ? 'bet' : 'raise',
     min,
     max,
     presets: {
@@ -95,6 +99,13 @@ function raiseControl(
       allIn: max,
     },
   };
+}
+
+function potView(hand: Hand | null): ViewModel['pot'] {
+  if (hand === null) {
+    return { collected: 0, total: 0 };
+  }
+  return { collected: hand.pot - hand.bets[0] - hand.bets[1], total: hand.pot };
 }
 
 function resultView(result: SessionState['result']): ViewModel['result'] {
@@ -138,7 +149,7 @@ export function toViewModel(state: SessionState, humanSeat: SeatIndex): ViewMode
   return {
     seats: [seatView(state, 0, humanSeat), seatView(state, 1, humanSeat)],
     board: hand === null ? [] : [...hand.board],
-    pot: hand?.pot ?? 0,
+    pot: potView(hand),
     controls: {
       fold: enabled && legal.fold,
       passive: call === null ? { kind: 'check', amount: 0 } : { kind: 'call', amount: call },

@@ -1,5 +1,5 @@
 use super::*;
-use crate::measure::fixtures::trained;
+use crate::measure::fixtures::{trained, trained_multi_open};
 use crate::rng::Rng;
 use crate::tree::{ActionKind, Node};
 use std::sync::OnceLock;
@@ -519,4 +519,104 @@ fn a_small_bet_after_a_lost_cursor_is_rarely_folded() {
         }
     }
     assert!(folds <= 15, "{folds} folds to a twentieth of the pot");
+}
+
+fn multi_model() -> &'static Model {
+    static M: OnceLock<Model> = OnceLock::new();
+    M.get_or_init(|| Model::new(trained_multi_open().clone()).unwrap())
+}
+
+const DRAWS: usize = 2000;
+
+fn draw_at(k: usize) -> f64 {
+    (k as f64 + 0.5) / DRAWS as f64
+}
+
+fn open_children() -> Vec<(ActionKind, NodeId)> {
+    let tree = &multi_model().file.tree;
+    let Node::Decision { actions, .. } = tree.node(tree.root()) else {
+        panic!("not a decision");
+    };
+    actions
+        .iter()
+        .copied()
+        .filter(|a| matches!(a.0, ActionKind::RaiseTo(_) | ActionKind::AllIn))
+        .collect()
+}
+
+fn open_child(kind: ActionKind) -> NodeId {
+    open_children().iter().find(|a| a.0 == kind).unwrap().1
+}
+
+fn opponent_opens(to: u32, draw: f64) -> Bot {
+    let mut bot = Bot::new();
+    bot.hand_started(multi_model(), false, [2000, 2000], [10, 20]);
+    bot.hole_cards([0, 5]);
+    bot.acted(multi_model(), false, Move::RaiseTo(to), draw);
+    bot
+}
+
+fn root_fraction(to: u32) -> f64 {
+    fraction(to, 20, 40)
+}
+
+#[test]
+fn the_multi_open_tree_has_three_opens_and_an_all_in() {
+    let kinds: Vec<ActionKind> = open_children().iter().map(|a| a.0).collect();
+    assert_eq!(
+        kinds,
+        vec![
+            ActionKind::RaiseTo(40),
+            ActionKind::RaiseTo(60),
+            ActionKind::RaiseTo(80),
+            ActionKind::AllIn
+        ]
+    );
+}
+
+#[test]
+fn a_five_bb_open_maps_to_the_four_bb_child_mostly() {
+    let four = open_child(ActionKind::RaiseTo(80));
+    let hits = (0..DRAWS)
+        .filter(|&k| opponent_opens(100, draw_at(k)).cursor() == Some(four))
+        .count();
+    let share = hits as f64 / DRAWS as f64;
+    let expected = pseudo_harmonic(root_fraction(80), root_fraction(2000), root_fraction(100));
+    assert!((share - expected).abs() < 0.03, "{share} vs {expected}");
+    assert!(share >= 0.8, "{share}");
+}
+
+#[test]
+fn a_two_and_a_half_bb_open_splits_between_two_and_three() {
+    let two = open_child(ActionKind::RaiseTo(40));
+    let three = open_child(ActionKind::RaiseTo(60));
+    let (mut twos, mut threes) = (0, 0);
+    for k in 0..DRAWS {
+        let cursor = opponent_opens(50, draw_at(k)).cursor();
+        if cursor == Some(two) {
+            twos += 1;
+        } else if cursor == Some(three) {
+            threes += 1;
+        }
+    }
+    assert!(twos > 0 && threes > 0, "{twos} {threes}");
+    assert_eq!(twos + threes, DRAWS);
+}
+
+#[test]
+fn a_ten_bb_open_is_answered_legally() {
+    let legal = Legal {
+        fold: true,
+        check: false,
+        call: Some(180),
+        raise: Some((380, 2000)),
+    };
+    let mut on_tree = 0;
+    for k in 0..DRAWS {
+        let mut bot = opponent_opens(200, draw_at(k));
+        on_tree += usize::from(bot.cursor().is_some());
+        let mv = bot.decide(multi_model(), &legal, draw_at((k * 7919) % DRAWS));
+        assert!(is_legal(mv, &legal), "{mv:?}");
+    }
+    assert_eq!(on_tree, DRAWS);
 }

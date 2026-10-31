@@ -204,7 +204,10 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 ## cfr
 
 - `v1.mlcs.gz` is the play file of `solver/` (`export --streets play`, strategy format 2, `v1` checkpoint 18),
-  gzipped: all four streets, the flop bucket table and the turn and river thresholds. `mallorca.wasm` is
+  gzipped: all four streets, the flop bucket table and the turn and river thresholds. Strategy format 3, written
+  for `v2` presets with `bucketing = "potential"`, carries turn and river centroids instead of thresholds and
+  buckets those streets live; the same loader reads it. `v2.mlcs.gz` is the `v2` play file (format 3, checkpoint
+  10, 51 MB gzipped). The worker loads each file on first use and keeps it. `mallorca.wasm` is
   `solver/crates/wasm`, a plain `extern "C"` ABI over `mallorca-core::bot`; it imports nothing.
 - `inflate(bytes)` gunzips with `DecompressionStream` when the bytes start with the gzip magic and returns other
   bytes as they are. `createCfrModel(wasm, strategy)` instantiates the module and loads the strategy; a bad file
@@ -248,10 +251,11 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - `createSession({ bot, seed, botDelayMs, humanSeat, names, mode, startingStacks?, records? })` returns a
   zustand store with `SessionState` (its engine state is `table`) and the actions `start(mode?, opponent?)`,
   `nextHand`, `act(intent)`, `leave` and `dispose`. `start(mode)` replaces the session's mode for this and later
-  starts; `start()` keeps the current one. `opponent` (`math` or `cfr`, `OPPONENTS` in `opponent.ts`) works the
+  starts; `start()` keeps the current one. `opponent` (`math`, `cfr` or `cfr-v2`, `OPPONENTS` in `opponent.ts`;
+  `opponentsFor(finePointer)` leaves `cfr-v2` out on touch screens, so a phone never downloads it) works the
   same way: when it differs from the current one, `start` first awaits `bot.select(opponent, seed)` and
   `SessionState.opponent` becomes the opponent the bot answered with; hand records carry its id (`math` version
-  `1`, `cfr` version `v1-18`). `seed` drives `mulberry32` for every shuffle. The actions are module functions
+  `1`, `cfr` version `v1-18`, `cfr-v2` as id `cfr` version `v2-10`). `seed` drives `mulberry32` for every shuffle. The actions are module functions
   over one shared `Runtime` per session: the store accessors, the bot, the RNG, the timers, the hand recorder, the
   mode, the session tally and an epoch that `start` and `dispose` advance.
 - `phase` is one of `idle` (before `start`), `humanToAct`, `botThinking` (waiting for `decide`), `animating`
@@ -267,8 +271,11 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   the human or asks the bot to decide and applies its action after `botDelayMs`.
 - `Intent` is `fold`, `passive` (check or call) or `raise` with a target. `resolveIntent` turns it into a legal
   action: a raise is rounded and clamped into `legal.raise`, a fold becomes a check when checking is free.
-- `log` holds the `LogEntry` values of the session. `lastActions` holds one tag per seat for the current hand,
-  `{ key, params }` with `key` under `actions` (`fold`, `check`, `call`, `raiseTo`, `allIn`).
+- `log` holds the `LogEntry` values of the session. `lastActions` holds one tag per seat for the current street,
+  `{ key, params }` with `key` under `actions` (`fold`, `check`, `call`, `bet`, `raiseTo`, `allIn`); a raise
+  with no bet on the street is a `bet`, in the tags and in the log. Every `streetDealt` clears both tags, and
+  `closingActions` keeps the tags the last one cleared, the actions that closed the previous street. Both are
+  reset when a hand starts.
 - `result` is set when a hand completes: `winner` (null for a split), `category` of the shown hand or null,
   `showdown` and `amount`. `amount` is the pot collected, twice the smaller contribution, or each share for a
   split. It equals the `win` entry of the log; an uncalled bet is its own `returned` entry.
@@ -287,11 +294,13 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   Its `select` answers `math` without asking a client that has no `select`; when the client's `select` rejects or
   takes longer than 60 s, it falls back the same way and answers `math`.
 - `toViewModel(state, humanSeat)` returns the `ViewModel`: per seat the name, stack, street bet, button, whether
-  it is to act, the cards (`'back'` for the bot's cards until a showdown) and the last action tag; the board, pot,
-  blinds (from `rulesOf(mode).blinds`) and hand number; the `mode` (`cash` or `tournament`); `session` with
-  `hands`, `netBb` and `bbPer100` (one decimal, `bbPer100` null with no hands); the controls (`fold`, `passive`
-  with its amount, `raise` with `min`, `max` and the presets `halfPot`, `pot` and `allIn`, and `enabled`); the
-  result and the tournament winner.
+  it is to act, the cards (`'back'` for the bot's cards until a showdown), the last action tag and the closing
+  action tag; the board; `pot` as `{ collected, total }`, `collected` the chips of the previous streets and
+  `total` with the street bets; the blinds (from `rulesOf(mode).blinds`) and hand number; the `mode` (`cash` or
+  `tournament`); `session` with `hands`, `netBb` and `bbPer100` (one decimal, `bbPer100` null with no hands); the
+  controls (`fold`, `passive` with its amount, `raise` with `kind` (`bet` with no bet on the street, otherwise
+  `raise`), `min`, `max` and the presets `halfPot`, `pot` and `allIn`, and `enabled`); the result and the
+  tournament winner.
 - `SessionOptions.records` is `{ store, sessionId, now }`; without it nothing is recorded and `sessionId` in the
   state is null. `records/recorder.ts` collects the events of each hand from `beginHand` on and, when the hand
   completes, calls `store.add(handRecord(...))` without awaiting it; a rejection, a synchronous throw or a failing
@@ -359,21 +368,31 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 
 - Preact components render only the `ViewModel`, the session phase and the log; they call the session actions
   and hold no game rules.
-- Components: `App`, `StatusBar`, `HistoryMenu`, `StartScreen`, `Table`, `Seat`, `Card` (SVG), `Board`, `Pot`,
-  `ActionBar`, `BetSlider`, `HandLog`, `TournamentOver`, `SessionOver`, `SidePanel`, `Chat`, `ChatSheet`, `Bubble`.
+- Components: `App`, `StatusBar`, `HistoryMenu`, `StartScreen`, `Table`, `Seat`, `BetChips`, `DealerButton`,
+  `ActionBubble`, `Card` (SVG), `BoardRow`, `Board`, `Pot`, `ActionBar`, `BetSlider`, `HandLogDrawer`,
+  `TournamentOver`, `SessionOver`, `Chat`, `ChatSheet`, `Bubble`.
+- Hooks: `useSweep(bets, collected)` keeps half of the newly collected chips on each seat for `SWEEP_MS`
+  (300 ms) when a street closes, so the bets slide into the pot; new bets or a new hand show at once.
+  `useHeldActions(actions, closing, board)` keeps the closing action tags, and hides the thinking bubble, for
+  `HOLD_MS` (900 ms) after the board grows; a new action or a new hand shows at once.
 - Table talk shows only while `talk.available` and `talk.on`: `Bubble` types a line at about 40 characters per
   second and removes it after 7 s (full text at once under `prefers-reduced-motion`), her bubble at her plaque and the
-  player's at theirs. On wide screens `SidePanel` holds Log and Chat tabs; on phones and short screens a chat button at
-  her plaque opens `ChatSheet`, a bottom sheet portalled to `body`. The menu holds Table talk and Tells, kept in
-  `localStorage` (`mallorca.talk`, `mallorca.tells`) and passed to `createSession` as `talkOn` and `tells`. Keyboard
-  shortcuts ignore keys typed in a text field.
+  player's at theirs. On wide screens the chat sits in the right column of the table; on phones and short screens a
+  chat button at her plaque opens `ChatSheet`, a sheet portalled to `body`. The hand log stays in its drawer. The menu
+  holds Table talk and Tells, kept in `localStorage` (`mallorca.talk`, `mallorca.tells`) and passed to
+  `createSession` as `talkOn` and `tells`. Keyboard shortcuts ignore keys typed in a text field.
 - The start screen offers a cash game (100 bb) and a tournament. In cash the status bar shows the blinds, the
   running result in bb and a leave button, enabled only between hands; the session-over dialog shows the result in
   bb, bb/100 and the hands, with play again and the export of the session. `signed` formats a bb value as sign
   and one-decimal absolute value.
 - Layout: portrait for phones (bot at the top, the human's cards and controls at the bottom), landscape for wide
-  screens with the hand log at the side, switched by a `min-aspect-ratio: 1/1` media query. The `coach` panel is
+  screens, switched by a `min-aspect-ratio: 1/1` media query. The layout has no side log. The `coach` panel is
   the slot for a later training mode and is empty.
+- The hand log is a drawer grouped by street (`groupHand` in `ui/handLog.ts`), opened by the status bar toggle
+  `hand-log-toggle` (`aria-expanded`). Opening moves focus to `hand-log-close`; closing, by the close button,
+  Escape, the toggle or the scrim, returns focus to the toggle. On portrait screens it is a full-height sheet over
+  a scrim that closes on tap; in landscape it is a floating panel and the scrim does not take pointer events, so
+  the player can act while it is open.
 - Every colour, font, radius, spacing and shadow is a CSS token on `:root` in `ui/styles/tokens.css`, with a dark
   theme under `prefers-color-scheme: dark`. The visual design brief is GitHub issue #2.
 - Every string comes from `src/locales/en.json` through i18next (`ui/i18n.ts`). `ui/phrases.ts` words log
@@ -387,12 +406,23 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   temporary anchor, the object URL revoked after the click) with `mallorca-<sessionId>.json|txt` or
   `mallorca-history.json|txt`; store errors are ignored. Plural copy such as `session.summary_one` and `_other`
   is resolved by i18next from `count`.
+- Sound lives in `ui/sound/`: `cues.ts` maps new log entries and phase changes to cue names (`cuesFor`,
+  `turnCue`), `player.ts` is the `SoundPlayer` interface with a Web Audio synthesizer (`createSynthPlayer`, no
+  audio files) and `silentPlayer`, and `useSoundCues.ts` watches the session store and plays the cues of each
+  update, 120 ms apart; it starts from the log at mount and ignores a shrinking log, so nothing old is replayed.
+  `main.tsx` creates one player and passes it to every `App`; no `AudioContext` exists before `unlock()`, which
+  `App` calls on the click of a start button. The `mallorca.sound` preference (`readSound`, `writeSound`; on unless
+  stored as `off`) is switched by the status bar button `sound-toggle` (`aria-pressed`) and the menu checkbox
+  `sound`; off silences every cue.
 - Keyboard: `f` folds, `c` checks or calls, `r` raises, the arrow keys move the raise amount.
 - `data-testid` contract for e2e and contact sheets: `start-cash`, `start-tournament`, `blinds`,
-  `session-result`, `hand-number`, `leave`, `new-game`, `seat-<i>`, `stack-<i>` (with `data-stack`), `bet-<i>`, `action-<i>`, `thinking-<i>`, `card` (with
-  `data-card`), `card-back`, `board`, `pot` (with `data-amount`), `result`, `next-hand`, `fold`, `passive`,
-  `raise`, `raise-amount`, `preset-half`, `preset-pot`, `preset-allin`, `hand-log`, `coach`, `live-region`,
-  `tournament-over`, `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and
+  `session-result`, `hand-number`, `leave`, `new-game`, `seat-<i>`, `stack-<i>` (with `data-stack`), `bet-<i>`,
+  `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`, `bubble-aggressive` or `bubble-fold`),
+  `thinking-<i>`, `card` (with `data-card`), `card-back`, `board`, `pot` (with `data-amount` = total and
+  `data-collected`), `result`, `next-hand`, `fold`, `passive`, `raise`, `raise-amount`, `preset-half`,
+  `preset-pot`, `preset-allin`, `hand-log-toggle`, `sound-toggle`, `sound`, `hand-log`, `hand-log-close`,
+  `hand-log-scrim`, `coach`,
+  `live-region`, `tournament-over`, `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and
   `export-text` (the session dialog, current session), and `export-all-json`, `export-all-text` and
   `clear-history` (the menu).
 
@@ -446,7 +476,9 @@ bounded by the clamps above.
   to a fresh table, a reload mid-hand shows the start screen, a cash hand is played and left with one hand in the
   summary, and the hand history is exported, persists across a reload and is cleared. `layout.spec.ts`: the start
   screen, the table, the cash table, the session summary and a cash status bar with long values fit the viewport
-  without horizontal scroll.
+  without horizontal scroll. `table.spec.ts`: on the human's first turn the dealer button, both bets, the pot
+  and the board are inside the viewport on every project, and the hand log drawer opens inside the viewport
+  with its close button, without horizontal scroll, and Escape hides it.
 - `e2e/contact.ts` (`npm run contact`) captures every view state of a seeded game on `phone` and `desktop` and
   composes one sheet per device into `e2e/contact/`.
 

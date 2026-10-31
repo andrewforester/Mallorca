@@ -26,11 +26,18 @@ import { withFallback } from './botClient.ts';
 import type { BotClient } from './botClient.ts';
 import { resolveIntent, toIntent } from './intent.ts';
 import type { Intent } from './intent.ts';
-import { actedLabel, awardedTo, potCollected, resultOf } from './outcome.ts';
-import type { HandResult } from './outcome.ts';
+import {
+  awardedTo,
+  isOpeningBet,
+  openingEntries,
+  potCollected,
+  resultOf,
+  streetActions,
+} from './outcome.ts';
+import type { HandResult, SeatActions } from './outcome.ts';
 import { handRecorder } from './records/recorder.ts';
 import type { HandRecorder, RecordsOptions } from './records/recorder.ts';
-import { CFR_BOT, MATH_BOT } from './records/record.ts';
+import { CFR_BOT, CFR_V2_BOT, MATH_BOT } from './records/record.ts';
 import type { Opponent } from './opponent.ts';
 import { initialTalk, sessionTalk } from './sessionTalk.ts';
 import { createTimers } from './timers.ts';
@@ -40,7 +47,7 @@ import { silentTalkClient } from './talkClient.ts';
 import type { TalkClient } from './talkClient.ts';
 import type { Level, Style } from '../talk/index.ts';
 
-const BOT_RECORDS = { math: MATH_BOT, cfr: CFR_BOT } as const;
+const BOT_RECORDS = { math: MATH_BOT, cfr: CFR_BOT, 'cfr-v2': CFR_V2_BOT } as const;
 
 export { resolveIntent, toIntent } from './intent.ts';
 export type { Intent } from './intent.ts';
@@ -66,7 +73,8 @@ export interface SessionState {
   table: Table;
   phase: Phase;
   log: LogEntry[];
-  lastActions: [LogEntry | null, LogEntry | null];
+  lastActions: SeatActions;
+  closingActions: SeatActions;
   lastDecision: Decision | null;
   seed: number;
   result: HandResult | null;
@@ -154,21 +162,21 @@ function tally(rt: Runtime, table: Table): SessionResult {
   return { hands: rt.hands, net: stack - buyIn - rt.topUps };
 }
 
-function record(rt: Runtime, events: EngineEvent[]): void {
+function record(rt: Runtime, events: EngineEvent[], opens = false): void {
   rt.recorder.observe(events);
   rt.bot.observe(toObservations(events, rt.botSeat));
   rt.talk.observe(events);
-  const lastActions: [LogEntry | null, LogEntry | null] = [...rt.get().lastActions];
   for (const event of events) {
-    if (event.type === 'acted') {
-      lastActions[event.seat] = actedLabel(event);
-    } else if (event.type === 'toppedUp' && event.seat === rt.humanSeat) {
+    if (event.type === 'toppedUp' && event.seat === rt.humanSeat) {
       rt.topUps += event.amount;
     }
   }
+  const { lastActions, closingActions } = rt.get();
+  const actions = streetActions({ last: lastActions, closing: closingActions }, events, opens);
   rt.set({
-    log: [...rt.get().log, ...handHistory(events)],
-    lastActions,
+    log: [...rt.get().log, ...openingEntries(handHistory(events), opens)],
+    lastActions: actions.last,
+    closingActions: actions.closing,
     session: tally(rt, rt.get().table),
   });
 }
@@ -194,12 +202,14 @@ function conclude(rt: Runtime, step: Step): void {
 }
 
 function play(rt: Runtime, action: Action, decision: Decision | null = null, style?: Style): void {
+  const { hand } = rt.get().table;
+  const opens = hand !== null && isOpeningBet(hand, action);
   const step = apply(rt.get().table, action);
   if (decision !== null) {
     rt.recorder.decided(decision, step.events, style);
   }
   rt.set({ table: step.state });
-  record(rt, step.events);
+  record(rt, step.events, opens);
   conclude(rt, step);
 }
 
@@ -259,7 +269,12 @@ function beginHand(rt: Runtime): Promise<void> {
   ];
   rt.bot.reset();
   rt.recorder.begin();
-  rt.set({ table: step.state, lastActions: [null, null], result: null });
+  rt.set({
+    table: step.state,
+    lastActions: [null, null],
+    closingActions: [null, null],
+    result: null,
+  });
   record(rt, step.events);
   conclude(rt, step);
   return drive(rt, rt.epoch);
@@ -392,6 +407,7 @@ export function createSession(options: SessionOptions): Session {
       phase: 'idle',
       log: [],
       lastActions: [null, null],
+      closingActions: [null, null],
       lastDecision: null,
       seed,
       result: null,

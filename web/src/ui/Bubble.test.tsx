@@ -8,7 +8,9 @@ function line(id: number, text: string): ChatLine {
 }
 
 function typed(): string {
-  return screen.getByTestId('bubble-mallorca').querySelector('.bubble-typed')?.textContent ?? '';
+  return (
+    screen.getByTestId('bubble-mallorca').querySelector('.talk-bubble-typed')?.textContent ?? ''
+  );
 }
 
 function reducedMotion(reduce: boolean) {
@@ -116,6 +118,6 @@ describe('Bubble', () => {
 
   it('marks the player bubble by speaker', () => {
     render(<Bubble line={{ id: 3, speaker: 'player', text: 'Hi', handNumber: 1 }} />);
-    expect(screen.getByTestId('bubble-player').classList.contains('bubble-player')).toBe(true);
+    expect(screen.getByTestId('bubble-player').classList.contains('talk-bubble-player')).toBe(true);
   });
 });

@@ -107,15 +107,13 @@ test.describe('desktop', () => {
     }
   });
 
-  test('the chat tab sends a message and shows her answer without acting', async ({ page }) => {
+  test('the chat panel sends a message and shows her answer without acting', async ({ page }) => {
     test.setTimeout(SOLVER_TIMEOUT_MS);
     const requests = await serveTalk(page, answers);
     await sitWithSolver(page);
     await myTurn(page);
-    await expect(byId(page, 'hand-log')).toBeVisible();
-    await byId(page, 'tab-chat').click();
-    await expect(byId(page, 'hand-log')).toBeHidden();
     const panel = byId(page, 'chat-panel');
+    await expect(panel).toBeVisible();
     const input = panel.getByTestId('chat-input');
     await input.pressSequentially('Coffee first, cards later');
     await expect(byId(page, 'passive')).toBeEnabled();
@@ -128,8 +126,6 @@ test.describe('desktop', () => {
     await expect(byId(page, 'seat-0').getByTestId('bubble-player')).toContainText('Coffee first');
     const reply = requests.find((request) => request.kind === 'reply');
     expect(reply?.text).toBe('Coffee first, cards later');
-    await byId(page, 'tab-log').click();
-    await expect(byId(page, 'hand-log')).toBeVisible();
   });
 
   test('switching talk off sends no requests to her', async ({ page }) => {
@@ -146,7 +142,7 @@ test.describe('desktop', () => {
     });
     await page.locator('summary.menu-summary').click();
     await expect(byId(page, 'table-talk')).not.toBeChecked();
-    await expect(byId(page, 'tab-chat')).toHaveCount(0);
+    await expect(byId(page, 'chat-panel')).toHaveCount(0);
     await expect(byId(page, 'chat-open')).toHaveCount(0);
     expect(requests).toEqual([]);
   });
@@ -156,7 +152,6 @@ test.describe('desktop', () => {
     const requests = await serveTalk(page, () => ({ status: 500, body: { error: 'down' } }));
     await sitWithSolver(page);
     await myTurn(page);
-    await byId(page, 'tab-chat').click();
     const input = byId(page, 'chat-panel').getByTestId('chat-input');
     await input.fill('Anyone there?');
     await input.press('Enter');

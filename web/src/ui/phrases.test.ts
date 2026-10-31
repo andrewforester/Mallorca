@@ -1,6 +1,6 @@
 import i18next from 'i18next';
 import { describe, expect, it } from 'vitest';
-import { actionTag, handName, logLine } from './phrases.ts';
+import { actionTag, handName, logKind, logLine } from './phrases.ts';
 
 const names: [string, string] = ['You', 'Mallorca'];
 
@@ -14,6 +14,13 @@ describe('phrases', () => {
       'Mallorca calls 40',
     );
     expect(logLine({ key: 'allIn', params: { seat: 1 } }, names, 0)).toBe('Mallorca is all-in');
+  });
+
+  it('words a bet entry', () => {
+    expect(logLine({ key: 'bet', params: { seat: 0, amount: 80 } }, names, 0)).toBe('You bet 80');
+    expect(logLine({ key: 'bet', params: { seat: 1, amount: 80 } }, names, 0)).toBe(
+      'Mallorca bets 80',
+    );
   });
 
   it('words entries without a seat and names the hand category', () => {
@@ -37,6 +44,7 @@ describe('phrases', () => {
       'check',
       'call',
       'raise',
+      'bet',
       'allIn',
       'show',
       'returned',
@@ -48,13 +56,21 @@ describe('phrases', () => {
         expect(i18next.exists(`log.${person}.${key}`), `${person}.${key}`).toBe(true);
       }
     }
-    for (const key of ['fold', 'check', 'call', 'raiseTo', 'allIn']) {
+    for (const key of ['fold', 'check', 'call', 'raiseTo', 'bet', 'allIn']) {
       expect(i18next.exists(`actions.${key}`), key).toBe(true);
     }
   });
 
   it('words an action tag from the actions keys', () => {
     expect(actionTag({ key: 'raiseTo', params: { amount: 100 } })).toBe('Raise to 100');
+    expect(actionTag({ key: 'bet', params: { amount: 80 } })).toBe('Bet 80');
     expect(actionTag({ key: 'allIn', params: {} })).toBe('All-in');
+  });
+
+  it('marks raises, bets and all-ins as aggressive log entries', () => {
+    expect(logKind({ key: 'raise', params: {} })).toBe('aggressive');
+    expect(logKind({ key: 'bet', params: {} })).toBe('aggressive');
+    expect(logKind({ key: 'allIn', params: {} })).toBe('aggressive');
+    expect(logKind({ key: 'call', params: {} })).toBe('plain');
   });
 });

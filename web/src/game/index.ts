@@ -3,7 +3,7 @@ export { formatCard, rankOf, suitOf } from './cards.ts';
 export type { BotClient } from './botClient.ts';
 export { inProcessBot, workerBot } from './botClient.ts';
 export type { Opponent } from './opponent.ts';
-export { OPPONENTS } from './opponent.ts';
+export { OPPONENTS, opponentsFor } from './opponent.ts';
 export type {
   ChatLine,
   Intent,
