@@ -509,6 +509,7 @@ types.
 - Chips are integers.
 - Cards in fixtures and text are two-character strings: rank `23456789TJQKA`, suit `cdhs`.
 - Tests sit next to the code as `*.test.ts` or `*.test.tsx`; golden tests are `*.golden.test.ts` and run only
-  under `npm run test:golden`.
+  under `npm run test:golden`. `npm test` has two Vitest projects: `ui` runs every test in `src/ui` and the
+  `*.test.tsx` of `tools` under happy-dom, `node` runs the other tests once.
 - Fixtures generated from the Java original live in `src/brains/fixtures/` and are written only by
   `web/tools/golden/run.sh`.
