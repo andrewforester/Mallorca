@@ -20,5 +20,12 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true
   },
-  "include": ["src", "scripts", "e2e", "playwright.config.ts", "tools/arena"]
+  "include": [
+    "src",
+    "scripts",
+    "e2e",
+    "playwright.config.ts",
+    "tools/arena",
+    "tools/evaluator-golden"
+  ]
 }

@@ -7,24 +7,28 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 
 ## Repository layout
 
-| Path                                                                | Owns                                                                  |
-| ------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `MallorcaBrains/`, `MallorcaCore/`, `MallorcaEquilator/`, `Tools/`  | Java bot, game model and equilator; the source of the golden fixtures |
-| Other Gradle modules (`MallorcaUI/`, `PokerRobot/`, `HHParser/`, …) | Java archive, not used by `web/`                                      |
-| `web/src/`                                                          | The game, in layers (see "Layers")                                    |
-| `web/src/locales/en.json`                                           | Every string the UI shows                                             |
-| `web/e2e/`                                                          | Playwright tests and the contact sheet script                         |
-| `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                   |
-| `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`      |
-| `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena" |
-| `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                 |
-| `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`  |
-| `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`  |
-| `.github/workflows/`                                                | `web-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master`   |
+| Path                                                                | Owns                                                                      |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `MallorcaBrains/`, `MallorcaCore/`, `MallorcaEquilator/`, `Tools/`  | Java bot, game model and equilator; the source of the golden fixtures     |
+| Other Gradle modules (`MallorcaUI/`, `PokerRobot/`, `HHParser/`, …) | Java archive, not used by `web/`                                          |
+| `web/src/`                                                          | The game, in layers (see "Layers")                                        |
+| `web/src/locales/en.json`                                           | Every string the UI shows                                                 |
+| `web/e2e/`                                                          | Playwright tests and the contact sheet script                             |
+| `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                       |
+| `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`          |
+| `web/tools/evaluator-golden/`                                       | Writes the evaluator fixture of `solver/crates/core`, see its `README.md` |
+| `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena"     |
+| `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                     |
+| `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`      |
+| `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`      |
+| `.github/workflows/`                                                | `web-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master`       |
 
 Generated and never committed: `web/dist`, `web/test-results`, `web/playwright-report`, `web/e2e/contact/`,
 `web/tools/golden/build`, `web/arena-out/` (the arena results, see "arena") and `web/src/cfr/mallorca.wasm`, which
 `npm run wasm` builds with cargo (the toolchain pinned in `solver/`) before `dev`, `test`, `build` and `arena`.
+
+`tsc` (`web/tsconfig.json`) type-checks `src`, `scripts`, `e2e`, `playwright.config.ts`, `tools/arena` and
+`tools/evaluator-golden`.
 
 ## Stack
 
@@ -63,12 +67,17 @@ web/src/
 
 ESLint enforces the table with a `@typescript-eslint/no-restricted-imports` rule per directory. For `brains` the
 rule sets `allowTypeImports` on `engine`; the tests in `brains` (`*.test.ts`) may also import `engine` code to
-build events. `import-x/no-cycle` forbids import cycles inside `src`.
+build events. `src/main.tsx` may import only `game` and `ui`. `tools/arena/**` may import from `src` only `cards`,
+`engine`, `brains`, `cfr` and `game/records`; the viewer `tools/arena/ui/**` (tests aside) only `game/records` and
+types from `engine`. `import-x/no-cycle` forbids import cycles inside `src`.
 
 ### Purity
 
-`cards`, `equity`, `engine`, `brains` and `cfr` use no DOM, no `Math.random`, no `Date` and no `performance`. ESLint
-enforces it with `no-restricted-globals` and `no-restricted-properties`. Randomness enters as an `Rng` argument.
+`cards`, `equity`, `engine`, `brains` and `cfr` use no DOM (`document`, `window`, `self`, `navigator`), no
+`Math.random` or `crypto`, no `Date` or `performance`, no timers (`setTimeout`, `setInterval`), no `fetch` and no
+storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-globals` and
+`no-restricted-properties`. Randomness enters as an `Rng` argument, bytes through a reader passed in; `cfr`'s
+`inflate` uses `Blob`, `Response` and `DecompressionStream`, which stay allowed.
 
 ## cards
 
@@ -86,6 +95,8 @@ enforces it with `no-restricted-globals` and `no-restricted-properties`. Randomn
   weight) are the types `brains` computes equity with; the computation itself lives in `brains` (`strength.ts`,
   `spectrumEquilator.ts`, `preflopEquilator.ts`).
 - `index.ts` exports `pheEvaluator`, `HandCategory`, `StreetEquity` and `WeightedHands`.
+- `npm run bench` (`evaluator.bench.test.ts`, outside `npm test`) ranks one million seven-card hands and expects
+  under 1500 ms outside CI.
 
 ## engine
 
@@ -396,6 +407,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 
 ## e2e
 
+- Playwright builds and starts its own `vite preview` on `E2E_PORT` (default 4173) and never reuses a server already
+  listening there, so a run fails instead of testing another worktree's build; set `E2E_PORT` to run beside one.
 - Playwright runs against the production build (`vite preview`) on three projects: `phone` 390 × 844, `small-phone`
   360 × 740 and `desktop` 1440 × 900. `layout.spec.ts` runs only on `small-phone`, which runs only `layout.spec.ts`
   and `table.spec.ts`. Most tests open `FAST_URL` (`fixtures.ts`), `/?seed=42&botDelay=0&autoNext=off`, and fail on
@@ -417,7 +430,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   recorded as `v2-10`, and a phone is not offered `cfr-v2`. `arena.spec.ts`: the published arena page lists the runs,
   a run with hands opens and shows a pair as PokerStars text.
 - `e2e/contact.ts` (`npm run contact`) captures every view state of a seeded game on `phone` and `desktop` and
-  composes one sheet per device into `e2e/contact/`.
+  composes one sheet per device into `e2e/contact/`. Its preview listens on `CONTACT_PORT` (default 4174); it stops
+  if that port already answers or its own server exits.
 
 ## arena
 
@@ -497,6 +511,8 @@ types.
 - Chips are integers.
 - Cards in fixtures and text are two-character strings: rank `23456789TJQKA`, suit `cdhs`.
 - Tests sit next to the code as `*.test.ts` or `*.test.tsx`; golden tests are `*.golden.test.ts` and run only
-  under `npm run test:golden`.
+  under `npm run test:golden`; timing tests are `*.bench.test.ts` and run only under `npm run bench`. `npm test`
+  has two Vitest projects: `ui` runs every test in `src/ui` and the `*.test.tsx` of `tools` under happy-dom, `node`
+  runs the other tests once.
 - Fixtures generated from the Java original live in `src/brains/fixtures/` and are written only by
   `web/tools/golden/run.sh`.
