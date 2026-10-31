@@ -93,7 +93,7 @@ class Wiring implements SessionTalk {
     this.sendSummary();
     const { level } = this.host.read();
     this.talk =
-      opponent === 'cfr'
+      opponent !== 'math'
         ? createTalk({ seat: this.setup.botSeat, rng: mulberry32(seed ^ TALK_SALT), level })
         : null;
     this.herRaised = false;

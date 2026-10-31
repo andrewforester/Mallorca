@@ -570,6 +570,15 @@ describe('session talk', () => {
     expect(client.summaries[1]?.summary.hands).toBe(1);
   });
 
+  it('the v2 solver opponent talks too', async () => {
+    const client = fakeClient({ line: () => new Promise(() => undefined) });
+    const table = open(client);
+    await table.session.getState().start(CASH, 'cfr-v2');
+    expect(table.session.getState().talk.available).toBe(true);
+    await untilHerBet(table, client);
+    expect(client.lines.some((p) => p.intent.situation === 'herBet')).toBe(true);
+  });
+
   it('math opponent has no talk', async () => {
     const client = fakeClient();
     const table = open(client);
