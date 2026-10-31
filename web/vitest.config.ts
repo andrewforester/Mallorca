@@ -8,7 +8,12 @@ export default defineConfig({
         test: {
           name: 'node',
           include: ['src/**/*.test.ts', 'tools/**/*.test.ts'],
-          exclude: [...configDefaults.exclude, '**/*.golden.test.ts', 'src/ui/**'],
+          exclude: [
+            ...configDefaults.exclude,
+            '**/*.golden.test.ts',
+            '**/*.bench.test.ts',
+            'src/ui/**',
+          ],
         },
       },
       {

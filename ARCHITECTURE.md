@@ -95,6 +95,8 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
   weight) are the types `brains` computes equity with; the computation itself lives in `brains` (`strength.ts`,
   `spectrumEquilator.ts`, `preflopEquilator.ts`).
 - `index.ts` exports `pheEvaluator`, `HandCategory`, `StreetEquity` and `WeightedHands`.
+- `npm run bench` (`evaluator.bench.test.ts`, outside `npm test`) ranks one million seven-card hands and expects
+  under 1500 ms outside CI.
 
 ## engine
 
@@ -509,7 +511,8 @@ types.
 - Chips are integers.
 - Cards in fixtures and text are two-character strings: rank `23456789TJQKA`, suit `cdhs`.
 - Tests sit next to the code as `*.test.ts` or `*.test.tsx`; golden tests are `*.golden.test.ts` and run only
-  under `npm run test:golden`. `npm test` has two Vitest projects: `ui` runs every test in `src/ui` and the
-  `*.test.tsx` of `tools` under happy-dom, `node` runs the other tests once.
+  under `npm run test:golden`; timing tests are `*.bench.test.ts` and run only under `npm run bench`. `npm test`
+  has two Vitest projects: `ui` runs every test in `src/ui` and the `*.test.tsx` of `tools` under happy-dom, `node`
+  runs the other tests once.
 - Fixtures generated from the Java original live in `src/brains/fixtures/` and are written only by
   `web/tools/golden/run.sh`.
