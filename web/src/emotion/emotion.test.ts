@@ -384,3 +384,16 @@ describe('engine', () => {
     expect(after.sessionNetBb).toBe(-60);
   });
 });
+
+describe('looking ahead', () => {
+  it('reads the snapshot a step later without moving the engine', () => {
+    const engine = createEngine(MALLORCA);
+    engine.event({ kind: 'bluff', succeeded: false, potBb: 40 });
+    const before = engine.snapshot();
+    const ahead = engine.ahead(3);
+    expect(engine.snapshot()).toEqual(before);
+    engine.step(3);
+    expect(ahead).toEqual(engine.snapshot());
+    expect(ahead.emotions.shame).toBeLessThan(before.emotions.shame);
+  });
+});

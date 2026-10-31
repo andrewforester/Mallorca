@@ -47,6 +47,7 @@ export interface Engine {
   event(e: TableEvent): Impulse[];
   step(dt: number): void;
   snapshot(): Snapshot;
+  ahead(dt: number): Snapshot;
   setPersonality(p: Personality): void;
   reset(): void;
 }
@@ -166,6 +167,14 @@ class EmotionEngine implements Engine {
       drivers,
       style: styleOf(drivers, load.leakage),
     };
+  }
+
+  ahead(dt: number): Snapshot {
+    const { time, emotions, mood, prospect, pressure } = this;
+    this.step(dt);
+    const later = this.snapshot();
+    Object.assign(this, { time, emotions, mood, prospect, pressure });
+    return later;
   }
 
   setPersonality(p: Personality): void {
