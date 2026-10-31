@@ -6,6 +6,8 @@ import type { Action, Step } from '../engine/types.ts';
 import { BASE_HABITS, habitsAt } from './habits.ts';
 import type { Habits, Situation } from './habits.ts';
 import type { StrengthClass } from './strength.ts';
+import { MALLORCA } from '../emotion/index.ts';
+import { characterOf } from './state.ts';
 import { createTalk, drawLine, endsHand } from './talk.ts';
 import type { LineIntent, Talk } from './talk.ts';
 
@@ -333,6 +335,21 @@ describe('replyIntent and state', () => {
     expect(talk.feeling().emotions.anger).toBeGreaterThan(0.4);
     expect(talk.moodWords()).toContain('annoyed');
     expect(talk.style().bluff).toBeGreaterThan(1);
+  });
+
+  it('gives the feeling for an intent, acting the hinted strength only when the hint is false', () => {
+    const talk = createTalk({ seat: 1, rng: mulberry32(2), level: 'obvious' });
+    talk.hear(['mockBluff', 'tease']);
+    const intent = talk.replyIntent();
+    const bluff = { ...intent, hint: 'strong' as const, honest: false };
+    expect(talk.feelingFor(bluff).shows.acting).toBe('strong');
+    expect(talk.feelingFor({ ...bluff, honest: true }).shows.acting).toBeNull();
+    expect(talk.feelingFor(bluff).emotions[0]?.name).toBe('anger');
+  });
+
+  it('gives her character sheet', () => {
+    const talk = createTalk({ seat: 1, rng: mulberry32(2), level: 'obvious' });
+    expect(talk.character()).toEqual(characterOf(MALLORCA));
   });
 
   it('changes the habits with setLevel', () => {

@@ -8,6 +8,8 @@ export type { StrengthClass } from './strength.ts';
 export { strengthOf } from './strength.ts';
 export type { Style } from './style.ts';
 export { NEUTRAL_STYLE } from './style.ts';
+export type { Character, FeelingState, FeltEmotion } from './state.ts';
+export { characterOf, feelingState } from './state.ts';
 export type { SessionSummary } from './summary.ts';
 export { EMPTY_SUMMARY, since } from './summary.ts';
 export type { Draw, HandFacts, LineIntent, Spot, Talk, TalkOptions } from './talk.ts';

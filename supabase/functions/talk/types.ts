@@ -1,3 +1,6 @@
+import { parseCharacter, parseFeeling, UNKNOWN } from "./feeling.ts";
+import type { Character, Feeling } from "./feeling.ts";
+
 export const SIGNALS = [
   "tease",
   "compliment",
@@ -65,6 +68,8 @@ interface HandContext extends Envelope {
   facts: Facts;
   intent: Intent;
   mood: string[];
+  feeling: Feeling | null;
+  character: Character | null;
   recent: RecentLine[];
 }
 
@@ -203,7 +208,18 @@ function parseHandContext(body: Json, envelope: Envelope): HandContext | null {
   const recent = parseRecent(body.recent);
   if (facts === null || intent === null || recent === null) return null;
   if (!isList(body.mood, LIMITS.mood, isMoodWord)) return null;
-  return { ...envelope, facts, intent, mood: [...body.mood], recent };
+  const feeling = parseFeeling(body.feeling);
+  const character = parseCharacter(body.character);
+  if (feeling === null || character === null) return null;
+  return {
+    ...envelope,
+    facts,
+    intent,
+    mood: [...body.mood],
+    feeling: feeling === UNKNOWN ? null : feeling,
+    character: character === UNKNOWN ? null : character,
+    recent,
+  };
 }
 
 function parseText(value: unknown): string | null {

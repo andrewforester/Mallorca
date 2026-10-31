@@ -162,3 +162,51 @@ Deno.test("a reply may be marked quick, and is not quick by default", () => {
   assertEquals(plain.quick, false);
   assertEquals(parseRequest({ ...reply, quick: "yes" }), null);
 });
+
+Deno.test("an old game without a feeling or a character still parses", () => {
+  const req = parseRequest(without(without(fixture("line"), "feeling"), "character"));
+  assert(req !== null && req.kind === "line");
+  assertEquals(req.feeling, null);
+  assertEquals(req.character, null);
+});
+
+Deno.test("a feeling or character of an unknown version is ignored, not rejected", () => {
+  const line = fixture("line");
+  const req = parseRequest({ ...line, feeling: { version: 2 }, character: { version: 9 } });
+  assert(req !== null && req.kind === "line");
+  assertEquals(req.feeling, null);
+  assertEquals(req.character, null);
+});
+
+Deno.test("rejects a malformed feeling of version 1", () => {
+  const line = fixture("line");
+  const feeling = line.feeling as Record<string, unknown>;
+  const bad = [
+    { ...feeling, emotions: [{ name: "boredom", intensity: 0.5 }] },
+    { ...feeling, emotions: [{ name: "joy", intensity: 1.5 }] },
+    { ...feeling, emotions: new Array(4).fill({ name: "joy", intensity: 0.5 }) },
+    { ...feeling, mood: { octant: "sleepy", strength: "slightly" } },
+    { ...feeling, mood: { octant: "relaxed", strength: "very" } },
+    { ...feeling, overload: { level: -0.1, source: null } },
+    { ...feeling, overload: { level: 0.5, source: "boredom" } },
+    { ...feeling, shows: { mask: 2, acting: null } },
+    { ...feeling, shows: { mask: 0.5, acting: "huge" } },
+  ];
+  for (const value of bad) assertEquals(parseRequest({ ...line, feeling: value }), null);
+});
+
+Deno.test("rejects a malformed character of version 1", () => {
+  const line = fixture("line");
+  const character = line.character as Record<string, unknown>;
+  for (const key of ["talkativeness", "warmth", "nerves", "wit"]) {
+    assertEquals(parseRequest({ ...line, character: { ...character, [key]: 1.2 } }), null);
+    assertEquals(parseRequest({ ...line, character: { ...character, [key]: "high" } }), null);
+  }
+});
+
+Deno.test("a reply carries the feeling and character too", () => {
+  const req = parseRequest(fixture("reply"));
+  assert(req !== null && req.kind === "reply");
+  assertEquals(req.feeling?.emotions[0]?.name, "pride");
+  assertEquals(req.character?.warmth, 0.75);
+});

@@ -229,6 +229,8 @@ class Wiring implements SessionTalk {
       facts: talk.facts(),
       intent,
       mood: talk.moodWords(),
+      feeling: talk.feelingFor(intent),
+      character: talk.character(),
       recent,
     };
   }

@@ -4,10 +4,22 @@
   "locale": "en",
   "facts": {
     "street": "river",
-    "board": ["Kd", "7s", "2c", "Th", "4h"],
+    "board": [
+      "Kd",
+      "7s",
+      "2c",
+      "Th",
+      "4h"
+    ],
     "pot": 24,
-    "stacks": [88, 112],
-    "her": ["Ks", "Qd"],
+    "stacks": [
+      88,
+      112
+    ],
+    "her": [
+      "Ks",
+      "Qd"
+    ],
     "actions": [
       "Mallorca posts the small blind 1",
       "Player posts the big blind 2",
@@ -21,10 +33,56 @@
     ],
     "bigBlind": 2
   },
-  "intent": { "situation": "herBet", "hint": "strong", "honest": true, "street": "river" },
-  "mood": ["on a winning streak", "cheerful"],
+  "intent": {
+    "situation": "herBet",
+    "hint": "strong",
+    "honest": true,
+    "street": "river"
+  },
+  "mood": [
+    "on a winning streak",
+    "cheerful"
+  ],
+  "feeling": {
+    "version": 1,
+    "emotions": [
+      {
+        "name": "pride",
+        "intensity": 0.42
+      },
+      {
+        "name": "hope",
+        "intensity": 0.3
+      }
+    ],
+    "mood": {
+      "octant": "exuberant",
+      "strength": "slightly"
+    },
+    "overload": {
+      "level": 0.02,
+      "source": null
+    },
+    "shows": {
+      "mask": 0.35,
+      "acting": null
+    }
+  },
+  "character": {
+    "version": 1,
+    "talkativeness": 0.66,
+    "warmth": 0.75,
+    "nerves": 0.55,
+    "wit": 0.7
+  },
   "recent": [
-    { "speaker": "mallorca", "text": "Another cup of tea before the flop?" },
-    { "speaker": "player", "text": "Only if you stop winning." }
+    {
+      "speaker": "mallorca",
+      "text": "Another cup of tea before the flop?"
+    },
+    {
+      "speaker": "player",
+      "text": "Only if you stop winning."
+    }
   ]
 }
