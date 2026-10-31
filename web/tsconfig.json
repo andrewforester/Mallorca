@@ -26,6 +26,7 @@
     "e2e",
     "playwright.config.ts",
     "tools/arena",
-    "tools/evaluator-golden"
+    "tools/evaluator-golden",
+    "prototypes"
   ]
 }

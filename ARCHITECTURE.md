@@ -19,17 +19,20 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 | `web/tools/evaluator-golden/`                                       | Writes the evaluator fixture of `solver/crates/core`, see its `README.md`          |
 | `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena"              |
 | `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                              |
+| `web/prototypes/emotion-lab/`                                       | Emotion sandbox: the `emotion` engine with a face and a voice, see `docs/emotion`  |
+| `docs/emotion/`                                                     | Emotion model document, its screenshots and generated tables                       |
 | `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`               |
 | `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`               |
 | `supabase/`                                                         | Table talk server: schema, limits and the `talk` Edge Function                     |
 | `.github/workflows/`                                                | `web-ci.yml`, `talk-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master` |
 
 Generated and never committed: `web/dist`, `web/test-results`, `web/playwright-report`, `web/e2e/contact/`,
-`web/tools/golden/build`, `web/arena-out/` (the arena results, see "arena") and `web/src/cfr/mallorca.wasm`, which
+`web/tools/golden/build`, `web/prototypes/emotion-lab/avatar.glb` (a non-commercial model), `web/arena-out/` (the
+arena results, see "arena") and `web/src/cfr/mallorca.wasm`, which
 `npm run wasm` builds with cargo (the toolchain pinned in `solver/`) before `dev`, `test`, `build` and `arena`.
 
-`tsc` (`web/tsconfig.json`) type-checks `src`, `scripts`, `e2e`, `playwright.config.ts`, `tools/arena` and
-`tools/evaluator-golden`.
+`tsc` (`web/tsconfig.json`) type-checks `src`, `scripts`, `e2e`, `playwright.config.ts`, `tools/arena`,
+`tools/evaluator-golden` and `prototypes`.
 
 ## Stack
 
@@ -289,8 +292,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 ## emotion
 
 The opponent's emotional state is the source of truth for how her play, and later her face, voice and lines, are
-coloured. The model and the origin of every formula and number are in `docs/emotion/README.md` (on the
-`spike/avatar-face` branch until the sandbox moves here); the code is the contract.
+coloured. The model and the origin of every formula and number are in `docs/emotion/README.md`, with
+screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contract.
 
 - `createEngine(personality, config = GAME_MOOD)` returns an `Engine`. `event(e)` appraises one `TableEvent` and
   returns the `Impulse`s it gave (emotion, amount, an English reason); `step(dt)` advances time in seconds;

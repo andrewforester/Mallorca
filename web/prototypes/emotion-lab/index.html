@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Emotion Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="./lab.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <h1>Лицо за столом</h1>
+        <p>
+          Песочница эмоционального оппонента. Карты и действия за столом оцениваются как события, из
+          них возникают эмоции, эмоции двигают настроение, перегрузка даёт тильт, а всё вместе
+          меняет стиль игры, лицо и голос. Устройство модели описано в
+          <code>docs/emotion/README.md</code>.
+        </p>
+      </header>
+
+      <div class="left">
+        <div class="stage" id="stage">
+          <div class="felt">
+            <div class="pot" id="pot"></div>
+            <div class="board" id="board"></div>
+            <div class="hole hero" id="heroCards"></div>
+            <div class="hole villain" id="villainCards"></div>
+          </div>
+          <div class="bubble" id="bubble"></div>
+          <div class="chip name" id="whoChip"></div>
+          <div class="chip clock" id="clock"></div>
+          <div class="loading" id="loading">Загружаю модель…</div>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="replay" type="button">Повторить сцену</button>
+          <button class="btn" id="slow" type="button" aria-pressed="false">
+            Замедлить в 4 раза
+          </button>
+          <button class="btn" id="sound" type="button" aria-pressed="true">Голос</button>
+          <button class="btn" id="reset" type="button">Спокойствие</button>
+        </div>
+        <section class="block">
+          <h2>Журнал событий</h2>
+          <ol class="log" id="log"></ol>
+        </section>
+      </div>
+
+      <div class="panel">
+        <section class="block">
+          <h2>Личность</h2>
+          <div class="cards" id="profiles"></div>
+          <p class="desc" id="profileDesc"></p>
+          <details>
+            <summary>Пять факторов и производные параметры</summary>
+            <div class="sliders" id="bigFive"></div>
+            <table class="traits" id="traits"></table>
+          </details>
+        </section>
+
+        <section class="block">
+          <h2>Сцены</h2>
+          <div class="cards scenes" id="scenes"></div>
+          <div class="watch">
+            <span class="label">На что смотреть</span>
+            <p id="watchText">Выберите сцену.</p>
+            <div class="progress"><i id="progress"></i></div>
+          </div>
+        </section>
+
+        <section class="block">
+          <h2>Эмоции</h2>
+          <div class="bars" id="emotions"></div>
+        </section>
+
+        <section class="block">
+          <h2>Настроение</h2>
+          <div class="map-wrap">
+            <svg
+              class="map"
+              id="map"
+              viewBox="0 0 300 300"
+              role="img"
+              aria-label="Настроение и выражение лица в пространстве PAD"
+            ></svg>
+            <div class="mood-text">
+              <div class="big" id="octant"></div>
+              <div class="pad" id="moodPad"></div>
+              <div class="legend">
+                <span><i class="sw mood"></i>настроение</span>
+                <span><i class="sw felt"></i>испытывает</span>
+                <span><i class="sw shown"></i>показывает</span>
+                <span><i class="sw def"></i>норма личности</span>
+              </div>
+              <div class="mix" id="mix"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="block">
+          <h2>Перегрузка (тильт)</h2>
+          <div class="tilt">
+            <div class="meter-big"><i id="tiltBar"></i></div>
+            <div class="pad" id="tiltText"></div>
+          </div>
+          <div class="bars" id="tiltParts"></div>
+        </section>
+
+        <section class="block">
+          <h2>Стиль игры</h2>
+          <p class="note">Множители к стратегии солвера. 1 значит без изменений.</p>
+          <div class="bars" id="style"></div>
+        </section>
+
+        <section class="block">
+          <h2>Лицо и голос</h2>
+          <div class="pad" id="faceText"></div>
+        </section>
+
+        <p class="note">
+          Модель brunette.glb создана в Ready Player Me, взята из проекта
+          <a href="https://github.com/met4citizen/TalkingHead" target="_blank" rel="noopener"
+            >TalkingHead</a
+          >, лицензия CC BY-NC 4.0.
+        </p>
+      </div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
