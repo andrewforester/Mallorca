@@ -6,9 +6,12 @@ export interface TalkConfig {
   anonKey?: string;
 }
 
+const configured = (value: string | undefined): value is string =>
+  value !== undefined && value !== '';
+
 export async function loadTalkClient(config: TalkConfig): Promise<TalkClient> {
   const { url, anonKey } = config;
-  if (url === undefined || url === '' || anonKey === undefined || anonKey === '') {
+  if (!configured(url) || !configured(anonKey)) {
     return silentTalkClient;
   }
   try {
@@ -17,4 +20,12 @@ export async function loadTalkClient(config: TalkConfig): Promise<TalkClient> {
   } catch {
     return silentTalkClient;
   }
+}
+
+export function talkConnector(config: TalkConfig): (() => Promise<TalkClient>) | undefined {
+  if (!configured(config.url) || !configured(config.anonKey)) {
+    return undefined;
+  }
+  let client: Promise<TalkClient> | null = null;
+  return () => (client ??= loadTalkClient(config));
 }

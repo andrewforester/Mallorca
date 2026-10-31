@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { BotStyle } from '../brains/index.ts';
 import { CASH, TOURNAMENT } from '../engine/index.ts';
 import type { LegalActions } from '../engine/index.ts';
@@ -23,6 +23,7 @@ interface FakeClient extends TalkClient {
   lines: LinePayload[];
   replies: ReplyPayload[];
   summaries: SummaryPayload[];
+  kept: boolean[];
 }
 
 interface Answers {
@@ -37,6 +38,7 @@ function fakeClient(answers: Answers = {}): FakeClient {
     lines: [],
     replies: [],
     summaries: [],
+    kept: [],
     line: (request) => {
       client.lines.push(request);
       return answers.line?.(request) ?? Promise.resolve('Here we go');
@@ -45,8 +47,9 @@ function fakeClient(answers: Answers = {}): FakeClient {
       client.replies.push(request);
       return answers.reply?.(request) ?? Promise.resolve({ text: 'Sure', signals: ['tease'] });
     },
-    summary: (request) => {
+    summary: (request, options) => {
       client.summaries.push(request);
+      client.kept.push(options?.keepalive === true);
       return answers.summary?.(request) ?? Promise.resolve();
     },
   };
@@ -81,6 +84,7 @@ interface Extra {
   talkOn?: boolean;
   tells?: Level;
   records?: RecordsOptions;
+  connectTalk?: () => Promise<TalkClient>;
 }
 
 function open(client: TalkClient, extra: Extra = {}, base = shovingBot()): Table {
@@ -128,6 +132,32 @@ function deferred<T>() {
     resolve = done;
   });
   return { promise, resolve };
+}
+
+type Pending = { situation: string; answer: ReturnType<typeof deferred<string | null>> };
+
+const HAND_END = ['handWon', 'handLost', 'bluffCaught'];
+
+function pendingLines(pending: Pending[]): Answers['line'] {
+  return (request) => {
+    const answer = deferred<string | null>();
+    pending.push({ situation: request.intent.situation, answer });
+    return answer.promise;
+  };
+}
+
+async function nextHandWithEndLine(table: Table, pending: Pending[]): Promise<Pending> {
+  for (let i = 0; i < 80; i += 1) {
+    await table.session.getState().act({ kind: 'fold' });
+    const end = pending.find((p) => HAND_END.includes(p.situation));
+    pending.splice(0, pending.length);
+    table.tick();
+    await table.session.getState().nextHand();
+    if (end !== undefined && table.session.getState().lastActions[0] === null) {
+      return end;
+    }
+  }
+  throw new Error('no hand-end line before a hand the player opens');
 }
 
 describe('session talk', () => {
@@ -179,6 +209,70 @@ describe('session talk', () => {
     await flush();
     expect(table.session.getState().talk.lines.map((l) => l.text)).not.toContain('Too late');
     expect(table.session.getState().talk.bubbles[0]).toBeNull();
+  });
+
+  it('keeps a hand-end line until the first action of the next hand', async () => {
+    const pending: Pending[] = [];
+    const table = open(fakeClient({ line: pendingLines(pending) }));
+    await table.session.getState().start(CASH, 'cfr');
+    const end = await nextHandWithEndLine(table, pending);
+    end.answer.resolve('Well played');
+    await flush();
+    expect(table.session.getState().talk.lines.at(-1)).toMatchObject({
+      speaker: 'mallorca',
+      text: 'Well played',
+    });
+  });
+
+  it('drops a hand-end line once the next hand has an action', async () => {
+    const pending: Pending[] = [];
+    const table = open(fakeClient({ line: pendingLines(pending) }));
+    await table.session.getState().start(CASH, 'cfr');
+    const end = await nextHandWithEndLine(table, pending);
+    await table.session.getState().act({ kind: 'passive' });
+    end.answer.resolve('Too late now');
+    await flush();
+    expect(table.session.getState().talk.lines.map((l) => l.text)).not.toContain('Too late now');
+  });
+
+  it('signs in only when the Solver opponent starts with talk on, and once', async () => {
+    const client = fakeClient();
+    const connectTalk = vi.fn(() => Promise.resolve<TalkClient>(client));
+    const table = open(silentTalkClient, { connectTalk });
+    await table.session.getState().start(CASH);
+    expect(connectTalk).not.toHaveBeenCalled();
+    expect(table.session.getState().talk.available).toBe(false);
+    await table.session.getState().start(CASH, 'cfr');
+    expect(connectTalk).toHaveBeenCalledTimes(1);
+    await flush();
+    expect(table.session.getState().talk.available).toBe(true);
+    table.session.getState().say('Hello');
+    expect(client.replies).toHaveLength(1);
+    await table.session.getState().start();
+    expect(connectTalk).toHaveBeenCalledTimes(1);
+  });
+
+  it('with talk off, signs in only when talk is switched on', async () => {
+    const client = fakeClient();
+    const connectTalk = vi.fn(() => Promise.resolve<TalkClient>(client));
+    const table = open(silentTalkClient, { connectTalk, talkOn: false });
+    await table.session.getState().start(CASH, 'cfr');
+    expect(connectTalk).not.toHaveBeenCalled();
+    expect(table.session.getState().talk).toMatchObject({ available: true, on: false });
+    table.session.getState().setTalk(true);
+    expect(connectTalk).toHaveBeenCalledTimes(1);
+    await flush();
+    table.session.getState().say('Hello');
+    expect(client.replies).toHaveLength(1);
+  });
+
+  it('a failed sign-in hides the talk', async () => {
+    const connectTalk = vi.fn(() => Promise.resolve(silentTalkClient));
+    const table = open(silentTalkClient, { connectTalk });
+    await table.session.getState().start(CASH, 'cfr');
+    await flush();
+    expect(table.session.getState().talk.available).toBe(false);
+    expect(table.bot.styles.every((style) => style === undefined)).toBe(true);
   });
 
   it('drops a line after the session restarts', async () => {
@@ -358,10 +452,74 @@ describe('session talk', () => {
   });
 
   it('talk off still passes the style', async () => {
+    const table = open(fakeClient(), { talkOn: false });
+    await table.session.getState().start(CASH, 'cfr');
+    expect(table.session.getState().talk).toMatchObject({ available: true, on: false });
+    expect(table.bot.styles[0]).toBeDefined();
+  });
+
+  it('no client, no style', async () => {
     const table = open(silentTalkClient);
     await table.session.getState().start(CASH, 'cfr');
+    await foldHand(table);
     expect(table.session.getState().talk.available).toBe(false);
-    expect(table.bot.styles[0]).toBeDefined();
+    expect(table.bot.styles.length).toBeGreaterThan(0);
+    expect(table.bot.styles.every((style) => style === undefined)).toBe(true);
+  });
+
+  it('quick phrases are marked quick and typed words are not', async () => {
+    const client = fakeClient();
+    const table = open(client);
+    await table.session.getState().start(CASH, 'cfr');
+    table.session.getState().quick('niceHand', 'Nice hand');
+    table.session.getState().say('Hello');
+    expect(client.replies.map((reply) => reply.quick)).toEqual([true, false]);
+  });
+
+  it("sends her stack first and the player's net", async () => {
+    const client = fakeClient();
+    const table = open(client);
+    await table.session.getState().start(CASH, 'cfr');
+    table.session.getState().say('Hello');
+    const { seats } = table.session.getState().table;
+    expect(client.replies[0]?.facts.stacks).toEqual([seats[0].stack, seats[1].stack]);
+    await table.session.getState().act({ kind: 'fold' });
+    table.session.getState().leave();
+    expect(client.summaries[0]?.summary.netBb).toBeLessThan(0);
+  });
+
+  it('sends what changed since the last summary', async () => {
+    const client = fakeClient();
+    const table = open(client);
+    await table.session.getState().start(CASH, 'cfr');
+    table.session.getState().quick('niceHand', 'Nice hand');
+    for (let i = 0; i < 50; i += 1) {
+      await foldHand(table);
+    }
+    expect(client.summaries).toHaveLength(1);
+    expect(client.summaries[0]?.summary).toMatchObject({ hands: 50, signals: { compliment: 1 } });
+    table.session.getState().quick('notThisTime', 'Not this time');
+    await table.session.getState().act({ kind: 'fold' });
+    table.session.getState().leave();
+    expect(client.summaries).toHaveLength(2);
+    const second = client.summaries[1]?.summary;
+    expect(second).toMatchObject({ hands: 1, signals: { claimStrength: 1 } });
+    expect(Math.abs(second?.netBb ?? 0)).toBeLessThan(
+      Math.abs(client.summaries[0]?.summary.netBb ?? 0),
+    );
+  });
+
+  it('sends the summary with keepalive when the page hides, once', async () => {
+    const client = fakeClient();
+    const table = open(client);
+    await table.session.getState().start(CASH, 'cfr');
+    await table.session.getState().act({ kind: 'fold' });
+    table.session.getState().pageHidden();
+    table.session.getState().pageHidden();
+    table.session.getState().dispose();
+    expect(client.summaries).toHaveLength(1);
+    expect(client.kept).toEqual([true]);
+    expect(client.summaries[0]?.summary.hands).toBe(1);
   });
 
   it('client errors keep the game going', async () => {

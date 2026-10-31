@@ -1,12 +1,13 @@
 import { render } from 'preact';
 import {
   createSession,
-  loadTalkClient,
+  onPageExit,
   openHandStore,
+  talkConnector,
   TOURNAMENT,
   workerBot,
 } from './game/index.ts';
-import type { Session, TalkClient } from './game/index.ts';
+import type { Session } from './game/index.ts';
 import { App } from './ui/App.tsx';
 import { t } from './ui/i18n.ts';
 import { readTalk, readTells } from './ui/preferences.ts';
@@ -40,16 +41,13 @@ const botDelay = numberParam('botDelay') ?? DEFAULT_BOT_DELAY;
 const autoNext = params.get('autoNext') !== 'off';
 let nextSeed: number | null = numberParam('seed');
 let session: Session | null = null;
-let talk: TalkClient | undefined;
 const store = await openHandStore();
-
-void loadTalkClient({
+const connectTalk = talkConnector({
   url: import.meta.env.VITE_SUPABASE_URL as string | undefined,
   anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
-}).then((client) => {
-  talk = client;
-  session?.getState().attachTalk(client);
 });
+
+onPageExit(window, document, () => session?.getState().pageHidden());
 
 const root = document.getElementById('app');
 if (root === null) {
@@ -67,7 +65,7 @@ function mount(farewell = false): void {
     humanSeat: HUMAN_SEAT,
     names: [t('seat.you'), t('seat.bot')],
     mode: TOURNAMENT,
-    talk,
+    connectTalk,
     talkOn: readTalk(),
     tells: readTells(),
     records: {

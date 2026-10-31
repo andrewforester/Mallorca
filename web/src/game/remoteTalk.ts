@@ -12,6 +12,11 @@ export interface RemoteOptions {
 
 type Tokens = () => Promise<string | null>;
 
+interface TokenCache {
+  latest(): string | null;
+  fresh: Tokens;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -32,6 +37,36 @@ function aborted(signal: AbortSignal): Promise<null> {
   });
 }
 
+function cache(tokens: Tokens, first: string | null): TokenCache {
+  let latest = first;
+  return {
+    latest: () => latest,
+    fresh: async () => {
+      latest = await tokens();
+      return latest;
+    },
+  };
+}
+
+function headersOf(options: RemoteOptions, token: string): Record<string, string> {
+  return {
+    'content-type': 'application/json',
+    authorization: `Bearer ${token}`,
+    apikey: options.anonKey,
+  };
+}
+
+async function beacon(options: RemoteOptions, token: string | null, payload: unknown) {
+  if (token === null) return;
+  const send = options.fetch ?? fetch;
+  await send(`${options.url}/functions/v1/talk`, {
+    method: 'POST',
+    headers: headersOf(options, token),
+    body: JSON.stringify(payload),
+    keepalive: true,
+  }).catch(() => undefined);
+}
+
 async function post(options: RemoteOptions, tokens: Tokens, payload: unknown): Promise<unknown> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TALK_TIMEOUT_MS);
@@ -41,11 +76,7 @@ async function post(options: RemoteOptions, tokens: Tokens, payload: unknown): P
     const send = options.fetch ?? fetch;
     const response = await send(`${options.url}/functions/v1/talk`, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${token}`,
-        apikey: options.anonKey,
-      },
+      headers: headersOf(options, token),
       body: JSON.stringify(payload),
       signal: controller.signal,
     });
@@ -57,13 +88,15 @@ async function post(options: RemoteOptions, tokens: Tokens, payload: unknown): P
   }
 }
 
-function connected(options: RemoteOptions, tokens: Tokens): TalkClient {
+function connected(options: RemoteOptions, tokens: TokenCache): TalkClient {
+  const { fresh } = tokens;
   return {
     enabled: true,
-    line: async (request) => parseReply(await post(options, tokens, request))?.text ?? null,
-    reply: async (request) => parseReply(await post(options, tokens, request)),
-    summary: async (request) => {
-      await post(options, tokens, request);
+    line: async (request) => parseReply(await post(options, fresh, request))?.text ?? null,
+    reply: async (request) => parseReply(await post(options, fresh, request)),
+    summary: async (request, send) => {
+      if (send?.keepalive === true) return beacon(options, tokens.latest(), request);
+      await post(options, fresh, request);
     },
   };
 }
@@ -84,7 +117,7 @@ async function signIn(options: RemoteOptions): Promise<Tokens | null> {
 export async function remoteTalkClient(options: RemoteOptions): Promise<TalkClient> {
   try {
     const tokens = await signIn(options);
-    return tokens === null ? silentTalkClient : connected(options, tokens);
+    return tokens === null ? silentTalkClient : connected(options, cache(tokens, await tokens()));
   } catch {
     return silentTalkClient;
   }

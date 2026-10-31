@@ -78,11 +78,15 @@ export interface TalkReply {
   signals: Signal[];
 }
 
+export interface SendOptions {
+  keepalive?: boolean;
+}
+
 export interface TalkClient {
   readonly enabled: boolean;
   line(request: LinePayload): Promise<string | null>;
   reply(request: ReplyPayload): Promise<TalkReply | null>;
-  summary(request: SummaryPayload): Promise<void>;
+  summary(request: SummaryPayload, options?: SendOptions): Promise<void>;
 }
 
 export const silentTalkClient: TalkClient = {

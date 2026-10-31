@@ -33,6 +33,8 @@ import type { HandRecorder, RecordsOptions } from './records/recorder.ts';
 import { CFR_BOT, MATH_BOT } from './records/record.ts';
 import type { Opponent } from './opponent.ts';
 import { initialTalk, sessionTalk } from './sessionTalk.ts';
+import { createTimers } from './timers.ts';
+import type { Timers } from './timers.ts';
 import type { QuickPhrase, SessionTalk, TalkState } from './sessionTalk.ts';
 import { silentTalkClient } from './talkClient.ts';
 import type { TalkClient } from './talkClient.ts';
@@ -85,6 +87,7 @@ export interface SessionActions {
   setTalk(on: boolean): void;
   setTells(level: Level): void;
   attachTalk(client: TalkClient): void;
+  pageHidden(): void;
 }
 
 export type Session = StoreApi<SessionState & SessionActions>;
@@ -99,6 +102,7 @@ export interface SessionOptions {
   mode: TableMode;
   records?: RecordsOptions;
   talk?: TalkClient;
+  connectTalk?: () => Promise<TalkClient>;
   now?: () => number;
   locale?: string;
   talkOn?: boolean;
@@ -107,11 +111,6 @@ export interface SessionOptions {
 
 type Store = SessionState & SessionActions;
 type Step = { state: Table; events: EngineEvent[] };
-
-interface Timers {
-  sleep(ms: number): Promise<void>;
-  cancel(): void;
-}
 
 interface Runtime {
   set: StoreApi<Store>['setState'];
@@ -131,27 +130,6 @@ interface Runtime {
   opponent: Opponent;
   seed: number;
   talk: SessionTalk;
-}
-
-function createTimers(): Timers {
-  const pending = new Map<ReturnType<typeof setTimeout>, () => void>();
-  return {
-    sleep: (ms) =>
-      new Promise((resolve) => {
-        const timer = setTimeout(() => {
-          pending.delete(timer);
-          resolve();
-        }, ms);
-        pending.set(timer, resolve);
-      }),
-    cancel: () => {
-      for (const [timer, resolve] of pending) {
-        clearTimeout(timer);
-        resolve();
-      }
-      pending.clear();
-    },
-  };
 }
 
 function freshTable(options: SessionOptions, mode: TableMode): Table {
@@ -354,6 +332,7 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
     setTalk: (on) => rt.talk.setOn(on),
     setTells: (level) => rt.talk.setLevel(level),
     attachTalk: (client) => rt.talk.attach(client),
+    pageHidden: () => rt.talk.pageHidden(),
   };
 }
 
@@ -368,6 +347,7 @@ function wireTalk(
       now: options.now ?? Date.now,
       locale: options.locale ?? 'en',
       botSeat,
+      connect: options.connectTalk,
     },
     {
       read: () => runtime().get().talk,

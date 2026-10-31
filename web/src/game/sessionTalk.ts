@@ -1,9 +1,9 @@
 import { mulberry32 } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex, Table } from '../engine/index.ts';
-import { createTalk } from '../talk/index.ts';
-import type { Level, LineIntent, Signal, Style, Talk } from '../talk/index.ts';
+import { EMPTY_SUMMARY, createTalk, endsHand, since } from '../talk/index.ts';
+import type { Level, LineIntent, SessionSummary, Signal, Style, Talk } from '../talk/index.ts';
 import type { Opponent } from './opponent.ts';
-import { toLinePayload, toReplyPayload, toSummaryPayload } from './talkClient.ts';
+import { silentTalkClient, toLinePayload, toReplyPayload, toSummaryPayload } from './talkClient.ts';
 import type { ChatTurn, HandInput, TalkClient, TalkReply } from './talkClient.ts';
 
 export interface ChatLine {
@@ -37,6 +37,7 @@ export interface TalkSetup {
   now: () => number;
   locale: string;
   botSeat: SeatIndex;
+  connect?: () => Promise<TalkClient>;
 }
 
 export interface SessionTalk {
@@ -50,6 +51,7 @@ export interface SessionTalk {
   attach(client: TalkClient): void;
   handDone(hands: number): void;
   leave(): void;
+  pageHidden(): void;
 }
 
 const MAX_LINES = 100;
@@ -73,6 +75,9 @@ class Wiring implements SessionTalk {
   private client: TalkClient;
   private talk: Talk | null = null;
   private herRaised = false;
+  private acted = false;
+  private link: 'none' | 'pending' | 'done' = 'none';
+  private sent: SessionSummary = EMPTY_SUMMARY;
   private unsent = 0;
   private nextId = 0;
   private readonly setup: TalkSetup;
@@ -92,8 +97,11 @@ class Wiring implements SessionTalk {
         ? createTalk({ seat: this.setup.botSeat, rng: mulberry32(seed ^ TALK_SALT), level })
         : null;
     this.herRaised = false;
+    this.acted = false;
+    this.sent = EMPTY_SUMMARY;
     this.unsent = 0;
     this.update({ available: this.available(), lines: [], bubbles: [null, null] });
+    this.connect();
   }
 
   observe(events: readonly EngineEvent[]): void {
@@ -111,7 +119,7 @@ class Wiring implements SessionTalk {
   }
 
   style(): Style | undefined {
-    return this.talk?.style();
+    return this.client.enabled ? this.talk?.style() : undefined;
   }
 
   say(text: string): void {
@@ -133,6 +141,7 @@ class Wiring implements SessionTalk {
 
   setOn(on: boolean): void {
     this.update({ on });
+    this.connect();
   }
 
   setLevel(level: Level): void {
@@ -142,6 +151,7 @@ class Wiring implements SessionTalk {
 
   attach(client: TalkClient): void {
     this.client = client;
+    this.link = 'done';
     this.update({ available: this.available() });
   }
 
@@ -155,12 +165,29 @@ class Wiring implements SessionTalk {
     this.sendSummary();
   }
 
+  pageHidden(): void {
+    this.sendSummary(true);
+  }
+
+  private connect(): void {
+    const { connect } = this.setup;
+    if (connect === undefined || this.link !== 'none' || this.talk === null) {
+      return;
+    }
+    if (!this.host.read().on) {
+      return;
+    }
+    this.link = 'pending';
+    void attempt(connect).then((client) => this.attach(client ?? silentTalkClient));
+  }
+
   private available(): boolean {
-    return this.client.enabled && this.talk !== null;
+    const connectable = this.setup.connect !== undefined && this.link !== 'done';
+    return this.talk !== null && (this.client.enabled || connectable);
   }
 
   private speaking(): boolean {
-    return this.available() && this.host.read().on;
+    return this.client.enabled && this.talk !== null && this.host.read().on;
   }
 
   private update(patch: Partial<TalkState>): void {
@@ -172,8 +199,10 @@ class Wiring implements SessionTalk {
     for (const event of events) {
       if (event.type === 'handStarted') {
         this.herRaised = false;
-      } else if (event.type === 'acted' && event.seat === this.setup.botSeat) {
-        this.herRaised ||= event.action.kind === 'raise';
+        this.acted = false;
+      } else if (event.type === 'acted') {
+        this.acted = true;
+        this.herRaised ||= event.seat === this.setup.botSeat && event.action.kind === 'raise';
       } else if (event.type === 'handEnded') {
         this.unsent += 1;
       }
@@ -223,15 +252,18 @@ class Wiring implements SessionTalk {
   }
 
   private current(epoch: number, intent: LineIntent): boolean {
+    if (epoch !== this.host.epoch()) {
+      return false;
+    }
     const table = this.host.table();
-    return (
-      epoch === this.host.epoch() &&
-      table.handNumber === intent.handNumber &&
-      table.hand?.street === intent.street
-    );
+    if (endsHand(intent.situation)) {
+      const next = table.handNumber === intent.handNumber + 1 && !this.acted;
+      return table.handNumber === intent.handNumber || next;
+    }
+    return table.handNumber === intent.handNumber && table.hand?.street === intent.street;
   }
 
-  private send(text: string, hear: boolean): void {
+  private send(text: string, typed: boolean): void {
     const { talk, client } = this;
     if (talk === null) {
       return;
@@ -239,9 +271,10 @@ class Wiring implements SessionTalk {
     const recent = this.recent();
     const line = this.append('player', text, this.host.table().handNumber);
     const epoch = this.host.epoch();
-    const payload = toReplyPayload({ ...this.input(talk, talk.replyIntent(), recent), text });
+    const input = this.input(talk, talk.replyIntent(), recent);
+    const payload = toReplyPayload({ ...input, text, quick: !typed });
     void attempt(() => client.reply(payload)).then((reply) => {
-      this.answered(epoch, line.id, reply, hear);
+      this.answered(epoch, line.id, reply, typed);
     });
   }
 
@@ -277,18 +310,20 @@ class Wiring implements SessionTalk {
     return line;
   }
 
-  private sendSummary(): void {
+  private sendSummary(keepalive = false): void {
     const { talk, client } = this;
     if (talk === null || !this.speaking() || this.unsent === 0) {
       return;
     }
     this.unsent = 0;
+    const summary = talk.summary();
     const payload = toSummaryPayload({
       sessionId: this.host.sessionId(),
       locale: this.setup.locale,
-      summary: talk.summary(),
+      summary: since(summary, this.sent),
     });
-    void attempt(() => client.summary(payload));
+    this.sent = summary;
+    void attempt(() => client.summary(payload, { keepalive }));
   }
 }
 

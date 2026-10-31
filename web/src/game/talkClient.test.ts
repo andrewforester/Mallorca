@@ -335,6 +335,26 @@ describe('remoteTalkClient', () => {
     ).resolves.toBeUndefined();
   });
 
+  it('sends a keepalive summary at once with the token it already has', async () => {
+    const calls: Call[] = [];
+    const client = await remoteTalkClient({
+      url: URL_BASE,
+      anonKey: 'anon',
+      fetch: fakeFetch(() => json({ facts: [] }), calls),
+    });
+    const before = calls.length;
+    const summary = { hands: 1, netBb: 2, playerBluffsShown: 0, playerAllIns: 0, signals: {} };
+    void client.summary(toSummaryPayload({ sessionId: 's', locale: 'en', summary }), {
+      keepalive: true,
+    });
+    expect(calls).toHaveLength(before + 1);
+    const sent = calls.at(-1);
+    expect(sent?.url).toBe(`${URL_BASE}/functions/v1/talk`);
+    expect(sent?.init?.keepalive).toBe(true);
+    expect(new Headers(sent?.init?.headers).get('authorization')).toBe('Bearer tok-1');
+    expect(JSON.parse(String(sent?.init?.body)).summary.netBb).toBe(-2);
+  });
+
   it('returns the silent client when sign-in fails', async () => {
     const failing = (() =>
       Promise.resolve(new Response('{"msg":"no"}', { status: 500 }))) as typeof fetch;

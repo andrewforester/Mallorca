@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { byId, expect, FAST_URL, test, waitForWaypoint } from './fixtures.ts';
-import { serveTalk } from './talkServer.ts';
+import { serveTalk, TALK_URL } from './talkServer.ts';
 import type { TalkRequest } from './talkServer.ts';
 
 const HER_BET = 'That bet is a question, darling.';
@@ -62,6 +62,27 @@ async function expectApart(over: Locator, under: Locator, name: string): Promise
     expect(apart, `covers ${name}`).toBe(true);
   }
 }
+
+test('the math opponent signs nobody in', async ({ page }) => {
+  const auth: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().startsWith(`${TALK_URL}/auth/`)) {
+      auth.push(request.url());
+    }
+  });
+  const requests = await serveTalk(page, answers);
+  await page.goto(FAST_URL);
+  await byId(page, 'start-cash').click();
+  let hands = 0;
+  await playUntil(page, async () => {
+    if (await byId(page, 'next-hand').isVisible()) {
+      hands += 1;
+    }
+    return hands >= 2;
+  });
+  expect(auth).toEqual([]);
+  expect(requests).toEqual([]);
+});
 
 test.describe('desktop', () => {
   test.skip(({ isMobile }) => isMobile, 'the side panel is a desktop layout');

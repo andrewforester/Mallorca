@@ -35,5 +35,6 @@ export type {
 export { silentTalkClient, toLinePayload, toReplyPayload, toSummaryPayload } from './talkClient.ts';
 export type { RemoteOptions } from './remoteTalk.ts';
 export type { TalkConfig } from './talkLoader.ts';
-export { loadTalkClient } from './talkLoader.ts';
+export { loadTalkClient, talkConnector } from './talkLoader.ts';
+export { onPageExit } from './pageExit.ts';
 export type { Level } from '../talk/index.ts';
