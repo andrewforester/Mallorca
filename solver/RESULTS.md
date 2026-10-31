@@ -107,6 +107,36 @@ Chunks of `cfr-solve` vs `cfr`: -9.5, +10.6, +27.9, +20.8, -6.3, -21.4, +17.6, +
 - Likely causes, not measured: unsafe re-solving with Bayes ranges from a coarse blueprint, the single river size
   inside a turn tree, and 50 turn iterations short of convergence.
 
+### On the `v2` blueprint (2026-10-31)
+
+Code at 0373ee6, the `v2` play file of checkpoint 10, M3 Pro, 100 bb, blinds 10/20, duplicate pairs, 8 to 10
+workers. `cfr-solve:<play file>` and `cfr:<play file>` play the same file with and without the solver.
+
+| bot | opponent | turn, river iterations | hands | seed | bb/100 (95% interval) |
+| --- | --- | --- | --- | --- | --- |
+| cfr-solve v2 | cfr v2 | 50, 200 | 10,000 | 101 | +23.2 ± 20.7 |
+| cfr-solve v2 | cfr v2 | 50, 200 | 40,000 | 201 | +17.2 ± 9.9 |
+| cfr-solve v2 | math | 50, 200 | 10,000 | 101 | +24.6 ± 21.1 |
+| cfr-solve v2 | math | 50, 200 | 40,000 | 201 | +26.0 ± 9.8 |
+| cfr-solve v2 | cfr v2 | 12, 200 | 40,000 | 301 | +1.8 ± 11.1 |
+
+Decision time of `cfr-solve` on `v2` in Node, one thread, 300 hands against the blueprint:
+
+| turn iterations | turn p50 | turn p95 | turn max | river p50 (200 iterations) |
+| --- | --- | --- | --- | --- |
+| 12 | 0.78 s | 1.21 s | 3.9 s | 65 ms |
+| 25 | 1.61 s | 2.30 s | 6.3 s | 64 ms |
+| 50 | 3.16 s | 4.39 s | 10.3 s | 65 ms |
+
+- At 50 turn iterations the solver beats its own blueprint: +18 ± 9 over the 50,000 hands pooled, the first
+  significant gain (on `v1` it was +10.6 ± 12.7).
+- Against `math` it does not add to the blueprint (+26.0 ± 9.8 against +33.1 ± 10.2 for `v2` alone).
+- At the game's 12 turn iterations the gain is gone, and 50 iterations do not fit a game: about 65 ms per turn
+  iteration, so 3.2 s at the median and up to 10 s, over the 5 s fallback budget, and a phone is slower still.
+- So the game plays the blueprint alone. The solver comes back to the game when 50 turn iterations fit in about a
+  second: fewer sizes in the turn tree, the river from the blueprint inside a turn solve, or threads in
+  WebAssembly.
+
 ## How to improve
 
 The first run sets the baseline; no threshold is fixed before it. Each lever names the number it should move.
