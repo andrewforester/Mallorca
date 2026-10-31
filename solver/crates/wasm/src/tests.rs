@@ -267,3 +267,17 @@ fn a_buffer_that_alloc_did_not_hand_out_is_refused_untouched() {
     assert_eq!(load(ptr, 16), -8);
     assert_eq!(load(std::ptr::null_mut(), 0), -8);
 }
+
+#[test]
+fn an_unknown_action_kind_abandons_the_hand_instead_of_raising() {
+    for kind in [4, KIND_NONE, u32::MAX] {
+        let bot = seated([48, 49]);
+        assert!(with_seat(bot, None, |s| s.bot.cursor()).is_some());
+        acted(bot, 1, kind, 400, 0.5);
+        assert_eq!(with_seat(bot, Some(0), |s| s.bot.cursor()), None, "{kind}");
+        for draw in [0.0, 0.5, 0.99] {
+            assert_eq!(decide(bot, 1, 0, 10, 40, 400, draw), KIND_CALL, "{kind}");
+        }
+        bot_free(bot);
+    }
+}

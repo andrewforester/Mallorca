@@ -56,12 +56,13 @@ fn error_code(e: StrategyError) -> i32 {
     }
 }
 
-fn to_move(kind: u32, to: u32) -> Move {
+fn to_move(kind: u32, to: u32) -> Option<Move> {
     match kind {
-        KIND_FOLD => Move::Fold,
-        KIND_CHECK => Move::Check,
-        KIND_CALL => Move::Call,
-        _ => Move::RaiseTo(to),
+        KIND_FOLD => Some(Move::Fold),
+        KIND_CHECK => Some(Move::Check),
+        KIND_CALL => Some(Move::Call),
+        KIND_RAISE => Some(Move::RaiseTo(to)),
+        _ => None,
     }
 }
 
@@ -158,8 +159,9 @@ pub extern "C" fn street(bot: i32, count: u32, c0: u32, c1: u32, c2: u32, c3: u3
 
 #[no_mangle]
 pub extern "C" fn acted(bot: i32, hero: i32, kind: u32, to: u32, draw: f64) {
-    with_seat(bot, (), |s| {
-        s.bot.acted(&s.model, hero != 0, to_move(kind, to), draw);
+    with_seat(bot, (), |s| match to_move(kind, to) {
+        Some(mv) => s.bot.acted(&s.model, hero != 0, mv, draw),
+        None => s.bot.abandon_hand(),
     });
 }
 
