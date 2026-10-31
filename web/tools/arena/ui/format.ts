@@ -1,7 +1,5 @@
 import type { SavedReport } from './types.ts';
 
-export const BIG_BLIND = 20;
-
 export function signed(value: number, digits = 1): string {
   const text = Math.abs(value).toFixed(digits);
   return value < 0 ? `-${text}` : `+${text}`;

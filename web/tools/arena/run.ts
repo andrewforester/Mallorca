@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, relative } from 'node:path';
 import { Worker } from 'node:worker_threads';
-import { CASH } from '../../src/engine/index.ts';
+import { CASH, rulesOf } from '../../src/engine/index.ts';
 import { handRecord } from '../../src/game/records/record.ts';
 import { botFactory, botLabel, prepareBots } from './bots.ts';
 import { playPair } from './match.ts';
@@ -11,7 +11,7 @@ import { styleStats } from './styleStats.ts';
 import type { StyleStats } from './styleStats.ts';
 import type { WorkerInput, WorkerResult } from './worker.ts';
 
-const BIG_BLIND = 20;
+const BIG_BLIND = rulesOf(CASH).blinds(1).big;
 
 export interface ArenaOptions {
   a: string;

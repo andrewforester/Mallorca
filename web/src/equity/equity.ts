@@ -124,3 +124,9 @@ export function equityVsRange(
   }
   return sampleEquity(hero, live, board, opts);
 }
+
+export interface StreetEquity {
+  strength: number;
+  positivePotential: number;
+  negativePotential: number;
+}

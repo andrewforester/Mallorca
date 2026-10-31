@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { LogEntry } from '../game/index.ts';
+import { fullDeck } from '../cards/index.ts';
+import { applyAction, handHistory, startHandWith } from '../engine/index.ts';
+import type { Action, EngineEvent, LogEntry, Step } from '../engine/index.ts';
 import { groupHand } from './handLog.ts';
 
 function e(key: string, params: Record<string, string | number> = {}): LogEntry {
@@ -19,11 +21,11 @@ describe('groupHand', () => {
       e('post', { seat: 1, amount: 20 }),
       e('raise', { seat: 0, amount: 60 }),
       e('call', { seat: 1, amount: 40 }),
-      e('flop', { cards: 'As Td 3h' }),
+      e('flop', { cards: 'As Td 3h', pot: 120 }),
       e('check', { seat: 1 }),
       e('bet', { seat: 0, amount: 80 }),
       e('call', { seat: 1, amount: 80 }),
-      e('turn', { cards: '2c' }),
+      e('turn', { cards: '2c', pot: 280 }),
     ];
     const groups = groupHand(entries);
     expect(groups.map((g) => g.street)).toEqual(['preflop', 'flop', 'turn']);
@@ -54,9 +56,9 @@ describe('groupHand', () => {
       e('post', { seat: 0, amount: 10 }),
       e('post', { seat: 1, amount: 20 }),
       e('call', { seat: 0, amount: 10 }),
-      e('river', { cards: 'Kc' }),
-      e('show', { seat: 0, cards: 'Ah Ad', category: 'pair' }),
-      e('show', { seat: 1, cards: 'Qh Qd', category: 'pair' }),
+      e('river', { cards: 'Kc', pot: 40 }),
+      e('show', { seat: 0, cards: 'Ah Ad', category: 'pair', pot: 40 }),
+      e('show', { seat: 1, cards: 'Qh Qd', category: 'pair', pot: 40 }),
       e('win', { seat: 0, amount: 40 }),
     ]);
     const last = groups[groups.length - 1];
@@ -74,11 +76,11 @@ describe('groupHand', () => {
       e('raise', { seat: 0, amount: 1000 }),
       e('call', { seat: 1, amount: 380 }),
       e('allIn', { seat: 1 }),
-      e('flop', { cards: 'As Td 3h' }),
-      e('turn', { cards: '2c' }),
-      e('river', { cards: 'Kc' }),
-      e('show', { seat: 0, cards: 'Ah Ad', category: 'pair' }),
-      e('show', { seat: 1, cards: 'Qh Qd', category: 'pair' }),
+      e('flop', { cards: 'As Td 3h', pot: 800 }),
+      e('turn', { cards: '2c', pot: 800 }),
+      e('river', { cards: 'Kc', pot: 800 }),
+      e('show', { seat: 0, cards: 'Ah Ad', category: 'pair', pot: 800 }),
+      e('show', { seat: 1, cards: 'Qh Qd', category: 'pair', pot: 800 }),
       e('returned', { seat: 0, amount: 600 }),
       e('win', { seat: 0, amount: 800 }),
     ]);
@@ -98,11 +100,11 @@ describe('groupHand', () => {
       e('post', { seat: 1, amount: 20 }),
       e('call', { seat: 0, amount: 10 }),
       e('check', { seat: 1 }),
-      e('flop', { cards: 'As Td 3h' }),
+      e('flop', { cards: 'As Td 3h', pot: 40 }),
       e('bet', { seat: 1, amount: 80 }),
       e('raise', { seat: 0, amount: 240 }),
       e('call', { seat: 1, amount: 160 }),
-      e('turn', { cards: '2c' }),
+      e('turn', { cards: '2c', pot: 520 }),
     ]);
     expect(groups[1]?.pot).toBe(40);
     expect(groups[2]?.pot).toBe(520);
@@ -128,5 +130,39 @@ describe('groupHand', () => {
       e('post', { seat: 0, amount: 10 }),
     ]);
     expect(groups[0]?.entries.map((x) => x.key)).toEqual(['post']);
+  });
+  it('groups the log of a hand played by the engine', () => {
+    const actions: Action[] = [
+      { kind: 'raise', to: 60 },
+      { kind: 'call' },
+      { kind: 'check' },
+      { kind: 'raise', to: 80 },
+      { kind: 'call' },
+      { kind: 'check' },
+      { kind: 'check' },
+      { kind: 'check' },
+      { kind: 'check' },
+    ];
+    const seats: Step['seats'] = [
+      { name: 'A', stack: 2000 },
+      { name: 'B', stack: 2000 },
+    ];
+    let step = startHandWith(
+      seats,
+      { button: 0, blinds: { small: 10, big: 20 }, handNumber: 1 },
+      fullDeck(),
+    );
+    const events: EngineEvent[] = [...step.events];
+    for (const action of actions) {
+      step = applyAction(step.hand, step.seats, action);
+      events.push(...step.events);
+    }
+    expect(groupHand(handHistory(events)).map((g) => [g.street, g.pot])).toEqual([
+      ['preflop', 0],
+      ['flop', 120],
+      ['turn', 280],
+      ['river', 280],
+      ['showdown', 280],
+    ]);
   });
 });

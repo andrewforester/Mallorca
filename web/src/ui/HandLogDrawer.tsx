@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'preact/hooks';
-import type { LogEntry, SeatIndex } from '../game/index.ts';
-import { groupHand } from './handLog.ts';
-import type { StreetGroup } from './handLog.ts';
+import type { LogEntry, SeatIndex, StreetGroup } from '../game/index.ts';
+import { groupHand } from '../game/index.ts';
 import { t } from './i18n.ts';
 import { logKind, logLine } from './phrases.ts';
 
