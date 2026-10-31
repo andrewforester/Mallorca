@@ -117,13 +117,14 @@ enforces it with `no-restricted-globals` and `no-restricted-properties`. Randomn
   `potAwarded`, `handEnded`, `tournamentEnded`. `acted.amount` is the chips added to the pot by that action.
   `toppedUp { seat, amount }` comes before `handStarted`, so `handStarted.stacks` include it; `toObservations`
   ignores it.
-  `showdown.hands` is indexed by seat; `cards` are the hole cards.
+  `showdown.hands` is indexed by seat; `cards` are the hole cards. `streetDealt.pot` and `showdown.pot` are the
+  pot of the matched chips when the street is dealt or the hands are shown, without an uncalled bet.
 - When a hand ends, `street` is `complete`, `toAct` is null, `pot` is 0 and the stacks include the awarded pot.
 - `startHand` and `apply` both end the tournament when a hand completes with an empty stack: they set `winner` and
   append `tournamentEnded`. A cash table never ends and never emits `tournamentEnded`. A hand can complete inside `startHand` when a short stack is all-in from the blinds.
 - `handHistory(events)` returns `LogEntry` values, `{ key, params }`, with seat indices in `params.seat` and no
   names or English text. `key` is a locale key under `log` (with `you` or `other` for entries that have a seat);
-  `params.category` is a `HandCategory`.
+  `params.category` is a `HandCategory`. The `flop`, `turn`, `river` and `show` entries carry `params.pot`.
 
 ### Rules
 
@@ -255,7 +256,9 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   the human or asks the bot to decide and applies its action after `botDelayMs`.
 - `Intent` is `fold`, `passive` (check or call) or `raise` with a target. `resolveIntent` turns it into a legal
   action: a raise is rounded and clamped into `legal.raise`, a fold becomes a check when checking is free.
-- `log` holds the `LogEntry` values of the session. `lastActions` holds one tag per seat for the current street,
+- `log` holds the `LogEntry` values of the session. `groupHand(log)` in `handLog.ts` splits the last hand, with
+  the top-ups before it, into `StreetGroup` values (`street`, `cards`, `pot`, `entries`): a group per dealt street
+  with the pot of its entry, and a `showdown` group from the first `show` entry. `lastActions` holds one tag per seat for the current street,
   `{ key, params }` with `key` under `actions` (`fold`, `check`, `call`, `bet`, `raiseTo`, `allIn`); a raise
   with no bet on the street is a `bet`, in the tags and in the log. Every `streetDealt` clears both tags, and
   `closingActions` keeps the tags the last one cleared, the actions that closed the previous street. Both are
@@ -336,7 +339,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - Layout: portrait for phones (bot at the top, the human's cards and controls at the bottom), landscape for wide
   screens, switched by a `min-aspect-ratio: 1/1` media query. The layout has no side log. The `coach` panel is
   the slot for a later training mode and is empty.
-- The hand log is a drawer grouped by street (`groupHand` in `ui/handLog.ts`), opened by the status bar toggle
+- The hand log is a drawer grouped by street (`groupHand` of `game`), opened by the status bar toggle
   `hand-log-toggle` (`aria-expanded`). Opening moves focus to `hand-log-close`; closing, by the close button,
   Escape, the toggle or the scrim, returns focus to the toggle. On portrait screens it is a full-height sheet over
   a scrim that closes on tap; in landscape it is a floating panel and the scrim does not take pointer events, so
