@@ -1,11 +1,18 @@
 import { fullDeck, mulberry32, shuffle } from '../../src/cards/index.ts';
-import type { EngineEvent, Seat, SeatIndex, Step } from '../../src/engine/index.ts';
-import { applyAction, legalActions, startHandWith } from '../../src/engine/index.ts';
+import type { EngineEvent, SeatIndex, Step } from '../../src/engine/index.ts';
+import {
+  applyAction,
+  CASH,
+  createTable,
+  legalActions,
+  rulesOf,
+  startHandWith,
+} from '../../src/engine/index.ts';
 import { toObservations } from '../../src/brains/index.ts';
 import type { ArenaBot, BotFactory } from './bots.ts';
 
-const STACK = 2000;
-const BLINDS = { small: 10, big: 20 };
+const SEATS = createTable(['seat0', 'seat1'], CASH).seats;
+const STACK = SEATS[0].stack;
 
 function playHand(
   factories: [BotFactory, BotFactory],
@@ -18,10 +25,6 @@ function playHand(
   const bots = factories.map((make, seat) =>
     make(mulberry32((seed ^ (index * 4 + k * 2 + seat)) >>> 0)),
   ) as [ArenaBot, ArenaBot];
-  const seats: [Seat, Seat] = [
-    { name: 'seat0', stack: STACK },
-    { name: 'seat1', stack: STACK },
-  ];
   const events: EngineEvent[] = [];
   const feed = (step: Step) => {
     events.push(...step.events);
@@ -29,9 +32,10 @@ function playHand(
       for (const o of toObservations(step.events, seat)) bots[seat].observe(o);
     }
   };
+  const handNumber = index * 2 + k + 1;
   let step = startHandWith(
-    seats,
-    { button: 0, blinds: BLINDS, handNumber: index * 2 + k + 1 },
+    SEATS,
+    { button: 0, blinds: rulesOf(CASH).blinds(handNumber), handNumber },
     deck,
   );
   feed(step);
