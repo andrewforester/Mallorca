@@ -43,7 +43,8 @@
   },
   "pot": {
     "label": "Pot",
-    "amount": "Pot {{amount}}"
+    "amount": "Pot {{amount}}",
+    "total": "Total {{amount}}"
   },
   "actions": {
     "fold": "Fold",
@@ -51,6 +52,7 @@
     "call": "Call {{amount}}",
     "raise": "Raise",
     "raiseTo": "Raise to {{amount}}",
+    "bet": "Bet {{amount}}",
     "amount": "Raise amount",
     "half": "Half pot",
     "pot": "Pot",
@@ -77,6 +79,7 @@
       "check": "You check",
       "call": "You call {{amount}}",
       "raise": "You raise to {{amount}}",
+      "bet": "You bet {{amount}}",
       "allIn": "You are all-in",
       "show": "You show {{cards}} ({{hand}})",
       "returned": "Uncalled bet of {{amount}} returned to you",
@@ -90,6 +93,7 @@
       "check": "{{name}} checks",
       "call": "{{name}} calls {{amount}}",
       "raise": "{{name}} raises to {{amount}}",
+      "bet": "{{name}} bets {{amount}}",
       "allIn": "{{name}} is all-in",
       "show": "{{name}} shows {{cards}} ({{hand}})",
       "returned": "Uncalled bet of {{amount}} returned to {{name}}",

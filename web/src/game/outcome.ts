@@ -1,4 +1,4 @@
-import type { EngineEvent, LogEntry, SeatIndex } from '../engine/index.ts';
+import type { Action, EngineEvent, Hand, LogEntry, SeatIndex } from '../engine/index.ts';
 import type { HandCategory } from '../equity/index.ts';
 
 export interface HandResult {
@@ -8,7 +8,21 @@ export interface HandResult {
   amount: number;
 }
 
-export function actedLabel(event: Extract<EngineEvent, { type: 'acted' }>): LogEntry {
+export function isOpeningBet(hand: Hand, action: Action): boolean {
+  return action.kind === 'raise' && hand.bets[0] === 0 && hand.bets[1] === 0;
+}
+
+export function openingEntries(entries: LogEntry[], opens: boolean): LogEntry[] {
+  if (!opens) {
+    return entries;
+  }
+  return entries.map((entry) => (entry.key === 'raise' ? { ...entry, key: 'bet' } : entry));
+}
+
+export function actedLabel(
+  event: Extract<EngineEvent, { type: 'acted' }>,
+  opens: boolean,
+): LogEntry {
   if (event.allIn && event.action.kind !== 'fold') {
     return { key: 'allIn', params: {} };
   }
@@ -19,7 +33,7 @@ export function actedLabel(event: Extract<EngineEvent, { type: 'acted' }>): LogE
     case 'call':
       return { key: 'call', params: { amount: event.amount } };
     case 'raise':
-      return { key: 'raiseTo', params: { amount: event.action.to } };
+      return { key: opens ? 'bet' : 'raiseTo', params: { amount: event.action.to } };
   }
 }
 
@@ -60,4 +74,32 @@ export function awardedTo(events: EngineEvent[], seat: SeatIndex): number {
     }
   }
   return total;
+}
+
+export type SeatActions = [LogEntry | null, LogEntry | null];
+
+export interface StreetActions {
+  last: SeatActions;
+  closing: SeatActions;
+}
+
+export function streetActions(
+  previous: StreetActions,
+  events: EngineEvent[],
+  opens: boolean,
+): StreetActions {
+  const last: SeatActions = [...previous.last];
+  let closing: SeatActions = previous.closing;
+  for (const event of events) {
+    if (event.type === 'acted') {
+      last[event.seat] = actedLabel(event, opens);
+    } else if (event.type === 'streetDealt') {
+      if (last[0] !== null || last[1] !== null) {
+        closing = [last[0], last[1]];
+      }
+      last[0] = null;
+      last[1] = null;
+    }
+  }
+  return { last, closing };
 }

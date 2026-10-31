@@ -244,8 +244,11 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   the human or asks the bot to decide and applies its action after `botDelayMs`.
 - `Intent` is `fold`, `passive` (check or call) or `raise` with a target. `resolveIntent` turns it into a legal
   action: a raise is rounded and clamped into `legal.raise`, a fold becomes a check when checking is free.
-- `log` holds the `LogEntry` values of the session. `lastActions` holds one tag per seat for the current hand,
-  `{ key, params }` with `key` under `actions` (`fold`, `check`, `call`, `raiseTo`, `allIn`).
+- `log` holds the `LogEntry` values of the session. `lastActions` holds one tag per seat for the current street,
+  `{ key, params }` with `key` under `actions` (`fold`, `check`, `call`, `bet`, `raiseTo`, `allIn`); a raise
+  with no bet on the street is a `bet`, in the tags and in the log. Every `streetDealt` clears both tags, and
+  `closingActions` keeps the tags the last one cleared, the actions that closed the previous street. Both are
+  reset when a hand starts.
 - `result` is set when a hand completes: `winner` (null for a split), `category` of the shown hand or null,
   `showdown` and `amount`. `amount` is the pot collected, twice the smaller contribution, or each share for a
   split. It equals the `win` entry of the log; an uncalled bet is its own `returned` entry.
@@ -264,11 +267,13 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   Its `select` answers `math` without asking a client that has no `select`; when the client's `select` rejects or
   takes longer than 60 s, it falls back the same way and answers `math`.
 - `toViewModel(state, humanSeat)` returns the `ViewModel`: per seat the name, stack, street bet, button, whether
-  it is to act, the cards (`'back'` for the bot's cards until a showdown) and the last action tag; the board, pot,
-  blinds (from `rulesOf(mode).blinds`) and hand number; the `mode` (`cash` or `tournament`); `session` with
-  `hands`, `netBb` and `bbPer100` (one decimal, `bbPer100` null with no hands); the controls (`fold`, `passive`
-  with its amount, `raise` with `min`, `max` and the presets `halfPot`, `pot` and `allIn`, and `enabled`); the
-  result and the tournament winner.
+  it is to act, the cards (`'back'` for the bot's cards until a showdown), the last action tag and the closing
+  action tag; the board; `pot` as `{ collected, total }`, `collected` the chips of the previous streets and
+  `total` with the street bets; the blinds (from `rulesOf(mode).blinds`) and hand number; the `mode` (`cash` or
+  `tournament`); `session` with `hands`, `netBb` and `bbPer100` (one decimal, `bbPer100` null with no hands); the
+  controls (`fold`, `passive` with its amount, `raise` with `kind` (`bet` with no bet on the street, otherwise
+  `raise`), `min`, `max` and the presets `halfPot`, `pot` and `allIn`, and `enabled`); the result and the
+  tournament winner.
 - `SessionOptions.records` is `{ store, sessionId, now }`; without it nothing is recorded and `sessionId` in the
   state is null. `records/recorder.ts` collects the events of each hand from `beginHand` on and, when the hand
   completes, calls `store.add(handRecord(...))` without awaiting it; a rejection, a synchronous throw or a failing
@@ -306,8 +311,13 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 
 - Preact components render only the `ViewModel`, the session phase and the log; they call the session actions
   and hold no game rules.
-- Components: `App`, `StatusBar`, `HistoryMenu`, `StartScreen`, `Table`, `Seat`, `Card` (SVG), `Board`, `Pot`,
-  `ActionBar`, `BetSlider`, `HandLog`, `TournamentOver`, `SessionOver`.
+- Components: `App`, `StatusBar`, `HistoryMenu`, `StartScreen`, `Table`, `Seat`, `BetChips`, `DealerButton`,
+  `ActionBubble`, `Card` (SVG), `BoardRow`, `Board`, `Pot`, `ActionBar`, `BetSlider`, `HandLog`,
+  `TournamentOver`, `SessionOver`.
+- Hooks: `useSweep(bets, collected)` keeps half of the newly collected chips on each seat for `SWEEP_MS`
+  (300 ms) when a street closes, so the bets slide into the pot; new bets or a new hand show at once.
+  `useHeldActions(actions, closing, board)` keeps the closing action tags, and hides the thinking bubble, for
+  `HOLD_MS` (900 ms) after the board grows; a new action or a new hand shows at once.
 - The start screen offers a cash game (100 bb) and a tournament. In cash the status bar shows the blinds, the
   running result in bb and a leave button, enabled only between hands; the session-over dialog shows the result in
   bb, bb/100 and the hands, with play again and the export of the session. `signed` formats a bb value as sign
@@ -330,10 +340,12 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   is resolved by i18next from `count`.
 - Keyboard: `f` folds, `c` checks or calls, `r` raises, the arrow keys move the raise amount.
 - `data-testid` contract for e2e and contact sheets: `start-cash`, `start-tournament`, `blinds`,
-  `session-result`, `hand-number`, `leave`, `new-game`, `seat-<i>`, `stack-<i>` (with `data-stack`), `bet-<i>`, `action-<i>`, `thinking-<i>`, `card` (with
-  `data-card`), `card-back`, `board`, `pot` (with `data-amount`), `result`, `next-hand`, `fold`, `passive`,
-  `raise`, `raise-amount`, `preset-half`, `preset-pot`, `preset-allin`, `hand-log`, `coach`, `live-region`,
-  `tournament-over`, `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and
+  `session-result`, `hand-number`, `leave`, `new-game`, `seat-<i>`, `stack-<i>` (with `data-stack`), `bet-<i>`,
+  `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`, `bubble-aggressive` or `bubble-fold`),
+  `thinking-<i>`, `card` (with `data-card`), `card-back`, `board`, `pot` (with `data-amount` = total and
+  `data-collected`), `result`, `next-hand`, `fold`, `passive`, `raise`, `raise-amount`, `preset-half`,
+  `preset-pot`, `preset-allin`, `hand-log`, `coach`, `live-region`, `tournament-over`, `session-over`,
+  `session-summary`, `session-rate`, `play-again`, `export-json` and
   `export-text` (the session dialog, current session), and `export-all-json`, `export-all-text` and
   `clear-history` (the menu).
 
@@ -345,7 +357,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   to a fresh table, a reload mid-hand shows the start screen, a cash hand is played and left with one hand in the
   summary, and the hand history is exported, persists across a reload and is cleared. `layout.spec.ts`: the start
   screen, the table, the cash table, the session summary and a cash status bar with long values fit the viewport
-  without horizontal scroll.
+  without horizontal scroll. `table.spec.ts`: on the human's first turn the dealer button, both bets, the pot
+  and the board are inside the viewport on every project.
 - `e2e/contact.ts` (`npm run contact`) captures every view state of a seeded game on `phone` and `desktop` and
   composes one sheet per device into `e2e/contact/`.
 

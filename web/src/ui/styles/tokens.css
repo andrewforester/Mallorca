@@ -37,6 +37,8 @@
   --radius-medium: 12px;
   --radius-large: 20px;
   --radius-pill: 999px;
+  --sweep-duration: 300ms;
+  --sweep-distance: 56px;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -49,6 +51,15 @@
   --shadow-panel: 0 8px 22px rgba(0, 0, 0, 0.35);
   --shadow-glow: 0 0 24px rgba(240, 180, 100, 0.35);
   --card-width: 56px;
+  --color-amount-bg: rgba(10, 6, 3, 0.6);
+  --color-slot-border: rgba(246, 236, 218, 0.14);
+  --color-bubble-fold: rgba(30, 21, 14, 0.9);
+  --shadow-bubble: 0 6px 14px rgba(0, 0, 0, 0.45);
+  --shadow-dealer: 0 0 0 3px rgba(42, 26, 12, 0.35), 0 3px 6px rgba(0, 0, 0, 0.6);
+  --ring-turn: 0 0 0 2px var(--color-accent);
+  --chip-size-small: 22px;
+  --dealer-size: 28px;
+  --bubble-tail: 10px;
 }
 
 @media (prefers-color-scheme: dark) {

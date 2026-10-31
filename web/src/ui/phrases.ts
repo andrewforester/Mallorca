@@ -19,3 +19,18 @@ export function logLine(entry: LogEntry, names: [string, string], humanSeat: Sea
   const person = seat === humanSeat ? 'you' : 'other';
   return t(`log.${person}.${entry.key}`, { ...params, name: names[seat as SeatIndex] });
 }
+
+export type ActionKind = 'passive' | 'aggressive' | 'fold';
+
+const KINDS: Record<string, ActionKind> = {
+  check: 'passive',
+  call: 'passive',
+  bet: 'aggressive',
+  raiseTo: 'aggressive',
+  allIn: 'aggressive',
+  fold: 'fold',
+};
+
+export function actionKind(entry: LogEntry): ActionKind {
+  return KINDS[entry.key] ?? 'passive';
+}

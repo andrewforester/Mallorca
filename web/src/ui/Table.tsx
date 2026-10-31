@@ -1,11 +1,15 @@
 import type { Intent, LogEntry, Phase, SeatIndex, ViewModel } from '../game/index.ts';
 import { ActionBar } from './ActionBar.tsx';
-import { Board } from './Board.tsx';
+import { BetChips } from './BetChips.tsx';
+import { BoardRow } from './BoardRow.tsx';
+import { DealerButton } from './DealerButton.tsx';
 import { HandLog } from './HandLog.tsx';
 import { t } from './i18n.ts';
 import { handName } from './phrases.ts';
-import { Pot } from './Pot.tsx';
 import { Seat } from './Seat.tsx';
+import { useHeldActions } from './useHeldActions.ts';
+import type { HeldActions } from './useHeldActions.ts';
+import { useSweep } from './useSweep.ts';
 
 export interface TableProps {
   vm: ViewModel;
@@ -43,6 +47,24 @@ function chipsDirection(winner: SeatIndex | null, humanSeat: SeatIndex): string 
   return winner === humanSeat ? 'to-bottom' : 'to-top';
 }
 
+interface FeltSpotProps {
+  vm: ViewModel;
+  seat: SeatIndex;
+  side: 'top' | 'bottom';
+  bets: [number, number];
+}
+
+function FeltSpot({ vm, seat, side, bets }: FeltSpotProps) {
+  const view = vm.seats[seat];
+  const amount = bets[seat];
+  return (
+    <div class={`felt-spot felt-spot-${side}`}>
+      <span class="felt-spot-dealer">{view.isButton && <DealerButton />}</span>
+      <BetChips seat={seat} amount={amount} sweeping={amount !== view.bet} />
+    </div>
+  );
+}
+
 function Felt({
   vm,
   humanSeat,
@@ -52,12 +74,15 @@ function Felt({
   humanSeat: SeatIndex;
   showPot: boolean;
 }) {
+  const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
+  const bets = useSweep([vm.seats[0].bet, vm.seats[1].bet], vm.pot.collected);
   return (
     <div class="table-felt">
+      <FeltSpot vm={vm} seat={botSeat} side="top" bets={bets} />
       <div class="felt-plane">
-        {showPot && <Pot amount={vm.pot} />}
-        <Board cards={vm.board} />
+        <BoardRow pot={showPot ? vm.pot : null} board={vm.board} />
       </div>
+      <FeltSpot vm={vm} seat={humanSeat} side="bottom" bets={bets} />
       {vm.result !== null && (
         <span
           class={`result-chips result-chips-${chipsDirection(vm.result.winner, humanSeat)}`}
@@ -68,6 +93,15 @@ function Felt({
         </span>
       )}
     </div>
+  );
+}
+
+function useSeatActions(vm: ViewModel): HeldActions {
+  const [first, second] = vm.seats;
+  return useHeldActions(
+    [first.lastAction, second.lastAction],
+    [first.closingAction, second.closingAction],
+    vm.board.length,
   );
 }
 
@@ -112,7 +146,9 @@ export function Table({
   const text = resultText(vm, humanSeat);
   const raise = vm.controls.raise;
   const barKey = raise === null ? 'none' : `${raise.min}:${raise.max}`;
-  const thinking = botWaiting && vm.seats[botSeat].isToAct;
+  const [bot, human] = [vm.seats[botSeat], vm.seats[humanSeat]];
+  const held = useSeatActions(vm);
+  const thinking = botWaiting && bot.isToAct && !held.holding;
   const announcement = text ?? (thinking ? t('seat.thinking') : '');
   const winner = vm.result?.winner ?? null;
   return (
@@ -131,14 +167,16 @@ export function Table({
       )}
       <Seat
         index={botSeat}
-        view={vm.seats[botSeat]}
+        view={bot}
+        action={held.actions[botSeat]}
         thinking={thinking}
         winner={winner === botSeat}
         position="top"
       />
       <Seat
         index={humanSeat}
-        view={vm.seats[humanSeat]}
+        view={human}
+        action={held.actions[humanSeat]}
         thinking={false}
         winner={winner === humanSeat}
         position="bottom"

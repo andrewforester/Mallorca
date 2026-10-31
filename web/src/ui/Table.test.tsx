@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/preact';
+import { act, cleanup, render, screen } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fixtureResult, viewModel } from './fixtures.ts';
 import { Table } from './Table.tsx';
@@ -49,6 +49,27 @@ describe('Table result and announcements', () => {
     );
   });
 
+  it('puts the dealer button once on the felt beside the button seat bet', () => {
+    const { container } = table();
+    const dealers = screen.getAllByTestId('dealer-button');
+    expect(dealers.length).toBe(1);
+    const dealer = screen.getByTestId('dealer-button');
+    expect(dealer.getAttribute('role')).toBe('img');
+    expect(dealer.getAttribute('aria-label')).toBe('Dealer button');
+    expect(container.querySelector('.table-felt')?.contains(dealer)).toBe(true);
+    expect(dealer.closest('.felt-spot')?.contains(screen.getByTestId('bet-0'))).toBe(true);
+    expect(screen.getByTestId('seat-0').contains(dealer)).toBe(false);
+  });
+
+  it('puts the bets on the felt instead of the seat tags', () => {
+    const { container } = table();
+    expect(container.querySelector('.tag-bet')).toBeNull();
+    const felt = container.querySelector('.table-felt');
+    expect(felt?.contains(screen.getByTestId('bet-0'))).toBe(true);
+    expect(felt?.contains(screen.getByTestId('bet-1'))).toBe(true);
+    expect(screen.getByTestId('seat-1').contains(screen.getByTestId('action-1'))).toBe(true);
+  });
+
   it('marks the player seat active on their turn', () => {
     table();
     expect(screen.getByTestId('seat-0').classList.contains('seat-active')).toBe(true);
@@ -93,5 +114,51 @@ describe('Table result and announcements', () => {
     vm.seats[1].isToAct = true;
     table(vm, 'botThinking');
     expect(screen.getByTestId('live-region').textContent).toBe('Thinking…');
+  });
+
+  it('keeps the closing call on the bot seat for a moment after the next card', () => {
+    vi.useFakeTimers();
+    const flop = viewModel({ enabled: false });
+    flop.board = [48, 41, 25];
+    flop.seats[0].lastAction = { key: 'bet', params: { amount: 80 } };
+    flop.seats[1].lastAction = null;
+    const view = render(
+      <Table
+        vm={flop}
+        phase="botThinking"
+        humanSeat={0}
+        log={[]}
+        onAct={vi.fn()}
+        onNextHand={vi.fn()}
+      />,
+    );
+    const turn = viewModel({ enabled: false });
+    turn.board = [48, 41, 25, 10];
+    turn.seats[0].isToAct = false;
+    turn.seats[1].isToAct = true;
+    turn.seats[0].lastAction = null;
+    turn.seats[1].lastAction = null;
+    turn.seats[0].closingAction = { key: 'bet', params: { amount: 80 } };
+    turn.seats[1].closingAction = { key: 'call', params: { amount: 80 } };
+    view.rerender(
+      <Table
+        vm={turn}
+        phase="botThinking"
+        humanSeat={0}
+        log={[]}
+        onAct={vi.fn()}
+        onNextHand={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId('action-1').textContent).toBe('Call 80');
+    expect(screen.getByTestId('action-0').textContent).toBe('Bet 80');
+    expect(screen.queryByTestId('thinking-1')).toBeNull();
+    act(() => {
+      vi.advanceTimersByTime(900);
+    });
+    expect(screen.queryByTestId('action-1')).toBeNull();
+    expect(screen.queryByTestId('action-0')).toBeNull();
+    expect(screen.getByTestId('thinking-1')).not.toBeNull();
+    vi.useRealTimers();
   });
 });
