@@ -33,11 +33,11 @@ async function start() {
 }
 
 describe('her face at the table', () => {
-  it('shows the still portrait in her seat when WebGL is missing', async () => {
+  it('shows the still portrait in her chair when WebGL is missing', async () => {
     const session = await start();
     const seat = screen.getByTestId('face-seat');
     expect(seat.dataset.face).toBe('portrait');
-    expect(seat.closest('[data-testid="seat-1"]')).not.toBeNull();
+    expect(seat.closest('.table-layout')).not.toBeNull();
     expect(seat.querySelector('img')?.getAttribute('src')).toContain('avatar/portrait.webp');
     expect(session.getState().face.on).toBe(true);
   });

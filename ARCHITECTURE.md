@@ -576,7 +576,7 @@ text)` (the caller's localized label) append the player's line at once and call 
 - `Scene` wraps the start screen and the table: the attic photo (`ui/scene/*.webp`, a portrait and a landscape plate
   over a blurred copy as the background) under a vignette, or with `simple` a flat felt without the photo (class
   `scene-simple`); `dimmed` blurs the plate behind the start screen. `ui/scene.ts` holds the `PlateGeometry` of each
-  plate (`LANDSCAPE`, `PORTRAIT`, `SIMPLE_LANDSCAPE`, `SIMPLE_PORTRAIT`: focus point, felt tilt, seat and board
+  plate (`LANDSCAPE`, `PORTRAIT`, `SIMPLE_LANDSCAPE`, `SIMPLE_PORTRAIT`: focus point, felt tilt, seat, rail and board
   heights, card size), which `geometryStyle` turns into the CSS variables the layout reads.
 - Preferences: `ui/preferences.ts` reads and writes `localStorage` (`mallorca.tableStyle` `room` or `simple`,
   `mallorca.autoNext` and `mallorca.sound`, on unless stored as `off`) and falls back to the default when storage
@@ -646,16 +646,18 @@ text)` (the caller's localized label) append the player's line at once and call 
   `App` calls on the click of a start button. The `mallorca.sound` preference (`readSound`, `writeSound`; on unless
   stored as `off`) is switched by the status bar button `sound-toggle` (`aria-pressed`) and the menu checkbox
   `sound`; off silences every cue.
-- Live face (`ui/avatar/`): `FaceSeat` takes the opponent's seat area above her plaque, head and shoulders behind the
-  table rail, on every layout. With the face preference on (`mallorca.face`, on unless stored `off`, the menu
-  checkbox `face`) it shows the still `portrait.webp` at once and, when `canRender()` finds WebGL and a device that
-  is not weak (more than 2 cores and more than 2 GB when the browser tells), imports `ui/avatar/avatar.ts` on demand,
-  so three.js and `mallorca.glb` are a separate chunk and a request made only then. The `Avatar` renders the model
-  over 52 ARKit blendshapes and 15 Oculus visemes: every frame it eases toward `faceNow()` (read about ten times a
-  second), plays new `FaceCue`s once (pulses, gaze with a glance back), blinks, saccades and glances away from
-  `idle`, poses the head from the shown PAD and breathes; `thinking` turns her gaze away to think. It pauses while
-  the document is hidden, calms the idle motion under `prefers-reduced-motion`, and falls back to the portrait when
-  the model fails to load or WebGL is lost. Off, the seat is the plaque as before.
+- Live face (`ui/avatar/`): `FaceSeat` seats her in the chair of the photo: its bottom edge is the far table rail
+  (`railY` of the `PlateGeometry`, `--rail-y`), so her body goes on below the rail and her plaque and cards lie in
+  front of her; her action bubble moves to the right of the plaque. With the face preference on (`mallorca.face`, on
+  unless stored `off`, the menu checkbox `face`) it shows the still `portrait.webp` at once and, when `canRender()`
+  finds hardware WebGL (a software renderer such as SwiftShader or llvmpipe counts as weak) on a device that is not
+  weak (more than 2 cores and more than 2 GB when the browser tells), imports `ui/avatar/live.ts` on demand, so
+  three.js and `mallorca.glb` are a separate chunk and a request made only then. The `Avatar` renders the model over
+  52 ARKit blendshapes and 15 Oculus visemes; `Motion` (`motion.ts`, no WebGL) eases toward `faceNow()` (read about
+  ten times a second), plays new `FaceCue`s once (pulses, gaze with a glance back), blinks, saccades and glances
+  away from `idle`, poses the head from the shown PAD and breathes; `thinking` turns her gaze away to think. It
+  pauses while the document is hidden, calms the idle motion under `prefers-reduced-motion`, and falls back to the
+  portrait when the model fails to load or WebGL is lost. Off, there is no `face-seat` and the plaque is as before.
 - Voice (`ui/avatar/voice.ts`): the `mallorca.voice` preference (off unless stored `on`, the menu checkbox `voice`)
   speaks each new line of hers with the browser's `speechSynthesis`, an English voice from a preferred list, the
   `prosody` of `faceNow()`, and her lips follow `speechOf` resynced on every word boundary. Without
@@ -674,7 +676,7 @@ text)` (the caller's localized label) append the player's line at once and call 
   dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu). Table talk adds
   `bubble-mallorca`, `bubble-player`, `talk-region`, `chat-panel`, `chat-open`, `chat-sheet`, `chat-close`,
   `chat-line`, `chat-input`, `chat-send`, `quick-<id>`, `table-talk` and `tells`. The face adds `face-seat` (with
-  `data-face` = `portrait`, `live` or `off`), `face` and `voice`.
+  `data-face` = `portrait` or `live`), `face` and `voice`.
 
 ## Table talk server
 
@@ -738,9 +740,10 @@ bounded by the clamps above.
   it is a full-height sheet on a 900 × 500 screen.
 - `scene.spec.ts`: the table stays playable on the felt colour when the plates fail to load, the showdown result
   covers neither shown hand nor the board, the simple table is flat, loads no plate and is remembered across a reload,
-  and the deal animation follows `prefers-reduced-motion`. `face.spec.ts`: the live face mounts on desktop and
-  phone and loads its chunk only then, falls back to the portrait without WebGL, and can be turned off and stays
-  off across a reload. `solver.spec.ts`: the `cfr` opponent loads the module and
+  and the deal animation follows `prefers-reduced-motion`. `face.spec.ts`: headless Chromium renders WebGL in software, so
+  her seat shows the portrait and never requests the model; without WebGL it is the portrait too; the face can be
+  turned off and stays off across a reload. The live face is checked on the contact sheets, which `npm run contact`
+  takes with the Metal renderer on macOS. `solver.spec.ts`: the `cfr` opponent loads the module and
   its strategy in the worker and plays cash hands recorded as `cfr`, `cfr-v2` loads its own file on desktop and is
   recorded as `v2-10`, and a phone is not offered `cfr-v2`. `arena.spec.ts`: the published arena page lists the runs,
   a run with hands opens and shows a pair as PokerStars text. `coach.spec.ts`: in coach mode the hint, both grids

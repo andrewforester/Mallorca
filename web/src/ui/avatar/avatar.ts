@@ -4,9 +4,13 @@ import type { Angles, Pose } from './motion.ts';
 
 const BONES = ['Head', 'Neck', 'Spine2', 'LeftEye', 'RightEye', 'LeftShoulder', 'RightShoulder'];
 const ARMS: ReadonlyArray<[string, Angles]> = [
-  ['LeftArm', [0, 1.05, 0]],
-  ['RightArm', [0, -1.05, 0]],
+  ['LeftArm', [0, 0.85, 0.25]],
+  ['RightArm', [0, -0.85, 0.25]],
 ];
+
+const FOV = 14;
+const ABOVE_HEAD = 0.25;
+const BELOW_HEAD = 0.37;
 
 const biped = ([pitch, yaw, roll]: Angles): Angles => [yaw, roll, pitch];
 
@@ -14,7 +18,7 @@ export class Avatar {
   readonly canvas: HTMLCanvasElement;
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
-  private readonly camera = new THREE.PerspectiveCamera(20, 1, 0.1, 20);
+  private readonly camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 20);
   private meshes: THREE.Mesh[] = [];
   private bones: Record<string, THREE.Bone> = {};
   private base: Record<string, THREE.Quaternion> = {};
@@ -68,8 +72,11 @@ export class Avatar {
   private frame(): void {
     const head = new THREE.Vector3();
     this.bones.Head?.getWorldPosition(head);
-    this.camera.position.set(0, head.y + 0.06, 1.6);
-    this.camera.lookAt(0, head.y - 0.02, 0);
+    const centre = head.y + (ABOVE_HEAD - BELOW_HEAD) / 2;
+    const span = ABOVE_HEAD + BELOW_HEAD;
+    const distance = span / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2));
+    this.camera.position.set(0, centre + 0.04, distance);
+    this.camera.lookAt(0, centre, 0);
   }
 
   resize(width: number, height: number): void {

@@ -947,6 +947,7 @@ button {
   --focus-y: var(--p-focus-y);
   --felt-tilt: var(--p-felt-tilt);
   --opponent-y: var(--p-opponent-y);
+  --rail-y: var(--p-rail-y);
   --board-y: var(--p-board-y);
   --hero-bottom: var(--p-hero-bottom);
   --card-scale: var(--p-card-scale);
@@ -998,6 +999,7 @@ button {
     --focus-y: var(--l-focus-y);
     --felt-tilt: var(--l-felt-tilt);
     --opponent-y: var(--l-opponent-y);
+    --rail-y: var(--l-rail-y);
     --board-y: var(--l-board-y);
     --hero-bottom: var(--l-hero-bottom);
     --card-scale: var(--l-card-scale);
@@ -1931,18 +1933,21 @@ button {
 
 .face-seat {
   position: absolute;
-  bottom: calc(100% - var(--face-overlap));
+  bottom: calc(100% - var(--rail-y));
   left: 50%;
-  width: var(--face-width);
-  aspect-ratio: 4 / 5;
+  z-index: 1;
+  height: var(--face-height);
+  aspect-ratio: 7 / 6;
   transform: translateX(-50%);
   pointer-events: none;
-  mask-image: linear-gradient(to bottom, #000 70%, transparent 98%);
+  mask-image: linear-gradient(to bottom, #000 96%, transparent);
+  --face-height: clamp(150px, 56vw, 340px);
 }
 
-.seat-top:has(.face-seat) {
-  --face-width: clamp(112px, max(calc(var(--card-width) * 4), 26vh), 300px);
-  --face-overlap: calc(var(--card-width) * 1.1);
+@media (min-aspect-ratio: 1/1) {
+  .face-seat {
+    --face-height: clamp(150px, 41vh, 460px);
+  }
 }
 
 .face-portrait,
@@ -1973,7 +1978,7 @@ button {
   opacity: 1;
 }
 
-.seat-top:has(.face-seat) .seat-bubble {
+.table-layout:has(.face-seat) .seat-top .seat-bubble {
   bottom: auto;
   top: 50%;
   left: calc(100% + var(--space-2));
