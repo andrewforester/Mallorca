@@ -21,9 +21,14 @@ Done when (from the issue):
   That row is the input for lever 7 (deeper blueprints).
 - **Strategy.** `v2` checkpoint 10, the play file `solver/data/v2/v2-10-play.mlcs` of the main checkout, through
   `cfr:<play file>` as in the arena. The version string in reports is the file name.
-- **Variance reduction.** All-in EV adjustment only. After about 2000 hands we measure the real standard deviation
-  and project the hands needed for ±10. If the projection is more than three nights, AIVAT becomes a separate
-  issue; it is not part of this task.
+- **Variance reduction.** Two estimates besides the raw one. All-in EV (ours). And the baseline that Slumbot
+  itself returns: `baseline_winnings` is what Slumbot would have won in our seat with the same cards against
+  itself, so `winnings - baseline_winnings` is a duplicate-style estimate. It is unbiased when both positions are
+  played equally often, because Slumbot against itself nets zero over a pair of positions; Slumbot alternates
+  `client_pos` every hand, and the report shows the count per position. The headline figure for the ±10 target is
+  the baseline-adjusted one; the raw and all-in EV figures are always reported next to it. After about 2000 hands
+  we measure the standard deviations and project the hands needed for ±10. If the projection is more than three
+  nights, AIVAT becomes a separate issue; it is not part of this task.
 - **Credentials.** Optional `SLUMBOT_USERNAME` and `SLUMBOT_PASSWORD` in the environment; without them the runner
   plays anonymously. Credentials and tokens are never written to disk or logs.
 - **Politeness.** One request at a time, never in parallel, with a pause between hands (`--delay-ms`, default 200).
@@ -35,14 +40,16 @@ Done when (from the issue):
 - `login` `{ username, password }` returns `{ token }`.
 - `new_hand` `{ token? }` starts a hand. If Slumbot acts first, its action is already in the response.
 - `act` `{ token, incr }` sends one action.
-- Responses carry `action`, `client_pos` (0 is the big blind, 1 is the small blind and the button), `hole_cards`,
-  `board`, `token`, and at the end of the hand `winnings` (chips of the client) and, when shown, the cards of
-  Slumbot. `error_msg` means the request was rejected. The client always uses the newest token it received.
+- Responses carry `old_action`, `action`, `client_pos` (0 is the big blind, 1 is the small blind and the button),
+  `hole_cards`, `board`, `token`. At the end of the hand they add `bot_hole_cards` (always, also after a fold),
+  `winnings` (chips of the client), `won_pot`, `baseline_winnings`, `session_num_hands`, `session_total` and
+  `session_baseline_total`. `error_msg` means the request was rejected. The client always uses the newest token
+  it received.
 - Action string: `k` check, `c` call, `f` fold, `b<n>` bet or raise to `n` chips put in on the current street
   (preflop includes the blind), `/` between streets. After an all-in the remaining streets may be empty.
 
-The exact field name for the cards of Slumbot and whether they are shown when nobody reaches showdown are taken
-from the first recorded responses; the fixtures pin them.
+These fields were checked on six live hands (2026-10-31); an action string may end in `/` when a street has just
+been dealt (`b200c/kk/kk/`). The recorded hands, token removed, become the test fixtures.
 
 ## Architecture
 
@@ -111,8 +118,9 @@ One JSON object per hand:
     "action": "b200c/kb400f",
     "holeCards": ["Ah", "Kd"],
     "board": ["Qs", "7h", "2c"],
-    "opponentCards": ["9c", "9d"] | null,
+    "opponentCards": ["9c", "9d"],
     "winnings": -400,
+    "baselineWinnings": 200,
     "seed": 1,
     "handIndex": 17
   }
@@ -120,8 +128,7 @@ One JSON object per hand:
 ```
 
 `record` is a `HandRecord` with `sessionId` `external-<run name>`, `names` `['cfr', 'slumbot']`, `humanSeat` null,
-`bot` `{ id: 'cfr-vs-slumbot', version: <strategy file name> }`. When the cards of Slumbot are unknown its hole
-cards in `record` are the fillers; `external.opponentCards` is null and says so. The viewer of the arena can show
+`bot` `{ id: 'cfr-vs-slumbot', version: <strategy file name> }`. The viewer of the arena can show
 these records; it is not changed in this task.
 
 ### Report
@@ -129,16 +136,17 @@ these records; it is not changed in this task.
 `estimate` prints one line in the arena format and writes a JSON report next to the log:
 
 ```
-cfr-v2-10 vs slumbot (200 bb): +12.3 ± 9.8 bb/100 over 41000 hands, all-in EV +10.1 ± 8.9
+cfr-v2-10 vs slumbot (200 bb): baseline +12.3 ± 6.1, all-in EV +10.1 ± 14.9, raw +11.0 ± 17.0 bb/100 over 41000 hands
 ```
 
-The report holds `opponent`, `strategy`, `stackBb` (200), `hands`, `bbPer100`, `ci95`, `allInEvBbPer100`,
-`allInEvCi95`, `sdPerHand`, `handsFor10`, `commit` and `handsFile`. The report is a pure function of the log, so a
+The report holds `opponent`, `strategy`, `stackBb` (200), `hands`, `abandoned`, `handsByPosition`
+(`{ bigBlind, button }`), and for each of `raw`, `allInEv` and `baseline` an object `{ bbPer100, ci95, sdPerHand,
+handsFor10 }`, plus `commit` and `handsFile`. The report is a pure function of the log, so a
 rerun with `--report` gives the same numbers.
 
 ### All-in EV
 
-When both players are all in before the river and the cards of Slumbot are known, the net of the hand is replaced
+When both players are all in before the river, the net of the hand is replaced
 by its expectation over the remaining board: `pot share * equity - committed`, with the equity of seat 0 enumerated
 exactly over every runout with `pheEvaluator` (at most 1,712,304 boards preflop, 990 on the flop, 44 on the turn),
 ties split. Exact enumeration keeps the report deterministic. Hands without such an all-in keep their real net.
