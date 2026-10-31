@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
-import { SHIPPED_STRATEGIES, WASM_URL, loadCfrModel } from './index.ts';
+import { SHIPPED_STRATEGIES, WASM_URL, loadCfrModel } from './strategies.ts';
 
 describe('SHIPPED_STRATEGIES', () => {
   it('names each shipped blueprint with its file and the id written into hand records', () => {

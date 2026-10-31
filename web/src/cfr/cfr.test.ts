@@ -7,8 +7,10 @@ import type { Action, LegalActions, Seat, SeatIndex } from '../engine/index.ts';
 import { isLegal, playToEnd, startHandWith } from '../engine/index.ts';
 import type { Observation } from '../brains/index.ts';
 import { toObservations } from '../brains/index.ts';
-import type { CfrModel } from './index.ts';
-import { SHIPPED_STRATEGIES, WASM_URL, createCfrBrain, createCfrModel, inflate } from './index.ts';
+import { createCfrBrain } from './brain.ts';
+import type { CfrModel } from './model.ts';
+import { createCfrModel, inflate } from './model.ts';
+import { SHIPPED_STRATEGIES, WASM_URL } from './strategies.ts';
 
 const wasm = readFileSync(WASM_URL);
 const strategy = readFileSync(SHIPPED_STRATEGIES.cfr.url);
