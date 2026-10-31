@@ -6,6 +6,7 @@ export interface Hand {
   villain: string | null;
   board: readonly [string, string, string];
   stackBb?: number;
+  line?: readonly string[];
 }
 
 export type Beat =
@@ -14,7 +15,7 @@ export type Beat =
   | { at: number; do: 'pot'; potBb: number; investedBb: number }
   | { at: number; do: 'reveal' }
   | { at: number; do: 'oppBet'; sizeBb: number; potBb: number; raise?: boolean }
-  | { at: number; do: 'narrow'; top: number }
+  | { at: number; do: 'narrow'; after: number }
   | { at: number; do: 'result'; netBb: number; lastEquity?: number }
   | { at: number; do: 'bluff'; succeeded: boolean }
   | { at: number; do: 'mistake'; costBb: number }
@@ -195,10 +196,27 @@ export const SCENES: readonly Scene[] = [
     title: 'Рейз на топ-пару',
     hint: 'Король-дама на короле, её ставку рейзят, потом ставят снова',
     watch:
-      'Против случайной руки топ-пара выглядит как 86%. Рейз соперника сужает его диапазон к сильным рукам (пока грубо: верхние 8% по силе на доске), эквити падает до 49%, приходят удивление, разочарование и страх. Сам рейз воспринимается как вызов: у неуступчивых злость, у тревожных страх. Второй рейз за сессию злит сильнее первого.',
+      'Против случайной руки топ-пара выглядит как 87%. Рейз соперника сужает его диапазон по блупринту V1, тем же расчётом, что в игре: сеты и две пары весят больше, но дро и блефы остаются, поэтому эквити падает только до 74%. Для свинга (порог 20%) этого мало: удивления и разочарования нет, растёт страх. Ставка на тёрне сужает его ещё раз, до 63%. Сам рейз воспринимается как вызов: у неуступчивых злость, у тревожных страх. Второй рейз за сессию злит сильнее первого.',
     length: 12.5,
     moment: 4.4,
-    hands: [{ hero: 'Kh Qd', villain: null, board: ['Kc 8d 4s', '8h', '2c'] }],
+    hands: [
+      {
+        hero: 'Kh Qd',
+        villain: null,
+        board: ['Kc 8d 4s', '8h', '2c'],
+        line: [
+          'him raise 3',
+          'her call',
+          'flop',
+          'her raise 4',
+          'him raise 14',
+          'her call',
+          'turn',
+          'her check',
+          'him raise 25',
+        ],
+      },
+    ],
     beats: [
       { at: 0, do: 'deal', potBb: 6, investedBb: 3 },
       { at: 0, do: 'gaze', target: 'cards' },
@@ -209,7 +227,7 @@ export const SCENES: readonly Scene[] = [
       { at: 2.6, do: 'pot', potBb: 10, investedBb: 7 },
       { at: 3.6, do: 'player', text: 'Raise to fourteen.' },
       { at: 3.6, do: 'oppBet', sizeBb: 14, potBb: 24, raise: true },
-      { at: 3.6, do: 'narrow', top: 0.08 },
+      { at: 3.6, do: 'narrow', after: 5 },
       { at: 4.6, do: 'gaze', target: 'think' },
       { at: 6.4, do: 'gaze', target: 'player' },
       { at: 6.6, do: 'say', text: 'Call.' },
@@ -217,7 +235,7 @@ export const SCENES: readonly Scene[] = [
       { at: 7.8, do: 'street', street: 'turn' },
       { at: 8.6, do: 'player', text: 'Twenty five.' },
       { at: 8.6, do: 'oppBet', sizeBb: 25, potBb: 56 },
-      { at: 8.6, do: 'narrow', top: 0.15 },
+      { at: 8.6, do: 'narrow', after: 9 },
       { at: 9.4, do: 'gaze', target: 'think' },
       { at: 11, do: 'gaze', target: 'player' },
       { at: 11.2, do: 'say', text: 'Fold.' },

@@ -10,6 +10,7 @@ import { ANCHORS, PULSE_FACES, blendOf, faceOf, shaped } from './face/anchors.ts
 import { Avatar } from './face/avatar.ts';
 import { feltPadOf, maskOf, pulsesFor, shownPadOf } from './face/expression.ts';
 import { visemesOf } from './face/visemes.ts';
+import { loadBlueprint } from './scenes/blueprint.ts';
 import { createRunner } from './scenes/runner.ts';
 import type { RunnerHooks } from './scenes/runner.ts';
 import { SCENES } from './scenes/scenes.ts';
@@ -133,7 +134,10 @@ const cardEl = (c: number) => {
   return wrap.querySelector('.card') as HTMLElement;
 };
 
-const runner = createRunner(engine, hooks, () => mulberry32(seed + 1));
+const ranges = await loadBlueprint(
+  async (url) => new Uint8Array(await (await fetch(url)).arrayBuffer()),
+);
+const runner = createRunner(engine, hooks, () => mulberry32(seed + 1), ranges ?? undefined);
 
 function resetAll(): void {
   engine.reset();
