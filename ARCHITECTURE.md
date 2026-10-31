@@ -251,7 +251,9 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   sampling does not narrow it. `spot(legal)` is the node `decide` would sample from, without moving the bot:
   `moves` are the real actions of the node's tree actions under `legal`, `grid` holds 1326 rows of their
   probabilities (0 for pairs that touch the board or the bot's cards), and `approximate` is true after a resync or
-  an off-tree size taken as a call. Both are null without a hand, a node or a live bot. In Rust they are
+  an off-tree size taken as a call. Facing a bet after a resync it names the facing node, although `decide` may
+  then sample from a check node with the probability of the bet-size mapping; with a small bet already taken as a
+  street-closing call there is no spot. Both are null without a hand, a node or a live bot. In Rust they are
   `Bot::range`, `Bot::spot` and `Bot::strategy_grid` over `Abstraction::buckets`, which buckets every pair of a board
   at once and equals the per-pair `bucket`; the ABI exports `bot_range`, `bot_spot` (`[approximate, n, kind, to, ...]`)
   and `bot_spot_grid`, each a pointer into a buffer of the seat, valid until the next call on it.

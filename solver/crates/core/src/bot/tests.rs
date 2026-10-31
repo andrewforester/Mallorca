@@ -860,3 +860,22 @@ fn no_spot_without_a_node() {
     assert!(bot.spot(model(), &facing_blind(20, 400)).is_none());
     assert!(Bot::new().spot(model(), &facing_blind(20, 400)).is_none());
 }
+
+#[test]
+fn a_facing_resync_spots_the_facing_node() {
+    let mut bot = started(false, [400, 400], [10, 20], [0, 5]);
+    bot.acted(model(), false, Move::Check, 0.3);
+    bot.acted(model(), false, Move::RaiseTo(100), 0.3);
+    assert_eq!(bot.cursor(), None);
+    let legal = Legal {
+        fold: true,
+        check: false,
+        call: Some(80),
+        raise: Some((180, 380)),
+    };
+    let spot = bot.spot(model(), &legal).unwrap();
+    assert!(spot.approximate);
+    let node = model().spot(spot.node).unwrap();
+    assert!(node.to_call() > 0);
+    assert_eq!(node.seat, bot.hand.as_ref().unwrap().hero);
+}
