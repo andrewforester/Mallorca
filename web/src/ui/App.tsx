@@ -5,6 +5,9 @@ import { HandLogDrawer } from './HandLogDrawer.tsx';
 import { HistoryMenu } from './HistoryMenu.tsx';
 import { Scene } from './Scene.tsx';
 import { SessionOver } from './SessionOver.tsx';
+import { silentPlayer } from './sound/player.ts';
+import type { SoundPlayer } from './sound/player.ts';
+import { useSoundCues } from './sound/useSoundCues.ts';
 import { Settings } from './Settings.tsx';
 import { StartScreen } from './StartScreen.tsx';
 import { StatusBar } from './StatusBar.tsx';
@@ -22,6 +25,7 @@ export interface AppProps {
   onLeaveTonight: () => void;
   farewell?: boolean;
   autoNext?: boolean;
+  player?: SoundPlayer;
 }
 
 function useSessionState(session: Session) {
@@ -51,11 +55,29 @@ function useLogDrawer(phase: Phase) {
   return { open: open && !ended, toggle, close, flip, dismiss };
 }
 
+type UnlockingPreferences = Preferences & { unlock: () => void };
+
+function useUnlockingPreferences(player: SoundPlayer): UnlockingPreferences {
+  const preferences = usePreferences();
+  return {
+    ...preferences,
+    unlock: () => {
+      if (preferences.sound) player.unlock();
+    },
+    toggleSound: () => {
+      if (!preferences.sound) player.unlock();
+      preferences.toggleSound();
+    },
+  };
+}
+
 export function App(props: AppProps) {
   const { session, humanSeat } = props;
   const state = useSessionState(session);
-  const preferences = usePreferences();
+  const player = props.player ?? silentPlayer;
+  const preferences = useUnlockingPreferences(player);
   const drawer = useLogDrawer(state.phase);
+  useSoundCues(session, player, preferences.sound);
   const vm = state.phase === 'idle' ? null : toViewModel(state, humanSeat);
   const handOver = state.phase === 'handOver' ? vm : null;
   const autoNextMs = useAutoNext(
@@ -69,11 +91,17 @@ export function App(props: AppProps) {
         seed={state.seed}
         simple={preferences.simple}
         farewell={props.farewell ?? false}
-        onStart={(mode, opponent) => void session.getState().start(mode, opponent)}
+        onStart={(mode, opponent) => {
+          preferences.unlock();
+          void session.getState().start(mode, opponent);
+        }}
       />
     );
   }
-  const act = (intent: Intent) => void session.getState().act(intent);
+  const act = (intent: Intent) => {
+    preferences.unlock();
+    void session.getState().act(intent);
+  };
   return (
     <Scene simple={preferences.simple}>
       <div class="app">
@@ -118,6 +146,8 @@ function Header({ app, vm, seed, drawer, preferences }: HeaderProps) {
       logOpen={drawer.open}
       logToggle={drawer.toggle}
       onToggleLog={drawer.flip}
+      sound={preferences.sound}
+      onToggleSound={preferences.toggleSound}
     >
       <HistoryMenu seed={seed} store={app.store} onNewGame={app.onNewGame} onOpen={drawer.dismiss}>
         <Settings preferences={preferences} />

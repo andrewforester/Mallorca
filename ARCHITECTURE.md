@@ -343,13 +343,22 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   temporary anchor, the object URL revoked after the click) with `mallorca-<sessionId>.json|txt` or
   `mallorca-history.json|txt`; store errors are ignored. Plural copy such as `session.summary_one` and `_other`
   is resolved by i18next from `count`.
+- Sound lives in `ui/sound/`: `cues.ts` maps new log entries and phase changes to cue names (`cuesFor`,
+  `turnCue`), `player.ts` is the `SoundPlayer` interface with a Web Audio synthesizer (`createSynthPlayer`, no
+  audio files) and `silentPlayer`, and `useSoundCues.ts` watches the session store and plays the cues of each
+  update, 120 ms apart; it starts from the log at mount and ignores a shrinking log, so nothing old is replayed.
+  `main.tsx` creates one player and passes it to every `App`; no `AudioContext` exists before `unlock()`, which
+  `App` calls on the click of a start button. The `mallorca.sound` preference (`readSound`, `writeSound`; on unless
+  stored as `off`) is switched by the status bar button `sound-toggle` (`aria-pressed`) and the menu checkbox
+  `sound`; off silences every cue.
 - Keyboard: `f` folds, `c` checks or calls, `r` raises, the arrow keys move the raise amount.
 - `data-testid` contract for e2e and contact sheets: `start-cash`, `start-tournament`, `blinds`,
   `session-result`, `hand-number`, `leave`, `new-game`, `seat-<i>`, `stack-<i>` (with `data-stack`), `bet-<i>`,
   `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`, `bubble-aggressive` or `bubble-fold`),
   `thinking-<i>`, `card` (with `data-card`), `card-back`, `board`, `pot` (with `data-amount` = total and
   `data-collected`), `result`, `next-hand`, `fold`, `passive`, `raise`, `raise-amount`, `preset-half`,
-  `preset-pot`, `preset-allin`, `hand-log-toggle`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`,
+  `preset-pot`, `preset-allin`, `hand-log-toggle`, `sound-toggle`, `sound`, `hand-log`, `hand-log-close`,
+  `hand-log-scrim`, `coach`,
   `live-region`, `tournament-over`, `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and
   `export-text` (the session dialog, current session), and `export-all-json`, `export-all-text` and
   `clear-history` (the menu).

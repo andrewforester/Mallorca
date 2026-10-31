@@ -10,7 +10,70 @@ export interface StatusBarProps {
   logOpen: boolean;
   logToggle: Ref<HTMLButtonElement>;
   onToggleLog: () => void;
+  sound: boolean;
+  onToggleSound: () => void;
   children: ComponentChildren;
+}
+
+function SoundToggle({ sound, onToggle }: { sound: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      class="log-toggle glass pill sound-toggle"
+      data-testid="sound-toggle"
+      aria-label={t('status.sound')}
+      aria-pressed={sound}
+      onClick={onToggle}
+    >
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+        <path
+          d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+        <path
+          d={sound ? 'M15.5 9a4 4 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11' : 'M16 9.5l5 5M21 9.5l-5 5'}
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+    </button>
+  );
+}
+
+interface LogToggleProps {
+  open: boolean;
+  toggle: Ref<HTMLButtonElement>;
+  onToggle: () => void;
+}
+
+function LogToggle({ open, toggle, onToggle }: LogToggleProps) {
+  return (
+    <button
+      type="button"
+      class="log-toggle glass pill"
+      data-testid="hand-log-toggle"
+      aria-label={t('log.open')}
+      aria-expanded={open}
+      aria-controls="hand-log"
+      ref={toggle}
+      onClick={onToggle}
+    >
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+        <path
+          d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+    </button>
+  );
 }
 
 export function StatusBar({
@@ -20,6 +83,8 @@ export function StatusBar({
   logOpen,
   logToggle,
   onToggleLog,
+  sound,
+  onToggleSound,
   children,
 }: StatusBarProps) {
   const cash = vm.mode === 'cash';
@@ -48,26 +113,8 @@ export function StatusBar({
           {t('status.leave')}
         </button>
       )}
-      <button
-        type="button"
-        class="log-toggle glass pill"
-        data-testid="hand-log-toggle"
-        aria-label={t('log.open')}
-        aria-expanded={logOpen}
-        aria-controls="hand-log"
-        ref={logToggle}
-        onClick={onToggleLog}
-      >
-        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-          <path
-            d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-        </svg>
-      </button>
+      <SoundToggle sound={sound} onToggle={onToggleSound} />
+      <LogToggle open={logOpen} toggle={logToggle} onToggle={onToggleLog} />
       {children}
     </header>
   );

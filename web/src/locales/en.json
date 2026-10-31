@@ -24,7 +24,8 @@
     "result": "{{sign}}{{bb}} bb",
     "leave": "Leave table",
     "simpleTable": "Simple table",
-    "autoNext": "Auto next hand"
+    "autoNext": "Auto next hand",
+    "sound": "Sound"
   },
   "seat": {
     "you": "You",
