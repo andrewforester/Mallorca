@@ -1,3 +1,4 @@
+mod decision;
 mod range;
 mod spot;
 mod style;
@@ -10,6 +11,7 @@ use crate::abstraction::Abstraction;
 use crate::cards::Card;
 use crate::strategy::{StrategyError, StrategyFile};
 use crate::tree::{ActionKind, Node, NodeId, Street};
+pub use decision::DecisionView;
 use style::choose;
 pub use style::{reweight, sample_weighted, size_position, Situation, Style};
 use translate::{fraction, nearest, pseudo_harmonic, scaled_raise};
@@ -175,6 +177,7 @@ impl Hand {
 pub struct Bot {
     hand: Option<Hand>,
     style: Style,
+    last: Option<DecisionView>,
 }
 
 impl Bot {
@@ -182,6 +185,7 @@ impl Bot {
         Bot {
             hand: None,
             style: Style::NEUTRAL,
+            last: None,
         }
     }
 
@@ -210,6 +214,7 @@ impl Bot {
             start.swap(0, 1);
         }
         let bets = [blinds[0].min(start[0]), blinds[1].min(start[1])];
+        self.last = None;
         self.hand = Some(Hand {
             hero,
             start,
@@ -230,6 +235,7 @@ impl Bot {
 
     pub fn abandon_hand(&mut self) {
         self.hand = None;
+        self.last = None;
     }
 
     pub fn hole_cards(&mut self, hole: [Card; 2]) {
@@ -280,6 +286,7 @@ impl Bot {
     }
 
     pub fn decide(&mut self, model: &Model, legal: &Legal, mut draw: f64) -> Move {
+        self.last = None;
         let Some(hand) = self.hand.as_mut() else {
             return passive(legal);
         };
@@ -311,6 +318,14 @@ impl Bot {
             return passive(legal);
         };
         let action = choose(model, &spot, probabilities, bucket, &self.style, draw);
+        let sampled = decision::Sampled {
+            spot: &spot,
+            probabilities,
+            bucket,
+            style: &self.style,
+            chosen: action,
+        };
+        self.last = Some(decision::explain(model, hand, legal, &sampled));
         let chosen = spot.actions[action];
         hand.history.push(Step {
             node: id,

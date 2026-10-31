@@ -405,3 +405,37 @@ fn the_grid_needs_a_fresh_spot_after_the_hand_moves() {
     assert!(bot_spot_grid(bot).is_null());
     bot_free(bot);
 }
+
+#[test]
+fn decision_layout_matches_the_core_decision() {
+    let (model, mut core) = core_bot([48, 49]);
+    core.set_style(Style {
+        aggression: 1.5,
+        ..Style::NEUTRAL
+    });
+    core.decide(&model, &OPEN, 0.3);
+    let expected = core.last_decision().unwrap();
+    let bot = seated([48, 49]);
+    bot_style(bot, 1.5, 1.0, 1.0, 1.0, 1.0);
+    decide(bot, 1, 0, 10, 40, 400, 0.3);
+    let n = expected.moves.len();
+    let out = read(bot_decision(bot), 2 + 4 * n);
+    assert_eq!(out[0], n as f32);
+    assert_eq!(out[1], expected.chosen as f32);
+    for (k, mv) in expected.moves.iter().enumerate() {
+        let (kind, to) = from_move(*mv);
+        assert_eq!(out[2 + 2 * k], kind as f32, "{mv:?}");
+        assert_eq!(out[3 + 2 * k], to as f32, "{mv:?}");
+        assert_eq!(out[2 + 2 * n + k], expected.base[k] as f32);
+        assert_eq!(out[2 + 3 * n + k], expected.styled[k] as f32);
+    }
+    bot_free(bot);
+}
+
+#[test]
+fn no_decision_gives_null() {
+    let bot = seated([48, 49]);
+    assert!(bot_decision(bot).is_null());
+    assert!(bot_decision(9999).is_null());
+    bot_free(bot);
+}
