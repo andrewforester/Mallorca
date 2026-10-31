@@ -1419,6 +1419,7 @@ button {
   font-family: var(--font-numeric);
   font-size: var(--coach-cell-font);
   line-height: 1;
+  text-shadow: var(--shadow-coach-cell);
 }
 
 .coach-grid-range .coach-cell {
@@ -1470,13 +1471,6 @@ button {
 
 .coach-detail {
   color: var(--color-muted);
-}
-
-.coach-toggle {
-  width: auto;
-  padding: 0 var(--space-3);
-  font: inherit;
-  font-size: var(--font-size-small);
 }
 
 .coach-scrim {

@@ -9,15 +9,24 @@ const TONE_VAR = {
   allIn: '--color-coach-all-in',
 } as const;
 
-export function toneColor(move: CoachMove): string {
-  return `var(${TONE_VAR[move.tone]})`;
+function isSized(move: CoachMove): boolean {
+  return move.tone === 'small' || move.tone === 'large';
+}
+
+export function moveColor(move: CoachMove, moves: CoachMove[]): string {
+  if (!isSized(move)) {
+    return `var(${TONE_VAR[move.tone]})`;
+  }
+  const sizes = [...new Set(moves.filter(isSized).map((m) => m.amount))].sort((a, b) => a - b);
+  const step = sizes.length < 2 ? 0 : (sizes.indexOf(move.amount) / (sizes.length - 1)) * 100;
+  return `color-mix(in srgb, var(${TONE_VAR.large}) ${step.toFixed(0)}%, var(${TONE_VAR.small}))`;
 }
 
 function stripes(moves: CoachMove[], shares: number[]): string {
   let start = 0;
   const stops = moves.map((move, k) => {
     const end = start + (shares[k] ?? 0) * 100;
-    const stop = `${toneColor(move)} ${start.toFixed(1)}% ${end.toFixed(1)}%`;
+    const stop = `${moveColor(move, moves)} ${start.toFixed(1)}% ${end.toFixed(1)}%`;
     start = end;
     return stop;
   });

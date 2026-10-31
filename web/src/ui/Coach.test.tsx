@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/preact';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Coach } from './Coach.tsx';
+import { moveColor } from './CoachGrid.tsx';
 import { coachFacts, readyCoach } from './coachFixtures.ts';
 
 afterEach(cleanup);
@@ -78,5 +79,21 @@ describe('Coach', () => {
       expect(screen.getByTestId('coach-status').textContent).toContain(text);
       cleanup();
     }
+  });
+});
+
+describe('Coach colours', () => {
+  it('gives every bet size its own shade', () => {
+    const moves = [
+      { label: 'check' as const, amount: 0, tone: 'passive' as const },
+      { label: 'bet' as const, amount: 20, tone: 'small' as const },
+      { label: 'bet' as const, amount: 30, tone: 'small' as const },
+      { label: 'bet' as const, amount: 80, tone: 'large' as const },
+      { label: 'allIn' as const, amount: 1980, tone: 'allIn' as const },
+    ];
+    const colours = moves.map((move) => moveColor(move, moves));
+    expect(new Set(colours).size).toBe(5);
+    expect(colours[1]).toContain('0%');
+    expect(colours[3]).toContain('100%');
   });
 });

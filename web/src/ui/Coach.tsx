@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 import type { CoachFacts, CoachState, Hint } from '../game/index.ts';
-import { RangeGrid, StrategyGrid, toneColor } from './CoachGrid.tsx';
+import { RangeGrid, StrategyGrid, moveColor } from './CoachGrid.tsx';
 import { isMixed, moveText, percent, shares } from './coachPhrases.ts';
 import { t } from './i18n.ts';
 
@@ -19,7 +19,7 @@ function HintLine({ hint }: { hint: Hint | null }) {
           <p class="coach-shares">
             {shares(hint).map(({ move, share }) => (
               <span key={`${move.label}-${move.amount}`} class="coach-share">
-                <span class="coach-swatch" style={{ background: toneColor(move) }} />
+                <span class="coach-swatch" style={{ background: moveColor(move, hint.moves) }} />
                 {t('coach.share', { move: moveText(move), percent: Math.round(share * 100) })}
               </span>
             ))}
@@ -48,7 +48,7 @@ function StrategyTab({ facts }: { facts: CoachFacts }) {
       <p class="coach-legend">
         {hint.moves.map((move) => (
           <span key={`${move.label}-${move.amount}`} class="coach-share">
-            <span class="coach-swatch" style={{ background: toneColor(move) }} />
+            <span class="coach-swatch" style={{ background: moveColor(move, hint.moves) }} />
             {moveText(move)}
           </span>
         ))}

@@ -73,6 +73,7 @@
   --color-coach-all-in: #9a3434;
   --color-coach-range: #e3b06e;
   --coach-cell-font: 8px;
+  --shadow-coach-cell: 0 0 2px rgba(0, 0, 0, 0.9), 0 0 1px rgba(0, 0, 0, 0.9);
   --sheet-max-height: 85dvh;
 }
 
