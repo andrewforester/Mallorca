@@ -30,6 +30,7 @@ export interface LineIntent {
   honest: boolean;
   strength: StrengthClass;
   street: string;
+  actionStreet: string;
   handNumber: number;
 }
 
@@ -69,6 +70,7 @@ interface Candidate {
   situation: Situation;
   strength: StrengthClass;
   key: string;
+  street: string;
 }
 
 const PACE_MS = 1500;
@@ -76,6 +78,8 @@ const SEED_RANGE = 0x100000000;
 const BET_HINT_RATE = 0.7;
 const UNKNOWN_STRENGTH: StrengthClass = 'medium';
 const HAND_END: ReadonlySet<Situation> = new Set<Situation>(['handWon', 'handLost', 'bluffCaught']);
+
+export const endsHand = (situation: Situation): boolean => HAND_END.has(situation);
 
 const hintRateOf = (situation: Situation): number => (HAND_END.has(situation) ? 0 : BET_HINT_RATE);
 
@@ -160,7 +164,14 @@ class TableTalk implements Talk {
     const strength = this.strength();
     const habit = this.habits[situation][strength];
     const { honest, hint } = drawHint(habit, situation, strength, this.rng);
-    return this.intent(situation, strength, { speak: true, honest, hint });
+    return this.intent(
+      { situation, strength, key: '', street: this.hand.street },
+      {
+        speak: true,
+        honest,
+        hint,
+      },
+    );
   }
 
   facts(): HandFacts {
@@ -199,6 +210,7 @@ class TableTalk implements Talk {
       this.last = null;
     }
     const key = this.streetKey();
+    const { street } = this.hand;
     this.hand = track(this.hand, event, this.seat);
     const situation =
       event.type === 'handEnded' ? this.endHand() : actedSituation(event, this.seat);
@@ -206,7 +218,7 @@ class TableTalk implements Talk {
       return null;
     }
     this.last = situation;
-    return { situation, strength: this.strength(), key };
+    return { situation, strength: this.strength(), key, street };
   }
 
   private endHand(): Situation {
@@ -255,16 +267,26 @@ class TableTalk implements Talk {
     this.lastLineAt = nowMs;
     this.usedStreets.add(key);
     this.usedStreets.add(this.streetKey());
-    return this.intent(situation, strength, draw);
+    return this.intent(candidate, draw);
   }
 
   private streetKey(): string {
     return `${this.hand.handNumber}:${this.hand.street}`;
   }
 
-  private intent(situation: Situation, strength: StrengthClass, draw: Draw): LineIntent {
+  private intent(candidate: Candidate, draw: Draw): LineIntent {
     const { street, handNumber } = this.hand;
-    return { situation, hint: draw.hint, honest: draw.honest, strength, street, handNumber };
+    const { situation, strength } = candidate;
+    const actionStreet = candidate.street;
+    return {
+      situation,
+      hint: draw.hint,
+      honest: draw.honest,
+      strength,
+      street,
+      actionStreet,
+      handNumber,
+    };
   }
 
   private strength(): StrengthClass {

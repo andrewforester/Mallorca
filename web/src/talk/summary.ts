@@ -39,3 +39,20 @@ export function withSignals(summary: SessionSummary, signals: readonly Signal[])
   }
   return { ...summary, signals: counts };
 }
+
+export function since(current: SessionSummary, earlier: SessionSummary): SessionSummary {
+  const signals: SessionSummary['signals'] = {};
+  for (const [signal, count] of Object.entries(current.signals) as [Signal, number][]) {
+    const delta = count - (earlier.signals[signal] ?? 0);
+    if (delta > 0) {
+      signals[signal] = delta;
+    }
+  }
+  return {
+    hands: current.hands - earlier.hands,
+    netBb: current.netBb - earlier.netBb,
+    playerBluffsShown: current.playerBluffsShown - earlier.playerBluffsShown,
+    playerAllIns: current.playerAllIns - earlier.playerAllIns,
+    signals,
+  };
+}

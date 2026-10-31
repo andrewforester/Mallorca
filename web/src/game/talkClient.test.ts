@@ -48,6 +48,7 @@ const intent: LineIntent = {
   honest: true,
   strength: 'strong',
   street: 'river',
+  actionStreet: 'river',
   handNumber: 3,
 };
 

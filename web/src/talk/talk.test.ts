@@ -7,7 +7,7 @@ import { BASE_HABITS, habitsAt } from './habits.ts';
 import type { Habits, Situation } from './habits.ts';
 import { CALM, afterHand } from './mood.ts';
 import type { StrengthClass } from './strength.ts';
-import { createTalk, drawLine } from './talk.ts';
+import { createTalk, drawLine, endsHand } from './talk.ts';
 import type { LineIntent, Talk } from './talk.ts';
 
 const always = (): Habits => {
@@ -57,6 +57,7 @@ describe('observe', () => {
       honest: true,
       strength: 'weak',
       street: 'preflop',
+      actionStreet: 'preflop',
       handNumber: 1,
     });
   });
@@ -98,6 +99,23 @@ describe('observe', () => {
     expect(closing?.situation).toBe('herCall');
     expect(closing?.street).toBe('flop');
     expect(t.act(check, 5000)).toBeNull();
+  });
+
+  it('keeps the street of the action for the cue when her call closes the street', () => {
+    const t = chatty();
+    t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h', 0);
+    t.act(call, 0);
+    const closing = t.act(check, 2000);
+    expect(closing).toMatchObject({ street: 'flop', actionStreet: 'preflop' });
+    const reply = t.talk.replyIntent();
+    expect(reply).toMatchObject({ street: 'flop', actionStreet: 'flop' });
+  });
+
+  it('names the situations that end a hand', () => {
+    expect(['handWon', 'handLost', 'bluffCaught'].every((s) => endsHand(s as Situation))).toBe(
+      true,
+    );
+    expect(['herBet', 'herCall', 'playerBet'].some((s) => endsHand(s as Situation))).toBe(false);
   });
 
   it('answers a new hand with herCall, not the end of the previous hand', () => {
