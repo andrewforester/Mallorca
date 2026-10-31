@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'solver/**'
-      - 'web/src/cfr/*.mlcs.gz'
+      - 'web/src/cfr/v1.mlcs.gz'
       - '.github/workflows/solver-*.yml'
   workflow_dispatch:
 
