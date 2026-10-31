@@ -4,7 +4,10 @@ import type { CfrModel } from '../cfr/index.ts';
 import type { Opponent } from './opponent.ts';
 import type { WorkerReply, WorkerRequest } from './workerProtocol.ts';
 
-export type CoachedBrain = Brain & { range?: () => Float32Array | null };
+export type CoachedBrain = Brain & {
+  range?: () => Float32Array | null;
+  opponentRange?: () => Float32Array | null;
+};
 
 export type BrainFactory = () => CoachedBrain;
 
@@ -44,6 +47,14 @@ function coach(
       (facts) => post({ id, facts }),
       (error: unknown) => post({ id, error: message(error) }),
     );
+}
+
+function opponentRange(brain: CoachedBrain, id: number, post: (reply: WorkerReply) => void): void {
+  try {
+    post({ id, range: brain.opponentRange?.() ?? null });
+  } catch (error) {
+    post({ id, error: message(error) });
+  }
 }
 
 interface BrainSlot {
@@ -121,6 +132,9 @@ export function createWorkerHandler(
         break;
       case 'coach':
         coach(request, slot.brain.range?.() ?? null, coachModel(slot.opponent), post);
+        break;
+      case 'opponentRange':
+        opponentRange(slot.brain, request.id, post);
         break;
     }
   };
