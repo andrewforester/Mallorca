@@ -91,10 +91,9 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
 - `HandEvaluator` has `rank(cards)` for 5 to 7 cards, higher is better, and `category(rank)`, a `HandCategory`:
   `high-card`, `pair`, `two-pair`, `trips`, `straight`, `flush`, `full-house`, `quads`, `straight-flush`.
   `pheEvaluator` implements it over `phe`.
-- `StreetEquity` (`strength`, `positivePotential`, `negativePotential`) and `WeightedHands` (hole cards with a
-  weight) are the types `brains` computes equity with; the computation itself lives in `brains` (`strength.ts`,
-  `spectrumEquilator.ts`, `preflopEquilator.ts`).
-- `index.ts` exports `pheEvaluator`, `HandCategory`, `StreetEquity` and `WeightedHands`.
+- `WeightedHands` (hole cards with a weight) is the type `brains` computes equity with; the computation itself
+  lives in `brains` (`spectrumEquilator.ts`, `preflopEquilator.ts`).
+- `index.ts` exports `pheEvaluator`, `HandCategory` and `WeightedHands`.
 - `npm run bench` (`evaluator.bench.test.ts`, outside `npm test`) ranks one million seven-card hands and expects
   under 1500 ms outside CI.
 
@@ -171,7 +170,6 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 | `handState.ts`         | `HandState`, `GameContext`, `HandStateObserver`: the bot's view of the hand      |
 | `spectrum.ts`          | `Spectrum`: a weight per villain hole-card pair                                  |
 | `villainModel.ts`      | `randomAdvice`, `VillainSpectrumTracker`                                         |
-| `strength.ts`          | `StrengthManager`: hero equity per street against the spectrum and at random     |
 | `spectrumEquilator.ts` | `SpectrumEquilator`: hero strength against a spectrum on a board, with its cache |
 | `preflopEquilator.ts`  | Preflop strength from `data/preflop-strength.json`                               |
 | `solver.ts`            | `NLGameSolver`: the game tree, as `SolverNode`s                                  |
