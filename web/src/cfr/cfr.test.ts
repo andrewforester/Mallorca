@@ -5,9 +5,12 @@ import type { Rng } from '../cards/index.ts';
 import { fullDeck, mulberry32, parseCards, shuffle } from '../cards/index.ts';
 import type { Action, LegalActions, Seat, SeatIndex } from '../engine/index.ts';
 import { isLegal, playToEnd, startHandWith } from '../engine/index.ts';
+import type { Observation } from '../brains/index.ts';
 import { toObservations } from '../brains/index.ts';
-import type { CfrModel } from './index.ts';
-import { SHIPPED_STRATEGIES, WASM_URL, createCfrBrain, createCfrModel, inflate } from './index.ts';
+import { createCfrBrain } from './brain.ts';
+import type { CfrModel } from './model.ts';
+import { createCfrModel, inflate } from './model.ts';
+import { SHIPPED_STRATEGIES, WASM_URL } from './strategies.ts';
 
 const wasm = readFileSync(WASM_URL);
 const strategy = readFileSync(SHIPPED_STRATEGIES.cfr.url);
@@ -120,6 +123,39 @@ describe('CfrBrain', () => {
       expect(Number.isFinite(decision.evByAction.fold)).toBe(false);
       brain.dispose();
     }
+  });
+
+  it('setStyle reaches the module', () => {
+    const raises = (aggression: number): number => {
+      let count = 0;
+      for (let seed = 0; seed < 500; seed++) {
+        const brain = createCfrBrain(model, mulberry32(seed));
+        brain.setStyle?.({ aggression, bluff: 1, tightness: 1 });
+        brain.observe({
+          type: 'handStarted',
+          handNumber: 1,
+          heroOnButton: false,
+          heroStack: 2000,
+          villainStack: 2000,
+          smallBlind: 10,
+          bigBlind: 20,
+        });
+        const deck = shuffle(fullDeck(), mulberry32(seed + 1000));
+        const [a, b, c, d, e] = deck;
+        brain.observe({ type: 'holeCards', cards: [a ?? 0, b ?? 0] });
+        brain.observe({ type: 'street', board: [c ?? 0, d ?? 0, e ?? 0] } as Observation);
+        const decision = brain.decide({
+          fold: false,
+          check: true,
+          call: null,
+          raise: { min: 20, max: 2000 },
+        });
+        if (decision.action.kind === 'raise') count += 1;
+        brain.dispose();
+      }
+      return count;
+    };
+    expect(raises(1.25)).toBeGreaterThan(raises(1));
   });
 });
 

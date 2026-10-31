@@ -1,8 +1,12 @@
 import type { ComponentChildren } from 'preact';
-import type { Intent, Phase, SeatIndex, ViewModel } from '../game/index.ts';
+import type { Intent, Phase, QuickPhrase, SeatIndex, ViewModel } from '../game/index.ts';
 import { ActionBar } from './ActionBar.tsx';
 import { BetChips } from './BetChips.tsx';
 import { BoardRow } from './BoardRow.tsx';
+import { Bubble } from './Bubble.tsx';
+import { Chat } from './Chat.tsx';
+import type { ChatProps } from './Chat.tsx';
+import { ChatSheet } from './ChatSheet.tsx';
 import { DealerButton } from './DealerButton.tsx';
 import { t } from './i18n.ts';
 import { handName } from './phrases.ts';
@@ -19,6 +23,18 @@ export interface TableProps {
   onAct: (intent: Intent) => void;
   onNextHand: () => void;
   coach?: ComponentChildren;
+  onSay?: (text: string) => void;
+  onQuick?: (id: QuickPhrase, text: string) => void;
+}
+
+const ignore = () => undefined;
+
+function chatOf(props: TableProps): ChatProps | null {
+  const { talk } = props.vm;
+  if (!talk.available || !talk.on) {
+    return null;
+  }
+  return { lines: talk.lines, onSay: props.onSay ?? ignore, onQuick: props.onQuick ?? ignore };
 }
 
 function resultText(vm: ViewModel, humanSeat: SeatIndex): string | null {
@@ -132,30 +148,90 @@ function Result({ text, canContinue, autoNextMs, onNextHand }: ResultProps) {
   );
 }
 
-export function Table({
-  vm,
-  phase,
-  humanSeat,
-  autoNextMs = null,
-  onAct,
-  onNextHand,
-  coach,
-}: TableProps) {
+function Announcements({ text, her }: { text: string; her: string }) {
+  return (
+    <>
+      <div class="visually-hidden" role="status" aria-live="polite" data-testid="live-region">
+        {text}
+      </div>
+      <div class="visually-hidden" aria-live="polite" data-testid="talk-region">
+        {her}
+      </div>
+    </>
+  );
+}
+
+function herLine(vm: ViewModel, chat: ChatProps | null): string {
+  return chat === null ? '' : (vm.talk.herBubble?.text ?? '');
+}
+
+function TableSide({ chat, coach }: { chat: ChatProps | null; coach: ComponentChildren }) {
+  return (
+    <div class="table-side">
+      {chat !== null && (
+        <section class="side-panel glass" data-testid="chat-panel" aria-label={t('talk.tab')}>
+          <Chat {...chat} />
+        </section>
+      )}
+      <aside class="coach" data-testid="coach" aria-label={t('coach.label')}>
+        {coach}
+      </aside>
+    </div>
+  );
+}
+
+interface SeatsProps {
+  vm: ViewModel;
+  humanSeat: SeatIndex;
+  held: HeldActions;
+  thinking: boolean;
+  chat: ChatProps | null;
+}
+
+function Seats({ vm, humanSeat, held, thinking, chat }: SeatsProps) {
+  const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
+  const winner = vm.result?.winner ?? null;
+  return (
+    <>
+      <Seat
+        index={botSeat}
+        view={vm.seats[botSeat]}
+        action={held.actions[botSeat]}
+        thinking={thinking}
+        winner={winner === botSeat}
+        position="top"
+      >
+        {chat !== null && <Bubble line={vm.talk.herBubble} />}
+        {chat !== null && <ChatSheet {...chat} />}
+      </Seat>
+      <Seat
+        index={humanSeat}
+        view={vm.seats[humanSeat]}
+        action={held.actions[humanSeat]}
+        thinking={false}
+        winner={winner === humanSeat}
+        position="bottom"
+      >
+        {chat !== null && <Bubble line={vm.talk.playerBubble} />}
+      </Seat>
+    </>
+  );
+}
+
+export function Table(props: TableProps) {
+  const { vm, phase, humanSeat, autoNextMs = null, onAct, onNextHand } = props;
+  const chat = chatOf(props);
   const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
   const botWaiting = phase === 'botThinking' || phase === 'animating';
   const text = resultText(vm, humanSeat);
   const raise = vm.controls.raise;
   const barKey = raise === null ? 'none' : `${raise.min}:${raise.max}`;
-  const [bot, human] = [vm.seats[botSeat], vm.seats[humanSeat]];
   const held = useSeatActions(vm);
-  const thinking = botWaiting && bot.isToAct && !held.holding;
+  const thinking = botWaiting && vm.seats[botSeat].isToAct && !held.holding;
   const announcement = text ?? (thinking ? t('seat.thinking') : '');
-  const winner = vm.result?.winner ?? null;
   return (
-    <div class="table-layout">
-      <div class="visually-hidden" role="status" aria-live="polite" data-testid="live-region">
-        {announcement}
-      </div>
+    <div class={`table-layout${text === null ? '' : ' table-result'}`}>
+      <Announcements text={announcement} her={herLine(vm, chat)} />
       <Felt vm={vm} humanSeat={humanSeat} showPot={text === null} />
       {text !== null && (
         <Result
@@ -165,28 +241,9 @@ export function Table({
           onNextHand={onNextHand}
         />
       )}
-      <Seat
-        index={botSeat}
-        view={bot}
-        action={held.actions[botSeat]}
-        thinking={thinking}
-        winner={winner === botSeat}
-        position="top"
-      />
-      <Seat
-        index={humanSeat}
-        view={human}
-        action={held.actions[humanSeat]}
-        thinking={false}
-        winner={winner === humanSeat}
-        position="bottom"
-      />
+      <Seats vm={vm} humanSeat={humanSeat} held={held} thinking={thinking} chat={chat} />
       <ActionBar key={barKey} controls={vm.controls} onAct={onAct} />
-      <div class="table-side">
-        <aside class="coach" data-testid="coach" aria-label={t('coach.label')}>
-          {coach}
-        </aside>
-      </div>
+      <TableSide chat={chat} coach={props.coach} />
     </div>
   );
 }

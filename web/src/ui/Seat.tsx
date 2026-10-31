@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import type { LogEntry, SeatView } from '../game/index.ts';
 import { ActionBubble } from './ActionBubble.tsx';
 import { Card } from './Card.tsx';
@@ -9,9 +10,10 @@ export interface SeatProps {
   thinking: boolean;
   winner: boolean;
   position: 'top' | 'bottom';
+  children?: ComponentChildren;
 }
 
-export function Seat({ index, view, action, thinking, winner, position }: SeatProps) {
+export function Seat({ index, view, action, thinking, winner, position, children }: SeatProps) {
   const className = [
     'seat',
     `seat-${position}`,
@@ -32,6 +34,7 @@ export function Seat({ index, view, action, thinking, winner, position }: SeatPr
             {view.stack}
           </span>
         </header>
+        {children}
       </div>
       <div class="seat-cards">
         {view.cards.map((card, slot) => (
