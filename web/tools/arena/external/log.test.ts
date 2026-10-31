@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { ExternalLine } from './log.ts';
-import { appendLine, openLog, readLog } from './log.ts';
+import { appendLine, openLog, readLog, readLogFile } from './log.ts';
 
 function line(handIndex: number): ExternalLine {
   return {
@@ -53,5 +53,15 @@ describe('openLog and appendLine', () => {
   it('opens a missing file as an empty log', () => {
     const file = join(mkdtempSync(join(tmpdir(), 'external-log-')), 'none.jsonl');
     expect(openLog(file)).toEqual([]);
+  });
+});
+
+describe('readLogFile', () => {
+  it('reads a log that a run is still writing without touching the file', () => {
+    const file = join(mkdtempSync(join(tmpdir(), 'external-log-')), 'live.jsonl');
+    const text = `${JSON.stringify(line(0))}\n{"rec`;
+    writeFileSync(file, text);
+    expect(readLogFile(file)).toHaveLength(1);
+    expect(readFileSync(file, 'utf8')).toBe(text);
   });
 });

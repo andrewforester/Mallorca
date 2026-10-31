@@ -36,6 +36,10 @@ export function readLog(text: string): ExternalLine[] {
   return lines;
 }
 
+export function readLogFile(path: string): ExternalLine[] {
+  return existsSync(path) ? readLog(readFileSync(path, 'utf8')) : [];
+}
+
 export function openLog(path: string): ExternalLine[] {
   if (!existsSync(path)) return [];
   const text = readFileSync(path, 'utf8');

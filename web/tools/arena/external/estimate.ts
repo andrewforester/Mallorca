@@ -16,11 +16,13 @@ export interface ExternalEstimate {
   raw: Estimate;
   allInEv: Estimate;
   baseline: Estimate;
+  baselineMean: Estimate;
 }
 
 export function summarizeNets(nets: number[]): Estimate {
   const values = nets.map((net) => (net / BLINDS.big) * 100);
   const n = values.length;
+  if (n === 0) return { bbPer100: 0, ci95: null, sdPerHand: 0, handsFor10: null };
   const mean = values.reduce((sum, v) => sum + v, 0) / n;
   if (n < 2) return { bbPer100: mean, ci95: null, sdPerHand: 0, handsFor10: null };
   const sd = Math.sqrt(values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / (n - 1));
@@ -47,6 +49,7 @@ export function estimate(lines: ExternalLine[]): ExternalEstimate {
     baseline: summarizeNets(
       played.map((line) => (line.external.winnings ?? 0) - (line.external.baselineWinnings ?? 0)),
     ),
+    baselineMean: summarizeNets(played.map((line) => line.external.baselineWinnings ?? 0)),
   };
 }
 

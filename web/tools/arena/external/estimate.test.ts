@@ -39,6 +39,10 @@ describe('summarizeNets', () => {
     expect(s.handsFor10).toBe(Math.ceil(((1.96 * s.sdPerHand) / 10) ** 2));
   });
 
+  it('has nothing to say about no hands', () => {
+    expect(summarizeNets([])).toEqual({ bbPer100: 0, ci95: null, sdPerHand: 0, handsFor10: null });
+  });
+
   it('has no interval below two hands', () => {
     expect(summarizeNets([100]).ci95).toBeNull();
   });
@@ -61,6 +65,10 @@ describe('estimate', () => {
     expect(e.raw.bbPer100).toBe(50);
     expect(e.allInEv.bbPer100).toBe(50);
     expect(e.baseline.bbPer100).toBe((50 + 200 + 200 - 100) / 4);
+  });
+
+  it('reports the mean baseline that the baseline figure relies on', () => {
+    expect(estimate(lines).baselineMean).toEqual(summarizeNets([50, -300, 100, 0]));
   });
 
   it('is a pure function of the log', () => {
