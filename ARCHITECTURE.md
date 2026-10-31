@@ -270,16 +270,20 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   `b * (b - 1) / 2 + a` for cards `a < b`, 1326 in all. `range()` is the bot's own range: 1 per pair at the start of
   a hand, 0 for pairs that touch the board, times the probability of every action the bot sampled from the strategy
   (its byte over the node's byte sum, reweighted by the bot's style when it plays one, as `decide` samples), a step that no pair takes being skipped; a decision played passive without
-  sampling does not narrow it. `spot(legal)` is the node `decide` would sample from, without moving the bot:
+  sampling does not narrow it. `opponentRange()` is the player's range read the same way from the player's own
+  steps: every action of his that the bot follows onto a tree action (an off-tree size after its mapping) is a step at
+  that node with the neutral style, so he is modelled as the blueprint's average; an action with no node under the
+  cursor adds no step and keeps the range, and the pairs that hold one of the bot's hole cards are 0. `spot(legal)` is the node `decide` would sample from, without moving the bot:
   `moves` are the real actions of the node's tree actions under `legal`, `grid` holds 1326 rows of their
   probabilities (0 for pairs that touch the board; the bot's own cards keep their row, so the coach reads the
   player's hand from it), and `approximate` is true after a resync or
   an off-tree size taken as a call. Facing a bet after a resync it names the facing node, although `decide` may
   then sample from a check node with the probability of the bet-size mapping; with a small bet already taken as a
   street-closing call there is no spot. Both are null without a hand, a node or a live bot. In Rust they are
-  `Bot::range`, `Bot::spot` and `Bot::strategy_grid` over `Abstraction::buckets`, which buckets every pair of a board
-  at once and equals the per-pair `bucket`; the ABI exports `bot_range`, `bot_spot` (`[approximate, n, kind, to, ...]`)
-  and `bot_spot_grid`, each a pointer into a buffer of the seat, valid until the next call on it.
+  `Bot::range`, `Bot::opponent_range`, `Bot::spot` and `Bot::strategy_grid` over `Abstraction::buckets`, which buckets
+  every pair of a board at once and equals the per-pair `bucket`; the ABI exports `bot_range`, `bot_opponent_range`,
+  `bot_spot` (`[approximate, n, kind, to, ...]`) and `bot_spot_grid`, each a pointer into a buffer of the seat, valid
+  until the next call on it. `createCfrBrain` exposes `range()` and `opponentRange()` of its bot.
 - Translation lives in Rust (`mallorca-core::bot`): chips scale by the big blind, an opponent raise maps to one of
   the two neighbouring tree sizes by the pseudo-harmonic mapping on pot fractions, the bot's own raise keeps the
   tree's pot fraction and is clamped into `legal.raise`, and a hand that leaves the tree resyncs to the nearest
@@ -336,14 +340,21 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   the `Rng` it was given; the model only words the line. Pace limits her to one unprompted line per street and
   none in the 1.5 s after a line.
 - `feeling.ts` runs the `emotion` engine for her (`MALLORCA`) on the same events: her cards as `deal`, every
-  street, bet and showdown as `street` with her perceived equity (against a random hand until the player shows,
-  then against his cards) and the money (pot, invested, stack behind, streets left), a raise of the player as
+  street, bet and showdown as `street` with her perceived equity (against the player's range until he shows, then
+  against his cards) and the money (pot, invested, stack behind, streets left), a raise of the player as
   `opponentBet` (`raise` when it answers her own bet or raise on that street), the hand end as `result` judged by
   her equity against his shown cards on the board when the money went in (0.5 without a showdown), a weak late bet
   caught or through as `bluff`, and the signals as `chat`. `observe` advances the engine with `nowMs`.
   `feeling()` is the engine's snapshot, `moodWords()` up to three words for the prompt (`on tilt` at overload 0.6
   and more, then the emotions of 0.25 and more, strongest first), and the chance to speak is scaled by
   `1 + 0.25 clamp((arousal above her default + overload) / 2, -1, 1)`.
+- The player's range is every pair at weight 1 when a hand starts. `Talk.playerRange(weights, handNumber)` replaces
+  it with 1326 weights indexed as `cfr` indexes pairs (`b * (b - 1) / 2 + a`); the pairs that touch her cards or the
+  board drop out. It is ignored for another hand than the one being followed, after the hand ended or the player
+  showed, and when no live pair has weight. A new range is appraised at once as a `street` with her equity against
+  it, so a raise that narrows him to strength moves her equity down and the swing brings surprise and
+  disappointment, and the hope and fear targets follow; the `opponentBet` of the action itself is appraised against
+  the range before it.
 - `style()` maps the engine's `PlayStyle` to the bot: aggression, bluff, sizing and stickiness as they are and
   tightness `1 / looseness`. A calm feeling gives the neutral style, all ones. Her words never decide a move.
 
@@ -421,7 +432,7 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   `showdown` and `amount`. `amount` is the pot collected, twice the smaller contribution, or each share for a
   split. It equals the `win` entry of the log; an uncalled bet is its own `returned` entry.
 - `BotClient` has `observe(observations)`, `decide(legal)`, `reset()`, an optional `select(opponent, seed)`, an
-  optional `coach(observations, legal, pot)` and an optional `dispose()`. `workerBot()` runs the brain in `bot.worker.ts` over the `WorkerRequest` and `WorkerReply`
+  optional `coach(observations, legal, pot)`, an optional `opponentRange()` and an optional `dispose()`. `workerBot()` runs the brain in `bot.worker.ts` over the `WorkerRequest` and `WorkerReply`
   messages in `workerProtocol.ts`; `createWorkerHandler(newBrain, post, load)` in `workerHandler.ts` is the worker's
   message handling as a plain function. A `select` request queues every later request until the opponent's brain
   factory is ready, then replies `{ id, opponent }` or `{ id, error }` and keeps the old brain on an error. The worker
@@ -430,12 +441,15 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   `mulberry32(seed)`. A `coach` request (`{ id, observations, legal, pot }`) reads `range()` of the playing brain when
   it arrives (a cfr brain has it, the math brain has none), loads the coach model (`coachModel(opponent)` in
   `createWorkerHandler`, the opponent's own strategy, `cfr` for the math bot) and replies `{ id, facts }` or
-  `{ id, error }`. The coach never touches the playing brain's RNG. Replacing a brain disposes it. `inProcessBot()` runs the math brain on the main thread and
+  `{ id, error }`. The coach never touches the playing brain's RNG. An `opponentRange` request (`{ id }`) replies
+  `{ id, range }` with `opponentRange()` of the playing brain when it arrives, after every observation sent before
+  it, or null for the math brain. Replacing a brain disposes it. `inProcessBot()` runs the math brain on the main thread and
   rejects `select('cfr')`.
 - `withFallback` wraps a client: when `decide` rejects or takes longer than 5 s, it disposes the primary, replays
   the observations of the hand into an in-process bot and uses it from then on. It falls back once, and a failure
   from before `reset` or `dispose` does not trigger it. Its `coach` forwards to the active client with the same timeout as
-  `decide` and rejects after a fallback or when the client has none. The session drops a decision that arrives after `start`
+  `decide` and rejects after a fallback or when the client has none; its `opponentRange` does the same but answers
+  null instead of rejecting. The session drops a decision that arrives after `start`
   or `dispose`.
   Its `select` answers `math` without asking a client that has no `select`; when the client's `select` rejects or
   takes longer than 60 s, it falls back the same way and answers `math`.
@@ -471,7 +485,10 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   optional `undelivered`) and `bubbles` the latest line per seat. `connectTalk` runs when a Solver session starts with
   talk on, or when talk is switched on in one, and its client is attached; a silent client hides the talk. Each
   `start` makes a `Talk` for the bot's seat with `mulberry32(seed ^ 0x7a1c)` when the opponent is a Solver; it lives
-  across hands, and every step's events reach `Talk.observe` after the bot, also with talk off. A line intent calls
+  across hands, and every step's events reach `Talk.observe` after the bot, also with talk off. After a step with an
+  action of the player, the session asks `bot.opponentRange()` without waiting and passes the answer to
+  `Talk.playerRange` with the hand number of that step, if the epoch and the `Talk` are the same and no later
+  request was made; null or an error keeps the range she has. A line intent calls
   `client.line` without waiting. Its text is kept only if the epoch matches, talk is still available and on, and the
   hand number and street still match; a hand-end line (`handWon`, `handLost`, `bluffCaught`) is kept until the next
   hand's first action. `say(text)` (trimmed, at most 200 characters) and `quick(niceHand | bluffing | notThisTime,
@@ -653,9 +670,12 @@ line      engine events -> Talk.observe -> LineIntent -> client.line(facts, inte
           -> bubble and chat
 reply     say(text) -> client.reply -> function (signals + answer) -> { text, signals }
           -> Talk.hear(signals) moves the mood -> her line in the chat
+range     player action -> bot.observe -> bot.opponentRange() (worker, after the observations)
+          -> Talk.playerRange(weights, handNumber) -> her equity against his range -> feeling
 ```
 
-The session never waits for the server: a line is requested without awaiting it, a late or missing answer is
+The player's range reaches her feeling a worker round trip after his action, so the bot's next decision may still
+use the style from before it; nothing in the hand waits for it. The session never waits for the server: a line is requested without awaiting it, a late or missing answer is
 dropped, and an error leaves the game as it is. The style path is the only way talk touches a move, and it is
 bounded by the clamps above.
 
