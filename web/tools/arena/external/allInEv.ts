@@ -4,7 +4,11 @@ import type { EngineEvent } from '../../../src/engine/index.ts';
 import { equityVsHand } from '../../../src/equity/index.ts';
 import type { ExternalLine } from './log.ts';
 
-export function exactEquity(hero: [string, string], villain: [string, string], board: string[]): number {
+export function exactEquity(
+  hero: [string, string],
+  villain: [string, string],
+  board: string[],
+): number {
   const [h0, h1] = hero.map(parseCard) as [Card, Card];
   const [v0, v1] = villain.map(parseCard) as [Card, Card];
   return equityVsHand([h0, h1], [v0, v1], board.map(parseCard));

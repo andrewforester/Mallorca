@@ -53,7 +53,8 @@ function decide(context: HandContext, state: SlumbotState, decision: number): st
   if (step.hand.toAct !== 0) {
     throw new MirrorError(`Slumbot waits for us at "${state.action}", the engine does not`);
   }
-  const seed = (Math.imul(context.options.seed, 0x9e3779b1) + context.handIndex * 64 + decision) >>> 0;
+  const seed =
+    (Math.imul(context.options.seed, 0x9e3779b1) + context.handIndex * 64 + decision) >>> 0;
   const bot = context.options.bot(mulberry32(seed));
   try {
     for (const observation of toObservations(events, 0)) bot.observe(observation);
@@ -63,7 +64,11 @@ function decide(context: HandContext, state: SlumbotState, decision: number): st
   }
 }
 
-function lineOf(context: HandContext, state: SlumbotState, record: HandRecord | null): ExternalLine {
+function lineOf(
+  context: HandContext,
+  state: SlumbotState,
+  record: HandRecord | null,
+): ExternalLine {
   return {
     record,
     external: {

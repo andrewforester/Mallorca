@@ -69,9 +69,9 @@ describe('runExternal', () => {
     const last = broken[2]?.at(-1) as Step;
     last.res.winnings = 150;
     const out = tempLog();
-    await expect(runExternal({ ...options, client: replay(broken), hands: 6, out })).rejects.toThrow(
-      WinningsMismatch,
-    );
+    await expect(
+      runExternal({ ...options, client: replay(broken), hands: 6, out }),
+    ).rejects.toThrow(WinningsMismatch);
     const lines = readLog(readFileSync(out, 'utf8'));
     expect(lines).toHaveLength(3);
     expect(lines[2]?.external.abandoned).toBe(true);
@@ -83,9 +83,9 @@ describe('runExternal', () => {
     const step = broken[0]?.[1] as Step;
     step.res.action = 'b200c/b50';
     const out = tempLog();
-    await expect(runExternal({ ...options, client: replay(broken), hands: 6, out })).rejects.toThrow(
-      MirrorError,
-    );
+    await expect(
+      runExternal({ ...options, client: replay(broken), hands: 6, out }),
+    ).rejects.toThrow(MirrorError);
     const lines = readLog(readFileSync(out, 'utf8'));
     expect(lines).toHaveLength(1);
     expect(lines[0]?.external.action).toBe('b200c/b50');

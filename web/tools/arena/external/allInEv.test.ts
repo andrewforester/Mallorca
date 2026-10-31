@@ -48,7 +48,10 @@ function line(
 
 describe('exactEquity', () => {
   it('counts the two outs of a set draw on the turn', () => {
-    expect(exactEquity(['Ah', 'Ad'], ['Kc', 'Ks'], ['2c', '7d', '9h', 'Js'])).toBeCloseTo(42 / 44, 12);
+    expect(exactEquity(['Ah', 'Ad'], ['Kc', 'Ks'], ['2c', '7d', '9h', 'Js'])).toBeCloseTo(
+      42 / 44,
+      12,
+    );
   });
 
   it('splits a board that plays', () => {
@@ -62,18 +65,33 @@ describe('exactEquity', () => {
 
 describe('allInEvNet', () => {
   it('replaces the result of a turn all-in by its expectation', () => {
-    const l = line('b200c/kk/kb19800c/', ['Ah', 'Ad'], ['Kc', 'Ks'], ['2c', '7d', '9h', 'Js', 'Kd']);
+    const l = line(
+      'b200c/kk/kb19800c/',
+      ['Ah', 'Ad'],
+      ['Kc', 'Ks'],
+      ['2c', '7d', '9h', 'Js', 'Kd'],
+    );
     expect(l.external.winnings).toBe(-20000);
     expect(allInEvNet(l)).toBeCloseTo((42 / 44) * 40000 - 20000, 6);
   });
 
   it('keeps the real result without an all-in', () => {
-    const l = line('b200c/kk/kb200c/kb400c', ['Td', '4s'], ['Ac', '3s'], ['Ah', '8d', '2s', 'Qd', '9s']);
+    const l = line(
+      'b200c/kk/kb200c/kb400c',
+      ['Td', '4s'],
+      ['Ac', '3s'],
+      ['Ah', '8d', '2s', 'Qd', '9s'],
+    );
     expect(allInEvNet(l)).toBe(-800);
   });
 
   it('keeps the real result of a river all-in', () => {
-    const l = line('b200c/kk/kk/kb19800c', ['Ah', 'Ad'], ['Kc', 'Ks'], ['2c', '7d', '9h', 'Js', 'Kd']);
+    const l = line(
+      'b200c/kk/kk/kb19800c',
+      ['Ah', 'Ad'],
+      ['Kc', 'Ks'],
+      ['2c', '7d', '9h', 'Js', 'Kd'],
+    );
     expect(allInEvNet(l)).toBe(-20000);
   });
 

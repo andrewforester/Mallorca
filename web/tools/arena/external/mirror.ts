@@ -46,7 +46,9 @@ function deckOf(input: MirrorInput): Card[] {
 
 function apply(step: Step, action: SlumbotAction, street: number): Step {
   if (step.hand.street !== STREETS[street] || step.hand.toAct === null) {
-    throw new MirrorError(`Action on ${STREETS[street]} while the engine is on ${step.hand.street}`);
+    throw new MirrorError(
+      `Action on ${STREETS[street]} while the engine is on ${step.hand.street}`,
+    );
   }
   try {
     return applyAction(step.hand, step.seats, toEngineAction(action));

@@ -17,6 +17,7 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 | `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                   |
 | `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`      |
 | `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena" |
+| `web/tools/arena/external/`                                         | Matches against external bots over their APIs, see "arena"           |
 | `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                 |
 | `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`  |
 | `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`  |
@@ -419,6 +420,28 @@ files directly, including in workers. `tools/` may use the clock and Node APIs.
 - The tests in `tools/arena/*.test.ts` run under `npm test`.
 - `match.ts` calls `dispose` on both bots after each hand; `worker.ts` and the in-process path of `run.ts` await
   `prepareBots([a, b])` first.
+
+### External
+
+`web/tools/arena/external/` plays an arena bot against Slumbot over its HTTP API at 200 bb (blinds 50/100,
+stacks 20000), run as `npm run arena:external`; see its `README.md` for the flags and the report.
+
+- `slumbot/actions.ts`: Slumbot action strings (`k`, `c`, `f`, `b<n>` with street-level amounts, `/` between
+  streets) to engine `Action`s and back.
+- `slumbot/client.ts`: `createSlumbotClient({ fetch, credentials?, sleep? })` with `newHand` and `act`; keeps the
+  newest token and never returns it; retries `login` and `new_hand` on any failure but `error_msg`, and `act` only
+  when the request never left (`ECONNREFUSED`, `ENOTFOUND`, `EAI_AGAIN`); any other `act` failure throws
+  `AbandonedHand`.
+- `mirror.ts`: `mirrorHand` rebuilds the hand in the engine from the action string with the client on seat 0,
+  filling unknown cards from the bottom of `fullDeck`; throws `MirrorError` when the engine cannot follow or would
+  deal a card Slumbot has not shown.
+- `runner.ts`: `runExternal` asks a fresh bot, seeded by `mulberry32((Math.imul(seed, 0x9e3779b1) + handIndex * 64
+  + decision) >>> 0)`, for every decision, checks the engine result against `winnings` at the end of the hand and
+  appends one line per hand to the log (`log.ts`), continuing the numbering of an existing log.
+- `estimate.ts` and `allInEv.ts`: raw, all-in EV (exact equity with `equityVsHand`) and Slumbot baseline
+  estimates in bb/100 with 95% intervals, from the log alone.
+- `options.ts` and `cli.ts`: the flags and the command; `cli.ts` is the only file that reads the environment.
+- Tests replay recorded responses and never call the network.
 
 ### Viewer
 

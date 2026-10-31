@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { estimate, formatEstimate, summarizeNets } from './estimate.ts';
 import type { ExternalLine } from './log.ts';
 
-function line(clientPos: 0 | 1, winnings: number, baseline: number, abandoned = false): ExternalLine {
+function line(
+  clientPos: 0 | 1,
+  winnings: number,
+  baseline: number,
+  abandoned = false,
+): ExternalLine {
   return {
     record: null,
     external: {
@@ -26,7 +31,10 @@ describe('summarizeNets', () => {
   it('turns chip nets at blinds 50/100 into bb/100', () => {
     const s = summarizeNets([100, -100, 300, -100]);
     expect(s.bbPer100).toBe(50);
-    expect(s.sdPerHand).toBeCloseTo(Math.sqrt(((50 ** 2 + 150 ** 2 + 250 ** 2 + 150 ** 2) / 3) * 1), 9);
+    expect(s.sdPerHand).toBeCloseTo(
+      Math.sqrt(((50 ** 2 + 150 ** 2 + 250 ** 2 + 150 ** 2) / 3) * 1),
+      9,
+    );
     expect(s.ci95).toBeCloseTo((1.96 * s.sdPerHand) / 2, 9);
     expect(s.handsFor10).toBe(Math.ceil(((1.96 * s.sdPerHand) / 10) ** 2));
   });
@@ -37,7 +45,13 @@ describe('summarizeNets', () => {
 });
 
 describe('estimate', () => {
-  const lines = [line(0, 100, 50), line(1, -100, -300), line(0, 300, 100), line(1, -100, 0), line(0, 0, 0, true)];
+  const lines = [
+    line(0, 100, 50),
+    line(1, -100, -300),
+    line(0, 300, 100),
+    line(1, -100, 0),
+    line(0, 0, 0, true),
+  ];
 
   it('reports raw, all-in EV and baseline figures, and skips abandoned hands', () => {
     const e = estimate(lines);

@@ -1,554 +1,336 @@
 [
- [
-  {
-   "req": "new_hand",
-   "res": {
-    "old_action": "",
-    "action": "b200",
-    "client_pos": 0,
-    "hole_cards": [
-     "Td",
-     "4s"
-    ],
-    "board": []
-   }
-  },
-  {
-   "req": "c",
-   "res": {
-    "old_action": "b200",
-    "action": "b200c/",
-    "client_pos": 0,
-    "hole_cards": [
-     "Td",
-     "4s"
-    ],
-    "board": [
-     "Ah",
-     "8d",
-     "2s"
-    ]
-   }
-  },
-  {
-   "req": "k",
-   "res": {
-    "old_action": "b200c/",
-    "action": "b200c/kk/",
-    "client_pos": 0,
-    "hole_cards": [
-     "Td",
-     "4s"
-    ],
-    "board": [
-     "Ah",
-     "8d",
-     "2s",
-     "Qd"
-    ]
-   }
-  },
-  {
-   "req": "k",
-   "res": {
-    "old_action": "b200c/kk/",
-    "action": "b200c/kk/kb200",
-    "client_pos": 0,
-    "hole_cards": [
-     "Td",
-     "4s"
-    ],
-    "board": [
-     "Ah",
-     "8d",
-     "2s",
-     "Qd"
-    ]
-   }
-  },
-  {
-   "req": "c",
-   "res": {
-    "old_action": "b200c/kk/kb200",
-    "action": "b200c/kk/kb200c/",
-    "client_pos": 0,
-    "hole_cards": [
-     "Td",
-     "4s"
-    ],
-    "board": [
-     "Ah",
-     "8d",
-     "2s",
-     "Qd",
-     "9s"
-    ]
-   }
-  },
-  {
-   "req": "k",
-   "res": {
-    "old_action": "b200c/kk/kb200c/",
-    "action": "b200c/kk/kb200c/kb400",
-    "client_pos": 0,
-    "hole_cards": [
-     "Td",
-     "4s"
-    ],
-    "board": [
-     "Ah",
-     "8d",
-     "2s",
-     "Qd",
-     "9s"
-    ]
-   }
-  },
-  {
-   "req": "c",
-   "res": {
-    "old_action": "b200c/kk/kb200c/kb400",
-    "action": "b200c/kk/kb200c/kb400c",
-    "client_pos": 0,
-    "hole_cards": [
-     "Td",
-     "4s"
-    ],
-    "board": [
-     "Ah",
-     "8d",
-     "2s",
-     "Qd",
-     "9s"
-    ],
-    "bot_hole_cards": [
-     "Ac",
-     "3s"
-    ],
-    "winnings": -800,
-    "won_pot": -1600,
-    "session_num_hands": 1,
-    "baseline_winnings": -600,
-    "session_total": -800,
-    "session_baseline_total": -600
-   }
-  }
- ],
- [
-  {
-   "req": "new_hand",
-   "res": {
-    "old_action": "",
-    "action": "",
-    "client_pos": 1,
-    "hole_cards": [
-     "Ac",
-     "Js"
-    ],
-    "board": []
-   }
-  },
-  {
-   "req": "c",
-   "res": {
-    "old_action": "",
-    "action": "ck/k",
-    "client_pos": 1,
-    "hole_cards": [
-     "Ac",
-     "Js"
-    ],
-    "board": [
-     "7s",
-     "6h",
-     "5s"
-    ]
-   }
-  },
-  {
-   "req": "k",
-   "res": {
-    "old_action": "ck/k",
-    "action": "ck/kk/k",
-    "client_pos": 1,
-    "hole_cards": [
-     "Ac",
-     "Js"
-    ],
-    "board": [
-     "7s",
-     "6h",
-     "5s",
-     "Kc"
-    ]
-   }
-  },
-  {
-   "req": "k",
-   "res": {
-    "old_action": "ck/kk/k",
-    "action": "ck/kk/kk/k",
-    "client_pos": 1,
-    "hole_cards": [
-     "Ac",
-     "Js"
-    ],
-    "board": [
-     "7s",
-     "6h",
-     "5s",
-     "Kc",
-     "3s"
-    ]
-   }
-  },
-  {
-   "req": "k",
-   "res": {
-    "old_action": "ck/kk/kk/k",
-    "action": "ck/kk/kk/kk",
-    "client_pos": 1,
-    "hole_cards": [
-     "Ac",
-     "Js"
-    ],
-    "board": [
-     "7s",
-     "6h",
-     "5s",
-     "Kc",
-     "3s"
-    ],
-    "bot_hole_cards": [
-     "5h",
-     "2s"
-    ],
-    "winnings": -100,
-    "won_pot": -200,
-    "session_num_hands": 2,
-    "baseline_winnings": 300,
-    "session_total": -900,
-    "session_baseline_total": -300
-   }
-  }
- ],
- [
-  {
-   "req": "new_hand",
-   "res": {
-    "old_action": "",
-    "action": "f",
-    "client_pos": 0,
-    "hole_cards": [
-     "Qh",
-     "8c"
-    ],
-    "board": [],
-    "bot_hole_cards": [
-     "9h",
-     "3d"
-    ],
-    "winnings": 50,
-    "won_pot": 150,
-    "session_num_hands": 3,
-    "baseline_winnings": 0,
-    "session_total": -850,
-    "session_baseline_total": -300
-   }
-  }
- ],
- [
-  {
-   "req": "new_hand",
-   "res": {
-    "old_action": "",
-    "action": "",
-    "client_pos": 1,
-    "hole_cards": [
-     "Qs",
-     "Js"
-    ],
-    "board": []
-   }
-  },
-  {
-   "req": "c",
-   "res": {
-    "old_action": "",
-    "action": "ck/b100",
-    "client_pos": 1,
-    "hole_cards": [
-     "Qs",
-     "Js"
-    ],
-    "board": [
-     "Ad",
-     "Kh",
-     "9s"
-    ]
-   }
-  },
-  {
-   "req": "c",
-   "res": {
-    "old_action": "ck/b100",
-    "action": "ck/b100c/k",
-    "client_pos": 1,
-    "hole_cards": [
-     "Qs",
-     "Js"
-    ],
-    "board": [
-     "Ad",
-     "Kh",
-     "9s",
-     "6s"
-    ]
-   }
-  },
-  {
-   "req": "k",
-   "res": {
-    "old_action": "ck/b100c/k",
-    "action": "ck/b100c/kk/k",
-    "client_pos": 1,
-    "hole_cards": [
-     "Qs",
-     "Js"
-    ],
-    "board": [
-     "Ad",
-     "Kh",
-     "9s",
-     "6s",
-     "Ts"
-    ]
-   }
-  },
-  {
-   "req": "k",
-   "res": {
-    "old_action": "ck/b100c/kk/k",
-    "action": "ck/b100c/kk/kk",
-    "client_pos": 1,
-    "hole_cards": [
-     "Qs",
-     "Js"
-    ],
-    "board": [
-     "Ad",
-     "Kh",
-     "9s",
-     "6s",
-     "Ts"
-    ],
-    "bot_hole_cards": [
-     "Ac",
-     "9h"
-    ],
-    "winnings": 200,
-    "won_pot": 400,
-    "session_num_hands": 4,
-    "baseline_winnings": -2200,
-    "session_total": -650,
-    "session_baseline_total": -2500
-   }
-  }
- ],
- [
-  {
-   "req": "new_hand",
-   "res": {
-    "old_action": "",
-    "action": "b200",
-    "client_pos": 0,
-    "hole_cards": [
-     "As",
-     "9c"
-    ],
-    "board": []
-   }
-  },
-  {
-   "req": "c",
-   "res": {
-    "old_action": "b200",
-    "action": "b200c/",
-    "client_pos": 0,
-    "hole_cards": [
-     "As",
-     "9c"
-    ],
-    "board": [
-     "9s",
-     "9h",
-     "2s"
-    ]
-   }
-  },
-  {
-   "req": "k",
-   "res": {
-    "old_action": "b200c/",
-    "action": "b200c/kk/",
-    "client_pos": 0,
-    "hole_cards": [
-     "As",
-     "9c"
-    ],
-    "board": [
-     "9s",
-     "9h",
-     "2s",
-     "Ad"
-    ]
-   }
-  },
-  {
-   "req": "k",
-   "res": {
-    "old_action": "b200c/kk/",
-    "action": "b200c/kk/kk/",
-    "client_pos": 0,
-    "hole_cards": [
-     "As",
-     "9c"
-    ],
-    "board": [
-     "9s",
-     "9h",
-     "2s",
-     "Ad",
-     "8h"
-    ]
-   }
-  },
-  {
-   "req": "k",
-   "res": {
-    "old_action": "b200c/kk/kk/",
-    "action": "b200c/kk/kk/kk",
-    "client_pos": 0,
-    "hole_cards": [
-     "As",
-     "9c"
-    ],
-    "board": [
-     "9s",
-     "9h",
-     "2s",
-     "Ad",
-     "8h"
-    ],
-    "bot_hole_cards": [
-     "Qs",
-     "7c"
-    ],
-    "winnings": 200,
-    "won_pot": 400,
-    "session_num_hands": 5,
-    "baseline_winnings": 0,
-    "session_total": -450,
-    "session_baseline_total": -2500
-   }
-  }
- ],
- [
-  {
-   "req": "new_hand",
-   "res": {
-    "old_action": "",
-    "action": "",
-    "client_pos": 1,
-    "hole_cards": [
-     "9c",
-     "4d"
-    ],
-    "board": []
-   }
-  },
-  {
-   "req": "c",
-   "res": {
-    "old_action": "",
-    "action": "ck/k",
-    "client_pos": 1,
-    "hole_cards": [
-     "9c",
-     "4d"
-    ],
-    "board": [
-     "Qh",
-     "9s",
-     "4s"
-    ]
-   }
-  },
-  {
-   "req": "k",
-   "res": {
-    "old_action": "ck/k",
-    "action": "ck/kk/k",
-    "client_pos": 1,
-    "hole_cards": [
-     "9c",
-     "4d"
-    ],
-    "board": [
-     "Qh",
-     "9s",
-     "4s",
-     "7s"
-    ]
-   }
-  },
-  {
-   "req": "k",
-   "res": {
-    "old_action": "ck/kk/k",
-    "action": "ck/kk/kk/k",
-    "client_pos": 1,
-    "hole_cards": [
-     "9c",
-     "4d"
-    ],
-    "board": [
-     "Qh",
-     "9s",
-     "4s",
-     "7s",
-     "7c"
-    ]
-   }
-  },
-  {
-   "req": "k",
-   "res": {
-    "old_action": "ck/kk/kk/k",
-    "action": "ck/kk/kk/kk",
-    "client_pos": 1,
-    "hole_cards": [
-     "9c",
-     "4d"
-    ],
-    "board": [
-     "Qh",
-     "9s",
-     "4s",
-     "7s",
-     "7c"
-    ],
-    "bot_hole_cards": [
-     "Ad",
-     "Ts"
-    ],
-    "winnings": 100,
-    "won_pot": 200,
-    "session_num_hands": 6,
-    "baseline_winnings": -300,
-    "session_total": -350,
-    "session_baseline_total": -2800
-   }
-  }
- ]
+  [
+    {
+      "req": "new_hand",
+      "res": {
+        "old_action": "",
+        "action": "b200",
+        "client_pos": 0,
+        "hole_cards": ["Td", "4s"],
+        "board": []
+      }
+    },
+    {
+      "req": "c",
+      "res": {
+        "old_action": "b200",
+        "action": "b200c/",
+        "client_pos": 0,
+        "hole_cards": ["Td", "4s"],
+        "board": ["Ah", "8d", "2s"]
+      }
+    },
+    {
+      "req": "k",
+      "res": {
+        "old_action": "b200c/",
+        "action": "b200c/kk/",
+        "client_pos": 0,
+        "hole_cards": ["Td", "4s"],
+        "board": ["Ah", "8d", "2s", "Qd"]
+      }
+    },
+    {
+      "req": "k",
+      "res": {
+        "old_action": "b200c/kk/",
+        "action": "b200c/kk/kb200",
+        "client_pos": 0,
+        "hole_cards": ["Td", "4s"],
+        "board": ["Ah", "8d", "2s", "Qd"]
+      }
+    },
+    {
+      "req": "c",
+      "res": {
+        "old_action": "b200c/kk/kb200",
+        "action": "b200c/kk/kb200c/",
+        "client_pos": 0,
+        "hole_cards": ["Td", "4s"],
+        "board": ["Ah", "8d", "2s", "Qd", "9s"]
+      }
+    },
+    {
+      "req": "k",
+      "res": {
+        "old_action": "b200c/kk/kb200c/",
+        "action": "b200c/kk/kb200c/kb400",
+        "client_pos": 0,
+        "hole_cards": ["Td", "4s"],
+        "board": ["Ah", "8d", "2s", "Qd", "9s"]
+      }
+    },
+    {
+      "req": "c",
+      "res": {
+        "old_action": "b200c/kk/kb200c/kb400",
+        "action": "b200c/kk/kb200c/kb400c",
+        "client_pos": 0,
+        "hole_cards": ["Td", "4s"],
+        "board": ["Ah", "8d", "2s", "Qd", "9s"],
+        "bot_hole_cards": ["Ac", "3s"],
+        "winnings": -800,
+        "won_pot": -1600,
+        "session_num_hands": 1,
+        "baseline_winnings": -600,
+        "session_total": -800,
+        "session_baseline_total": -600
+      }
+    }
+  ],
+  [
+    {
+      "req": "new_hand",
+      "res": {
+        "old_action": "",
+        "action": "",
+        "client_pos": 1,
+        "hole_cards": ["Ac", "Js"],
+        "board": []
+      }
+    },
+    {
+      "req": "c",
+      "res": {
+        "old_action": "",
+        "action": "ck/k",
+        "client_pos": 1,
+        "hole_cards": ["Ac", "Js"],
+        "board": ["7s", "6h", "5s"]
+      }
+    },
+    {
+      "req": "k",
+      "res": {
+        "old_action": "ck/k",
+        "action": "ck/kk/k",
+        "client_pos": 1,
+        "hole_cards": ["Ac", "Js"],
+        "board": ["7s", "6h", "5s", "Kc"]
+      }
+    },
+    {
+      "req": "k",
+      "res": {
+        "old_action": "ck/kk/k",
+        "action": "ck/kk/kk/k",
+        "client_pos": 1,
+        "hole_cards": ["Ac", "Js"],
+        "board": ["7s", "6h", "5s", "Kc", "3s"]
+      }
+    },
+    {
+      "req": "k",
+      "res": {
+        "old_action": "ck/kk/kk/k",
+        "action": "ck/kk/kk/kk",
+        "client_pos": 1,
+        "hole_cards": ["Ac", "Js"],
+        "board": ["7s", "6h", "5s", "Kc", "3s"],
+        "bot_hole_cards": ["5h", "2s"],
+        "winnings": -100,
+        "won_pot": -200,
+        "session_num_hands": 2,
+        "baseline_winnings": 300,
+        "session_total": -900,
+        "session_baseline_total": -300
+      }
+    }
+  ],
+  [
+    {
+      "req": "new_hand",
+      "res": {
+        "old_action": "",
+        "action": "f",
+        "client_pos": 0,
+        "hole_cards": ["Qh", "8c"],
+        "board": [],
+        "bot_hole_cards": ["9h", "3d"],
+        "winnings": 50,
+        "won_pot": 150,
+        "session_num_hands": 3,
+        "baseline_winnings": 0,
+        "session_total": -850,
+        "session_baseline_total": -300
+      }
+    }
+  ],
+  [
+    {
+      "req": "new_hand",
+      "res": {
+        "old_action": "",
+        "action": "",
+        "client_pos": 1,
+        "hole_cards": ["Qs", "Js"],
+        "board": []
+      }
+    },
+    {
+      "req": "c",
+      "res": {
+        "old_action": "",
+        "action": "ck/b100",
+        "client_pos": 1,
+        "hole_cards": ["Qs", "Js"],
+        "board": ["Ad", "Kh", "9s"]
+      }
+    },
+    {
+      "req": "c",
+      "res": {
+        "old_action": "ck/b100",
+        "action": "ck/b100c/k",
+        "client_pos": 1,
+        "hole_cards": ["Qs", "Js"],
+        "board": ["Ad", "Kh", "9s", "6s"]
+      }
+    },
+    {
+      "req": "k",
+      "res": {
+        "old_action": "ck/b100c/k",
+        "action": "ck/b100c/kk/k",
+        "client_pos": 1,
+        "hole_cards": ["Qs", "Js"],
+        "board": ["Ad", "Kh", "9s", "6s", "Ts"]
+      }
+    },
+    {
+      "req": "k",
+      "res": {
+        "old_action": "ck/b100c/kk/k",
+        "action": "ck/b100c/kk/kk",
+        "client_pos": 1,
+        "hole_cards": ["Qs", "Js"],
+        "board": ["Ad", "Kh", "9s", "6s", "Ts"],
+        "bot_hole_cards": ["Ac", "9h"],
+        "winnings": 200,
+        "won_pot": 400,
+        "session_num_hands": 4,
+        "baseline_winnings": -2200,
+        "session_total": -650,
+        "session_baseline_total": -2500
+      }
+    }
+  ],
+  [
+    {
+      "req": "new_hand",
+      "res": {
+        "old_action": "",
+        "action": "b200",
+        "client_pos": 0,
+        "hole_cards": ["As", "9c"],
+        "board": []
+      }
+    },
+    {
+      "req": "c",
+      "res": {
+        "old_action": "b200",
+        "action": "b200c/",
+        "client_pos": 0,
+        "hole_cards": ["As", "9c"],
+        "board": ["9s", "9h", "2s"]
+      }
+    },
+    {
+      "req": "k",
+      "res": {
+        "old_action": "b200c/",
+        "action": "b200c/kk/",
+        "client_pos": 0,
+        "hole_cards": ["As", "9c"],
+        "board": ["9s", "9h", "2s", "Ad"]
+      }
+    },
+    {
+      "req": "k",
+      "res": {
+        "old_action": "b200c/kk/",
+        "action": "b200c/kk/kk/",
+        "client_pos": 0,
+        "hole_cards": ["As", "9c"],
+        "board": ["9s", "9h", "2s", "Ad", "8h"]
+      }
+    },
+    {
+      "req": "k",
+      "res": {
+        "old_action": "b200c/kk/kk/",
+        "action": "b200c/kk/kk/kk",
+        "client_pos": 0,
+        "hole_cards": ["As", "9c"],
+        "board": ["9s", "9h", "2s", "Ad", "8h"],
+        "bot_hole_cards": ["Qs", "7c"],
+        "winnings": 200,
+        "won_pot": 400,
+        "session_num_hands": 5,
+        "baseline_winnings": 0,
+        "session_total": -450,
+        "session_baseline_total": -2500
+      }
+    }
+  ],
+  [
+    {
+      "req": "new_hand",
+      "res": {
+        "old_action": "",
+        "action": "",
+        "client_pos": 1,
+        "hole_cards": ["9c", "4d"],
+        "board": []
+      }
+    },
+    {
+      "req": "c",
+      "res": {
+        "old_action": "",
+        "action": "ck/k",
+        "client_pos": 1,
+        "hole_cards": ["9c", "4d"],
+        "board": ["Qh", "9s", "4s"]
+      }
+    },
+    {
+      "req": "k",
+      "res": {
+        "old_action": "ck/k",
+        "action": "ck/kk/k",
+        "client_pos": 1,
+        "hole_cards": ["9c", "4d"],
+        "board": ["Qh", "9s", "4s", "7s"]
+      }
+    },
+    {
+      "req": "k",
+      "res": {
+        "old_action": "ck/kk/k",
+        "action": "ck/kk/kk/k",
+        "client_pos": 1,
+        "hole_cards": ["9c", "4d"],
+        "board": ["Qh", "9s", "4s", "7s", "7c"]
+      }
+    },
+    {
+      "req": "k",
+      "res": {
+        "old_action": "ck/kk/kk/k",
+        "action": "ck/kk/kk/kk",
+        "client_pos": 1,
+        "hole_cards": ["9c", "4d"],
+        "board": ["Qh", "9s", "4s", "7s", "7c"],
+        "bot_hole_cards": ["Ad", "Ts"],
+        "winnings": 100,
+        "won_pot": 200,
+        "session_num_hands": 6,
+        "baseline_winnings": -300,
+        "session_total": -350,
+        "session_baseline_total": -2800
+      }
+    }
+  ]
 ]

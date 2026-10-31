@@ -19,7 +19,9 @@
     "arena:publish": "node tools/arena/publishCli.ts",
     "contact": "npm run build && node e2e/contact.ts",
     "lint": "eslint . && prettier --check .",
-    "format": "prettier --write . && eslint . --fix"
+    "format": "prettier --write . && eslint . --fix",
+    "arena:external": "node tools/arena/external/cli.ts",
+    "prearena:external": "npm run wasm"
   },
   "engines": {
     "node": ">=24"

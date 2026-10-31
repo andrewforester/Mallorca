@@ -35,7 +35,7 @@ export interface Report {
   handsFile: string | null;
 }
 
-function commitHash(): string {
+export function commitHash(): string {
   try {
     return execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
       encoding: 'utf8',
