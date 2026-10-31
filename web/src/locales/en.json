@@ -190,8 +190,8 @@
       "foldToThreeBet": "Fold to a three-bet",
       "cbet": "Continuation bet on the flop",
       "foldToCbet": "Fold to a continuation bet",
-      "turnBet": "Bet the turn when checked to",
-      "riverBet": "Bet the river when checked to",
+      "turnBet": "Bet the turn with no bet to face",
+      "riverBet": "Bet the river with no bet to face",
       "riverFold": "Fold to a river bet"
     },
     "leakLine": "You {{player}}%, strategy {{strategy}}%, {{spots}} spots",

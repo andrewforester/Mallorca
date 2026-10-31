@@ -298,7 +298,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   raise goes to the nearest sized move, all-in included) and grades its frequency: `strategy` from 25 %, `rare` from
   5 %, `off` below. `spotOf(events, seat)` (`spots.ts`) names the leak spot of a decision from the hand's events
   before it: `open` (the button's first preflop action, no raise), `threeBet` (the big blind facing one raise),
-  `foldToThreeBet`, `cbet` (the last preflop raiser on the flop with no bet yet), `foldToCbet`, `turnBet` and
+  `foldToThreeBet` (the opener facing one re-raise; a four-bet is no spot), `cbet` (the last preflop raiser on the flop with no bet yet), `foldToCbet`, `turnBet` and
   `riverBet` (nothing to face) and `riverFold` (facing a river bet), or null. `leaks(decisions)` (`leaks.ts`) gives,
   per spot in that order, the number of decisions, the player's share of the spot's kind (raises, or folds for the
   three folding spots) and the strategy's mean share of moves of that kind; the panel shows a spot from `MIN_SPOTS`

@@ -53,7 +53,7 @@ function preflopSpot(state: Walk, seat: SeatIndex): SpotTag | null {
   const facing = raises[raises.length - 1] !== seat;
   if (!facing) return null;
   if (raises.length === 1 && !state.acted.includes(seat)) return 'threeBet';
-  return raises.includes(seat) ? 'foldToThreeBet' : null;
+  return raises.length === 2 && raises[0] === seat ? 'foldToThreeBet' : null;
 }
 
 function flopSpot(state: Walk, seat: SeatIndex): SpotTag | null {

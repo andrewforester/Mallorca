@@ -30,6 +30,8 @@ describe('spotOf', () => {
     expect(spotOf([start(0)], 0)).toBe('open');
     expect(spotOf([start(1), act(1, raise(50))], 0)).toBe('threeBet');
     expect(spotOf([start(0), act(0, raise(50)), act(1, raise(150))], 0)).toBe('foldToThreeBet');
+    const fourBet = [start(0), act(0, raise(50)), act(1, raise(150)), act(0, raise(400))];
+    expect(spotOf(fourBet, 1)).toBeNull();
   });
 
   it('has no spot for the big blind after a limp', () => {
