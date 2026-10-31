@@ -1,3 +1,4 @@
+use crate::schedule::{Claim, Schedule};
 use crate::tree::load_preset;
 use clap::Args;
 use mallorca_core::abstraction::{decode_table, Abstraction};
@@ -13,7 +14,7 @@ use mallorca_core::tree::{Street, Tree};
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 const TABLES: [(&str, Street); 3] = [
@@ -226,9 +227,7 @@ struct Shared<'a, G: Game> {
     game: &'a G,
     storage: &'a Storage,
     cfr: &'a CfrParams,
-    claimed: &'a AtomicU64,
-    completed: &'a AtomicU64,
-    end: u64,
+    schedule: &'a Schedule,
     halt: &'a AtomicBool,
     pause: &'a AtomicBool,
     idle: &'a AtomicUsize,
@@ -244,16 +243,14 @@ fn work<G: Game>(s: &Shared<'_, G>, rng: &mut Rng) {
             s.idle.fetch_sub(1, Ordering::AcqRel);
             continue;
         }
-        let i = s.claimed.fetch_add(1, Ordering::Relaxed);
-        if i >= s.end {
-            break;
+        match s.schedule.claim() {
+            Claim::Done => break,
+            Claim::Wait => std::thread::sleep(PAUSE_POLL),
+            Claim::Run(i) => {
+                iterate(s.game, s.storage, (i % 2) as u8, rng);
+                s.schedule.complete(|k| s.storage.discount(k, s.cfr));
+            }
         }
-        iterate(s.game, s.storage, (i % 2) as u8, rng);
-        let done = i + 1;
-        if done.is_multiple_of(s.cfr.discount_interval) {
-            s.storage.discount(done / s.cfr.discount_interval, s.cfr);
-        }
-        s.completed.fetch_add(1, Ordering::Release);
     }
 }
 
@@ -362,11 +359,10 @@ pub fn train(
         start_elapsed,
         next,
     };
-    let claimed = AtomicU64::new(start);
-    let completed = AtomicU64::new(start);
     let end = session
         .iterations
         .map_or(u64::MAX, |n| start.saturating_add(n));
+    let schedule = Schedule::new(start, end, preset.cfr.discount_interval);
     let halt = AtomicBool::new(false);
     let pause = AtomicBool::new(false);
     let idle = AtomicUsize::new(0);
@@ -377,9 +373,7 @@ pub fn train(
         game: &game,
         storage: &storage,
         cfr: &preset.cfr,
-        claimed: &claimed,
-        completed: &completed,
-        end,
+        schedule: &schedule,
         halt: &halt,
         pause: &pause,
         idle: &idle,
@@ -417,7 +411,7 @@ pub fn train(
                     Ok(())
                 } else {
                     progress
-                        .checkpoint(&storage, completed.load(Ordering::Acquire), elapsed)
+                        .checkpoint(&storage, schedule.completed(), elapsed)
                         .map(|_| ())
                 };
                 pause.store(false, Ordering::Release);
@@ -434,7 +428,7 @@ pub fn train(
     });
     run?;
     let trained_for = since();
-    let iterations = completed.load(Ordering::Acquire);
+    let iterations = schedule.completed();
     let path = progress.checkpoint(&storage, iterations, trained_for)?;
     Ok(Outcome {
         iterations,
@@ -513,6 +507,7 @@ pub fn calibrate(args: &CalibrateArgs, stop: &AtomicBool) -> Result<(), String> 
 pub mod tests {
     use super::*;
     use mallorca_core::abstraction::{encode_table, TABLE_HEADER_LEN};
+    use std::sync::atomic::AtomicU64;
     use std::sync::OnceLock;
 
     const TINY: &str = include_str!("../../../presets/tiny.toml");

@@ -5,6 +5,7 @@ mod lbr;
 mod measure;
 mod parallel;
 mod potential;
+mod schedule;
 mod thresholds;
 mod train;
 mod tree;
