@@ -1,4 +1,4 @@
-import type { EngineEvent, SeatIndex } from '../../engine/index.ts';
+import type { BettingStreet, DealtStreet, EngineEvent, SeatIndex } from '../../engine/index.ts';
 import type { HandCategory } from '../../equity/index.ts';
 import { formatCard } from '../cards.ts';
 import type { HandRecord } from './record.ts';
@@ -15,9 +15,8 @@ const CATEGORY_TEXT: Record<HandCategory, string> = {
   'straight-flush': 'a straight flush',
 };
 
-const STREET_TITLE = { flop: 'Flop', turn: 'Turn', river: 'River' } as const;
+const STREET_TITLE: Record<DealtStreet, string> = { flop: 'Flop', turn: 'Turn', river: 'River' };
 
-type Street = 'preflop' | keyof typeof STREET_TITLE;
 type Pair = [number, number];
 
 function other(seat: SeatIndex): SeatIndex {
@@ -49,9 +48,9 @@ interface Writer {
   lines: string[];
   bets: Pair;
   awards: Pair;
-  foldedOn: (Street | undefined)[];
+  foldedOn: (BettingStreet | undefined)[];
   showdownHands: { cards: string; category: HandCategory }[];
-  street: Street;
+  street: BettingStreet;
   lastActedIndex: number;
   returnedFlushed: boolean;
 }

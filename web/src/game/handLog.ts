@@ -1,4 +1,4 @@
-import type { LogEntry, Street } from '../engine/index.ts';
+import type { DealtStreet, LogEntry, Street } from '../engine/index.ts';
 
 export type StreetName = Exclude<Street, 'complete'>;
 
@@ -9,7 +9,7 @@ export interface StreetGroup {
   entries: LogEntry[];
 }
 
-const DEALT = new Set<string>(['flop', 'turn', 'river']);
+const DEALT = new Set<string>(['flop', 'turn', 'river'] satisfies DealtStreet[]);
 
 function lastHand(entries: LogEntry[]): LogEntry[] {
   let start = -1;
@@ -37,7 +37,7 @@ export function groupHand(entries: LogEntry[]): StreetGroup[] {
     const current = groups[groups.length - 1] as StreetGroup;
     const pot = Number(entry.params.pot ?? 0);
     if (DEALT.has(entry.key)) {
-      groups.push({ street: entry.key as StreetName, cards: cardsOf(entry), pot, entries: [] });
+      groups.push({ street: entry.key as DealtStreet, cards: cardsOf(entry), pot, entries: [] });
     } else if (entry.key === 'show' && current.street !== 'showdown') {
       groups.push({ street: 'showdown', cards: [], pot, entries: [entry] });
     } else {
