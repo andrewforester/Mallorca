@@ -1,7 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { CompleteInput, Deps, Purpose } from "./handler.ts";
 
-const MODEL = Deno.env.get("TALK_MODEL") ?? "claude-haiku-5-5";
+const DEFAULT_MODEL = "claude-haiku-5-5";
+
+export const modelFrom = (value: string | undefined): string => value || DEFAULT_MODEL;
 
 const SETTINGS: Record<Purpose, { maxTokens: number; temperature: number }> = {
   line: { maxTokens: 120, temperature: 0.9 },
@@ -11,10 +13,11 @@ const SETTINGS: Record<Purpose, { maxTokens: number; temperature: number }> = {
 
 export function createComplete(apiKey: string | undefined): Deps["complete"] {
   const client = new Anthropic({ apiKey });
+  const model = modelFrom(Deno.env.get("TALK_MODEL"));
   return async (input: CompleteInput) => {
     const { maxTokens, temperature } = SETTINGS[input.purpose];
     const response = await client.messages.create({
-      model: MODEL,
+      model,
       max_tokens: maxTokens,
       temperature,
       system: input.system,
