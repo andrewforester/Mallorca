@@ -15,6 +15,8 @@ const decision: Decision = {
 
 const noLoader = () => Promise.reject(new Error('no loader'));
 
+const noCoach = () => Promise.reject(new Error('no coach'));
+
 function fakeBrain(decide: Brain['decide'] = () => decision) {
   const observed: Observation[] = [];
   const brain: Brain = {
@@ -33,6 +35,7 @@ describe('createWorkerHandler', () => {
       () => brain,
       () => undefined,
       noLoader,
+      noCoach,
     );
     handle({ kind: 'observe', observations: [observation, observation] });
     expect(observed).toHaveLength(2);
@@ -45,6 +48,7 @@ describe('createWorkerHandler', () => {
       () => brain,
       (reply) => replies.push(reply),
       noLoader,
+      noCoach,
     );
     handle({ kind: 'decide', id: 7, legal });
     expect(replies).toEqual([{ id: 7, decision }]);
@@ -59,6 +63,7 @@ describe('createWorkerHandler', () => {
       () => brain,
       (reply) => replies.push(reply),
       noLoader,
+      noCoach,
     );
     handle({ kind: 'decide', id: 3, legal });
     expect(replies).toEqual([{ id: 3, error: 'no cards' }]);
@@ -73,6 +78,7 @@ describe('createWorkerHandler', () => {
       () => brain,
       (reply) => replies.push(reply),
       noLoader,
+      noCoach,
     );
     handle({ kind: 'decide', id: 4, legal });
     expect(replies).toEqual([{ id: 4, error: 'boom' }]);
@@ -87,6 +93,7 @@ describe('createWorkerHandler', () => {
       () => brains.shift() as Brain,
       (reply) => replies.push(reply),
       noLoader,
+      noCoach,
     );
     handle({ kind: 'observe', observations: [observation] });
     handle({ kind: 'reset' });
@@ -116,6 +123,7 @@ describe('createWorkerHandler select', () => {
           release = () => resolve(() => cfr.brain);
         });
       },
+      noCoach,
     );
     handle({ kind: 'select', id: 1, opponent: 'cfr', seed: 5 });
     handle({ kind: 'observe', observations: [observation] });
@@ -139,6 +147,7 @@ describe('createWorkerHandler select', () => {
       () => math.brain,
       (reply) => replies.push(reply),
       () => Promise.reject(new Error('no wasm')),
+      noCoach,
     );
     handle({ kind: 'select', id: 1, opponent: 'cfr', seed: 5 });
     handle({ kind: 'decide', id: 2, legal });
@@ -159,6 +168,7 @@ describe('createWorkerHandler select', () => {
         asked.push(opponent);
         return Promise.reject(new Error('no model'));
       },
+      noCoach,
     );
     handle({ kind: 'select', id: 3, opponent: 'math', seed: 1 });
     handle({ kind: 'select', id: 4, opponent: 'cfr', seed: 1 });
@@ -176,6 +186,7 @@ describe('createWorkerHandler select', () => {
       () => ({ ...fakeBrain().brain, dispose: () => (disposed += 1) }),
       () => undefined,
       noLoader,
+      noCoach,
     );
     handle({ kind: 'reset' });
     handle({ kind: 'reset' });

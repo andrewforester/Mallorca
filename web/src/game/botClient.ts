@@ -1,5 +1,6 @@
 import { createMathBrain } from '../brains/index.ts';
 import type { Decision, Observation } from '../brains/index.ts';
+import type { CoachFacts } from '../coach/index.ts';
 import type { LegalActions } from '../engine/index.ts';
 import type { Opponent } from './opponent.ts';
 import type { WorkerReply, WorkerRequest } from './workerProtocol.ts';
@@ -9,6 +10,7 @@ export interface BotClient {
   decide(legal: LegalActions): Promise<Decision>;
   reset(): void;
   select?(opponent: Opponent, seed: number): Promise<Opponent>;
+  coach?(observations: Observation[], legal: LegalActions, pot: number): Promise<CoachFacts>;
   dispose?(): void;
 }
 
@@ -115,6 +117,10 @@ export function withFallback(primary: BotClient, timeoutMs = BOT_TIMEOUT_MS): Bo
         return fallBack().decide(legal);
       }
     },
+    coach(observations, legal, pot) {
+      const ask = usedFallback ? undefined : active.coach?.(observations, legal, pot);
+      return ask ?? Promise.reject(new Error('The coach is not available'));
+    },
     select: (opponent, seed) =>
       selectOrFallBack(active.select?.(opponent, seed), () => {
         if (!usedFallback) {
@@ -205,6 +211,12 @@ function rawWorkerBot(): BotClient {
       return ask(
         (id) => ({ kind: 'select', id, opponent, seed }),
         (r) => ('opponent' in r ? r.opponent : undefined),
+      );
+    },
+    coach(observations, legal, pot) {
+      return ask(
+        (id) => ({ kind: 'coach', id, observations, legal, pot }),
+        (r) => ('facts' in r ? r.facts : undefined),
       );
     },
     reset() {

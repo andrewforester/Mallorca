@@ -39,11 +39,14 @@ import { handRecorder } from './records/recorder.ts';
 import type { HandRecorder, RecordsOptions } from './records/recorder.ts';
 import { botRecord } from './records/record.ts';
 import type { Opponent } from './opponent.ts';
+import { COACH_OFF, createCoach } from './coach.ts';
+import type { Coach, CoachState } from './coach.ts';
 
 export { resolveIntent, toIntent } from './intent.ts';
 export type { Intent } from './intent.ts';
 export { potCollected, resultOf } from './outcome.ts';
 export type { HandResult } from './outcome.ts';
+export type { CoachState, CoachStatus } from './coach.ts';
 
 export type Phase =
   | 'idle'
@@ -71,6 +74,7 @@ export interface SessionState {
   session: SessionResult;
   sessionId: string | null;
   opponent: Opponent;
+  coach: CoachState;
 }
 
 export interface SessionActions {
@@ -78,6 +82,7 @@ export interface SessionActions {
   leave(): void;
   nextHand(): Promise<void>;
   act(intent: Intent): Promise<void>;
+  setCoach(on: boolean): void;
   dispose(): void;
 }
 
@@ -92,6 +97,7 @@ export interface SessionOptions {
   startingStacks?: [number, number];
   mode: TableMode;
   records?: RecordsOptions;
+  coach?: boolean;
 }
 
 type Store = SessionState & SessionActions;
@@ -106,6 +112,7 @@ interface Runtime {
   set: StoreApi<Store>['setState'];
   get: StoreApi<Store>['getState'];
   bot: BotClient;
+  coach: Coach;
   rng: Rng;
   timers: Timers;
   recorder: HandRecorder;
@@ -166,6 +173,7 @@ function tally(rt: Runtime, table: Table): SessionResult {
 
 function record(rt: Runtime, events: EngineEvent[], opens = false): void {
   rt.recorder.observe(events);
+  rt.coach.observe(events);
   rt.bot.observe(toObservations(events, rt.botSeat));
   for (const event of events) {
     if (event.type === 'toppedUp' && event.seat === rt.humanSeat) {
@@ -251,6 +259,7 @@ async function drive(rt: Runtime, myEpoch: number): Promise<void> {
     }
     if (toAct(table) === rt.humanSeat) {
       rt.set({ phase: 'humanToAct' });
+      rt.coach.ask(legalActionsOf(table), table.hand.pot);
       return;
     }
     if (!(await botTurn(rt, myEpoch))) {
@@ -267,6 +276,7 @@ function beginHand(rt: Runtime): Promise<void> {
     seats[1].stack + (hand?.committed[1] ?? 0),
   ];
   rt.bot.reset();
+  rt.coach.handStarted();
   rt.recorder.begin();
   rt.set({
     table: step.state,
@@ -322,6 +332,7 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
     dispose() {
       rt.epoch += 1;
       rt.timers.cancel();
+      rt.coach.acted();
       rt.bot.dispose?.();
     },
     nextHand() {
@@ -335,8 +346,16 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
       if (phase !== 'humanToAct' || toAct(table) !== rt.humanSeat) {
         return Promise.resolve();
       }
+      rt.coach.acted();
       play(rt, resolveIntent(intent, legalActionsOf(table)));
       return drive(rt, rt.epoch);
+    },
+    setCoach(on) {
+      rt.coach.setOn(on);
+      const { phase, table } = rt.get();
+      if (on && phase === 'humanToAct' && table.hand !== null) {
+        rt.coach.ask(legalActionsOf(table), table.hand.pot);
+      }
     },
   };
 }
@@ -348,10 +367,14 @@ export function createSession(options: SessionOptions): Session {
   const timers = createTimers();
   const recorder = handRecorder(options.records, { names, humanSeat });
   return createStore<Store>((set, get) => {
+    const coach = createCoach(bot, humanSeat, options.coach ?? false, (state) =>
+      set({ coach: state }),
+    );
     const rt: Runtime = {
       set,
       get,
       bot,
+      coach,
       rng,
       timers,
       recorder,
@@ -379,6 +402,7 @@ export function createSession(options: SessionOptions): Session {
       session: tally(rt, initial),
       sessionId: options.records?.sessionId ?? null,
       opponent: rt.opponent,
+      coach: COACH_OFF,
       ...sessionActions(rt, options),
     };
   });
