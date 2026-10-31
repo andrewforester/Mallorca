@@ -10,6 +10,7 @@ on:
       - 'solver/Cargo.*'
       - 'solver/rust-toolchain.toml'
       - '.github/workflows/web-*.yml'
+      - '.github/vercel/**'
   workflow_dispatch:
 
 permissions:
@@ -25,8 +26,6 @@ defaults:
 
 env:
   PRODUCTION: ${{ github.ref == 'refs/heads/master' }}
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
   deploy:
@@ -47,7 +46,24 @@ jobs:
         with:
           node-version-file: web/.nvmrc
           cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: |
+            web/package-lock.json
+            .github/vercel/package-lock.json
+      - id: credentials
+        env:
+          ENVIRONMENT: ${{ github.ref == 'refs/heads/master' && 'vercel-production' || 'vercel-preview' }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          elif [ "$PRODUCTION" = "true" ]; then
+            echo "::error::The $ENVIRONMENT environment has no Vercel secrets"
+            exit 1
+          else
+            echo "The $ENVIRONMENT environment has no Vercel secrets, so the preview deploy is skipped." >> "$GITHUB_STEP_SUMMARY"
+          fi
       - run: npm ci
       - run: npm run build
       - run: |
@@ -55,12 +71,19 @@ jobs:
           mkdir -p .vercel/output
           cp -r dist .vercel/output/static
           cp vercel-output-config.json .vercel/output/config.json
+      - if: steps.credentials.outputs.ready == 'true'
+        working-directory: .github/vercel
+        run: npm ci
       - id: deploy
+        if: steps.credentials.outputs.ready == 'true'
+        working-directory: .github/vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          args=(deploy --prebuilt --yes --token "$VERCEL_TOKEN")
+          args=(deploy --prebuilt --yes --cwd "$GITHUB_WORKSPACE/web" --token "$VERCEL_TOKEN")
           if [ "$PRODUCTION" = "true" ]; then args+=(--prod); fi
-          url=$(npx --yes vercel@63.1.2 "${args[@]}")
+          url=$(npx vercel "${args[@]}")
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "$url" >> "$GITHUB_STEP_SUMMARY"
