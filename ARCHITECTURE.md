@@ -223,12 +223,15 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 
 ## talk
 
-- `createTalk({ rng, seat })` returns a `Talk` for one session against the CFR bot. `observe(events, nowMs)` follows
-  the engine events of a hand (`handTracker.ts`) and returns a `LineIntent` or null: the situation (`herBet`,
-  `herCall`, `playerBet`, `handWon`, `handLost`, `bluffCaught`), the hint (her hand-strength class `strong`, `medium`
-  or `weak`, or null for a neutral line), whether the hint is honest, and the street and hand number the line
-  belongs to. `hear(signals)` moves the mood with what the player said, `replyIntent()` is the intent for an answer,
-  `facts()` the hand as the server sees it (her cards included) and `summary()` the session summary.
+- `createTalk({ seat, rng, level, luckRng?, habits? })` returns a `Talk` for one session against the CFR bot.
+  `observe(events, nowMs)` follows the engine events of a hand (`handTracker.ts`) and returns a `LineIntent` or null:
+  the situation (`herBet`, `herCall`, `playerBet`, `handWon`, `handLost`, `bluffCaught`; `endsHand` tells the last
+  three), the hint (her hand-strength class `strong`, `medium` or `weak`, or null for a neutral line), whether the
+  hint is honest, the street and hand number the line belongs to, and `actionStreet`, the street the action happened
+  on. A call that closes a street belongs to the next street (its pace slot and staleness), but its cue names
+  `actionStreet`. `hear(signals)` moves the mood with what the player said, `replyIntent()` is the intent for an
+  answer, `facts()` the hand as the server sees it (her cards included, stacks by seat) and `summary()` the session
+  summary from her side (`netBb` is her net); `since(current, earlier)` gives what changed between two summaries.
 - `strengthOf` classifies her hand from equity against a random hand, not from the blueprint. The habits
   (`habits.ts`) give, for a situation and a class, the chance she speaks and the chance the hint is honest, and the
   tells level (`obvious`, `subtle`, `hidden`) moves both toward the class-blind mean. Code draws every chance from
@@ -236,8 +239,9 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   none in the 1.5 s after a line.
 - `mood.ts` keeps four axes in [-1, 1] (`cheer`, `confidence`, `tilt`, `caution`) and `form`, an exponential mean of
   the recent results. A hand result and the player's signals move it and it decays toward calm. `styleOf(mood)`
-  maps it to the CFR style `{ aggression, bluff, tightness }`, clamped to [0.8, 1.25], [0.8, 1.3] and [0.85, 1.2]. A
-  calm mood gives the neutral style 1, 1, 1. Her words never decide a move.
+  maps it to the CFR style `{ aggression, bluff, tightness }`: aggression `1 + 0.5 tilt + 0.1 (confidence + form)`,
+  bluff `1 + 0.8 tilt` and tightness `1 + 0.2 caution - 0.1 cheer`, clamped to [0.8, 1.6], [0.8, 1.8] and
+  [0.85, 1.2]. A calm mood gives the neutral style 1, 1, 1. Her words never decide a move.
 
 ## game
 
@@ -294,25 +298,36 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   `now()` is ignored and the game goes on. A bot `Decision` is recorded with `recordDecision`; its `eventIndex` is
   the index of the resulting `acted` event in the hand's events. The timeout fallback plays without a decision
   and records none. `bot` is `MATH_BOT`, `playedAt` is `now()` at completion.
-- Table talk (`sessionTalk.ts`): `SessionOptions` takes `talk` (a `TalkClient`, default `silentTalkClient`), `now`
-  (default `Date.now`), `locale` (default `en`), `talkOn` (default true) and `tells` (default `subtle`).
-  `SessionState.talk` is `{ available, on, level, lines, bubbles }`: `available` is `client.enabled` with the `cfr`
-  opponent, `lines` the last 100 `ChatLine`s (`id`, `speaker`, `text`, `handNumber`, optional `undelivered`) and
-  `bubbles` the latest line per seat. Each `start` makes a `Talk` for the bot's seat with
-  `mulberry32(seed ^ 0x7a1c)` when the opponent is `cfr`; it lives across hands, and every step's events reach
-  `Talk.observe` after the bot, also with talk off. A line intent calls `client.line` without waiting, and its text
-  is kept only if the epoch, hand number and street still match and talk is still available and on. `say(text)` (trimmed, at most 200 characters) and
-  `quick(niceHand | bluffing | notThisTime, text)` (the caller's localized label) append the player's line at once and call `client.reply`; `say` feeds
-  the reply's signals to `Talk.hear`, `quick` its own (`compliment`, `mockBluff` after any raise of hers in the hand, else `tease`,
-  `claimStrength`). A reply that is null or fails marks the player's line `undelivered`. `setTalk`, `setTells` and
-  `attachTalk(client)` change the switch, the tells level and the client. With a `Talk`, every `decide` and the
-  recorded decision get `Talk.style()`. A `summary` goes out on an effective `leave`, on `dispose`, at the end of a tournament, before a new
-  `start` replaces the `Talk`, and every 50th hand, only when a hand completed since the last one. Nothing
-  is sent when talk is off or unavailable, and every client error is ignored. `toViewModel` adds `talk` with
-  `herBubble` and `playerBubble`. `loadTalkClient({ url, anonKey })` (`talkLoader.ts`) imports `remoteTalk.ts`,
-  the only module that uses supabase-js, on demand, and answers `silentTalkClient` when a value is missing or
-  loading fails; `main.tsx` calls it with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` and attaches the client
-  to the session when it resolves.
+- Table talk (`sessionTalk.ts`): `SessionOptions` takes `talk` (a `TalkClient`, default `silentTalkClient`),
+  `connectTalk` (a loader for the client, called at most once), `now` (default `Date.now`), `locale` (default `en`),
+  `talkOn` (default true) and `tells` (default `subtle`). `SessionState.talk` is
+  `{ available, on, level, lines, bubbles }`: with the `cfr` opponent, `available` is `client.enabled`, or true while
+  a `connectTalk` has not answered yet; `lines` are the last 100 `ChatLine`s (`id`, `speaker`, `text`, `handNumber`,
+  optional `undelivered`) and `bubbles` the latest line per seat. `connectTalk` runs when a `cfr` session starts with
+  talk on, or when talk is switched on in one, and its client is attached; a silent client hides the talk. Each
+  `start` makes a `Talk` for the bot's seat with `mulberry32(seed ^ 0x7a1c)` when the opponent is `cfr`; it lives
+  across hands, and every step's events reach `Talk.observe` after the bot, also with talk off. A line intent calls
+  `client.line` without waiting. Its text is kept only if the epoch matches, talk is still available and on, and the
+  hand number and street still match; a hand-end line (`handWon`, `handLost`, `bluffCaught`) is kept until the next
+  hand's first action. `say(text)` (trimmed, at most 200 characters) and `quick(niceHand | bluffing | notThisTime,
+  text)` (the caller's localized label) append the player's line at once and call `client.reply`; `quick` sends
+  `quick: true`. `say` feeds the reply's signals to `Talk.hear`, `quick` its own (`compliment`, `mockBluff` after any
+  raise of hers in the hand, else `tease`, `claimStrength`). A reply that is null or fails marks the player's line
+  `undelivered`. `setTalk`, `setTells` and `attachTalk(client)` change the switch, the tells level and the client.
+  With a `Talk` and an enabled client, every `decide` and the recorded decision get `Talk.style()`, also with talk
+  switched off; without an enabled client the bot plays with no style. A `summary` goes out on an effective `leave`,
+  on `dispose`, at the end of a tournament, before a new `start` replaces the `Talk`, every 50th hand and on
+  `pageHidden()` (with `keepalive`), only when a hand completed since the last one, and it holds what changed since
+  the last summary. Nothing is sent when talk is off or unavailable, and every client error is ignored. `toViewModel`
+  adds `talk` with `herBubble` and `playerBubble`.
+- The payload builders (`talkClient.ts`) send `facts.stacks` as `[hers, the player's]` from the bot seat, the intent
+  street as `actionStreet`, `quick` on a reply, and the summary `netBb` as the player's net (the negated net of hers).
+  `loadTalkClient({ url, anonKey })` (`talkLoader.ts`) imports `remoteTalk.ts`, the only module that uses
+  supabase-js, on demand, and answers `silentTalkClient` when a value is missing or loading fails;
+  `talkConnector(config)` is undefined without both values and otherwise loads the client once. `main.tsx` passes it
+  to `createSession` as `connectTalk`, so the anonymous sign-in happens only for the Solver opponent with talk on, and
+  `onPageExit` (`pageExit.ts`, `pagehide` or the document becoming hidden) calls `pageHidden()`. The remote client
+  keeps the latest access token, so a `keepalive` summary is sent at once with `fetch(..., { keepalive: true })`.
 - `simulation.test.ts` plays full tournaments between the bot and a seeded random human through the session and
   checks that chips are conserved, the session never stalls and the winner holds every chip.
 
@@ -386,26 +401,35 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 `supabase/` holds the whole server; `supabase/README.md` lists the deploy steps and the owner's part.
 
 - Tables: `talk_lines` (the conversation), `memories` (the facts a `summary` leaves), `usage` and `usage_total` (the
-  call counts per user and day, and per day). Row Level Security lets a user read their own lines and memories and
-  nothing else; the function writes with the service role. `consume_call(user_limit, global_limit)` counts one call
+  call counts per user and day, and per day). `anon` and `authenticated` hold no table privilege except `select` on
+  `talk_lines` and `memories` for `authenticated`, and Row Level Security lets a user read only their own rows; the
+  function writes with the service role. `consume_call(user_limit, global_limit)` counts one call
   against both limits in one transaction and returns false over a limit; only the service role can run it. The
   defaults are 200 calls per user and 5000 in total per day (`TALK_DAILY_LIMIT`, `TALK_GLOBAL_DAILY_LIMIT`).
 - The Edge Function `talk` (Deno, `supabase/functions/talk/`) takes a `POST` with the user's JWT, checked with
-  `auth.getUser`, and a body of kind `line`, `reply` or `summary`. It validates the body, spends a call, loads the
-  ten newest memories, builds the prompt (a cached system block, then the facts, memories and recent lines), calls
-  the model (`claude-haiku-5-5`, `TALK_MODEL` overrides it) and answers `{ text }`, `{ text, signals }` or
-  `{ facts }`. A `reply` makes two parallel calls, one for the signals as strict JSON and one for her answer. The
-  card filter rejects a text that names a card or her holding; the function asks once more with a stricter
-  instruction and then falls back to a fixed neutral line. Over a limit it answers an error and she stays silent.
+  `auth.getUser`, and a body of at most 16 KB of kind `line`, `reply` or `summary`. It validates the body, spends a
+  call while it loads the ten newest memories, builds the prompt (a system block marked for caching, then the facts,
+  memories and recent lines), calls the model (`claude-haiku-5-5`; a non-empty `TALK_MODEL` overrides it) and
+  answers `{ text }`, `{ text, signals }` or `{ facts }`. The cache marker only takes effect once the fixed block is
+  longer than the model's minimum cacheable prompt (2048 tokens or more for Haiku models); today's block is shorter,
+  so every call pays for it in full. In a body, `facts.stacks` is `[hers, the player's]`, `intent.street` is the
+  street of her action (the cue names it) and a summary's `netBb` is the player's net. A `reply` spends a second call
+  and makes two parallel model calls, one for the signals as strict JSON and one for her answer; a `reply` with
+  `quick: true` (a quick phrase, which carries its own signals) makes only the answer call. The card filter rejects a
+  text that names a card or her holding; the function asks once more with a stricter instruction and then falls back
+  to a fixed neutral line. Over a limit it answers an error and she stays silent. It answers before it saves the
+  lines or facts, which run through `EdgeRuntime.waitUntil` when there is one.
 - The browser reaches it through `remoteTalk.ts` (supabase-js, anonymous sign-in, a 5 s timeout, every error turned
   into `null`). Without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` the build has no talk.
 
 ### Data flow
 
 ```
-style     talk.observe -> Talk.style() -> session decide(legal, style) -> worker -> CfrBot.setStyle -> bot_style (wasm)
+style     talk.observe -> Talk.style() (enabled client only) -> session decide(legal, style) -> worker
+          -> CfrBot.setStyle -> bot_style (wasm)
 line      engine events -> Talk.observe -> LineIntent -> client.line(facts, intent, mood) -> function -> text
-          -> session (kept if epoch, hand and street match) -> bubble and chat
+          -> session (kept if epoch, hand and street match, a hand-end line until the next hand's first action)
+          -> bubble and chat
 reply     say(text) -> client.reply -> function (signals + answer) -> { text, signals }
           -> Talk.hear(signals) moves the mood -> her line in the chat
 ```

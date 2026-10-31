@@ -91,20 +91,25 @@ coach (#5) will be a second role on the same foundation; it is not part of this 
      into a check or call. It does not know her mood; the cost of tilt is its result against `cfr-tilted` minus its
      result against `cfr` with the same seed (arena README, "Is tilt noticeable").
 10. **Server on Supabase.** A `supabase/` directory at the root: `config.toml`, migrations and the Edge Function
-    `talk` in Deno. The player signs in anonymously with supabase-js on first load, invisibly; a real sign-in screen
-    is a later project, and an anonymous user can be linked to an account later without losing data.
+    `talk` in Deno. The player signs in anonymously with supabase-js, invisibly, the first time a Solver game starts
+    with talk on (or talk is switched on in one), never for the math opponent; a real sign-in screen is a later
+    project, and an anonymous user can be linked to an account later without losing data.
 11. **Edge Function `talk`.** `POST` with the user's JWT and a JSON body of one of three kinds:
-    - `line`: facts of the hand (street, board, pot, stacks, the actions so far, her hole cards marked as secret),
-      the intent (`situation`, `hint` or `neutral`, honest or not), the mood in words and the last eight lines.
-      Answers `{ text }`.
+    - `line`: facts of the hand (street, board, pot, stacks as hers then the player's, the actions so far, her hole
+      cards marked as secret), the intent (`situation`, `hint` or `neutral`, honest or not, and the street of her
+      action, which the cue names), the mood in words and the last eight lines. Answers `{ text }`.
     - `reply`: the same facts and the player's text. The function runs two model calls in parallel: one returns
-      the signals as strict JSON, one writes her answer. Answers `{ text, signals }`.
-    - `summary`: the session summary (hands, net, notable player moves, the signals heard). The model compresses
-      it into at most three short facts, stored in `memories`. Answers `{ facts }`.
+      the signals as strict JSON, one writes her answer. A quick phrase is sent with `quick: true` and gets only
+      the answer. Answers `{ text, signals }`.
+    - `summary`: what changed since the last summary (hands, the player's net, notable player moves, the signals
+      heard). The model compresses it into at most three short facts, stored in `memories`. Answers `{ facts }`.
     The answer is not streamed: a line is one or two sentences, the card filter needs the whole text, and the
     client shows it with a typewriter effect.
-12. **Model and prompt.** `claude-haiku-5-5` by default, `TALK_MODEL` overrides it. The fixed part of the prompt
-    (character, rules, habits of speech) is a cached system block; the facts, memories and recent lines follow.
+12. **Model and prompt.** `claude-haiku-5-5` by default, a non-empty `TALK_MODEL` overrides it. The fixed part of
+    the prompt (character, rules, habits of speech) is a system block marked for caching; the facts, memories and
+    recent lines follow. Caching applies only once that block exceeds the model's minimum cacheable length (2048
+    tokens or more for Haiku models); the block is shorter today, so the marker is harmless but saves nothing, and
+    the prompt is not padded to reach it.
     Her character: warm, wry, competitive, a friend at a kitchen-table game, not a casino dealer. Rules in the
     prompt: one or two sentences; never name or describe her exact cards; play the hint she is given; take her tone
     from the mood; no all-caps words and no dashes as punctuation; answer in the language of the player's last
@@ -114,7 +119,8 @@ coach (#5) will be a second role on the same foundation; it is not part of this 
     regenerated once with a stricter instruction; if it fails again, a fixed neutral line from a short list takes
     its place.
 14. **Memory.** Table `memories (id, user_id, fact, created_at)`. The ten newest facts of the user go into every
-    prompt. The client sends a `summary` when the player leaves the table or every 50 hands.
+    prompt. The client sends a `summary` when the player leaves the table, when the page is closed or hidden (with
+    `keepalive`), or every 50 hands, each with what changed since the previous one.
 15. **Limits.** `consume_call(user_limit, global_limit)` is a security-definer function that counts calls per user
     and day and in total per day, in one transaction, and returns false over a limit. Defaults: 200 calls per user
     and 5000 in total per day, from `TALK_DAILY_LIMIT` and `TALK_GLOBAL_DAILY_LIMIT`. Over a limit she stays
@@ -126,7 +132,8 @@ coach (#5) will be a second role on the same foundation; it is not part of this 
 17. **Game integration.** `game` holds the talk state in the session store: the chat lines, the current bubble per
     seat, the mood and the tells level. Engine events go to `talk` after they reach the bot. When `talk` returns a
     line request, `game` calls the talk client without waiting; a line that arrives after its street has ended is
-    dropped. `say(text)` and `quick(id)` send the player's words; quick phrases (`niceHand` → compliment,
+    dropped, except that a line on the end of a hand is kept until the next hand's first action. `say(text)` and
+    `quick(id)` send the player's words; quick phrases (`niceHand` → compliment,
     `bluffing` → mockBluff when said after her bet, otherwise tease, `notThisTime` → claimStrength) carry their
     signals. Before each bot decision `game` sends the current style with the `decide` request.
 18. **Talk client.** `game/talkClient.ts` defines `TalkClient` with `line`, `reply` and `summary`. `remoteTalkClient`
@@ -142,7 +149,8 @@ coach (#5) will be a second role on the same foundation; it is not part of this 
     - Phone and short screens: a chat button at Mallorca's plaque opens a bottom sheet with the same chat. Closed,
       only the bubbles show.
     - Settings: "Table talk" on or off and "Tells" (Obvious, Subtle, Hidden), both kept in `localStorage`. Talk
-      off: she is silent and the player's words cannot reach her, so only hand outcomes move her mood.
+      off: she is silent and the player's words cannot reach her, so only hand outcomes move her mood. Her style
+      follows her mood only while the talk client is enabled; without it the bot plays exactly as before.
     - Talk exists only with the Solver opponent, since only the CFR bot has style knobs.
     - The empty `coach` slot stays for #5.
 20. **Records.** `RecordedDecision` gains an optional `style`, so a hand history shows how tilted she was. The

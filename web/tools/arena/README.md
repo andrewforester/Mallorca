@@ -75,7 +75,7 @@ into 200, 1200 hands a row:
 
 | Bot                                                      | What it is                                                                                                                                                                                                                                                         |
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `cfr-tilted`                                             | `cfr` with the style aggression 1.6, bluff 1.8, tightness 0.85 (1.25, 1.3, 0.85 before Task 14)                                                                                                                                                                    |
+| `cfr-tilted`                                             | `cfr` with the style aggression 1.6, bluff 1.8, tightness 0.85 (1.25, 1.3, 0.85 at the first clamps)                                                                                                                                                               |
 | `cfr-confident`                                          | `cfr` with the style 1.15, 1, 0.95                                                                                                                                                                                                                                 |
 | `cfr-cautious`                                           | `cfr` with the style 0.9, 0.9, 1.2                                                                                                                                                                                                                                 |
 | `cfr-talk-obvious`, `cfr-talk-subtle`, `cfr-talk-hidden` | plain `cfr` that, after deciding a raise, speaks with the chance of the base habit `herBet` for its hand strength class at that level                                                                                                                              |
@@ -127,17 +127,18 @@ hidden habits the reader does worse than `math`, because its rule of folding aft
 `math` scores the same -32.3 ± 9.1 against both opponents: a talking bot plays exactly as plain `cfr` does and the
 speech changes nothing for a bot that does not listen, so the two runs play the same hands.
 
-### Is tilt noticeable (Task 14)
+### Is tilt noticeable
 
 `--stats` counts, for bot A over all its hands: `vpip` and `pfr` (hands with a call or raise, and with a raise,
 before the flop), and after the flop `aggressionFactor` (bets and raises over calls), `betFrequency` (bets and
 raises over decisions), `foldToBet` and `raiseFrequency` (folds and raises over decisions facing a bet or raise).
 These runs were made at commit `9c94cc8`; those at the second corner also had the clamp change of the next commit.
 Noticeable means: `betFrequency` or `raiseFrequency` of `cfr-tilted` differs from `cfr` by at least 5 percentage
-points, and `tilt-exploiter` gains on `cfr-tilted` more than on `cfr` by more than the combined 95% interval.
+points, and the gain of `tilt-exploiter` on `cfr-tilted` over its result on `cfr` is larger than the paired 95%
+interval of that gain (the two runs play the same decks; see below).
 
-Behaviour of bot A against `cfr`, seed 2, 20000 pairs (40000 hands) each. The frequencies are known to about ±0.5
-points (95%).
+Behaviour of bot A against `cfr`, seed 2, 20000 pairs (40000 hands) each. Each frequency is known to about
+±0.5 points (95%); that is the precision of one frequency, not an interval of the difference between two.
 
 | Bot A                    | vpip  | pfr   | af   | bet   | fold to bet | raise | decisions after the flop | facing a bet |
 | ------------------------ | ----- | ----- | ---- | ----- | ----------- | ----- | ------------------------ | ------------ |
@@ -176,7 +177,8 @@ task, aggression 1.6 and bluff 1.8 with tightness unchanged, and the mood coeffi
 Decision: at 1.6 and 1.8 tilt counts as noticeable. Duplicate runs with the same seed play the same decks, so the
 paired interval is the test for them; the combined interval assumes independent runs and overstates the noise. The
 exploiter gains +17.4 ± 8.4 bb/100 on `cfr-tilted`, above the paired interval. Bets after the flop rise by
-4.9 ± 0.5 points, which reaches the 5 point bar within its noise; raises facing a bet rise by 2.1. The cost against
+4.9 points (30.3% against 25.4%, each known to about ±0.5 points), which reaches the 5 point bar within the
+precision of the frequencies; raises facing a bet rise by 2.1. The cost against
 `cfr` stays inside the 5 bb/100 allowance (+0.4 ± 2.7), and the exploited cost of 17.4 bb/100 is under the 25 bb/100
 stop. The clamps are not widened further.
 
