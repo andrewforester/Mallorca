@@ -64,9 +64,9 @@ web/src/
 
 `brains` takes only types from `engine`: `Action`, `LegalActions`, the events it turns into observations and
 `BoardSize`, which pins its board sizes to the engine's.
-`ui` imports only from `game`; for the table, `game` re-exports `Card`, `formatCard`, `rankOf`, `suitOf`,
-`SeatIndex`, `LogEntry`, `HandCategory`, `TableMode`, `CASH` and `TOURNAMENT`, for the opponent choice `Opponent`
-and `opponentsFor`, and for the history `HandRecord`, `HandStore`, `openHandStore`, `memoryStore` and
+`ui` imports only from `game`; for the table, `game` re-exports `Card`, `formatCard`, `rankOf`, `SeatIndex`,
+`LogEntry`, `HandCategory`, `TableMode`, `CASH` and `TOURNAMENT`, for the opponent choice `Opponent` and
+`opponentsFor`, and for the history `HandRecord`, `HandStore`, `openHandStore`, `memoryStore` and
 `toPokerStars`.
 
 Each layer's `index.ts` exports only what other layers and `tools/` import; a test reaches the internals of its
@@ -412,7 +412,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   and hold no game rules.
 - Components: `App`, `Scene`, `StatusBar`, `HistoryMenu`, `Settings`, `StartScreen`, `Table`, `Seat`, `BetChips`,
   `DealerButton`, `ActionBubble`, `Card` (SVG), `BoardRow`, `Board`, `Pot`, `ActionBar`, `BetSlider`,
-  `HandLogDrawer`, `TournamentOver`, `SessionOver`, `Chat`, `ChatSheet`, `Bubble`.
+  `HandLogDrawer`, `TournamentOver`, `SessionOver`, `Chat`, `ChatSheet`, `Bubble`. `ui/suits.ts` `suitFace(card)`
+  gives the glyph and whether the suit is red for a card value or its text, for `Card` and the hand log.
 - `Scene` wraps the start screen and the table: the attic photo (`ui/scene/*.webp`, a portrait and a landscape plate
   over a blurred copy as the background) under a vignette, or with `simple` a flat felt without the photo (class
   `scene-simple`); `dimmed` blurs the plate behind the start screen. `ui/scene.ts` holds the `PlateGeometry` of each

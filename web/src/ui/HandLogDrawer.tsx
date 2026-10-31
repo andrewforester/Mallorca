@@ -3,6 +3,7 @@ import type { LogEntry, SeatIndex, StreetGroup } from '../game/index.ts';
 import { groupHand } from '../game/index.ts';
 import { t } from './i18n.ts';
 import { logKind, logLine } from './phrases.ts';
+import { suitFace } from './suits.ts';
 
 export interface HandLogDrawerProps {
   entries: LogEntry[];
@@ -11,15 +12,12 @@ export interface HandLogDrawerProps {
   onClose: () => void;
 }
 
-const SUIT_SYMBOLS: Record<string, string> = { c: '♣', d: '♦', h: '♥', s: '♠' };
-
 function LogCard({ text }: { text: string }) {
-  const suit = text.slice(-1);
-  const red = suit === 'h' || suit === 'd';
+  const { glyph, red } = suitFace(text);
   return (
     <span class={`log-card${red ? ' log-card-red' : ''}`}>
       {text.slice(0, -1)}
-      {SUIT_SYMBOLS[suit] ?? suit}
+      {glyph}
     </span>
   );
 }
