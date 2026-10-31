@@ -71,6 +71,25 @@ const viewerLayer = {
   },
 };
 
+const EVALUATOR_GOLDEN_MESSAGE = 'tools/evaluator-golden may import from src only cards and equity';
+
+const evaluatorGoldenLayer = {
+  files: ['tools/evaluator-golden/**/*.ts'],
+  rules: {
+    '@typescript-eslint/no-restricted-imports': [
+      'error',
+      {
+        patterns: [
+          {
+            regex: '(^|/)src/(engine|brains|cfr|talk|game|ui|main\\.tsx)(/|$)',
+            message: EVALUATOR_GOLDEN_MESSAGE,
+          },
+        ],
+      },
+    ],
+  },
+};
+
 export default tseslint.config(
   {
     ignores: ['**/dist', '.vercel', 'node_modules', 'test-results', 'playwright-report'],
@@ -116,6 +135,7 @@ export default tseslint.config(
   layer('main', ['game', 'ui'], [], ['src/main.tsx']),
   arenaLayer,
   viewerLayer,
+  evaluatorGoldenLayer,
   ...pure.map((dir) => ({
     files: [`${dir}/**/*.ts`],
     rules: {

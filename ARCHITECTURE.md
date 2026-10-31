@@ -81,7 +81,7 @@ ESLint enforces the table with a `@typescript-eslint/no-restricted-imports` rule
 rule sets `allowTypeImports` on `engine`; the tests in `brains` and `talk` (`*.test.ts`) may also import `engine` code to
 build events. `src/main.tsx` may import only `game` and `ui`. `tools/arena/**` may import from `src` only `cards`,
 `engine`, `brains`, `cfr`, `talk` and `game/records`; the viewer `tools/arena/ui/**` (tests aside) only `game/records` and
-types from `engine`. `import-x/no-cycle` forbids import cycles inside `src`.
+types from `engine`; `tools/evaluator-golden/**` only `cards` and `equity`. `import-x/no-cycle` forbids import cycles inside `src`.
 
 ### Purity
 
