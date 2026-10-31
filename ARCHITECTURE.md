@@ -206,6 +206,14 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   buckets those streets live; the same loader reads it. `v2.mlcs.gz` is the `v2` play file (format 3, checkpoint
   10, 51 MB gzipped). The worker loads each file on first use and keeps it. `mallorca.wasm` is
   `solver/crates/wasm`, a plain `extern "C"` ABI over `mallorca-core::bot`; it imports nothing.
+- `strategies.ts` names every shipped strategy once: `SHIPPED_STRATEGIES` maps a key (`cfr`, `cfr-v2`, the cfr
+  values of the game's `Opponent`) to the asset `url` and the `record` (`BotRecord`, id and version) written into
+  hand records; `WASM_URL` is the module. `loadCfrModel(url, read)` reads the module and the strategy through
+  `read` (`ReadBytes`, `fetch` in the bot worker, `readFile` in the arena and the tests), inflates the strategy and
+  calls `createCfrModel`.
+- `abi.test.ts` pins the hand-kept mirror of `solver/crates/wasm/src/lib.rs` in `model.ts`: it loads damaged files
+  through the real module and expects the message of each load error code, and reads each action kind from a known
+  decision.
 - `inflate(bytes)` gunzips with `DecompressionStream` when the bytes start with the gzip magic and returns other
   bytes as they are. `createCfrModel(wasm, strategy)` instantiates the module and loads the strategy; a bad file
   rejects with the reader's reason. `model.newBot()` returns a `CfrBot` handle, freed with `free()`.
@@ -229,8 +237,9 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   starts; `start()` keeps the current one. `opponent` (`math`, `cfr` or `cfr-v2`, `OPPONENTS` in `opponent.ts`;
   `opponentsFor(finePointer)` leaves `cfr-v2` out on touch screens, so a phone never downloads it) works the
   same way: when it differs from the current one, `start` first awaits `bot.select(opponent, seed)` and
-  `SessionState.opponent` becomes the opponent the bot answered with; hand records carry its id (`math` version
-  `1`, `cfr` version `v1-18`, `cfr-v2` as id `cfr` version `v2-10`). `seed` drives `mulberry32` for every shuffle. The actions are module functions
+  `SessionState.opponent` becomes the opponent the bot answered with; hand records carry its id (`botRecord(opponent)`
+  in `records/record.ts`: `math` version `1`, otherwise the `record` of `SHIPPED_STRATEGIES`, `cfr` version
+  `v1-18`, `cfr-v2` as id `cfr` version `v2-10`). `seed` drives `mulberry32` for every shuffle. The actions are module functions
   over one shared `Runtime` per session: the store accessors, the bot, the RNG, the timers, the hand recorder, the
   mode, the session tally and an epoch that `start` and `dispose` advance.
 - `phase` is one of `idle` (before `start`), `humanToAct`, `botThinking` (waiting for `decide`), `animating`

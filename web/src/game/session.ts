@@ -37,10 +37,8 @@ import {
 import type { HandResult, SeatActions } from './outcome.ts';
 import { handRecorder } from './records/recorder.ts';
 import type { HandRecorder, RecordsOptions } from './records/recorder.ts';
-import { CFR_BOT, CFR_V2_BOT, MATH_BOT } from './records/record.ts';
+import { botRecord } from './records/record.ts';
 import type { Opponent } from './opponent.ts';
-
-const BOT_RECORDS = { math: MATH_BOT, cfr: CFR_BOT, 'cfr-v2': CFR_V2_BOT } as const;
 
 export { resolveIntent, toIntent } from './intent.ts';
 export type { Intent } from './intent.ts';
@@ -190,7 +188,7 @@ function conclude(rt: Runtime, step: Step): void {
   }
   const { seats } = step.state;
   rt.hands += 1;
-  rt.recorder.save(step.state.mode, BOT_RECORDS[rt.opponent]);
+  rt.recorder.save(step.state.mode, botRecord(rt.opponent));
   const paid = (seat: SeatIndex) =>
     rt.startStacks[seat] - seats[seat].stack + awardedTo(step.events, seat);
   rt.set({
