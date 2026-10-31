@@ -1001,7 +1001,7 @@ fn assert_follows(range: &[f32], kind: ActionKind) {
 
 #[test]
 fn the_opponent_range_is_uniform_before_he_acts_without_her_cards() {
-    let bot = started(false, [400, 400], [10, 20], HER);
+    let mut bot = started(false, [400, 400], [10, 20], HER);
     let range = bot.opponent_range(model());
     assert_eq!(range.len(), PAIRS);
     for (i, &w) in range.iter().enumerate() {
@@ -1012,7 +1012,7 @@ fn the_opponent_range_is_uniform_before_he_acts_without_her_cards() {
 
 #[test]
 fn an_opponent_raise_narrows_his_range_by_the_neutral_strategy() {
-    let bot = facing(Move::RaiseTo(50));
+    let mut bot = facing(Move::RaiseTo(50));
     let range = bot.opponent_range(model());
     assert_follows(&range, ActionKind::RaiseTo(50));
     let aces = range[pair_index(48, 49)];
@@ -1041,6 +1041,30 @@ fn the_board_leaves_the_opponent_range() {
         }
     }
     assert!(range.iter().any(|&w| w > 0.0));
+}
+
+#[test]
+fn a_second_read_on_the_flop_gives_the_same_range() {
+    let flop = || {
+        let mut bot = facing(Move::Call);
+        bot.acted(model(), true, Move::Check, 0.0);
+        bot.street(model(), &[10, 20, 30]);
+        bot.acted(model(), true, Move::Check, 0.0);
+        bot
+    };
+    let mut read = flop();
+    let first = read.opponent_range(model());
+    read.acted(model(), false, Move::RaiseTo(20), 0.0);
+    assert_eq!(
+        read.opponent_range(model()),
+        flop_after_bet(flop()).opponent_range(model())
+    );
+    assert_ne!(read.opponent_range(model()), first);
+}
+
+fn flop_after_bet(mut bot: Bot) -> Bot {
+    bot.acted(model(), false, Move::RaiseTo(20), 0.0);
+    bot
 }
 
 #[test]

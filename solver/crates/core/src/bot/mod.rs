@@ -141,6 +141,7 @@ struct Hand {
     shifted: bool,
     history: Vec<Step>,
     opponent: Vec<Step>,
+    buckets: range::Buckets,
 }
 
 impl Hand {
@@ -223,6 +224,7 @@ impl Bot {
             shifted: false,
             history: Vec::new(),
             opponent: Vec::new(),
+            buckets: Vec::new(),
         });
     }
 
