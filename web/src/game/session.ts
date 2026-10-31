@@ -10,8 +10,8 @@ import {
   handHistory,
   legalActionsOf,
   startHand,
+  startingStack,
   toAct,
-  TOURNAMENT_STACK,
 } from '../engine/index.ts';
 import type {
   Action,
@@ -154,7 +154,7 @@ function freshTable(options: SessionOptions, mode: TableMode): Table {
 }
 
 function tally(rt: Runtime, table: Table): SessionResult {
-  const buyIn = table.mode.kind === 'cash' ? table.mode.buyIn : TOURNAMENT_STACK;
+  const buyIn = startingStack(table.mode);
   const live = table.hand !== null && table.hand.street !== 'complete';
   const stack = live ? rt.startStacks[rt.humanSeat] : table.seats[rt.humanSeat].stack;
   return { hands: rt.hands, net: stack - buyIn - rt.topUps };

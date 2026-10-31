@@ -64,17 +64,17 @@ web/src/
 
 `brains` takes only types from `engine`: `Action`, `LegalActions`, the events it turns into observations and
 `BoardSize`, which pins its board sizes to the engine's.
-`ui` imports only from `game`; for the table, `game` re-exports `Card`, `formatCard`, `rankOf`, `suitOf`,
-`SeatIndex`, `LogEntry`, `HandCategory`, `TableMode`, `CASH` and `TOURNAMENT`, for the opponent choice `Opponent`
-and `opponentsFor`, and for the history `HandRecord`, `HandStore`, `openHandStore`, `memoryStore` and
+`ui` imports only from `game`; for the table, `game` re-exports `Card`, `formatCard`, `rankOf`, `SeatIndex`,
+`LogEntry`, `HandCategory`, `TableMode`, `CASH` and `TOURNAMENT`, for the opponent choice `Opponent` and
+`opponentsFor`, and for the history `HandRecord`, `HandStore`, `openHandStore`, `memoryStore` and
 `toPokerStars`.
 
 Each layer's `index.ts` exports only what other layers and `tools/` import; a test reaches the internals of its
 own layer by path. `brains/index.ts` holds `Brain`, `Decision`, `Observation`, `createMathBrain` and
 `toObservations`; `engine/index.ts` the types of a hand and a table, the reducers (`startHandWith`, `applyAction`,
 `startHand`, `apply`, `legalActionsOf`, `toAct`), `isLegal`, `checkOrCall`, `playToEnd`, `createTable`, `rulesOf`,
-the modes and `handHistory`; `game/index.ts` is the surface of `ui` (with `createSession`, `toViewModel`,
-`groupHand`, `workerBot` and `inProcessBot`).
+the modes, `startingStack`, `BOARD_SIZE` and `handHistory`; `game/index.ts` is the surface of `ui` (with `createSession`,
+`toViewModel`, `groupHand`, `workerBot` and `inProcessBot`).
 
 ESLint enforces the table with a `@typescript-eslint/no-restricted-imports` rule per directory. For `brains` the
 rule sets `allowTypeImports` on `engine`; the tests in `brains` and `talk` (`*.test.ts`) may also import `engine` code to
@@ -93,7 +93,7 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
 ## cards
 
 - `Card` is a number 0..51, `rank * 4 + suit`. `rankOf` returns 2..14, `suitOf` returns 0..3 for `c d h s`.
-- `parseCard("As")`, `parseCards("As Kd")`, `formatCard`, `fullDeck()`.
+- `cardOf(rank, suit)`, `parseCard("As")`, `parseCards("As Kd")`, `formatCard`, `fullDeck()`.
 - `Rng` has `next(): number` in [0, 1). `mulberry32(seed)` implements it. `shuffle(items, rng)` is Fisher-Yates
   and returns a copy.
 
@@ -117,7 +117,7 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
 - `createTable(names, mode, firstButton = 0)` (`table.ts`) returns a `Table`:
   `{ mode, seats, button, handNumber, hand, winner }`. A `Seat` is `{ name, stack }`. `TableMode` is
   `{ kind: 'tournament' }` (`TOURNAMENT`) or `{ kind: 'cash', bigBlind, buyIn }` (`CASH` is 20 and 2000). Both
-  seats start with `TOURNAMENT_STACK` (2000) in a tournament and with `buyIn` in cash.
+  seats start with `startingStack(mode)`: `TOURNAMENT_STACK` (2000) in a tournament and `buyIn` in cash.
 - `rulesOf(mode)` (`rules.ts`) returns the `Rules` of a mode: `blinds(handNumber)`, `beforeHand(seats)`, which
   returns the seats and events before the deal, and `isOver(seats)`, the winner or null. The table stays plain
   data; `startHand` and `apply` take the blinds, the top-up and the winner from the rules.
@@ -137,7 +137,7 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
   holds the undealt cards.
 - `Street` (`types.ts`) is the one list of street names; `BettingStreet` drops `showdown` and `complete`,
   `DealtStreet` also drops `preflop`, and every other street type in `src` and `tools/` derives from them.
-  `BOARD_SIZE` (`streets.ts`) is the board length per betting street, and its type `BoardSize` is exported.
+  `BOARD_SIZE` (`streets.ts`) is the board length per betting street; it and its type `BoardSize` are exported.
 - `Hand.bets` is the street bet per seat, `committed` the total per seat for the hand, `pot` is the sum of
   `committed`. `canRaise` is false for a seat that faces a short all-in raise.
 - `seats` stacks are the chips behind. `LegalActions` is `{ fold, check, call, raise }`: `call` is the amount the
@@ -301,9 +301,9 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   session from `handOver` to `sessionOver`, where `act` and `nextHand` do nothing; in any other mode or phase it
   is ignored.
 - `session` is `{ hands, net }` for the human seat: `hands` counts completed hands and
-  `net = stack - buyIn - top-ups` in chips, where `buyIn` is the mode's in cash and 2000 in a tournament and
-  top-ups are the human's `toppedUp` amounts since `start`. Mid-hand `net` uses the stack at the start of the hand
-  (after any top-up, blinds included), so it changes only when a hand completes.
+  `net = stack - startingStack(mode) - top-ups` in chips, where the top-ups are the human's `toppedUp` amounts
+  since `start`. Mid-hand `net` uses the stack at the start of the hand (after any top-up, blinds included), so it
+  changes only when a hand completes.
 - Turn loop: after each step the session forwards the events to the bot as observations, then either waits for
   the human or asks the bot to decide and applies its action after `botDelayMs`.
 - `Intent` is `fold`, `passive` (check or call) or `raise` with a target. `resolveIntent` turns it into a legal
@@ -412,7 +412,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   and hold no game rules.
 - Components: `App`, `Scene`, `StatusBar`, `HistoryMenu`, `Settings`, `StartScreen`, `Table`, `Seat`, `BetChips`,
   `DealerButton`, `ActionBubble`, `Card` (SVG), `BoardRow`, `Board`, `Pot`, `ActionBar`, `BetSlider`,
-  `HandLogDrawer`, `TournamentOver`, `SessionOver`, `Chat`, `ChatSheet`, `Bubble`.
+  `HandLogDrawer`, `TournamentOver`, `SessionOver`, `Chat`, `ChatSheet`, `Bubble`. `ui/suits.ts` `suitFace(card)`
+  gives the glyph and whether the suit is red for a card value or its text, for `Card` and the hand log.
 - `Scene` wraps the start screen and the table: the attic photo (`ui/scene/*.webp`, a portrait and a landscape plate
   over a blurred copy as the background) under a vignette, or with `simple` a flat felt without the photo (class
   `scene-simple`); `dimmed` blurs the plate behind the start screen. `ui/scene.ts` holds the `PlateGeometry` of each
@@ -556,6 +557,9 @@ bounded by the clamps above.
 - `e2e/contact.ts` (`npm run contact`) captures every view state of a seeded game on `phone` and `desktop` and
   composes one sheet per device into `e2e/contact/`. Its preview listens on `CONTACT_PORT` (default 4174); it stops
   if that port already answers or its own server exits.
+- `e2e/shared.ts` holds what the tests and the contact sheets share: the devices (`DEVICES`, the Playwright projects
+  and the sheets), `byId`, `waitForWaypoint` and `playToTheEnd`. `fixtures.ts` re-exports them beside the `test`
+  fixture, and `TOTAL_CHIPS` is `2 * startingStack(TOURNAMENT)` from `engine`.
 
 ## arena
 

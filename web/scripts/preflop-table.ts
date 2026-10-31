@@ -1,16 +1,19 @@
 import { writeFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { Worker, isMainThread, parentPort } from 'node:worker_threads';
+import { cardOf, fullDeck } from '../src/cards/index.ts';
+import type { Suit } from '../src/cards/index.ts';
+import { BOARD_SIZE } from '../src/engine/index.ts';
 import { pheEvaluator } from '../src/equity/index.ts';
 
 const VALUES = 13;
 const SIZE = VALUES * VALUES;
-const DECK_SIZE = 52;
-const BOARD_SIZE = 5;
-const CLUBS = 0;
-const DIAMONDS = 1;
-const HEARTS = 2;
-const SPADES = 3;
+const DECK = fullDeck();
+const BOARD_CARDS = BOARD_SIZE.river;
+const CLUBS: Suit = 0;
+const DIAMONDS: Suit = 1;
+const HEARTS: Suit = 2;
+const SPADES: Suit = 3;
 const OUTPUT = new URL('../src/brains/data/preflop-strength.json', import.meta.url);
 
 interface Task {
@@ -29,7 +32,7 @@ for (let high = 0; high < VALUES; high++) {
   }
 }
 
-const card = (value: number, suit: number): number => value * 4 + suit;
+const card = (value: number, suit: Suit): number => cardOf(value + 2, suit);
 const indexOf = ([high, low]: readonly [number, number]): number => high * VALUES + low;
 
 function strengthsOf(heroPosition: number): number[] {
@@ -41,13 +44,13 @@ function strengthsOf(heroPosition: number): number[] {
   const wins = new Array<number>(villains.length).fill(0);
   const draws = new Array<number>(villains.length).fill(0);
   const counts = new Array<number>(villains.length).fill(0);
-  const deck = Array.from({ length: DECK_SIZE }, (_, i) => i).filter((c) => !hero.includes(c));
-  const onBoard = new Uint8Array(DECK_SIZE);
+  const deck = DECK.filter((c) => !hero.includes(c));
+  const onBoard = new Uint8Array(DECK.length);
   const heroCards = [hero[0] as number, hero[1] as number, 0, 0, 0, 0, 0];
   const villainCards = [0, 0, 0, 0, 0, 0, 0];
-  const board = new Array<number>(BOARD_SIZE).fill(0);
+  const board = new Array<number>(BOARD_CARDS).fill(0);
   const visit = (): void => {
-    for (let k = 0; k < BOARD_SIZE; k++) {
+    for (let k = 0; k < BOARD_CARDS; k++) {
       heroCards[2 + k] = board[k] as number;
       villainCards[2 + k] = board[k] as number;
       onBoard[board[k] as number] = 1;
@@ -68,16 +71,16 @@ function strengthsOf(heroPosition: number): number[] {
       }
       counts[v] = (counts[v] as number) + 1;
     }
-    for (let k = 0; k < BOARD_SIZE; k++) {
+    for (let k = 0; k < BOARD_CARDS; k++) {
       onBoard[board[k] as number] = 0;
     }
   };
   const fill = (slot: number, from: number): void => {
-    if (slot === BOARD_SIZE) {
+    if (slot === BOARD_CARDS) {
       visit();
       return;
     }
-    for (let i = from; i <= deck.length - (BOARD_SIZE - slot); i++) {
+    for (let i = from; i <= deck.length - (BOARD_CARDS - slot); i++) {
       board[slot] = deck[i] as number;
       fill(slot + 1, i + 1);
     }
