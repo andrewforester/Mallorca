@@ -396,6 +396,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 
 ## e2e
 
+- Playwright builds and starts its own `vite preview` on `E2E_PORT` (default 4173) and never reuses a server already
+  listening there, so a run fails instead of testing another worktree's build; set `E2E_PORT` to run beside one.
 - Playwright runs against the production build (`vite preview`) on three projects: `phone` 390 × 844, `small-phone`
   360 × 740 and `desktop` 1440 × 900. `layout.spec.ts` runs only on `small-phone`, which runs only `layout.spec.ts`
   and `table.spec.ts`. Most tests open `FAST_URL` (`fixtures.ts`), `/?seed=42&botDelay=0&autoNext=off`, and fail on
@@ -417,7 +419,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   recorded as `v2-10`, and a phone is not offered `cfr-v2`. `arena.spec.ts`: the published arena page lists the runs,
   a run with hands opens and shows a pair as PokerStars text.
 - `e2e/contact.ts` (`npm run contact`) captures every view state of a seeded game on `phone` and `desktop` and
-  composes one sheet per device into `e2e/contact/`.
+  composes one sheet per device into `e2e/contact/`. Its preview listens on `CONTACT_PORT` (default 4174); it stops
+  if that port already answers or its own server exits.
 
 ## arena
 

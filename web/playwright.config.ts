@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PREVIEW_PORT = 4173;
+const PREVIEW_PORT = Number(process.env.E2E_PORT ?? 4173);
 const BASE_URL = `http://localhost:${PREVIEW_PORT}/`;
 const IS_CI = Boolean(process.env.CI);
 const TEST_TIMEOUT_MS = 180_000;
@@ -37,7 +37,7 @@ export default defineConfig({
   webServer: {
     command: `npm run build && npm run preview -- --port ${PREVIEW_PORT} --strictPort`,
     url: BASE_URL,
-    reuseExistingServer: !IS_CI,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });
