@@ -1,0 +1,7 @@
+{
+  "name": "mallorca-vercel-cli",
+  "private": true,
+  "devDependencies": {
+    "vercel": "63.1.2"
+  }
+}
