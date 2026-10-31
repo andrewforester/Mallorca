@@ -1,8 +1,8 @@
-use crate::abstraction::{below_and_equal, river_indexer, LIVE_HOLES};
+use crate::abstraction::{below_and_equal, LIVE_HOLES};
 use crate::cards::Card;
 use crate::eval::rank;
-use crate::iso::HandIndexer;
-use std::sync::OnceLock;
+use crate::iso::street_indexer;
+use crate::tree::Street;
 
 pub const BINS: usize = 50;
 pub const CLUSTERS: usize = 8;
@@ -11,11 +11,6 @@ pub const CLUSTERS: usize = 8;
 pub enum Metric {
     Emd,
     L2,
-}
-
-fn preflop_indexer() -> &'static HandIndexer {
-    static INDEXER: OnceLock<HandIndexer> = OnceLock::new();
-    INDEXER.get_or_init(|| HandIndexer::new(&[2]))
 }
 
 pub fn bin_of(hs: f32) -> usize {
@@ -119,7 +114,7 @@ pub fn ochs_live(hole: [Card; 2], board: &[Card; 5], clusters: &[u8; 169]) -> [f
     seven[2..].copy_from_slice(board);
     let mine = rank(&seven);
     let live = live_cards(&seven);
-    let pre = preflop_indexer();
+    let pre = street_indexer(Street::Preflop);
     let mut wins = [0u32; CLUSTERS];
     let mut ties = [0u32; CLUSTERS];
     let mut totals = [0u32; CLUSTERS];
@@ -198,7 +193,7 @@ impl ClusterRanks {
 
 pub fn river_ochs(board: &[Card; 5], clusters: &[u8; 169]) -> Vec<(u64, [f32; CLUSTERS])> {
     let live = live_cards(board);
-    let pre = preflop_indexer();
+    let pre = street_indexer(Street::Preflop);
     let mut seven = [0 as Card; 7];
     seven[2..].copy_from_slice(board);
     let mut holes: Vec<(usize, usize, usize, u16)> = Vec::with_capacity(LIVE_HOLES);
@@ -214,7 +209,7 @@ pub fn river_ochs(board: &[Card; 5], clusters: &[u8; 169]) -> Vec<(u64, [f32; CL
         }
     }
     ranks.sort();
-    let indexer = river_indexer();
+    let indexer = street_indexer(Street::River);
     holes
         .iter()
         .map(|&(i, j, cluster, r)| {

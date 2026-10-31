@@ -1,5 +1,5 @@
 import type { Rng } from '../cards/index.ts';
-import type { Brain, Decision, Observation } from '../brains/index.ts';
+import type { BotStyle, Brain, Decision, Observation } from '../brains/index.ts';
 import type { Action, LegalActions } from '../engine/index.ts';
 import type { CfrModel } from './model.ts';
 
@@ -47,6 +47,9 @@ export function createCfrBrain(model: CfrModel, rng: Rng): CfrBrain {
     },
     range() {
       return bot.range();
+    },
+    setStyle(style: BotStyle) {
+      bot.setStyle(style);
     },
     dispose() {
       bot.free();

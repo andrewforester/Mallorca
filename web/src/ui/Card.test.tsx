@@ -1,4 +1,4 @@
-import { cleanup, render } from '@testing-library/preact';
+import { cleanup, render, screen } from '@testing-library/preact';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Card } from './Card.tsx';
 
@@ -17,24 +17,23 @@ describe('Card', () => {
   });
 
   it('colours hearts and diamonds red and clubs and spades black', () => {
-    const diamond = render(<Card card={1} />).container.querySelector('svg');
-    const heart = render(<Card card={2} />).container.querySelector('svg');
-    const club = render(<Card card={0} />).container.querySelector('svg');
-    const spade = render(<Card card={3} />).container.querySelector('svg');
-    expect(diamond?.classList.contains('card-red')).toBe(true);
-    expect(heart?.classList.contains('card-red')).toBe(true);
-    expect(club?.classList.contains('card-black')).toBe(true);
-    expect(spade?.classList.contains('card-black')).toBe(true);
+    for (const card of [0, 1, 2, 3]) {
+      render(<Card card={card} />);
+    }
+    expect(screen.getByRole('img', { name: '2d' }).classList.contains('card-red')).toBe(true);
+    expect(screen.getByRole('img', { name: '2h' }).classList.contains('card-red')).toBe(true);
+    expect(screen.getByRole('img', { name: '2c' }).classList.contains('card-black')).toBe(true);
+    expect(screen.getByRole('img', { name: '2s' }).classList.contains('card-black')).toBe(true);
   });
 
   it('draws the corner index twice on a face card', () => {
-    const { container } = render(<Card card={51} />);
-    expect(container.querySelectorAll('.card-rank').length).toBe(2);
+    render(<Card card={51} />);
+    expect(screen.getAllByText('A').length).toBe(2);
   });
 
   it('renders the back without rank text', () => {
     const { container } = render(<Card card="back" />);
-    expect(container.querySelector('svg')).not.toBeNull();
+    expect(screen.getByRole('img', { name: 'Face down card' })).not.toBeNull();
     expect(container.querySelector('text')).toBeNull();
     expect(container.textContent).toBe('');
   });

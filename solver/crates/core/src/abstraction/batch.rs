@@ -1,5 +1,6 @@
-use super::{river_indexer, river_strength, Abstraction, BucketSource};
+use super::{river_strength, Abstraction, BucketSource};
 use crate::cards::Card;
+use crate::iso::street_indexer;
 use crate::pairs::{pair_index, PAIRS};
 use crate::potential::{histogram, nearest, river_ochs, turn_counts, Metric};
 use crate::strength::{bucket_of, turn_value_with};
@@ -18,7 +19,7 @@ impl RiverMemo {
         let mut seven = [0 as Card; 7];
         seven[..2].copy_from_slice(&hole);
         seven[2..].copy_from_slice(board);
-        let index = river_indexer().index(&seven);
+        let index = street_indexer(Street::River).index(&seven);
         if let Some(&v) = self.hs.get(&index) {
             return v;
         }
@@ -102,7 +103,7 @@ fn river_buckets(source: &BucketSource, pairs: &[[Card; 2]], board: &[Card]) -> 
     seven[2..].copy_from_slice(river);
     let index_of = |hole: [Card; 2], seven: &mut [Card; 7]| {
         seven[..2].copy_from_slice(&hole);
-        river_indexer().index(seven)
+        street_indexer(Street::River).index(seven)
     };
     match source {
         BucketSource::Thresholds(t) => {

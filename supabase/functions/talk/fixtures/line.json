@@ -1,0 +1,30 @@
+{
+  "kind": "line",
+  "sessionId": "5f2c9a1e-7b3d-4e8a-9c61-2d4f8b0a7e13",
+  "locale": "en",
+  "facts": {
+    "street": "river",
+    "board": ["Kd", "7s", "2c", "Th", "4h"],
+    "pot": 24,
+    "stacks": [88, 112],
+    "her": ["Ks", "Qd"],
+    "actions": [
+      "Mallorca posts the small blind 1",
+      "Player posts the big blind 2",
+      "Mallorca raises to 6",
+      "Player calls 6",
+      "Mallorca bets 6 on the flop",
+      "Player calls 6",
+      "Mallorca checks on the turn",
+      "Player checks",
+      "Mallorca bets 12 on the river"
+    ],
+    "bigBlind": 2
+  },
+  "intent": { "situation": "herBet", "hint": "strong", "honest": true, "street": "river" },
+  "mood": ["on a winning streak", "cheerful"],
+  "recent": [
+    { "speaker": "mallorca", "text": "Another cup of tea before the flop?" },
+    { "speaker": "player", "text": "Only if you stop winning." }
+  ]
+}

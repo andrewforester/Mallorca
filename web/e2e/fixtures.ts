@@ -1,5 +1,8 @@
 import { expect, test as base } from '@playwright/test';
-import type { Locator, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { startingStack, TOURNAMENT } from '../src/engine/index.ts';
+import { byId } from './shared.ts';
+import { refuseTalk } from './talkServer.ts';
 
 declare global {
   interface Window {
@@ -36,6 +39,7 @@ export const test = base.extend<{ problems: string[] }>({
         problems.push(`pageerror: ${error.message}`);
       });
       await page.addInitScript(WORKER_TRACKER);
+      await refuseTalk(page);
       await use(problems);
       expect(problems).toEqual([]);
     },
@@ -44,51 +48,13 @@ export const test = base.extend<{ problems: string[] }>({
 });
 
 export { expect };
+export { byId, playToTheEnd, waitForWaypoint } from './shared.ts';
+export type { Waypoint } from './shared.ts';
 
 export const FAST_URL = '/?seed=42&botDelay=0&autoNext=off';
-export const TOTAL_CHIPS = 4000;
-
-export function byId(page: Page, id: string): Locator {
-  return page.getByTestId(id);
-}
+export const TOTAL_CHIPS = 2 * startingStack(TOURNAMENT);
 
 export async function stackOf(page: Page, seat: 0 | 1): Promise<number> {
   const text = (await byId(page, `stack-${seat}`).innerText()).replace(/[^0-9]/g, '');
   return Number(text);
-}
-
-export type Waypoint = 'act' | 'next-hand' | 'tournament-over';
-
-export async function waitForWaypoint(page: Page): Promise<Waypoint> {
-  const act = byId(page, 'passive').and(page.locator(':enabled'));
-  const next = byId(page, 'next-hand');
-  const over = byId(page, 'tournament-over');
-  const any = act.or(next).or(over);
-  await any.first().waitFor({ state: 'visible' });
-  if (await over.isVisible()) {
-    return 'tournament-over';
-  }
-  if (await next.isVisible()) {
-    return 'next-hand';
-  }
-  return 'act';
-}
-
-export async function playToTheEnd(page: Page): Promise<void> {
-  for (;;) {
-    const waypoint = await waitForWaypoint(page);
-    if (waypoint === 'tournament-over') {
-      return;
-    }
-    if (waypoint === 'next-hand') {
-      await byId(page, 'next-hand').click();
-      continue;
-    }
-    if (await byId(page, 'raise').isEnabled()) {
-      await byId(page, 'preset-allin').click();
-      await byId(page, 'raise').click();
-    } else {
-      await byId(page, 'passive').click();
-    }
-  }
 }

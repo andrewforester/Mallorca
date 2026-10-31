@@ -54,6 +54,31 @@ fn a_new_hand_starts_at_the_root() {
 }
 
 #[test]
+fn an_abandoned_hand_plays_passive_until_the_next_hand() {
+    let root = model().file.tree.root();
+    let hole = [48, 49];
+    let bucket = model().abstraction.bucket(Street::Preflop, hole, &[]);
+    let draw = draw_for(root, bucket, ActionKind::RaiseTo(50));
+    assert!(draw >= 0.0, "the fixture never opens this hand");
+    let mut bot = started(true, [2000, 2000], [50, 100], hole);
+    bot.abandon_hand();
+    assert_eq!(bot.cursor(), None);
+    bot.acted(model(), false, Move::Call, 0.0);
+    bot.street(model(), &[0, 4, 8]);
+    assert_eq!(bot.cursor(), None);
+    assert_eq!(
+        bot.decide(model(), &facing_blind(100, 2000), draw),
+        Move::Call
+    );
+    bot.hand_started(model(), true, [2000, 2000], [50, 100]);
+    bot.hole_cards(hole);
+    assert_eq!(
+        bot.decide(model(), &facing_blind(100, 2000), draw),
+        Move::RaiseTo(250)
+    );
+}
+
+#[test]
 fn own_raise_keeps_the_pot_fraction_at_a_bigger_blind() {
     let root = model().file.tree.root();
     let hole = [48, 49];
@@ -253,7 +278,7 @@ fn random_move(legal: &Legal, rng: &mut Rng) -> Move {
     options[rng.below(options.len() as u32) as usize]
 }
 
-fn play_random_hand(rng: &mut Rng) {
+fn play_random_hand(rng: &mut Rng, styles: &[Style]) {
     let bb = [20, 50, 100][rng.below(3) as usize];
     let hero = rng.below(2) as usize;
     let stacks = [bb * (5 + rng.below(200)), bb * (5 + rng.below(200))];
@@ -265,6 +290,21 @@ fn play_random_hand(rng: &mut Rng) {
         [bb / 2, bb],
         [deck[0], deck[1]],
     );
+    let mut styled: Vec<Bot> = styles
+        .iter()
+        .map(|&style| {
+            let mut b = Bot::new();
+            b.set_style(style);
+            b.hand_started(
+                model(),
+                hero == 0,
+                [stacks[hero], stacks[1 - hero]],
+                [bb / 2, bb],
+            );
+            b.hole_cards([deck[0], deck[1]]);
+            b
+        })
+        .collect();
     let blinds = [(bb / 2).min(stacks[0]), bb.min(stacks[1])];
     let mut sim = Sim {
         behind: [stacks[0] - blinds[0], stacks[1] - blinds[1]],
@@ -279,17 +319,32 @@ fn play_random_hand(rng: &mut Rng) {
         if board_len > 0 {
             sim.next_street();
             bot.street(model(), &deck[4..4 + board_len]);
+            for b in &mut styled {
+                b.street(model(), &deck[4..4 + board_len]);
+            }
         }
         while !sim.over && !sim.street_closed() {
             let legal = sim.legal();
             let mv = if sim.to_act == hero {
-                let mv = bot.decide(model(), &legal, rng.next_f64());
+                let draw = rng.next_f64();
+                let mv = bot.decide(model(), &legal, draw);
                 assert!(is_legal(mv, &legal), "{mv:?} under {legal:?}");
+                for (b, style) in styled.iter_mut().zip(styles) {
+                    let other = b.decide(model(), &legal, draw);
+                    assert!(is_legal(other, &legal), "{other:?} under {legal:?}");
+                    if *style == Style::NEUTRAL {
+                        assert_eq!(other, mv, "draw {draw} under {legal:?}");
+                    }
+                }
                 mv
             } else {
                 random_move(&legal, rng)
             };
-            bot.acted(model(), sim.to_act == hero, mv, rng.next_f64());
+            let follow = rng.next_f64();
+            bot.acted(model(), sim.to_act == hero, mv, follow);
+            for b in &mut styled {
+                b.acted(model(), sim.to_act == hero, mv, follow);
+            }
             sim.apply(mv);
         }
         if sim.over {
@@ -301,9 +356,82 @@ fn play_random_hand(rng: &mut Rng) {
 #[test]
 fn random_hands_at_any_depth_and_blind_get_legal_moves() {
     let mut rng = Rng::new(2026);
+    let tilted = Style {
+        aggression: 1.25,
+        bluff: 1.3,
+        tightness: 0.85,
+    };
     for _ in 0..400 {
-        play_random_hand(&mut rng);
+        play_random_hand(&mut rng, &[tilted]);
     }
+}
+
+#[test]
+fn neutral_style_plays_the_blueprint() {
+    let mut rng = Rng::new(23);
+    for _ in 0..400 {
+        play_random_hand(&mut rng, &[Style::NEUTRAL]);
+    }
+}
+
+fn flop_raises(style: Option<Style>) -> usize {
+    let mut rng = Rng::new(7);
+    let legal = Legal {
+        fold: false,
+        check: true,
+        call: None,
+        raise: Some((20, 360)),
+    };
+    let mut raises = 0;
+    for _ in 0..2000 {
+        let mut deck: Vec<Card> = (0..52).collect();
+        rng.shuffle(&mut deck);
+        let mut bot = Bot::new();
+        if let Some(style) = style {
+            bot.set_style(style);
+        }
+        bot.hand_started(model(), false, [400, 400], [10, 20]);
+        bot.hole_cards([deck[0], deck[1]]);
+        bot.acted(model(), false, Move::Call, 0.0);
+        bot.acted(model(), true, Move::Check, 0.0);
+        bot.street(model(), &deck[2..5]);
+        assert!(bot.cursor().is_some());
+        let mv = bot.decide(model(), &legal, rng.next_f64());
+        assert!(is_legal(mv, &legal), "{mv:?}");
+        if matches!(mv, Move::RaiseTo(_)) {
+            raises += 1;
+        }
+    }
+    raises
+}
+
+#[test]
+fn aggressive_style_raises_more() {
+    let neutral = flop_raises(None);
+    let aggressive = flop_raises(Some(Style {
+        aggression: 1.25,
+        bluff: 1.0,
+        tightness: 1.0,
+    }));
+    assert!(
+        aggressive > neutral,
+        "{aggressive} raises, {neutral} neutral"
+    );
+}
+
+#[test]
+fn a_style_is_kept_across_hands() {
+    let mut bot = Bot::new();
+    let style = Style {
+        aggression: 0.9,
+        bluff: 0.9,
+        tightness: 1.2,
+    };
+    bot.set_style(style);
+    bot.hand_started(model(), true, [400, 400], [10, 20]);
+    bot.hand_started(model(), false, [400, 400], [10, 20]);
+    assert_eq!(bot.style(), style);
+    assert_eq!(Bot::new().style(), Style::NEUTRAL);
 }
 
 fn smallest_raise(id: NodeId) -> (f64, ActionKind, NodeId) {
@@ -727,6 +855,7 @@ fn impossible_step() -> Step {
         action: actions.len(),
         street: Street::Preflop,
         board: Vec::new(),
+        style: Style::NEUTRAL,
     }
 }
 
@@ -880,4 +1009,43 @@ fn a_facing_resync_spots_the_facing_node() {
     let node = model().spot(spot.node).unwrap();
     assert!(node.to_call() > 0);
     assert_eq!(node.seat, bot.hand.as_ref().unwrap().hero);
+}
+
+#[test]
+fn a_styled_range_follows_the_styled_strategy() {
+    let style = Style {
+        aggression: 1.25,
+        bluff: 1.3,
+        tightness: 0.85,
+    };
+    let root = model().file.tree.root();
+    let hole = [48, 49];
+    let mut bot = started(true, [400, 400], [10, 20], hole);
+    bot.set_style(style);
+    let mv = bot.decide(model(), &facing_blind(20, 400), 0.99);
+    bot.acted(model(), true, mv, 0.0);
+    let step = bot.history()[0].clone();
+    let Node::Decision { actions, .. } = model().file.tree.node(root) else {
+        panic!("not a decision");
+    };
+    let kinds: Vec<ActionKind> = actions.iter().map(|a| a.0).collect();
+    let range = bot.range(model());
+    for (i, &w) in range.iter().enumerate() {
+        let bucket = model()
+            .abstraction
+            .bucket(Street::Preflop, pair_cards(i), &[]);
+        let weights = reweight(
+            model().file.probabilities(root, bucket),
+            &kinds,
+            &style,
+            false,
+            false,
+        );
+        let expected = weights[step.action] / weights.iter().sum::<f64>();
+        assert!(
+            (f64::from(w) - expected).abs() < 1e-5,
+            "{:?}: {w} vs {expected}",
+            pair_cards(i)
+        );
+    }
 }

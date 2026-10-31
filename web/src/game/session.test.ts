@@ -585,6 +585,20 @@ describe('session recording', () => {
     expect(await store.list()).toEqual([]);
   });
 
+  it('has no talk without a talk client', async () => {
+    const session = open(callingBot());
+    expect(session.getState().talk).toEqual({
+      available: false,
+      on: true,
+      level: 'subtle',
+      lines: [],
+      bubbles: [null, null],
+    });
+    await session.getState().start();
+    session.getState().say('Hello');
+    expect(session.getState().talk.lines).toEqual([]);
+  });
+
   it('records nothing without records', async () => {
     const session = open(shovingBot());
     await session.getState().start();
