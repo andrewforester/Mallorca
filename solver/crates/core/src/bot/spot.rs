@@ -1,6 +1,6 @@
 use super::range::action_probability;
 use super::{target, to_real, Bot, Legal, Model, Move, Target};
-use crate::pairs::{pair_cards, PAIRS};
+use crate::pairs::PAIRS;
 use crate::tree::{NodeId, Street};
 use std::collections::HashMap;
 
@@ -44,12 +44,10 @@ impl Bot {
         let Some(hand) = self.hand.as_ref() else {
             return grid;
         };
-        let hole = hand.hole.unwrap_or([u8::MAX; 2]);
         let buckets = model.abstraction.buckets(spot.street, &hand.board);
         let mut rows: HashMap<u16, Vec<f32>> = HashMap::new();
         for (i, &bucket) in buckets.iter().enumerate() {
-            let c = pair_cards(i);
-            if bucket == u16::MAX || hole.contains(&c[0]) || hole.contains(&c[1]) {
+            if bucket == u16::MAX {
                 continue;
             }
             let row = rows.entry(bucket).or_insert_with(|| {

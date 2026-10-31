@@ -1,6 +1,6 @@
 use super::*;
 use crate::measure::fixtures::{trained, trained_multi_open};
-use crate::pairs::{pair_cards, PAIRS};
+use crate::pairs::{pair_cards, pair_index, PAIRS};
 use crate::rng::Rng;
 use crate::tree::{ActionKind, Node};
 use range::range_of;
@@ -836,7 +836,7 @@ fn grid_rows_are_the_strategy() {
     let n = spot.moves.len();
     let grid = bot.strategy_grid(model(), &spot);
     assert_eq!(grid.len(), PAIRS * n);
-    let dead = [10, 20, 30, 48, 49];
+    let dead = [10, 20, 30];
     for i in 0..PAIRS {
         let c = pair_cards(i);
         let row = &grid[i * n..(i + 1) * n];
@@ -852,6 +852,8 @@ fn grid_rows_are_the_strategy() {
         }
         assert!((row.iter().sum::<f32>() - 1.0).abs() < 1e-5, "{c:?}");
     }
+    let own = pair_index(48, 49);
+    assert!((grid[own * n..(own + 1) * n].iter().sum::<f32>() - 1.0).abs() < 1e-5);
 }
 
 #[test]

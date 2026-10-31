@@ -250,7 +250,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   (its byte over the node's byte sum), a step that no pair takes being skipped; a decision played passive without
   sampling does not narrow it. `spot(legal)` is the node `decide` would sample from, without moving the bot:
   `moves` are the real actions of the node's tree actions under `legal`, `grid` holds 1326 rows of their
-  probabilities (0 for pairs that touch the board or the bot's cards), and `approximate` is true after a resync or
+  probabilities (0 for pairs that touch the board; the bot's own cards keep their row, so the coach reads the
+  player's hand from it), and `approximate` is true after a resync or
   an off-tree size taken as a call. Facing a bet after a resync it names the facing node, although `decide` may
   then sample from a check node with the probability of the bet-size mapping; with a small bet already taken as a
   street-closing call there is no spot. Both are null without a hand, a node or a live bot. In Rust they are
