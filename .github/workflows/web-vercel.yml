@@ -54,7 +54,7 @@ jobs:
           rm -rf .vercel/output
           mkdir -p .vercel/output
           cp -r dist .vercel/output/static
-          echo '{"version":3}' > .vercel/output/config.json
+          cp vercel-output-config.json .vercel/output/config.json
       - id: deploy
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
