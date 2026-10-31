@@ -5,7 +5,7 @@ import { completeWith } from "../model.ts";
 import type { Observed } from "../model.ts";
 import { checks, JUDGE_SYSTEM, judgePrompt, kindOf, score, VERDICT_SCHEMA } from "./grade.ts";
 import type { EvalCase, Verdict } from "./grade.ts";
-import { summarize } from "./summary.ts";
+import { costOf, summarize } from "./summary.ts";
 import type { Row } from "./summary.ts";
 
 const DEFAULTS: Record<string, string> = {
@@ -14,6 +14,7 @@ const DEFAULTS: Record<string, string> = {
   concurrency: "4",
   out: "./out",
   variant: "scratch",
+  budget: "0.25",
 };
 
 function parseFlags(list: string[]): Record<string, string> {
@@ -40,7 +41,12 @@ const resultsUrl = new URL("results.jsonl", out);
 const errorsUrl = new URL("errors.jsonl", out);
 const readLines = async (url: URL): Promise<string[]> =>
   (await Deno.readTextFile(url).catch(() => "")).split("\n").filter((l) => l.trim() !== "");
-const done = new Set((await readLines(resultsUrl)).map((l) => JSON.parse(l).prompt_id));
+const earlier: Row[] = (await readLines(resultsUrl)).map((l) => JSON.parse(l));
+const done = new Set(earlier.map((r) => r.prompt_id));
+const rowCost = (r: Row): number =>
+  r.calls.reduce((s, c) => s + costOf(c.model, c.usage), 0) + costOf(r.judge_model, r.judge_usage);
+let spent = earlier.reduce((s, r) => s + rowCost(r), 0);
+const budget = Number(args.budget);
 
 const dry = args.dry as "oracle" | "null" | undefined;
 const client = dry ? null : new Anthropic({ timeout: 30_000, maxRetries: 2 });
@@ -177,6 +183,7 @@ async function runCase(c: EvalCase): Promise<void> {
     new URL(`traces/${c.id}_rep0.json`, out),
     JSON.stringify(trace, null, 2),
   );
+  spent += rowCost(row);
   await Deno.writeTextFile(resultsUrl, `${JSON.stringify(row)}\n`, { append: true });
 }
 
@@ -193,7 +200,13 @@ async function attempt(c: EvalCase): Promise<void> {
 
 const queue = selected.filter((c) => !done.has(c.id));
 const workers = Array.from({ length: Number(args.concurrency) }, async () => {
-  for (let c = queue.shift(); c !== undefined; c = queue.shift()) await attempt(c);
+  for (let c = queue.shift(); c !== undefined; c = queue.shift()) {
+    if (spent >= budget) {
+      console.error(`budget $${budget} reached at $${spent.toFixed(4)}, skipping ${c.id}`);
+      continue;
+    }
+    await attempt(c);
+  }
 });
 await Promise.all(workers);
 
