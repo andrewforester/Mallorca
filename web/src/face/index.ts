@@ -1,0 +1,14 @@
+export type { Anchor, Weights } from './anchors.ts';
+export { ANCHORS, PULSE_FACES, blendOf, faceOf, shaped } from './anchors.ts';
+export type { Pulse, PulsePlan } from './expression.ts';
+export { feltPadOf, maskOf, pulsesFor, pulsesOf, shownPadOf } from './expression.ts';
+export type { FaceFrame, IdleState } from './frame.ts';
+export { faceFrame, nervousOf, sadnessOf } from './frame.ts';
+export type { FaceLook } from './look.ts';
+export { MALLORCA_LOOK, leakOf } from './look.ts';
+export type { Prosody } from './prosody.ts';
+export { prosodyOf, speechOf } from './prosody.ts';
+export type { Pose, Stance } from './stance.ts';
+export { STANCES, poseOf } from './stance.ts';
+export type { VisemeCue } from './visemes.ts';
+export { visemesOf } from './visemes.ts';
