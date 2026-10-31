@@ -18,7 +18,7 @@ const HAND = [
   e('post', { seat: 1, amount: 20 }),
   e('raise', { seat: 0, amount: 60 }),
   e('call', { seat: 1, amount: 40 }),
-  e('flop', { cards: 'As Td 3h' }),
+  e('flop', { cards: 'As Td 3h', pot: 120 }),
   e('check', { seat: 1 }),
   e('bet', { seat: 0, amount: 80 }),
 ];

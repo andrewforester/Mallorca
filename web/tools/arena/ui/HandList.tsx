@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'preact/hooks';
 import { STREETS, pairRows } from './analysis.ts';
 import type { HandFilter, HandSummary, PairRow } from './analysis.ts';
-import { BIG_BLIND, LABELS, signed } from './format.ts';
+import { LABELS, signed } from './format.ts';
 
 const PAGE = 50;
 
@@ -11,8 +11,8 @@ interface Props {
   onOpen: (row: PairRow) => void;
 }
 
-function bb(chips: number): string {
-  return signed(chips / BIG_BLIND);
+function bb(chips: number, bigBlind: number): string {
+  return signed(chips / bigBlind);
 }
 
 function Choice({
@@ -50,6 +50,7 @@ function toFilter(position: string, street: string, showdown: string): HandFilte
 }
 
 function Row({ row, open, onOpen }: { row: PairRow; open: boolean; onOpen: () => void }) {
+  const { bigBlind } = row.hands[0];
   return (
     <tr class={open ? 'selected' : ''} onClick={onOpen} data-testid="pair-row">
       <td class="num">
@@ -62,11 +63,11 @@ function Row({ row, open, onOpen }: { row: PairRow; open: boolean; onOpen: () =>
           key={h.handNumber}
           class={`num ${h.aNet < 0 ? 'loss' : 'win'}${row.matches[i] ? '' : ' dim'}`}
         >
-          {`${bb(h.aNet)} ${LABELS[h.street]?.toLowerCase()}${h.showdown ? ', showdown' : ''}`}
+          {`${bb(h.aNet, h.bigBlind)} ${LABELS[h.street]?.toLowerCase()}${h.showdown ? ', showdown' : ''}`}
         </td>
       ))}
-      <td class={`num ${row.net < 0 ? 'loss' : 'win'}`}>{bb(row.net)}</td>
-      <td class="num">{row.pot / BIG_BLIND}</td>
+      <td class={`num ${row.net < 0 ? 'loss' : 'win'}`}>{bb(row.net, bigBlind)}</td>
+      <td class="num">{row.pot / bigBlind}</td>
     </tr>
   );
 }

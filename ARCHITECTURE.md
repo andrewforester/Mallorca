@@ -115,13 +115,14 @@ enforces it with `no-restricted-globals` and `no-restricted-properties`. Randomn
   `potAwarded`, `handEnded`, `tournamentEnded`. `acted.amount` is the chips added to the pot by that action.
   `toppedUp { seat, amount }` comes before `handStarted`, so `handStarted.stacks` include it; `toObservations`
   ignores it.
-  `showdown.hands` is indexed by seat; `cards` are the hole cards.
+  `showdown.hands` is indexed by seat; `cards` are the hole cards. `streetDealt.pot` and `showdown.pot` are the
+  pot of the matched chips when the street is dealt or the hands are shown, without an uncalled bet.
 - When a hand ends, `street` is `complete`, `toAct` is null, `pot` is 0 and the stacks include the awarded pot.
 - `startHand` and `apply` both end the tournament when a hand completes with an empty stack: they set `winner` and
   append `tournamentEnded`. A cash table never ends and never emits `tournamentEnded`. A hand can complete inside `startHand` when a short stack is all-in from the blinds.
 - `handHistory(events)` returns `LogEntry` values, `{ key, params }`, with seat indices in `params.seat` and no
   names or English text. `key` is a locale key under `log` (with `you` or `other` for entries that have a seat);
-  `params.category` is a `HandCategory`.
+  `params.category` is a `HandCategory`. The `flop`, `turn`, `river` and `show` entries carry `params.pot`.
 
 ### Rules
 
@@ -253,7 +254,9 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   the human or asks the bot to decide and applies its action after `botDelayMs`.
 - `Intent` is `fold`, `passive` (check or call) or `raise` with a target. `resolveIntent` turns it into a legal
   action: a raise is rounded and clamped into `legal.raise`, a fold becomes a check when checking is free.
-- `log` holds the `LogEntry` values of the session. `lastActions` holds one tag per seat for the current street,
+- `log` holds the `LogEntry` values of the session. `groupHand(log)` in `handLog.ts` splits the last hand, with
+  the top-ups before it, into `StreetGroup` values (`street`, `cards`, `pot`, `entries`): a group per dealt street
+  with the pot of its entry, and a `showdown` group from the first `show` entry. `lastActions` holds one tag per seat for the current street,
   `{ key, params }` with `key` under `actions` (`fold`, `check`, `call`, `bet`, `raiseTo`, `allIn`); a raise
   with no bet on the street is a `bet`, in the tags and in the log. Every `streetDealt` clears both tags, and
   `closingActions` keeps the tags the last one cleared, the actions that closed the previous street. Both are
@@ -353,7 +356,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - Layout: portrait for phones (bot at the top, the human's cards and controls at the bottom), landscape for wide
   screens, switched by a `min-aspect-ratio: 1/1` media query. The layout has no side log. The `coach` panel is
   the slot for a later training mode and is empty.
-- The hand log is a drawer grouped by street (`groupHand` in `ui/handLog.ts`), opened by the status bar toggle
+- The hand log is a drawer grouped by street (`groupHand` of `game`), opened by the status bar toggle
   `hand-log-toggle` (`aria-expanded`). Opening moves focus to `hand-log-close`; closing, by the close button,
   Escape, the toggle or the scrim, returns focus to the toggle. On portrait screens it is a full-height sheet over
   a scrim that closes on tap; in landscape it is a floating panel and the scrim does not take pointer events, so
@@ -430,8 +433,9 @@ imports `engine`, `brains`, `cards`, `cfr` and `game/records/record.ts` and noth
   kinds, a raise to the minimum, from its seeded `Rng`). `cfr:<play file>` plays any play file the same way and is
   labelled `cfr-<file name>` in the report (`botLabel`).
 - `match.ts`: `playPair(a, b, seed, index)` plays one deck twice with the seats swapped: the deck is shuffled by
-  `mulberry32((Math.imul(seed, 0x9e3779b1) + index) >>> 0)`; hand `k` (0, 1) starts both seats at 2000, button
-  seat 0, blinds 10/20, `handNumber = index * 2 + k + 1`, with `a` on seat 0 in hand 0 and `b` in hand 1. Each hand
+  `mulberry32((Math.imul(seed, 0x9e3779b1) + index) >>> 0)`; hand `k` (0, 1) starts both seats at the cash stakes
+  (the stacks of `createTable` with `CASH`, the blinds of `rulesOf(CASH)`), button seat 0,
+  `handNumber = index * 2 + k + 1`, with `a` on seat 0 in hand 0 and `b` in hand 1. Each hand
   gets fresh bots, the bot on `seat` seeded by `mulberry32((seed ^ (index * 4 + k * 2 + seat)) >>> 0)`, and each
   bot receives `toObservations` of the new events for its seat after every step. It returns `net`, the chips of
   `a` over both hands, and the events of both hands. The math bot against itself nets exactly 0 per pair.
@@ -444,7 +448,7 @@ imports `engine`, `brains`, `cards`, `cfr` and `game/records/record.ts` and noth
 - `run.ts`: `runArena({ a, b, pairs, seed, workers, saveHands?, reportDir? })` splits the pair indices into
   contiguous chunks,
   runs them in process (`workers: 1`) or in `worker_threads` (`worker.ts`), gathers the results in index order and
-  returns the `Report` (`a`, `b`, `pairs`, `hands`, `seed`, `bbPer100`, `ci95`, `durationMs`, `commit` from
+  returns the `Report` (`a`, `b`, `pairs`, `hands`, `seed`, `bbPer100` in the big blind of `CASH`, `ci95`, `durationMs`, `commit` from
   `git rev-parse --short HEAD` or `unknown`, `finishedAt`, and `handsFile`, the `saveHands` path relative to
   `reportDir`, or null); the result depends only on the seed, not on the worker count.
   `saveHands` writes one `HandRecord` per line (JSONL) with `humanSeat: null`, `sessionId: arena-<seed>`,
@@ -480,11 +484,12 @@ types.
   with the gzip magic bytes (`decodeHands`, so a host that sent `Content-Encoding: gzip` works too), parses the
   JSONL, skips unreadable lines and keeps the raw lines for `record(line)`.
 - `analysis.ts`: `summarize(record, line)` takes A's seat from the hand number (`k = (handNumber - 1) % 2`, A on
-  seat `k`), so a bot against itself works; `pairNets`, `cumulative` (at most 600 points), `slices` (position,
+  seat `k`), so a bot against itself works, and the big blind of the hand from its `handStarted` event; the views
+  show amounts in that big blind; `pairNets`, `cumulative` (at most 600 points), `slices` (position,
   street of the last action, showdown) and `pairRows`: a pair is kept when either hand passes the filter, its
   `matches` mark which, and a filtered list is sorted by the matching hands.
-- Components: `App`, `RunList`, `RunView` (warns when the hands do not give the report's pairs and bb/100 within
-  0.05), `Curve`, `Slices`, `HandList`, `PairPanel` (both hands of a pair as PokerStars text). Tests run under
+- Components: `App`, `RunList`, `RunView` (warns when the hands do not give the report's pairs and bb/100 of
+  `summarize` in `stats.ts` within 0.05, and says so when the hands file holds no readable hand), `Curve`, `Slices`, `HandList`, `PairPanel` (both hands of a pair as PokerStars text). Tests run under
   happy-dom in the `ui` Vitest project.
 
 ## Conventions

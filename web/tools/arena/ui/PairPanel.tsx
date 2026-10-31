@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { toPokerStars } from '../../../src/game/records/pokerstars.ts';
 import type { HandRecord } from '../../../src/game/records/record.ts';
 import type { PairRow } from './analysis.ts';
-import { BIG_BLIND, signed } from './format.ts';
+import { signed } from './format.ts';
 
 interface Props {
   row: PairRow;
@@ -28,7 +28,7 @@ export function PairPanel({ row, a, record }: Props) {
   }, [row, record]);
   return (
     <section class="pair-panel">
-      <h3>{`Pair ${row.pair + 1}: ${a} ${signed(row.net / BIG_BLIND)} bb`}</h3>
+      <h3>{`Pair ${row.pair + 1}: ${a} ${signed(row.net / row.hands[0].bigBlind)} bb`}</h3>
       {error !== null && <p class="warning">{`Could not read the hands of this pair: ${error}`}</p>}
       {error !== null ? null : texts === null ? (
         <p class="note">Reading the hands.</p>
@@ -36,7 +36,7 @@ export function PairPanel({ row, a, record }: Props) {
         <div class="hands">
           {row.hands.map((h, i) => (
             <div key={h.handNumber}>
-              <h4>{`${a} ${h.position === 'button' ? 'on the button' : 'in the big blind'}: ${signed(h.aNet / BIG_BLIND)} bb`}</h4>
+              <h4>{`${a} ${h.position === 'button' ? 'on the button' : 'in the big blind'}: ${signed(h.aNet / h.bigBlind)} bb`}</h4>
               <pre data-testid="hand-text">{texts[i]}</pre>
             </div>
           ))}

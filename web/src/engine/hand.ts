@@ -132,12 +132,12 @@ function settle(table: Table, last: SeatIndex): Step {
   return closeBetting(table);
 }
 
-function dealStreet(hand: Hand, events: EngineEvent[]): Hand {
+function dealStreet(hand: Hand, events: EngineEvent[], pot: number): Hand {
   const street = STREET_BY_BOARD_SIZE[hand.board.length as 0 | 3 | 4];
   const count = CARDS_BY_STREET[street];
   const cards = hand.deck.slice(0, count);
   const board = [...hand.board, ...cards];
-  events.push({ type: 'streetDealt', street, cards, board });
+  events.push({ type: 'streetDealt', street, cards, board, pot });
   return { ...hand, street, deck: hand.deck.slice(count), board };
 }
 
@@ -145,7 +145,7 @@ function closeBetting(table: Table): Step {
   const { hand, stacks, seats, events } = table;
   const bothCanBet = stacks[0] > 0 && stacks[1] > 0;
   if (bothCanBet && hand.street !== 'river') {
-    const next = dealStreet(hand, events);
+    const next = dealStreet(hand, events, hand.pot);
     return {
       hand: {
         ...next,
@@ -172,13 +172,13 @@ function showdown(table: Table): Step {
     refund[bigger] = excess;
     committed[bigger] -= excess;
   }
+  const pot = committed[0] + committed[1];
   let current: Hand = hand;
   while (current.board.length < 5) {
-    current = dealStreet(current, events);
+    current = dealStreet(current, events, pot);
   }
   const hands = evaluateShowdown(current.holeCards, current.board);
-  events.push({ type: 'showdown', hands });
-  const pot = committed[0] + committed[1];
+  events.push({ type: 'showdown', hands, pot });
   const awards = awardShowdown(pot, [hands[0].rank, hands[1].rank], otherSeat(hand.button));
   return finish({ ...table, hand: current }, { awards, refund });
 }

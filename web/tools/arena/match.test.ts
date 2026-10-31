@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { mulberry32 } from '../../src/cards/index.ts';
+import { CASH, createTable, rulesOf } from '../../src/engine/index.ts';
 import type { EngineEvent, SeatIndex } from '../../src/engine/index.ts';
 import { BOTS } from './bots.ts';
 import type { BotName } from './bots.ts';
@@ -65,6 +66,19 @@ describe('playPair', () => {
       const recomputed = finalStacks(hands[0]!)[0] - 2000 + (finalStacks(hands[1]!)[1] - 2000);
       expect(net).toBe(recomputed);
       expect(net).toBe(expected);
+    }
+  });
+  it('plays both hands at the cash stakes', () => {
+    const { hands } = playPair(BOTS['always-call'], BOTS['always-raise'], 5, 3);
+    const { small, big } = rulesOf(CASH).blinds(1);
+    const stack = createTable(['A', 'B'], CASH).seats[0].stack;
+    for (const hand of hands) {
+      expect(hand[0]).toMatchObject({
+        type: 'handStarted',
+        smallBlind: small,
+        bigBlind: big,
+        stacks: [stack, stack],
+      });
     }
   });
 });

@@ -97,6 +97,11 @@ describe('RunView', () => {
     expect(screen.getByText(/no saved hands/)).toBeTruthy();
   });
 
+  it('says so when the hands file holds no readable hand', async () => {
+    render(<RunView run={run()} load={loader([], 3)} />);
+    expect(await screen.findByText(/holds no readable hand/)).toBeTruthy();
+  });
+
   it('warns when the hands do not match the report', async () => {
     const { records: list } = records(30);
     render(<RunView run={run({ bbPer100: 999 })} load={loader(list)} />);
@@ -142,5 +147,25 @@ describe('RunView', () => {
     expect(
       await screen.findByText(/Could not read the hands of this pair: no hand on line 7/),
     ).toBeTruthy();
+  });
+  it('reads the amounts in the big blind of the hands', async () => {
+    const { records: list, nets } = records(30);
+    const doubled = list.map((record) => ({
+      ...record,
+      mode: { kind: 'cash' as const, bigBlind: 40, buyIn: 2000 },
+      events: record.events.map((e) => (e.type === 'handStarted' ? { ...e, bigBlind: 40 } : e)),
+    }));
+    render(<RunView run={run({ bbPer100: stats(nets, 40).bbPer100 })} load={loader(doubled)} />);
+    const rows = await screen.findAllByTestId('pair-row');
+    expect(screen.queryByText(/do not match this report/)).toBeNull();
+    fireEvent.click(rows[0]!);
+    const largest = nets.reduce(
+      (best, n, i) => (Math.abs(n) > Math.abs(nets[best]!) ? i : best),
+      0,
+    );
+    const net = nets[largest]! / 40;
+    const text = `${net < 0 ? '-' : '+'}${Math.abs(net).toFixed(1)}`;
+    const name = `Pair ${largest + 1}: random ${text} bb`;
+    expect(screen.getByRole('heading', { name })).toBeTruthy();
   });
 });
