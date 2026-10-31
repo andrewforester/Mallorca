@@ -1,6 +1,6 @@
 use super::translate::sample;
 use super::{Model, Spot};
-use crate::tree::{ActionKind, NodeId, Street};
+use crate::tree::{ActionKind, Street};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Style {
@@ -66,12 +66,11 @@ pub fn sample_weighted(weights: &[f64], draw: f64) -> usize {
 pub(super) fn choose(
     model: &Model,
     spot: &Spot<'_>,
-    id: NodeId,
+    probabilities: &[u8],
     bucket: u16,
     style: &Style,
     draw: f64,
 ) -> usize {
-    let probabilities = model.file.probabilities(id, bucket);
     if *style == Style::NEUTRAL {
         return sample(probabilities, draw);
     }

@@ -8,10 +8,10 @@ import { applyAction, legalActions, startHandWith } from '../engine/index.ts';
 import type { Observation } from '../brains/index.ts';
 import { toObservations } from '../brains/index.ts';
 import type { CfrModel } from './index.ts';
-import { createCfrBrain, createCfrModel, inflate } from './index.ts';
+import { SHIPPED_STRATEGIES, WASM_URL, createCfrBrain, createCfrModel, inflate } from './index.ts';
 
-const wasm = readFileSync(new URL('./mallorca.wasm', import.meta.url));
-const strategy = readFileSync(new URL('./v1.mlcs.gz', import.meta.url));
+const wasm = readFileSync(WASM_URL);
+const strategy = readFileSync(SHIPPED_STRATEGIES.cfr.url);
 
 let model: CfrModel;
 
@@ -101,7 +101,7 @@ describe('CfrBrain', () => {
   it('plays the v2 blueprint legally', async () => {
     const v2 = await createCfrModel(
       wasm,
-      await inflate(readFileSync(new URL('./v2.mlcs.gz', import.meta.url))),
+      await inflate(readFileSync(SHIPPED_STRATEGIES['cfr-v2'].url)),
     );
     for (let seed = 1; seed <= 30; seed++) {
       playHand(seed, [2000, 2000], 20, v2);

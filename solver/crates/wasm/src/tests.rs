@@ -33,11 +33,13 @@ fn uniform_file() -> StrategyFile {
     StrategyFile::new(header, tree, vec![flop], probabilities)
 }
 
-fn play_file() -> Vec<u8> {
+fn play_strategy() -> StrategyFile {
     let t: Vec<f32> = (1..8).map(|i| i as f32 / 8.0).collect();
-    uniform_file()
-        .with_thresholds(vec![(Street::Turn, t.clone()), (Street::River, t)])
-        .to_bytes()
+    uniform_file().with_thresholds(vec![(Street::Turn, t.clone()), (Street::River, t)])
+}
+
+fn play_file() -> Vec<u8> {
+    play_strategy().to_bytes()
 }
 
 fn centroid_file() -> Vec<u8> {
@@ -115,6 +117,86 @@ fn a_bot_plays_a_hand_on_a_centroid_file() {
         acted(bot, 0, KIND_CHECK, 0, 0.5);
     }
     bot_free(bot);
+}
+
+fn seated(hole: [u32; 2]) -> i32 {
+    let model = loaded(&play_file());
+    assert!(model >= 0, "{model}");
+    let bot = bot_new(model);
+    assert!(bot >= 0);
+    hand_started(bot, 1, 400, 400, 10, 20);
+    hole_cards(bot, hole[0], hole[1]);
+    bot
+}
+
+#[test]
+fn a_raise_minimum_above_the_maximum_plays_passive() {
+    let bot = seated([48, 49]);
+    assert_eq!(decide(bot, 1, 0, 10, 400, 40, 0.99), KIND_CALL);
+    assert_eq!(decide(bot, 1, 0, 10, 40, 400, 0.99), KIND_RAISE);
+    bot_free(bot);
+}
+
+#[test]
+fn invalid_hole_cards_play_passive() {
+    for hole in [[48, 48], [48, 100], [52, 49], [u32::MAX, 49]] {
+        let bot = seated(hole);
+        assert_eq!(decide(bot, 1, 0, 10, 40, 400, 0.99), KIND_CALL, "{hole:?}");
+        bot_free(bot);
+    }
+}
+
+#[test]
+fn a_board_that_repeats_a_card_plays_passive() {
+    for board in [[48, 4, 8], [0, 0, 8], [0, 4, 60]] {
+        let bot = seated([48, 49]);
+        acted(bot, 1, KIND_CALL, 0, 0.5);
+        acted(bot, 0, KIND_CHECK, 0, 0.5);
+        street(bot, 3, board[0], board[1], board[2], 0, 0);
+        assert_eq!(
+            decide(bot, 0, 1, -1, 20, 400, 0.99),
+            KIND_CHECK,
+            "{board:?}"
+        );
+        bot_free(bot);
+    }
+}
+
+#[test]
+fn a_tree_with_too_few_preflop_buckets_is_refused() {
+    let file = play_strategy();
+    let mut tree = file.tree.serialize();
+    tree[..2].copy_from_slice(&8u16.to_le_bytes());
+    let mut bytes = file.to_bytes();
+    let at = 67;
+    bytes[at..at + 2].copy_from_slice(&tree[..2]);
+    let preflop_slots: usize = file
+        .tree
+        .nodes()
+        .iter()
+        .map(|n| match n {
+            Node::Decision {
+                street: Street::Preflop,
+                actions,
+                ..
+            } => (169 - 8) * actions.len(),
+            _ => 0,
+        })
+        .sum();
+    bytes.truncate(bytes.len() - preflop_slots);
+    assert_eq!(loaded(&bytes), -6);
+}
+
+#[test]
+fn a_raise_is_the_answer_when_it_is_the_only_legal_move() {
+    for hole in [[48, 49], [48, 48]] {
+        for draw in [0.0, 0.5, 0.99] {
+            let bot = seated(hole);
+            assert_eq!(decide(bot, 0, 0, -1, 40, 400, draw), KIND_RAISE);
+            assert!((40..=400).contains(&decided_to(bot)), "{}", decided_to(bot));
+            bot_free(bot);
+        }
+    }
 }
 
 #[test]

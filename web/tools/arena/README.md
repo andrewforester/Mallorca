@@ -33,8 +33,8 @@ Reference run on Apple M3 Pro, 12 cores:
 math vs always-call: +272.8 ± 42.4 bb/100 over 4000 hands in 37 s
 ```
 
-`cfr` is the `v1` blueprint of `solver/` (checkpoint 18) in `src/cfr/v1.mlcs.gz`, played through
-`src/cfr/mallorca.wasm`; `npm run arena` builds the module first. `cfr:<play file>` plays any play file
+`cfr` is the `v1` blueprint of `solver/` (checkpoint 18) in `src/cfr/v1.mlcs.gz` (`SHIPPED_STRATEGIES.cfr` in
+`src/cfr/strategies.ts`), played through `src/cfr/mallorca.wasm`; `npm run arena` builds the module first. `cfr:<play file>` plays any play file
 (`.mlcs` or `.mlcs.gz`, for example `cfr:../solver/data/v2/v2-18-play.mlcs`) and is named `cfr-<file name>` in the
 report, so two blueprints can meet: `npm run arena -- --a cfr:<v2 play file> --b cfr --pairs 20000`. Reference runs on the same machine, seed in
 brackets:

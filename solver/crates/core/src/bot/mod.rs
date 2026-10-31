@@ -41,11 +41,13 @@ struct Spot<'a> {
 
 impl Spot<'_> {
     fn to_call(&self) -> u32 {
-        self.street_bets[1 - self.seat] - self.street_bets[self.seat]
+        self.street_bets[1 - self.seat].saturating_sub(self.street_bets[self.seat])
     }
 
     fn pot_after_call(&self) -> u32 {
-        self.committed[0] + self.committed[1] + self.to_call()
+        self.committed[0]
+            .saturating_add(self.committed[1])
+            .saturating_add(self.to_call())
     }
 
     fn child(&self, kind: ActionKind) -> Option<NodeId> {
@@ -96,9 +98,10 @@ impl Model {
     fn raise_to(&self, spot: &Spot<'_>, kind: ActionKind) -> Option<u32> {
         match kind {
             ActionKind::RaiseTo(to) => Some(to),
-            ActionKind::AllIn => {
-                Some(spot.street_bets[spot.seat] + self.file.stack - spot.committed[spot.seat])
-            }
+            ActionKind::AllIn => Some(
+                spot.street_bets[spot.seat]
+                    .saturating_add(self.file.stack.saturating_sub(spot.committed[spot.seat])),
+            ),
             _ => None,
         }
     }
@@ -109,8 +112,13 @@ pub fn passive(legal: &Legal) -> Move {
         Move::Check
     } else if legal.call.is_some() {
         Move::Call
-    } else {
+    } else if legal.fold {
         Move::Fold
+    } else {
+        legal
+            .raise
+            .filter(|r| r.0 <= r.1)
+            .map_or(Move::Fold, |r| Move::RaiseTo(r.0))
     }
 }
 
@@ -134,11 +142,17 @@ impl Hand {
     }
 
     fn pot_after_call(&self, seat: usize) -> u32 {
-        self.committed[0] + self.committed[1] + self.to_call(seat)
+        self.committed[0]
+            .saturating_add(self.committed[1])
+            .saturating_add(self.to_call(seat))
+    }
+
+    fn pot(&self) -> f64 {
+        f64::from(self.committed[0]) + f64::from(self.committed[1])
     }
 
     fn apply(&mut self, seat: usize, mv: Move) {
-        let behind = self.start[seat] - self.committed[seat];
+        let behind = self.start[seat].saturating_sub(self.committed[seat]);
         let add = match mv {
             Move::Fold | Move::Check => 0,
             Move::Call => self.to_call(seat).min(behind),
@@ -249,7 +263,7 @@ impl Bot {
         let Some(hand) = self.hand.as_mut() else {
             return passive(legal);
         };
-        let Some(hole) = hand.hole else {
+        let Some(hole) = hand.hole.filter(|&h| distinct_cards(h, &hand.board)) else {
             return passive(legal);
         };
         let facing = legal.call.is_some();
@@ -274,11 +288,16 @@ impl Bot {
         let Some(id) = hand.node else {
             return passive(legal);
         };
-        let spot = model.spot(id).expect("a decision node");
+        let Some(spot) = model.spot(id) else {
+            return passive(legal);
+        };
         let bucket = model.abstraction.bucket(hand.street, hole, &hand.board);
-        let chosen = spot.actions[choose(model, &spot, id, bucket, &self.style, draw)];
+        let Some(probabilities) = model.file.try_probabilities(id, bucket) else {
+            return passive(legal);
+        };
+        let chosen = spot.actions[choose(model, &spot, probabilities, bucket, &self.style, draw)];
         hand.pending = Some(chosen.1);
-        to_real(model, &spot, hand, chosen.0, legal)
+        to_real(&spot, hand, chosen.0, legal)
     }
 }
 
@@ -321,28 +340,32 @@ fn follow(model: &Model, hand: &Hand, seat: usize, mv: Move, draw: f64) -> (Opti
     }
 }
 
+fn spot_pot(spot: &Spot<'_>) -> f64 {
+    f64::from(spot.committed[0]) + f64::from(spot.committed[1])
+}
+
 fn resync(model: &Model, hand: &Hand, facing: bool) -> Option<NodeId> {
-    let pot = hand.scale * f64::from(hand.committed[0] + hand.committed[1]);
+    let pot = hand.scale * hand.pot();
     let price = hand.scale * f64::from(hand.to_call(hand.hero)) / pot;
-    let distance = |id: NodeId| {
-        let spot = model.spot(id).expect("a decision node");
-        let p = f64::from(spot.committed[0] + spot.committed[1]);
+    let distance = |spot: &Spot<'_>| {
+        let p = spot_pot(spot);
         let q = f64::from(spot.to_call()) / p;
         (p / pot).ln().abs() + ((1.0 + q) / (1.0 + price)).ln().abs()
     };
     model.spots[spot_key(hand.street, hand.hero, facing)]
         .iter()
-        .copied()
-        .min_by(|&a, &b| distance(a).total_cmp(&distance(b)))
+        .filter_map(|&id| model.spot(id).map(|spot| (id, distance(&spot))))
+        .min_by(|a, b| a.1.total_cmp(&b.1))
+        .map(|(id, _)| id)
 }
 
 fn resync_to_check(model: &Model, hand: &mut Hand, draw: f64) -> f64 {
     let Some(spot) = hand.node.and_then(|id| model.spot(id)) else {
         return draw;
     };
-    let tree_pot = f64::from(spot.committed[0] + spot.committed[1] - spot.to_call());
+    let tree_pot = spot_pot(&spot) - f64::from(spot.to_call());
     let to_call = hand.to_call(hand.hero);
-    let pot = f64::from(hand.committed[0] + hand.committed[1] - to_call);
+    let pot = hand.pot() - f64::from(to_call);
     let p = pseudo_harmonic(
         0.0,
         f64::from(spot.to_call()) / tree_pot,
@@ -361,8 +384,8 @@ fn resync_to_check(model: &Model, hand: &mut Hand, draw: f64) -> f64 {
     draw / p
 }
 
-fn to_real(model: &Model, spot: &Spot<'_>, hand: &Hand, kind: ActionKind, legal: &Legal) -> Move {
-    let Some(range) = legal.raise else {
+fn to_real(spot: &Spot<'_>, hand: &Hand, kind: ActionKind, legal: &Legal) -> Move {
+    let Some(range) = legal.raise.filter(|r| r.0 <= r.1) else {
         return match kind {
             ActionKind::Fold if legal.fold => Move::Fold,
             _ => passive(legal),
@@ -372,8 +395,7 @@ fn to_real(model: &Model, spot: &Spot<'_>, hand: &Hand, kind: ActionKind, legal:
         ActionKind::Fold if legal.fold => Move::Fold,
         ActionKind::Fold | ActionKind::Check | ActionKind::Call => passive(legal),
         ActionKind::AllIn => Move::RaiseTo(range.1),
-        ActionKind::RaiseTo(_) => {
-            let t = model.raise_to(spot, kind).expect("a raise");
+        ActionKind::RaiseTo(t) => {
             let f = fraction(t, spot.street_bets[1 - spot.seat], spot.pot_after_call());
             let me = hand.hero;
             Move::RaiseTo(scaled_raise(
@@ -384,6 +406,16 @@ fn to_real(model: &Model, spot: &Spot<'_>, hand: &Hand, kind: ActionKind, legal:
             ))
         }
     }
+}
+
+fn distinct_cards(hole: [Card; 2], board: &[Card]) -> bool {
+    let mut seen = 0u64;
+    hole.iter().chain(board).all(|&c| {
+        let bit = 1u64 << (c % 64);
+        let fresh = c < 52 && seen & bit == 0;
+        seen |= bit;
+        fresh
+    })
 }
 
 #[cfg(test)]

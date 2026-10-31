@@ -1,14 +1,15 @@
-import { basename } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { basename, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import type { Action, LegalActions } from '../../src/engine/index.ts';
 import type { BotStyle } from '../../src/brains/index.ts';
 import { createMathBrain, randomVillainModel } from '../../src/brains/index.ts';
 import type { Rng } from '../../src/cards/index.ts';
-import type { CfrModel } from '../../src/cfr/index.ts';
-import { createCfrBrain } from '../../src/cfr/index.ts';
+import type { CfrModel, ShippedStrategyKey } from '../../src/cfr/index.ts';
+import { SHIPPED_STRATEGIES, createCfrBrain, loadCfrModel } from '../../src/cfr/index.ts';
 import { strengthOf } from '../../src/talk/index.ts';
 import type { Level } from '../../src/talk/index.ts';
 import type { ArenaBot } from './arenaBot.ts';
-import { loadCfrModel } from './cfrModel.ts';
 import { createExploiter } from './exploiter.ts';
 import { createReader } from './reader.ts';
 import { createTalkingBot } from './talking.ts';
@@ -58,8 +59,9 @@ const random: BotFactory = (rng) => ({
 });
 
 const CFR_FILE = 'cfr:';
-const SHIPPED = 'cfr';
+const SHIPPED: ShippedStrategyKey = 'cfr';
 const cfrModels = new Map<string, CfrModel>();
+const read = (url: URL) => readFile(url);
 
 function cfrBot(key: string, style?: BotStyle): BotFactory {
   return (rng) => {
@@ -153,11 +155,16 @@ export function botLabel(name: string): string {
   return `cfr-${base}`;
 }
 
+function strategyUrl(name: string): URL | null {
+  if (name === SHIPPED) return SHIPPED_STRATEGIES[SHIPPED].url;
+  const file = cfrFile(name);
+  return file === null ? null : pathToFileURL(resolve(file));
+}
+
 export async function prepareBots(names: readonly string[]): Promise<void> {
   for (const name of names) {
-    const file = cfrFile(name);
-    const key = file === null ? SHIPPED : name;
-    if (cfrModels.has(key) || (file === null && !name.startsWith(SHIPPED))) continue;
-    cfrModels.set(key, await (file === null ? loadCfrModel() : loadCfrModel(file)));
+    const key = cfrFile(name) === null && name.startsWith(SHIPPED) ? SHIPPED : name;
+    const url = strategyUrl(key);
+    if (url !== null && !cfrModels.has(key)) cfrModels.set(key, await loadCfrModel(url, read));
   }
 }

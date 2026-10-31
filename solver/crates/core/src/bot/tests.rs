@@ -143,6 +143,24 @@ fn never_folds_when_checking_is_free() {
     assert_eq!(passive(&legal), Move::Call);
 }
 
+#[test]
+fn raises_the_minimum_when_raising_is_the_only_legal_move() {
+    let legal = Legal {
+        fold: false,
+        check: false,
+        call: None,
+        raise: Some((40, 400)),
+    };
+    assert_eq!(passive(&legal), Move::RaiseTo(40));
+    for hole in [[48, 49], [0, 5], [48, 48]] {
+        for k in 0..20 {
+            let mut bot = started(true, [400, 400], [10, 20], hole);
+            let mv = bot.decide(model(), &legal, f64::from(k) / 20.0);
+            assert!(is_legal(mv, &legal), "{hole:?} {k} {mv:?}");
+        }
+    }
+}
+
 fn is_legal(mv: Move, legal: &Legal) -> bool {
     match mv {
         Move::Fold => legal.fold,
@@ -619,4 +637,94 @@ fn a_ten_bb_open_is_answered_legally() {
         assert!(is_legal(mv, &legal), "{mv:?}");
     }
     assert_eq!(on_tree, DRAWS);
+}
+
+fn opening_raise_draw(hole: [Card; 2]) -> f64 {
+    let root = model().file.tree.root();
+    let bucket = model().abstraction.bucket(Street::Preflop, hole, &[]);
+    let draw = draw_for(root, bucket, ActionKind::RaiseTo(50));
+    assert!(draw >= 0.0, "the fixture never opens this hand");
+    draw
+}
+
+#[test]
+fn an_inverted_raise_range_plays_passive() {
+    let hole = [48, 49];
+    let draw = opening_raise_draw(hole);
+    let mut bot = started(true, [400, 400], [10, 20], hole);
+    let legal = Legal {
+        fold: true,
+        check: false,
+        call: Some(10),
+        raise: Some((400, 40)),
+    };
+    assert_eq!(bot.decide(model(), &legal, draw), Move::Call);
+}
+
+#[test]
+fn invalid_hole_cards_play_passive() {
+    let draw = opening_raise_draw([48, 49]);
+    for hole in [[48, 48], [48, 52], [200, 49]] {
+        let mut bot = started(true, [400, 400], [10, 20], hole);
+        let mv = bot.decide(model(), &facing_blind(20, 400), draw);
+        assert_eq!(mv, Move::Call, "{hole:?}");
+    }
+}
+
+#[test]
+fn a_board_that_repeats_a_card_plays_passive() {
+    let legal = Legal {
+        fold: false,
+        check: true,
+        call: None,
+        raise: Some((20, 360)),
+    };
+    for board in [[48, 20, 30], [10, 10, 30], [10, 20, 52]] {
+        let mut bot = started(false, [400, 400], [10, 20], [48, 49]);
+        bot.acted(model(), false, Move::Call, 0.3);
+        bot.acted(model(), true, Move::Check, 0.3);
+        bot.street(model(), &board);
+        assert_eq!(bot.decide(model(), &legal, 0.99), Move::Check, "{board:?}");
+    }
+}
+
+#[test]
+fn spot_arithmetic_saturates_on_a_malformed_tree() {
+    let spot = Spot {
+        seat: 0,
+        street: Street::Flop,
+        committed: [u32::MAX, u32::MAX],
+        street_bets: [30, 10],
+        actions: &[],
+    };
+    assert_eq!(spot.to_call(), 0);
+    assert_eq!(spot.pot_after_call(), u32::MAX);
+    let behind = Spot {
+        committed: [u32::MAX, 0],
+        street_bets: [u32::MAX, 0],
+        ..spot
+    };
+    assert_eq!(model().raise_to(&behind, ActionKind::AllIn), Some(u32::MAX));
+    let over = Spot {
+        committed: [u32::MAX, 0],
+        street_bets: [0, 0],
+        ..spot
+    };
+    assert_eq!(model().raise_to(&over, ActionKind::AllIn), Some(0));
+}
+
+#[test]
+fn huge_stacks_do_not_overflow_the_pot() {
+    let mut bot = started(false, [u32::MAX, u32::MAX], [10, 20], [48, 49]);
+    bot.acted(model(), false, Move::Check, 0.3);
+    bot.acted(model(), false, Move::RaiseTo(u32::MAX), 0.3);
+    assert_eq!(bot.cursor(), None);
+    let legal = Legal {
+        fold: true,
+        check: false,
+        call: Some(u32::MAX - 20),
+        raise: None,
+    };
+    let mv = bot.decide(model(), &legal, 0.5);
+    assert!(is_legal(mv, &legal), "{mv:?}");
 }

@@ -461,24 +461,25 @@ impl StrategyFile {
     }
 
     pub fn probabilities(&self, node: NodeId, bucket: u16) -> &[u8] {
-        match self.tree.node(node) {
-            Node::Decision {
-                street, actions, ..
-            } => {
-                assert!(
-                    self.includes(*street),
-                    "street {street:?} is not in this file"
-                );
-                assert!(
-                    bucket < self.tree.buckets()[street.as_index()],
-                    "bucket {bucket} out of range for {street:?}"
-                );
-                let n = actions.len();
-                let start = self.offsets[node as usize] as usize + usize::from(bucket) * n;
-                &self.probabilities[start..start + n]
-            }
-            other => panic!("node {node} is not a decision: {other:?}"),
+        self.try_probabilities(node, bucket).unwrap_or_else(|| {
+            panic!("node {node} has no probabilities for bucket {bucket} in this file")
+        })
+    }
+
+    pub fn try_probabilities(&self, node: NodeId, bucket: u16) -> Option<&[u8]> {
+        let Some(Node::Decision {
+            street, actions, ..
+        }) = self.tree.nodes().get(node as usize)
+        else {
+            return None;
+        };
+        if !self.includes(*street) || bucket >= self.tree.buckets()[street.as_index()] {
+            return None;
         }
+        let n = actions.len();
+        let start = usize::try_from(*self.offsets.get(node as usize)?).ok()?;
+        let start = start.checked_add(usize::from(bucket).checked_mul(n)?)?;
+        self.probabilities.get(start..start.checked_add(n)?)
     }
 }
 
@@ -1011,5 +1012,29 @@ mod tests {
             .position(|n| matches!(n, Node::Decision { street, .. } if *street == Street::Flop))
             .unwrap();
         f.probabilities(id as NodeId, 0);
+    }
+
+    #[test]
+    fn try_probabilities_refuses_what_probabilities_panics_on() {
+        let f = sample(0b0001);
+        let nodes = f.tree.nodes();
+        let flop = nodes
+            .iter()
+            .position(|n| matches!(n, Node::Decision { street, .. } if *street == Street::Flop))
+            .unwrap();
+        let terminal = nodes
+            .iter()
+            .position(|n| !matches!(n, Node::Decision { .. }))
+            .unwrap();
+        let root = f.tree.root();
+        let preflop = f.tree.buckets()[0];
+        assert_eq!(f.try_probabilities(flop as NodeId, 0), None);
+        assert_eq!(f.try_probabilities(terminal as NodeId, 0), None);
+        assert_eq!(f.try_probabilities(root, preflop), None);
+        assert_eq!(f.try_probabilities(nodes.len() as NodeId, 0), None);
+        assert_eq!(
+            f.try_probabilities(root, preflop - 1),
+            Some(f.probabilities(root, preflop - 1))
+        );
     }
 }
