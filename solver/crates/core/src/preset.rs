@@ -1,3 +1,4 @@
+#[cfg(feature = "presets")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 
@@ -10,6 +11,7 @@ impl Sizes {
     }
 }
 
+#[cfg(feature = "presets")]
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum SizesRepr {
@@ -17,6 +19,7 @@ enum SizesRepr {
     Many(Vec<f64>),
 }
 
+#[cfg(feature = "presets")]
 impl<'de> Deserialize<'de> for Sizes {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         Ok(match SizesRepr::deserialize(deserializer)? {
@@ -26,6 +29,7 @@ impl<'de> Deserialize<'de> for Sizes {
     }
 }
 
+#[cfg(feature = "presets")]
 impl Serialize for Sizes {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self.0.as_slice() {
@@ -35,26 +39,30 @@ impl Serialize for Sizes {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "presets", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "presets", serde(rename_all = "lowercase"))]
 pub enum Bucketing {
     #[default]
     Hs2,
     Potential,
 }
 
+#[cfg(feature = "presets")]
 impl Bucketing {
     fn is_hs2(&self) -> bool {
         *self == Bucketing::Hs2
     }
 }
 
+#[cfg(feature = "presets")]
 fn is_false(b: &bool) -> bool {
     !*b
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "presets", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "presets", serde(deny_unknown_fields))]
 pub struct PreflopSizes {
     pub open_bb: Sizes,
     pub iso_vs_limp_bb: Sizes,
@@ -62,19 +70,21 @@ pub struct PreflopSizes {
     pub four_bet_x: Sizes,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "presets", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "presets", serde(deny_unknown_fields))]
 pub struct PostflopSizes {
     pub first_bet_pot: Vec<f64>,
     pub first_raise_pot: Vec<f64>,
     pub max_aggressive: u8,
     pub all_in_threshold: f64,
-    #[serde(default, skip_serializing_if = "is_false")]
+    #[cfg_attr(feature = "presets", serde(default, skip_serializing_if = "is_false"))]
     pub min_raise: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "presets", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "presets", serde(deny_unknown_fields))]
 pub struct CfrParams {
     pub alpha: f64,
     pub beta: f64,
@@ -82,15 +92,19 @@ pub struct CfrParams {
     pub discount_interval: u64,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "presets", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "presets", serde(deny_unknown_fields))]
 pub struct Preset {
     pub name: String,
     pub small_blind: u32,
     pub big_blind: u32,
     pub stack: u32,
     pub buckets: [u16; 3],
-    #[serde(default, skip_serializing_if = "Bucketing::is_hs2")]
+    #[cfg_attr(
+        feature = "presets",
+        serde(default, skip_serializing_if = "Bucketing::is_hs2")
+    )]
     pub bucketing: Bucketing,
     pub memory_limit_gb: f64,
     pub threads: usize,
@@ -100,6 +114,7 @@ pub struct Preset {
     pub cfr: CfrParams,
 }
 
+#[cfg(feature = "presets")]
 #[derive(Serialize)]
 struct AbstractionIdentity<'a> {
     small_blind: u32,
@@ -130,6 +145,13 @@ impl fmt::Display for PresetError {
 impl std::error::Error for PresetError {}
 
 impl Preset {
+    pub fn tree_buckets(&self) -> [u16; 4] {
+        [169, self.buckets[0], self.buckets[1], self.buckets[2]]
+    }
+}
+
+#[cfg(feature = "presets")]
+impl Preset {
     pub fn from_toml(s: &str) -> Result<Preset, PresetError> {
         let preset: Preset = toml::from_str(s).map_err(|e| PresetError::Parse(e.to_string()))?;
         preset.validate()?;
@@ -151,10 +173,6 @@ impl Preset {
             postflop: &self.postflop,
         };
         toml::to_string(&identity).expect("abstraction identity serializes to toml")
-    }
-
-    pub fn tree_buckets(&self) -> [u16; 4] {
-        [169, self.buckets[0], self.buckets[1], self.buckets[2]]
     }
 
     fn validate(&self) -> Result<(), PresetError> {

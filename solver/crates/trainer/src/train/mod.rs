@@ -1,30 +1,24 @@
-use crate::schedule::{Claim, Schedule};
+pub mod calibrate;
+pub mod checkpoints;
+pub mod tables;
+mod worker;
+
+use crate::schedule::Schedule;
 use crate::tree::load_preset;
+use checkpoints::{checkpoint_path, resume, Progress};
 use clap::Args;
-use mallorca_core::abstraction::{decode_table, Abstraction};
-use mallorca_core::cfr::{iterate, Game, Storage, SLOT_BYTES};
-use mallorca_core::checkpoint::{
-    read_checkpoint, write_checkpoint, CheckpointHeader, FORMAT_VERSION,
-};
+use mallorca_core::cfr::Storage;
 use mallorca_core::fingerprint::fingerprint;
 use mallorca_core::holdem::Holdem;
-use mallorca_core::preset::{CfrParams, Preset};
-use mallorca_core::rng::{splitmix64, Rng};
-use mallorca_core::tree::{Street, Tree};
-use std::fs::File;
-use std::io::Write;
-use std::path::{Path, PathBuf};
+use mallorca_core::rng::Rng;
+use mallorca_core::tree::Tree;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
+use tables::{load_abstraction, memory_estimate};
+use worker::{work, worker_seed, Finished, Shared, PAUSE_POLL};
 
-const TABLES: [(&str, Street); 3] = [
-    ("flop.bkt", Street::Flop),
-    ("turn.bkt", Street::Turn),
-    ("river.bkt", Street::River),
-];
 const POLL: Duration = Duration::from_millis(50);
-const PAUSE_POLL: Duration = Duration::from_millis(1);
-const NIGHTS: [u64; 2] = [8, 10];
 
 #[derive(Args)]
 pub struct TrainArgs {
@@ -38,18 +32,6 @@ pub struct TrainArgs {
     pub iterations: Option<u64>,
     #[arg(long, default_value_t = 0)]
     pub seed: u64,
-    #[arg(long)]
-    pub threads: Option<usize>,
-}
-
-#[derive(Args)]
-pub struct CalibrateArgs {
-    #[arg(long)]
-    pub preset: PathBuf,
-    #[arg(long)]
-    pub data: PathBuf,
-    #[arg(long, default_value_t = 30)]
-    pub minutes: u64,
     #[arg(long)]
     pub threads: Option<usize>,
 }
@@ -69,250 +51,6 @@ pub struct Outcome {
     pub trained: u64,
     pub seconds: f64,
     pub checkpoint: PathBuf,
-}
-
-pub struct Resume {
-    pub storage: Storage,
-    pub iterations: u64,
-    pub elapsed_seconds: u64,
-    pub checkpoint: u32,
-}
-
-fn read_file(path: &Path) -> Result<Vec<u8>, String> {
-    std::fs::read(path).map_err(|e| format!("cannot read {}: {e}", path.display()))
-}
-
-fn memory_estimate(tree: &Tree, tables: &Path) -> Result<u64, String> {
-    let mut bytes = tree.action_slot_count() * SLOT_BYTES as u64;
-    for (name, _) in TABLES {
-        let path = tables.join(name);
-        let meta =
-            std::fs::metadata(&path).map_err(|e| format!("cannot read {}: {e}", path.display()))?;
-        bytes += meta.len();
-    }
-    Ok(bytes)
-}
-
-pub fn read_table(path: &Path, street: Street, buckets: u16) -> Result<Vec<u8>, String> {
-    let (header, table) =
-        decode_table(read_file(path)?).map_err(|e| format!("{}: {e}", path.display()))?;
-    if header.street != street {
-        return Err(format!(
-            "{}: a {:?} table, expected {street:?}",
-            path.display(),
-            header.street
-        ));
-    }
-    if header.buckets != buckets {
-        return Err(format!(
-            "{}: built for {} buckets, the preset has {buckets}; rebuild it with `buckets`",
-            path.display(),
-            header.buckets
-        ));
-    }
-    Ok(table)
-}
-
-pub fn load_abstraction(preset: &Preset, dir: &Path) -> Result<Abstraction, String> {
-    let mut tables: [Vec<u8>; 3] = Default::default();
-    for (i, (slot, (name, street))) in tables.iter_mut().zip(TABLES).enumerate() {
-        *slot = read_table(&dir.join(name), street, preset.buckets[i])?;
-    }
-    let abstraction = Abstraction::new(tables);
-    for (i, (name, street)) in TABLES.into_iter().enumerate() {
-        let path = dir.join(name);
-        let table = abstraction.table_bytes(street);
-        let classes = abstraction.class_count(street);
-        if table.len() as u64 != classes {
-            return Err(format!(
-                "{}: {} bytes, expected {classes}",
-                path.display(),
-                table.len()
-            ));
-        }
-        let buckets = preset.buckets[i];
-        if let Some(&b) = table.iter().find(|&&b| u16::from(b) >= buckets) {
-            return Err(format!(
-                "{}: bucket {b} out of range for {buckets} buckets",
-                path.display()
-            ));
-        }
-    }
-    Ok(abstraction)
-}
-
-fn checkpoint_path(dir: &Path, n: u32) -> PathBuf {
-    dir.join(format!("{n}.ckpt"))
-}
-
-pub fn latest_checkpoint(dir: &Path) -> Result<Option<u32>, String> {
-    let entries =
-        std::fs::read_dir(dir).map_err(|e| format!("cannot read {}: {e}", dir.display()))?;
-    let mut latest = None;
-    for entry in entries {
-        let entry = entry.map_err(|e| format!("cannot read {}: {e}", dir.display()))?;
-        let name = entry.file_name();
-        let Some(n) = name
-            .to_str()
-            .and_then(|s| s.strip_suffix(".ckpt"))
-            .and_then(|s| s.parse::<u32>().ok())
-        else {
-            continue;
-        };
-        latest = latest.max(Some(n));
-    }
-    Ok(latest)
-}
-
-pub fn load_checkpoint(
-    dir: &Path,
-    n: u32,
-    expected: &[u8; 32],
-    slots: u64,
-) -> Result<Resume, String> {
-    let path = checkpoint_path(dir, n);
-    let bytes = read_file(&path)?;
-    let (header, storage) =
-        read_checkpoint(&bytes, expected).map_err(|e| format!("{}: {e}", path.display()))?;
-    if storage.len() != slots {
-        return Err(format!(
-            "{}: {} action slots, the tree has {slots}",
-            path.display(),
-            storage.len()
-        ));
-    }
-    Ok(Resume {
-        storage,
-        iterations: header.iterations,
-        elapsed_seconds: header.elapsed_seconds,
-        checkpoint: n,
-    })
-}
-
-fn resume(dir: &Path, expected: &[u8; 32], slots: u64) -> Result<Option<Resume>, String> {
-    let Some(n) = latest_checkpoint(dir)? else {
-        return Ok(None);
-    };
-    load_checkpoint(dir, n, expected, slots).map(Some)
-}
-
-fn save(dir: &Path, header: &CheckpointHeader, storage: &Storage) -> Result<PathBuf, String> {
-    let path = checkpoint_path(dir, header.checkpoint);
-    let tmp = dir.join(format!("{}.ckpt.tmp", header.checkpoint));
-    let failed = |e: std::io::Error| format!("cannot write {}: {e}", tmp.display());
-    let bytes = write_checkpoint(header, storage);
-    let mut file = File::create(&tmp).map_err(failed)?;
-    file.write_all(&bytes).map_err(failed)?;
-    file.sync_all().map_err(failed)?;
-    drop(file);
-    std::fs::rename(&tmp, &path)
-        .map_err(|e| format!("cannot rename {} to {}: {e}", tmp.display(), path.display()))?;
-    File::open(dir)
-        .and_then(|d| d.sync_all())
-        .map_err(|e| format!("cannot sync {}: {e}", dir.display()))?;
-    Ok(path)
-}
-
-pub fn average_positive_regret(storage: &Storage, iterations: u64) -> f64 {
-    if iterations == 0 {
-        return 0.0;
-    }
-    let sum: f64 = (0..storage.len())
-        .map(|i| f64::from(storage.regret(i).max(0.0)))
-        .sum();
-    sum / iterations as f64
-}
-
-fn worker_seed(seed: u64, worker: u64, start: u64) -> u64 {
-    let mut state = seed;
-    let mut state = splitmix64(&mut state) ^ worker;
-    let mut state = splitmix64(&mut state) ^ start;
-    splitmix64(&mut state)
-}
-
-struct Shared<'a, G: Game> {
-    game: &'a G,
-    storage: &'a Storage,
-    cfr: &'a CfrParams,
-    schedule: &'a Schedule,
-    halt: &'a AtomicBool,
-    pause: &'a AtomicBool,
-    idle: &'a AtomicUsize,
-}
-
-fn work<G: Game>(s: &Shared<'_, G>, rng: &mut Rng) {
-    while !s.halt.load(Ordering::Relaxed) {
-        if s.pause.load(Ordering::Acquire) {
-            s.idle.fetch_add(1, Ordering::AcqRel);
-            while s.pause.load(Ordering::Acquire) && !s.halt.load(Ordering::Relaxed) {
-                std::thread::sleep(PAUSE_POLL);
-            }
-            s.idle.fetch_sub(1, Ordering::AcqRel);
-            continue;
-        }
-        match s.schedule.claim() {
-            Claim::Done => break,
-            Claim::Wait => std::thread::sleep(PAUSE_POLL),
-            Claim::Run(i) => {
-                iterate(s.game, s.storage, (i % 2) as u8, rng);
-                s.schedule.complete(|k| s.storage.discount(k, s.cfr));
-            }
-        }
-    }
-}
-
-struct Finished<'a> {
-    count: &'a AtomicUsize,
-    halt: &'a AtomicBool,
-}
-
-impl Drop for Finished<'_> {
-    fn drop(&mut self) {
-        if std::thread::panicking() {
-            self.halt.store(true, Ordering::Relaxed);
-        }
-        self.count.fetch_add(1, Ordering::AcqRel);
-    }
-}
-
-struct Progress<'a> {
-    dir: &'a Path,
-    fingerprint: [u8; 32],
-    start_iterations: u64,
-    start_elapsed: u64,
-    next: u32,
-}
-
-impl Progress<'_> {
-    fn checkpoint(
-        &mut self,
-        storage: &Storage,
-        iterations: u64,
-        session: Duration,
-    ) -> Result<PathBuf, String> {
-        let header = CheckpointHeader {
-            format_version: FORMAT_VERSION,
-            fingerprint: self.fingerprint,
-            iterations,
-            elapsed_seconds: self.start_elapsed + session.as_secs(),
-            checkpoint: self.next,
-        };
-        let path = save(self.dir, &header, storage)?;
-        self.next += 1;
-        let secs = session.as_secs_f64();
-        let rate = if secs > 0.0 {
-            (iterations - self.start_iterations) as f64 / secs
-        } else {
-            0.0
-        };
-        println!(
-            "checkpoint {}: {iterations} iterations, {rate:.1} it/s, avg positive regret {:.6e} per iteration, {}",
-            header.checkpoint,
-            average_positive_regret(storage, iterations),
-            path.display()
-        );
-        Ok(path)
-    }
 }
 
 pub fn train(
@@ -445,7 +183,7 @@ pub fn train(
     })
 }
 
-fn wall_clock() -> impl Fn() -> Duration + Sync {
+pub fn wall_clock() -> impl Fn() -> Duration + Sync {
     let start = Instant::now();
     move || start.elapsed()
 }
@@ -471,53 +209,19 @@ pub fn run(args: &TrainArgs, stop: &AtomicBool) -> Result<(), String> {
     Ok(())
 }
 
-pub fn calibrate(args: &CalibrateArgs, stop: &AtomicBool) -> Result<(), String> {
-    let scratch = args.data.join("calibrate");
-    let clear = || match std::fs::remove_dir_all(&scratch) {
-        Err(e) if e.kind() != std::io::ErrorKind::NotFound => {
-            Err(format!("cannot remove {}: {e}", scratch.display()))
-        }
-        _ => Ok(()),
-    };
-    clear()?;
-    let session = Session {
-        preset: args.preset.clone(),
-        tables: args.data.clone(),
-        checkpoints: scratch.clone(),
-        minutes: Some(args.minutes),
-        iterations: None,
-        seed: 0,
-        threads: args.threads,
-    };
-    let outcome = train(&session, &wall_clock(), stop);
-    clear()?;
-    let outcome = outcome?;
-    let rate = if outcome.seconds > 0.0 {
-        outcome.trained as f64 / outcome.seconds
-    } else {
-        0.0
-    };
-    println!(
-        "calibrated {} iterations in {:.1}s: {rate:.1} iterations per second",
-        outcome.trained, outcome.seconds
-    );
-    for hours in NIGHTS {
-        println!(
-            "{hours} hours: {:.0} iterations",
-            rate * (hours * 3600) as f64
-        );
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 pub mod tests {
+    use super::tables::TABLES;
     use super::*;
     use mallorca_core::abstraction::{encode_table, TABLE_HEADER_LEN};
+    use mallorca_core::checkpoint::{write_checkpoint, CheckpointHeader, FORMAT_VERSION};
+    use mallorca_core::preset::Preset;
+    use mallorca_core::tree::Street;
+    use std::path::Path;
     use std::sync::atomic::AtomicU64;
     use std::sync::OnceLock;
 
-    const TINY: &str = include_str!("../../../presets/tiny.toml");
+    const TINY: &str = include_str!("../../../../presets/tiny.toml");
     const SIZES: [usize; 3] = [1_286_792, 13_960_050, 123_156_254];
 
     fn scratch_root() -> PathBuf {
@@ -650,11 +354,9 @@ pub mod tests {
             elapsed_seconds: 0,
             checkpoint: 3,
         };
-        std::fs::write(
-            ckpts.join("3.ckpt"),
-            write_checkpoint(&header, &Storage::new(4)),
-        )
-        .unwrap();
+        let mut bytes = Vec::new();
+        write_checkpoint(&mut bytes, &header, &Storage::new(4)).unwrap();
+        std::fs::write(ckpts.join("3.ckpt"), bytes).unwrap();
         let err = go(&session(&dir, Some(10), 0, None)).err().unwrap();
         assert!(
             err.contains("3.ckpt") && err.contains("another preset"),
@@ -792,58 +494,5 @@ pub mod tests {
         );
         std::fs::remove_dir_all(dir).unwrap();
         std::fs::remove_dir_all(fresh).unwrap();
-    }
-
-    #[test]
-    fn panicking_worker_counts_as_finished_and_halts_the_others() {
-        let count = AtomicUsize::new(0);
-        let halt = AtomicBool::new(false);
-        let joined = std::thread::scope(|scope| {
-            let clean = scope.spawn(|| {
-                let _guard = Finished {
-                    count: &count,
-                    halt: &halt,
-                };
-            });
-            clean.join().unwrap();
-            assert!(!halt.load(Ordering::Relaxed));
-            scope
-                .spawn(|| {
-                    let _guard = Finished {
-                        count: &count,
-                        halt: &halt,
-                    };
-                    std::panic::resume_unwind(Box::new("worker failed"));
-                })
-                .join()
-        });
-        assert!(joined.is_err());
-        assert_eq!(count.load(Ordering::Relaxed), 2);
-        assert!(halt.load(Ordering::Relaxed));
-    }
-
-    #[test]
-    fn worker_seeds_are_distinct_across_seeds_workers_and_starts() {
-        let mut seen = std::collections::HashSet::new();
-        for start in [0, 1000, 4000] {
-            for seed in 0..64 {
-                for w in 0..64 {
-                    assert!(
-                        seen.insert(worker_seed(seed, w, start)),
-                        "seed {seed} worker {w} start {start}"
-                    );
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn average_positive_regret_ignores_negative_regrets() {
-        let s = Storage::new(3);
-        s.add_regret(0, 2.0);
-        s.add_regret(1, -1.0);
-        s.add_regret(2, 4.0);
-        assert_eq!(average_positive_regret(&s, 3), 2.0);
-        assert_eq!(average_positive_regret(&s, 0), 0.0);
     }
 }

@@ -217,6 +217,10 @@ impl Bot {
         });
     }
 
+    pub fn abandon_hand(&mut self) {
+        self.hand = None;
+    }
+
     pub fn hole_cards(&mut self, hole: [Card; 2]) {
         if let Some(hand) = self.hand.as_mut() {
             hand.hole = Some(hole);

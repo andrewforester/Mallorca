@@ -1,11 +1,14 @@
 pub mod abstraction;
 pub mod bot;
+pub mod bytes;
 pub mod cards;
 pub mod centroids;
 pub mod cfr;
 pub mod checkpoint;
 pub mod eval;
+#[cfg(feature = "presets")]
 pub mod fingerprint;
+#[cfg(test)]
 pub mod games;
 pub mod holdem;
 pub mod iso;

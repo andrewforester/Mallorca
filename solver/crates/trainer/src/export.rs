@@ -1,5 +1,6 @@
 use crate::thresholds::play_thresholds;
-use crate::train::{latest_checkpoint, load_abstraction, load_checkpoint};
+use crate::train::checkpoints::{latest_checkpoint, load_checkpoint};
+use crate::train::tables::load_abstraction;
 use crate::tree::load_preset;
 use crate::verify::play_centroids;
 use clap::{Args, ValueEnum};
@@ -136,7 +137,7 @@ pub fn run(args: &ExportArgs) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::train::read_table;
+    use crate::train::tables::read_table;
     use crate::train::tests::{data_dir, go, session};
     use mallorca_core::strategy::StrategyError;
 

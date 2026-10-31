@@ -52,6 +52,31 @@ fn a_new_hand_starts_at_the_root() {
 }
 
 #[test]
+fn an_abandoned_hand_plays_passive_until_the_next_hand() {
+    let root = model().file.tree.root();
+    let hole = [48, 49];
+    let bucket = model().abstraction.bucket(Street::Preflop, hole, &[]);
+    let draw = draw_for(root, bucket, ActionKind::RaiseTo(50));
+    assert!(draw >= 0.0, "the fixture never opens this hand");
+    let mut bot = started(true, [2000, 2000], [50, 100], hole);
+    bot.abandon_hand();
+    assert_eq!(bot.cursor(), None);
+    bot.acted(model(), false, Move::Call, 0.0);
+    bot.street(model(), &[0, 4, 8]);
+    assert_eq!(bot.cursor(), None);
+    assert_eq!(
+        bot.decide(model(), &facing_blind(100, 2000), draw),
+        Move::Call
+    );
+    bot.hand_started(model(), true, [2000, 2000], [50, 100]);
+    bot.hole_cards(hole);
+    assert_eq!(
+        bot.decide(model(), &facing_blind(100, 2000), draw),
+        Move::RaiseTo(250)
+    );
+}
+
+#[test]
 fn own_raise_keeps_the_pot_fraction_at_a_bigger_blind() {
     let root = model().file.tree.root();
     let hole = [48, 49];
