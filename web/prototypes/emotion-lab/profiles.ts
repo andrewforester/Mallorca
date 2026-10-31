@@ -1,13 +1,8 @@
 import type { Personality } from '../../src/emotion/index.ts';
+import { leakOf } from '../../src/face/index.ts';
+import type { FaceLook } from '../../src/face/index.ts';
 
-export interface FaceLook {
-  brows: number;
-  eyes: number;
-  mouth: number;
-  smileSide: number;
-  blink: number;
-  lettersPerSecond: number;
-}
+export type { FaceLook };
 
 export interface Profile {
   id: string;
@@ -36,7 +31,15 @@ export const PROFILES = {
       suppression: 0.3,
       experience: 0.5,
     },
-    face: { brows: 1, eyes: 1, mouth: 1, smileSide: 0.4, blink: 1, lettersPerSecond: 13 },
+    face: {
+      brows: 1,
+      eyes: 1,
+      mouth: 1,
+      smileSide: 0.4,
+      blink: 1,
+      lettersPerSecond: 13,
+      leak: leakOf(-0.1),
+    },
   },
   ingrid: {
     id: 'ingrid',
@@ -55,7 +58,15 @@ export const PROFILES = {
       suppression: 0.85,
       experience: 0.9,
     },
-    face: { brows: 1.7, eyes: 0.7, mouth: 0.45, smileSide: 0.15, blink: 0.6, lettersPerSecond: 11 },
+    face: {
+      brows: 1.7,
+      eyes: 0.7,
+      mouth: 0.45,
+      smileSide: 0.15,
+      blink: 0.6,
+      lettersPerSecond: 11,
+      leak: leakOf(-0.6),
+    },
   },
   lola: {
     id: 'lola',
@@ -74,7 +85,15 @@ export const PROFILES = {
       suppression: 0.08,
       experience: 0.2,
     },
-    face: { brows: 1.1, eyes: 1.1, mouth: 1.35, smileSide: 0.3, blink: 1.2, lettersPerSecond: 15 },
+    face: {
+      brows: 1.1,
+      eyes: 1.1,
+      mouth: 1.35,
+      smileSide: 0.3,
+      blink: 1.2,
+      lettersPerSecond: 15,
+      leak: leakOf(0.5),
+    },
   },
   nina: {
     id: 'nina',
@@ -93,7 +112,15 @@ export const PROFILES = {
       suppression: 0.55,
       experience: 0,
     },
-    face: { brows: 1.25, eyes: 1.25, mouth: 0.8, smileSide: 0, blink: 1.4, lettersPerSecond: 14 },
+    face: {
+      brows: 1.25,
+      eyes: 1.25,
+      mouth: 0.8,
+      smileSide: 0,
+      blink: 1.4,
+      lettersPerSecond: 14,
+      leak: leakOf(0.8),
+    },
   },
 } satisfies Record<string, Profile>;
 

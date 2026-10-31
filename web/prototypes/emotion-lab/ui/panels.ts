@@ -4,7 +4,8 @@ import type { Card } from '../../../src/cards/index.ts';
 import { EMOTION_LABEL } from './labels.ts';
 
 export { EMOTION_LABEL };
-import { ANCHORS } from '../face/anchors.ts';
+import { ANCHORS } from '../../../src/face/index.ts';
+import { ANCHOR_LABEL } from './labels.ts';
 
 const SUIT = ['♣', '♦', '♥', '♠'];
 const RANK: Readonly<Record<number, string>> = { 10: 'T', 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
@@ -157,7 +158,7 @@ export function createMoodMap(
     add(
       'text',
       { x: x + (right ? 6 : -6), y: y + 3.5, 'text-anchor': right ? 'start' : 'end' },
-      a.label,
+      ANCHOR_LABEL[a.id] ?? a.id,
     );
   }
   const def = add('circle', { r: 6, fill: 'none', stroke: 'var(--muted)', 'stroke-width': 1.5 });
