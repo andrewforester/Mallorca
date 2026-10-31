@@ -19,6 +19,7 @@ export interface Row {
   words: number;
   text: string;
   delivered: string;
+  delivery?: { emotion: string; intensity: number };
   verdict: Verdict;
   model: string;
   calls: Call[];

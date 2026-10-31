@@ -119,8 +119,9 @@ export function judgePrompt(c: EvalCase, line: string): string {
 }
 
 const words = (text: string): number => text.split(/\s+/).filter((w) => w.length > 0).length;
-const sentences = (text: string): number =>
-  text.split(/[.!?…]+(?:\s|$)/u).filter((s) => s.trim().length > 0).length;
+export const sentences = (text: string): number =>
+  text.replace(/\.{2,}|…/gu, ",").split(/[.!?]+(?:\s|$)/u).filter((s) => s.trim().length > 0)
+    .length;
 const CYRILLIC = /\p{Script=Cyrillic}/gu;
 const LATIN = /\p{Script=Latin}/gu;
 

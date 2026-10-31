@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { handle } from "../handler.ts";
+import { handle, parseSpoken } from "../handler.ts";
 import type { Deps } from "../handler.ts";
-import { completeWith } from "../model.ts";
+import { completeWith, createFrom, parseData } from "../model.ts";
 import type { Observed } from "../model.ts";
 import { checks, JUDGE_SYSTEM, judgePrompt, kindOf, score, VERDICT_SCHEMA } from "./grade.ts";
 import type { EvalCase, Verdict } from "./grade.ts";
@@ -84,7 +84,7 @@ const NULL_VERDICT: Verdict = {
 
 function depsFor(calls: Observed[]): Deps {
   const create = client
-    ? (request: Anthropic.MessageCreateParamsNonStreaming) => client.messages.create(request)
+    ? createFrom(client)
     : () => Promise.resolve(fakeMessage(dry === "oracle" ? "Well, there we go." : "Hmm."));
   return {
     userId: () => Promise.resolve("eval"),
@@ -132,7 +132,9 @@ async function runCase(c: EvalCase): Promise<void> {
     throw new Error(`status ${response.status}: ${JSON.stringify(answer)}`);
   }
   const first = lines[0];
-  const raw = first.content.map((b) => (b.type === "text" ? b.text : "")).join("").trim();
+  const output = first.content.map((b) => (b.type === "text" ? b.text : "")).join("");
+  const spoken = parseSpoken(parseData(output), output);
+  const raw = spoken.text;
   const judged = await judge(c, raw);
   const scores = score(c.body.feeling!, judged.verdict);
   const check = checks(c, raw);
@@ -153,6 +155,7 @@ async function runCase(c: EvalCase): Promise<void> {
     words: check.words,
     text: raw,
     delivered: answer.text,
+    delivery: spoken.delivery,
     verdict: judged.verdict,
     model: first.model,
     calls: calls.map((call) => ({

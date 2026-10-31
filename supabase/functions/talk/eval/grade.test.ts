@@ -1,6 +1,6 @@
 import { assertEquals } from "../../_shared/testing.ts";
 import type { Feeling } from "../feeling.ts";
-import { checks, kindOf, languageOf, score } from "./grade.ts";
+import { checks, kindOf, languageOf, score, sentences } from "./grade.ts";
 import type { EvalCase, Verdict } from "./grade.ts";
 import cases from "./cases.json" with { type: "json" };
 
@@ -90,4 +90,10 @@ Deno.test("the checks catch length, leaks and the wrong language", () => {
 Deno.test("every case parses as a request the server accepts", async () => {
   const { parseRequest } = await import("../types.ts");
   for (const c of cases) assertEquals(parseRequest(c.body) !== null, true, c.id);
+});
+
+Deno.test("an ellipsis is a pause, not the end of a sentence", () => {
+  assertEquals(sentences("Да... ну, ладно, раз так. Смотрим."), 2);
+  assertEquals(sentences("Right, well… you've called. So there it is!"), 2);
+  assertEquals(sentences("One. Two. Three."), 3);
 });
