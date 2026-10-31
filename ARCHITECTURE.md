@@ -182,8 +182,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - `Observation` is the bot's view of engine events: `handStarted` (hand number, `heroOnButton`, both stacks,
   blinds), `holeCards` (its own), `acted` (`who` is `hero` or `villain`, the `Action` and the chips added) and
   `street` with the board. `toObservations` drops the villain's hole cards and the showdown.
-- `createMathBrain()` returns a `Brain` with `observe(o)` and `decide(legal)`. It enumerates equities exactly and
-  takes no `Rng`.
+- A `Brain` has `observe(o)`, `decide(legal)` and an optional `dispose()`. `createMathBrain()` returns one without
+  `dispose`; it enumerates equities exactly and takes no `Rng`.
 - The villain is modelled as the Java `RandomBot`: `randomAdvice(state)` returns the probabilities it samples from,
   facing a bet fold, passive and aggressive 1/3 each, otherwise passive and aggressive 1/2 each. It is never
   sampled.
@@ -226,7 +226,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - `inflate(bytes)` gunzips with `DecompressionStream` when the bytes start with the gzip magic and returns other
   bytes as they are. `createCfrModel(wasm, strategy)` instantiates the module and loads the strategy; a bad file
   rejects with the reader's reason. `model.newBot()` returns a `CfrBot` handle, freed with `free()`.
-- `createCfrBrain(model, rng)` is a `Brain` with `dispose()`. It forwards every `Observation` to the bot and draws
+- `createCfrBrain(model, rng)` is a `Brain` whose `dispose()` is always present. It forwards every `Observation` to the bot and draws
   one `rng.next()` per observed action (the off-tree raise mapping) and one per decision (sampling the strategy),
   so a seed fixes its play. `solverChoice` is the kind of the action; `evByAction` is `NaN` for every class.
 - Translation lives in Rust (`mallorca-core::bot`): chips scale by the big blind, an opponent raise maps to one of
@@ -276,7 +276,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   split. It equals the `win` entry of the log; an uncalled bet is its own `returned` entry.
 - `BotClient` has `observe(observations)`, `decide(legal)`, `reset()`, an optional `select(opponent, seed)` and an
   optional `dispose()`. `workerBot()` runs the brain in `bot.worker.ts` over the `WorkerRequest` and `WorkerReply`
-  messages in `workerProtocol.ts`; `createWorkerHandler(newBrain, post, load?)` in `workerHandler.ts` is the worker's
+  messages in `workerProtocol.ts`; `createWorkerHandler(newBrain, post, load)` in `workerHandler.ts` is the worker's
   message handling as a plain function. A `select` request queues every later request until the opponent's brain
   factory is ready, then replies `{ id, opponent }` or `{ id, error }` and keeps the old brain on an error. The worker
   loads the model of each cfr opponent once, on its first `select` (`loadCfrModel` with `fetch` of `WASM_URL` and the
