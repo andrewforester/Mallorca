@@ -9,7 +9,7 @@ use mallorca_core::checkpoint::{
 use mallorca_core::fingerprint::fingerprint;
 use mallorca_core::holdem::Holdem;
 use mallorca_core::preset::{CfrParams, Preset};
-use mallorca_core::rng::Rng;
+use mallorca_core::rng::{splitmix64, Rng};
 use mallorca_core::tree::{Street, Tree};
 use std::fs::File;
 use std::io::Write;
@@ -223,6 +223,13 @@ pub fn average_positive_regret(storage: &Storage, iterations: u64) -> f64 {
     sum / iterations as f64
 }
 
+fn worker_seed(seed: u64, worker: u64, start: u64) -> u64 {
+    let mut state = seed;
+    let mut state = splitmix64(&mut state) ^ worker;
+    let mut state = splitmix64(&mut state) ^ start;
+    splitmix64(&mut state)
+}
+
 struct Shared<'a, G: Game> {
     game: &'a G,
     storage: &'a Storage,
@@ -390,7 +397,7 @@ pub fn train(
                 count: &finished,
                 halt: &halt,
             };
-            let seed = session.seed ^ w as u64 ^ start.rotate_left(32);
+            let seed = worker_seed(session.seed, w as u64, start);
             scope.spawn(move || {
                 let _guard = guard;
                 work(shared, &mut Rng::new(seed));
@@ -813,6 +820,21 @@ pub mod tests {
         assert!(joined.is_err());
         assert_eq!(count.load(Ordering::Relaxed), 2);
         assert!(halt.load(Ordering::Relaxed));
+    }
+
+    #[test]
+    fn worker_seeds_are_distinct_across_seeds_workers_and_starts() {
+        let mut seen = std::collections::HashSet::new();
+        for start in [0, 1000, 4000] {
+            for seed in 0..64 {
+                for w in 0..64 {
+                    assert!(
+                        seen.insert(worker_seed(seed, w, start)),
+                        "seed {seed} worker {w} start {start}"
+                    );
+                }
+            }
+        }
     }
 
     #[test]
