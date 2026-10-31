@@ -119,6 +119,29 @@ describe('default output', () => {
     expect(JSON.parse(readFileSync(join(dir, files[0]!), 'utf8')).handsFile).toBeNull();
   });
 
+  it('--stats adds the style of bot A to the report and prints it', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'arena-'));
+    const out = join(dir, 'r.json');
+    const r = cli([...base, '--dir', dir, '--out', out, '--no-hands', '--stats']);
+    expect(r.status).toBe(0);
+    const report = JSON.parse(readFileSync(out, 'utf8'));
+    expect(report.handsFile).toBeNull();
+    expect(report.styleStats.hands).toBe(8);
+    expect(report.styleStats.vpip).toBe(1);
+    expect(report.styleStats.pfr).toBe(0);
+    expect(report.styleStats.betFrequency).toBe(0);
+    expect(r.stdout.split('\n')[1]).toMatch(
+      /^always-call style: vpip 100\.0% pfr 0\.0% af \d+\.\d\d bet 0\.0% fold to bet \d+\.\d% raise \d+\.\d% over 8 hands, \d+ decisions after the flop, \d+ facing a bet$/,
+    );
+  });
+
+  it('without --stats the report has no style', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'arena-'));
+    const out = join(dir, 'r.json');
+    expect(cli([...base, '--dir', dir, '--out', out, '--no-hands']).status).toBe(0);
+    expect(JSON.parse(readFileSync(out, 'utf8')).styleStats).toBeUndefined();
+  });
+
   it('--out and --save-hands write exactly those paths', () => {
     const dir = mkdtempSync(join(tmpdir(), 'arena-'));
     const other = mkdtempSync(join(tmpdir(), 'arena-'));

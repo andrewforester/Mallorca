@@ -1,5 +1,7 @@
+use crate::bytes::{ByteReader, Truncated};
 use crate::cfr::{Storage, SLOT_BYTES};
 use std::fmt;
+use std::io::{self, Write};
 
 pub const MAGIC: &[u8; 4] = b"MLCK";
 pub const FORMAT_VERSION: u16 = 2;
@@ -43,64 +45,64 @@ impl fmt::Display for CheckpointError {
 
 impl std::error::Error for CheckpointError {}
 
-const HEADER_LEN: usize = 66;
-
-pub fn write_checkpoint(header: &CheckpointHeader, storage: &Storage) -> Vec<u8> {
-    let slots = storage.len();
-    let mut out = Vec::with_capacity(HEADER_LEN + slots as usize * SLOT_BYTES);
-    out.extend_from_slice(MAGIC);
-    out.extend_from_slice(&header.format_version.to_le_bytes());
-    out.extend_from_slice(&header.fingerprint);
-    out.extend_from_slice(&header.iterations.to_le_bytes());
-    out.extend_from_slice(&header.elapsed_seconds.to_le_bytes());
-    out.extend_from_slice(&header.checkpoint.to_le_bytes());
-    out.extend_from_slice(&slots.to_le_bytes());
-    for i in 0..slots {
-        out.extend_from_slice(&storage.regret(i).to_le_bytes());
+impl From<Truncated> for CheckpointError {
+    fn from(_: Truncated) -> CheckpointError {
+        CheckpointError::Truncated
     }
-    for i in 0..slots {
-        out.extend_from_slice(&storage.strategy_sum(i).to_le_bytes());
-    }
-    out
 }
 
-fn array<const N: usize>(bytes: &[u8], at: usize) -> [u8; N] {
-    bytes[at..at + N].try_into().expect("length checked")
+const HEADER_LEN: usize = 66;
+
+pub fn write_checkpoint<W: Write>(
+    out: &mut W,
+    header: &CheckpointHeader,
+    storage: &Storage,
+) -> io::Result<()> {
+    let slots = storage.len();
+    out.write_all(MAGIC)?;
+    out.write_all(&header.format_version.to_le_bytes())?;
+    out.write_all(&header.fingerprint)?;
+    out.write_all(&header.iterations.to_le_bytes())?;
+    out.write_all(&header.elapsed_seconds.to_le_bytes())?;
+    out.write_all(&header.checkpoint.to_le_bytes())?;
+    out.write_all(&slots.to_le_bytes())?;
+    for i in 0..slots {
+        out.write_all(&storage.regret(i).to_le_bytes())?;
+    }
+    for i in 0..slots {
+        out.write_all(&storage.strategy_sum(i).to_le_bytes())?;
+    }
+    Ok(())
 }
 
 pub fn read_checkpoint(
     bytes: &[u8],
     expected: &[u8; 32],
 ) -> Result<(CheckpointHeader, Storage), CheckpointError> {
-    if bytes.len() < MAGIC.len() {
-        return Err(CheckpointError::Truncated);
-    }
-    if &bytes[..4] != MAGIC {
+    let mut r = ByteReader::new(bytes);
+    if &r.array::<4>()? != MAGIC {
         return Err(CheckpointError::BadMagic);
     }
-    if bytes.len() < 6 {
-        return Err(CheckpointError::Truncated);
-    }
-    let format_version = u16::from_le_bytes(array(bytes, 4));
+    let format_version = r.u16()?;
     if format_version != FORMAT_VERSION {
         return Err(CheckpointError::UnknownVersion(format_version));
     }
     if bytes.len() < HEADER_LEN {
         return Err(CheckpointError::Truncated);
     }
-    let fingerprint: [u8; 32] = array(bytes, 6);
+    let fingerprint: [u8; 32] = r.array()?;
     if &fingerprint != expected {
         return Err(CheckpointError::FingerprintMismatch);
     }
     let header = CheckpointHeader {
         format_version,
         fingerprint,
-        iterations: u64::from_le_bytes(array(bytes, 38)),
-        elapsed_seconds: u64::from_le_bytes(array(bytes, 46)),
-        checkpoint: u32::from_le_bytes(array(bytes, 54)),
+        iterations: r.u64()?,
+        elapsed_seconds: r.u64()?,
+        checkpoint: r.u32()?,
     };
-    let slots = u64::from_le_bytes(array(bytes, 58));
-    let body = &bytes[HEADER_LEN..];
+    let slots = r.u64()?;
+    let body = r.rest();
     if slots.checked_mul(SLOT_BYTES as u64) != Some(body.len() as u64) {
         return Err(CheckpointError::Truncated);
     }
@@ -132,7 +134,35 @@ mod tests {
     }
 
     fn bytes() -> Vec<u8> {
-        write_checkpoint(&header(), &storage())
+        let mut out = Vec::new();
+        write_checkpoint(&mut out, &header(), &storage()).unwrap();
+        out
+    }
+
+    struct Full(usize);
+
+    impl std::io::Write for Full {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            if self.0 == 0 {
+                return Err(std::io::Error::other("disk full"));
+            }
+            let n = buf.len().min(self.0);
+            self.0 -= n;
+            Ok(n)
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn a_failing_writer_is_an_error() {
+        for room in [0, 10, 70, bytes().len() - 1] {
+            let err = write_checkpoint(&mut Full(room), &header(), &storage()).unwrap_err();
+            assert_eq!(err.to_string(), "disk full", "{room}");
+        }
+        assert!(write_checkpoint(&mut Full(bytes().len()), &header(), &storage()).is_ok());
     }
 
     #[test]

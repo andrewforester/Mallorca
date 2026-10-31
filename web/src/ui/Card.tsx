@@ -1,10 +1,10 @@
 import { useId } from 'preact/hooks';
-import { formatCard, rankOf, suitOf } from '../game/index.ts';
+import { formatCard, rankOf } from '../game/index.ts';
 import type { Card as CardValue } from '../game/index.ts';
 import { t } from './i18n.ts';
+import { suitFace } from './suits.ts';
 
 const RANKS: Record<number, string> = { 10: '10', 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
-const SUITS = ['♣', '♦', '♥', '♠'];
 
 export interface CardProps {
   card: CardValue | 'back';
@@ -63,8 +63,7 @@ function CardBack({ className }: { className: string }) {
 function CardFace({ card, className }: { card: CardValue; className: string }) {
   const id = useId();
   const rank = RANKS[rankOf(card)] ?? String(rankOf(card));
-  const suit = SUITS[suitOf(card)] ?? '';
-  const red = suitOf(card) === 1 || suitOf(card) === 2;
+  const { glyph: suit, red } = suitFace(card);
   return (
     <svg
       class={`${className}${red ? ' card-red' : ' card-black'}`}

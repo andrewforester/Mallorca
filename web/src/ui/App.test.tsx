@@ -1,6 +1,13 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { CASH, createSession, inProcessBot, memoryStore, TOURNAMENT } from '../game/index.ts';
+import {
+  CASH,
+  createSession,
+  inProcessBot,
+  memoryStore,
+  toViewModel,
+  TOURNAMENT,
+} from '../game/index.ts';
 import { App } from './App.tsx';
 import { readSound } from './preferences.ts';
 import type { SoundPlayer } from './sound/player.ts';
@@ -226,16 +233,16 @@ describe('App', () => {
     fireEvent.click(screen.getByTestId('start-tournament'));
     await waitFor(() => expect(screen.queryByTestId('seat-0')).not.toBeNull());
     await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
-    expect(screen.getByTestId('seat-0').querySelectorAll('[data-testid="card"]').length).toBe(2);
-    expect(screen.getByTestId('seat-1').querySelectorAll('[data-testid="card-back"]').length).toBe(
-      2,
-    );
+    expect(within(screen.getByTestId('seat-0')).getAllByTestId('card').length).toBe(2);
+    expect(within(screen.getByTestId('seat-1')).getAllByTestId('card-back').length).toBe(2);
     const stacks =
       Number(screen.getByTestId('stack-0').textContent) +
       Number(screen.getByTestId('stack-1').textContent);
-    const bets = [...document.querySelectorAll('[data-testid^="bet-"]')].length;
+    const bets = screen.queryAllByTestId(/^bet-/).length;
     expect(bets).toBeGreaterThan(0);
-    expect(stacks).toBeLessThan(4000);
+    const view = toViewModel(session.getState(), 0);
+    const chips = view.seats.reduce((sum, seat) => sum + seat.stack + seat.bet, view.pot.collected);
+    expect(stacks).toBeLessThan(chips);
     expect(screen.queryByTestId('hand-log')).toBeNull();
     expect(screen.queryByTestId('hand-log-menu')).toBeNull();
     session.getState().dispose();
@@ -268,8 +275,9 @@ describe('App', () => {
     await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
     fireEvent.click(screen.getByTestId('hand-log-toggle'));
     expect(screen.getByTestId('hand-log')).not.toBeNull();
-    const menu = document.querySelector('details.menu') as HTMLDetailsElement;
-    fireEvent.click(menu.querySelector('summary') as HTMLElement);
+    const summary = screen.getByText('Menu');
+    const menu = summary.closest('details') as HTMLDetailsElement;
+    fireEvent.click(summary);
     await waitFor(() => expect(screen.queryByTestId('hand-log')).toBeNull());
     expect(menu.open).toBe(true);
     session.getState().dispose();
@@ -341,7 +349,7 @@ describe('App', () => {
     fireEvent.click(button);
     expect(clear).not.toHaveBeenCalled();
     expect(screen.getByTestId('clear-history').textContent).toBe('Tap again to clear');
-    const menu = document.querySelector('details.menu') as HTMLDetailsElement;
+    const menu = screen.getByText('Menu').closest('details') as HTMLDetailsElement;
     menu.open = true;
     menu.open = false;
     fireEvent(menu, new Event('toggle'));

@@ -7,6 +7,8 @@ import { handRecord } from '../../src/game/records/record.ts';
 import { botFactory, botLabel, prepareBots } from './bots.ts';
 import { playPair } from './match.ts';
 import { summarize } from './stats.ts';
+import { styleStats } from './styleStats.ts';
+import type { StyleStats } from './styleStats.ts';
 import type { WorkerInput, WorkerResult } from './worker.ts';
 
 const BIG_BLIND = rulesOf(CASH).blinds(1).big;
@@ -19,6 +21,7 @@ export interface ArenaOptions {
   workers: number;
   saveHands?: string;
   reportDir?: string;
+  stats?: boolean;
 }
 
 export interface Report {
@@ -33,6 +36,7 @@ export interface Report {
   commit: string;
   finishedAt: string;
   handsFile: string | null;
+  styleStats?: StyleStats;
 }
 
 function commitHash(): string {
@@ -74,13 +78,44 @@ export function runInWorker(input: WorkerInput): Promise<WorkerResult[]> {
   });
 }
 
+function writeHands(
+  path: string,
+  results: WorkerResult[],
+  run: { labels: [string, string]; seed: number; started: number },
+): void {
+  const lines: string[] = [];
+  for (const result of results) {
+    (result.hands ?? []).forEach((events, k) => {
+      const [a, b] = run.labels;
+      const names: [string, string] = k === 0 ? [a, b] : [b, a];
+      const playedAt = new Date(run.started + (result.index * 2 + k) * 1000).toISOString();
+      const record = handRecord(events, [], {
+        sessionId: `arena-${run.seed}`,
+        mode: CASH,
+        names,
+        humanSeat: null,
+        bot: { id: `${a}-vs-${b}`, version: '1' },
+        playedAt,
+      });
+      lines.push(JSON.stringify(record));
+    });
+  }
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, lines.join('\n') + '\n');
+}
+
+function styleOfA(results: WorkerResult[]): StyleStats {
+  const hands = results.flatMap((result) => result.hands ?? []);
+  return styleStats(hands, (index) => (index % 2 === 0 ? 0 : 1));
+}
+
 export async function runArena(options: ArenaOptions): Promise<Report> {
   botFactory(options.a);
   botFactory(options.b);
   const started = Date.now();
   const { a, b } = options;
   const labels: [string, string] = [botLabel(a), botLabel(b)];
-  const withHands = options.saveHands !== undefined;
+  const withHands = options.saveHands !== undefined || options.stats === true;
   const inputs: WorkerInput[] = chunks(options.pairs, Math.max(1, options.workers)).map(
     (indices) => ({ a, b, seed: options.seed, indices, withHands }),
   );
@@ -95,24 +130,7 @@ export async function runArena(options: ArenaOptions): Promise<Report> {
     BIG_BLIND,
   );
   if (options.saveHands !== undefined) {
-    const lines: string[] = [];
-    for (const result of results) {
-      (result.hands ?? []).forEach((events, k) => {
-        const names: [string, string] = k === 0 ? labels : [labels[1], labels[0]];
-        const playedAt = new Date(started + (result.index * 2 + k) * 1000).toISOString();
-        const record = handRecord(events, [], {
-          sessionId: `arena-${options.seed}`,
-          mode: CASH,
-          names,
-          humanSeat: null,
-          bot: { id: `${labels[0]}-vs-${labels[1]}`, version: '1' },
-          playedAt,
-        });
-        lines.push(JSON.stringify(record));
-      });
-    }
-    mkdirSync(dirname(options.saveHands), { recursive: true });
-    writeFileSync(options.saveHands, lines.join('\n') + '\n');
+    writeHands(options.saveHands, results, { labels, seed: options.seed, started });
   }
   return {
     a: labels[0],
@@ -129,5 +147,6 @@ export async function runArena(options: ArenaOptions): Promise<Report> {
       options.saveHands === undefined
         ? null
         : relative(options.reportDir ?? process.cwd(), options.saveHands),
+    ...(options.stats === true ? { styleStats: styleOfA(results) } : {}),
   };
 }

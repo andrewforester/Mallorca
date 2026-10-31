@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { toViewModel } from '../game/index.ts';
-import type { HandStore, Intent, Phase, Session, SeatIndex, ViewModel } from '../game/index.ts';
+import type {
+  HandStore,
+  Intent,
+  Level,
+  Phase,
+  QuickPhrase,
+  Session,
+  SeatIndex,
+  ViewModel,
+} from '../game/index.ts';
 import { HandLogDrawer } from './HandLogDrawer.tsx';
 import { HistoryMenu } from './HistoryMenu.tsx';
 import { Scene } from './Scene.tsx';
@@ -35,6 +44,18 @@ function useSessionState(session: Session) {
     return session.subscribe(setState);
   }, [session]);
   return state;
+}
+
+function talkActions(session: Session, vm: ViewModel) {
+  return {
+    talk: vm.talk.available,
+    talkOn: vm.talk.on,
+    tells: vm.talk.level,
+    onTalk: (on: boolean) => session.getState().setTalk(on),
+    onTells: (level: Level) => session.getState().setTells(level),
+    onSay: (text: string) => session.getState().say(text),
+    onQuick: (id: QuickPhrase, text: string) => session.getState().quick(id, text),
+  };
 }
 
 function useLogDrawer(phase: Phase) {
@@ -113,6 +134,8 @@ export function App(props: AppProps) {
           autoNextMs={autoNextMs}
           onAct={act}
           onNextHand={() => void session.getState().nextHand()}
+          onSay={(text) => session.getState().say(text)}
+          onQuick={(id, text) => session.getState().quick(id, text)}
         />
         {drawer.open && (
           <HandLogDrawer
@@ -150,7 +173,7 @@ function Header({ app, vm, seed, drawer, preferences }: HeaderProps) {
       onToggleSound={preferences.toggleSound}
     >
       <HistoryMenu seed={seed} store={app.store} onNewGame={app.onNewGame} onOpen={drawer.dismiss}>
-        <Settings preferences={preferences} />
+        <Settings preferences={preferences} {...talkActions(app.session, vm)} />
       </HistoryMenu>
     </StatusBar>
   );

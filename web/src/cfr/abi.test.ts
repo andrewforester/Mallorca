@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { Action, LegalActions } from '../engine/index.ts';
-import type { CfrBot, CfrModel } from './index.ts';
-import { SHIPPED_STRATEGIES, WASM_URL, createCfrModel, inflate } from './index.ts';
+import type { CfrBot, CfrModel } from './model.ts';
+import { createCfrModel, inflate } from './model.ts';
+import { SHIPPED_STRATEGIES, WASM_URL } from './strategies.ts';
 
 const wasm = readFileSync(WASM_URL);
 

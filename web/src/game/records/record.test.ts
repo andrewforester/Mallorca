@@ -79,6 +79,17 @@ describe('handRecord', () => {
     expect(record.handNumber).toBe(1);
   });
 
+  it('saves the style with a decision and leaves the key out without one', () => {
+    const decision: Decision = {
+      action: { kind: 'call' },
+      solverChoice: 'passive',
+      evByAction: { fold: 0, passive: 0, aggressive: 0 },
+    };
+    const style = { aggression: 1.2, bluff: 0.9, tightness: 1 };
+    expect(recordDecision(decision, 3, style).style).toEqual(style);
+    expect('style' in recordDecision(decision, 3)).toBe(false);
+  });
+
   it('stores infinite expected values as null and survives JSON', () => {
     const decision: Decision = {
       action: { kind: 'fold' },

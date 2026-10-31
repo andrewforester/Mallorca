@@ -1,8 +1,9 @@
 import { fullDeck, mulberry32, shuffle } from '../../src/cards/index.ts';
-import type { EngineEvent, Step } from '../../src/engine/index.ts';
+import type { Action, EngineEvent, LegalActions, SeatIndex, Step } from '../../src/engine/index.ts';
 import { CASH, createTable, playToEnd, rulesOf, startHandWith } from '../../src/engine/index.ts';
 import { toObservations } from '../../src/brains/index.ts';
-import type { ArenaBot, BotFactory } from './bots.ts';
+import type { ArenaBot } from './arenaBot.ts';
+import type { BotFactory } from './bots.ts';
 
 const SEATS = createTable(['seat0', 'seat1'], CASH).seats;
 const STACK = SEATS[0].stack;
@@ -31,7 +32,15 @@ function playHand(
     { button: 0, blinds: rulesOf(CASH).blinds(handNumber), handNumber },
     deck,
   );
-  const end = playToEnd(start, (seat, legal) => bots[seat].decide(legal), feed);
+  const act = (seat: SeatIndex, legal: LegalActions): Action => {
+    const actor = bots[seat];
+    const action = actor.decide(legal);
+    if (action.kind === 'raise' && actor.spoke) {
+      bots[seat === 0 ? 1 : 0].heard?.(actor.spoke());
+    }
+    return action;
+  };
+  const end = playToEnd(start, act, feed);
   for (const bot of bots) bot.dispose?.();
   return { events, stacks: [end.seats[0].stack, end.seats[1].stack] };
 }
