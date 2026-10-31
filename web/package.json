@@ -42,9 +42,9 @@
     "fast-check": "^4.10.2",
     "happy-dom": "^21.0.4",
     "prettier": "^3.9.10",
-    "three": "^0.170.0",
+    "three": "^0.186.1",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.72.0",
+    "typescript-eslint": "^8.72.1",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"
   },
@@ -52,10 +52,10 @@
     "@fontsource/cormorant-garamond": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "@fontsource/inter": "^5.3.0",
-    "@supabase/supabase-js": "^2.117.3",
-    "i18next": "^26.5.6",
+    "@supabase/supabase-js": "^2.118.0",
+    "i18next": "^26.5.11",
     "phe": "^0.6.0",
-    "preact": "^11.0.1",
+    "preact": "^11.1.0",
     "zustand": "^5.0.16"
   }
 }
