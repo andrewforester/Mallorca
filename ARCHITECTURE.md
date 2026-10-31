@@ -16,6 +16,7 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 | `web/e2e/`                                                          | Playwright tests and the contact sheet script                                      |
 | `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                                |
 | `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`                   |
+| `web/tools/evaluator-golden/`                                       | Writes the evaluator fixture of `solver/crates/core`, see its `README.md`          |
 | `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena"              |
 | `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                              |
 | `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`               |
@@ -26,6 +27,9 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 Generated and never committed: `web/dist`, `web/test-results`, `web/playwright-report`, `web/e2e/contact/`,
 `web/tools/golden/build`, `web/arena-out/` (the arena results, see "arena") and `web/src/cfr/mallorca.wasm`, which
 `npm run wasm` builds with cargo (the toolchain pinned in `solver/`) before `dev`, `test`, `build` and `arena`.
+
+`tsc` (`web/tsconfig.json`) type-checks `src`, `scripts`, `e2e`, `playwright.config.ts`, `tools/arena` and
+`tools/evaluator-golden`.
 
 ## Stack
 
@@ -60,18 +64,30 @@ web/src/
 
 `brains` takes only types from `engine`: `Action`, `LegalActions` and the events it turns into observations.
 `ui` imports only from `game`; for the table, `game` re-exports `Card`, `formatCard`, `rankOf`, `suitOf`,
-`SeatIndex`, `LogEntry`, `HandCategory`, `TableMode`, `CASH` and `TOURNAMENT`, for the opponent choice `Opponent`,
-`OPPONENTS` and `opponentsFor`, and for the history `HandRecord`, `HandStore`, `openHandStore`, `memoryStore` and
+`SeatIndex`, `LogEntry`, `HandCategory`, `TableMode`, `CASH` and `TOURNAMENT`, for the opponent choice `Opponent`
+and `opponentsFor`, and for the history `HandRecord`, `HandStore`, `openHandStore`, `memoryStore` and
 `toPokerStars`.
+
+Each layer's `index.ts` exports only what other layers and `tools/` import; a test reaches the internals of its
+own layer by path. `brains/index.ts` holds `Brain`, `Decision`, `Observation`, `createMathBrain` and
+`toObservations`; `engine/index.ts` the types of a hand and a table, the reducers (`startHandWith`, `applyAction`,
+`startHand`, `apply`, `legalActionsOf`, `toAct`), `isLegal`, `checkOrCall`, `playToEnd`, `createTable`, `rulesOf`,
+the modes and `handHistory`; `game/index.ts` is the surface of `ui` (with `createSession`, `toViewModel`,
+`groupHand`, `workerBot` and `inProcessBot`).
 
 ESLint enforces the table with a `@typescript-eslint/no-restricted-imports` rule per directory. For `brains` the
 rule sets `allowTypeImports` on `engine`; the tests in `brains` and `talk` (`*.test.ts`) may also import `engine` code to
-build events. `import-x/no-cycle` forbids import cycles inside `src`.
+build events. `src/main.tsx` may import only `game` and `ui`. `tools/arena/**` may import from `src` only `cards`,
+`engine`, `brains`, `cfr`, `talk` and `game/records`; the viewer `tools/arena/ui/**` (tests aside) only `game/records` and
+types from `engine`. `import-x/no-cycle` forbids import cycles inside `src`.
 
 ### Purity
 
-`cards`, `equity`, `engine`, `brains`, `cfr` and `talk` use no DOM, no `Math.random`, no `Date` and no `performance`. ESLint
-enforces it with `no-restricted-globals` and `no-restricted-properties`. Randomness enters as an `Rng` argument.
+`cards`, `equity`, `engine`, `brains`, `cfr` and `talk` use no DOM (`document`, `window`, `self`, `navigator`), no
+`Math.random` or `crypto`, no `Date` or `performance`, no timers (`setTimeout`, `setInterval`), no `fetch` and no
+storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-globals` and
+`no-restricted-properties`. Randomness enters as an `Rng` argument, bytes through a reader passed in; `cfr`'s
+`inflate` uses `Blob`, `Response` and `DecompressionStream`, which stay allowed.
 
 ## cards
 
@@ -85,14 +101,15 @@ enforces it with `no-restricted-globals` and `no-restricted-properties`. Randomn
 - `HandEvaluator` has `rank(cards)` for 5 to 7 cards, higher is better, and `category(rank)`, a `HandCategory`:
   `high-card`, `pair`, `two-pair`, `trips`, `straight`, `flush`, `full-house`, `quads`, `straight-flush`.
   `pheEvaluator` implements it over `phe`.
-- `StreetEquity` (`strength`, `positivePotential`, `negativePotential`) and `WeightedHands` (hole cards with a
-  weight) are the types `brains` computes equity with; the computation itself lives in `brains` (`strength.ts`,
-  `spectrumEquilator.ts`, `preflopEquilator.ts`).
+- `WeightedHands` (hole cards with a weight) is the type `brains` computes equity with; the computation itself
+  lives in `brains` (`spectrumEquilator.ts`, `preflopEquilator.ts`).
 - `equityVsHand(hero, villain, board)` enumerates the rest of the board exactly; `equityVsRange(hero, range, board,
   { rng, samples })` is exact on the turn and the river and samples before that. `talk` uses them for her strength
   class and her luck.
-- `index.ts` exports `pheEvaluator`, `HandCategory`, `StreetEquity`, `WeightedHands`, `EquityOptions`,
-  `equityVsHand` and `equityVsRange`.
+- `index.ts` exports `pheEvaluator`, `HandCategory`, `WeightedHands`, `EquityOptions`, `equityVsHand` and
+  `equityVsRange`.
+- `npm run bench` (`evaluator.bench.test.ts`, outside `npm test`) ranks one million seven-card hands and expects
+  under 1500 ms outside CI.
 
 ## engine
 
@@ -108,7 +125,11 @@ enforces it with `no-restricted-globals` and `no-restricted-properties`. Randomn
   Both return `{ state, events }`. `legalActionsOf(t)` and `toAct(t)` read the current hand.
 - `startHandWith(seats, { button, blinds, handNumber }, deck)`, `applyAction(hand, seats, action)` and
   `legalActions(hand, seats)` are the hand-level reducer; `applyAction` throws `IllegalActionError` for anything
-  `legalActions` does not offer.
+  `legalActions` does not offer, as `isLegal(legal, action)` (`legal.ts`) decides. `checkOrCall(legal)` is the
+  passive action.
+- `playToEnd(start, act, onStep)` (`play.ts`) plays a hand from a `Step`: while a seat is to act it applies
+  `act(seat, legal)` (an `Actor`) and calls `onStep` with the start and every later step, then returns the last.
+  The arena and the cfr tests drive their bots through it.
 - `startHandWith` takes an already shuffled deck and deals from its front. Hole cards alternate starting with the
   seat after the button: `deck[0]` and `deck[2]` go to the big blind seat, `deck[1]` and `deck[3]` to the button.
   The board follows in order with no burn cards: flop `deck[4..6]`, turn `deck[7]`, river `deck[8]`. `Hand.deck`
@@ -166,13 +187,12 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 | `observation.ts`       | `Observation`, `toObservations(events, heroSeat)`, `parseObservation`            |
 | `handState.ts`         | `HandState`, `GameContext`, `HandStateObserver`: the bot's view of the hand      |
 | `spectrum.ts`          | `Spectrum`: a weight per villain hole-card pair                                  |
-| `villainModel.ts`      | `VillainModel`, `randomVillainModel`, `VillainSpectrumTracker`                   |
-| `strength.ts`          | `StrengthManager`: hero equity per street against the spectrum and at random     |
+| `villainModel.ts`      | `randomAdvice`, `VillainSpectrumTracker`                                         |
 | `spectrumEquilator.ts` | `SpectrumEquilator`: hero strength against a spectrum on a board, with its cache |
 | `preflopEquilator.ts`  | Preflop strength from `data/preflop-strength.json`                               |
-| `solver.ts`            | `NLGameSolver`, `ShowdownGameSolver`: the game tree, as `SolverNode`s            |
+| `solver.ts`            | `NLGameSolver`: the game tree, as `SolverNode`s                                  |
 | `profit.ts`            | `profitMap`, `SolverRequest`, `HeroKnowledge`, `RandomVariable`, raise sizing    |
-| `adviceFromMap.ts`     | `LessVarianceActionFromMap`: picks the action class from the action distribution |
+| `adviceFromMap.ts`     | `lessVarianceAction`: picks the action class from the action distribution        |
 | `preprocess.ts`        | `preprocessAction`, `toLegalAction`: resizes and clamps the chosen action        |
 | `brain.ts`             | `createMathBrain`, `Brain`, `Decision`                                           |
 | `javaCard.ts`          | The Java card numbering, for hashes that must match the original                 |
@@ -180,13 +200,14 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - `Observation` is the bot's view of engine events: `handStarted` (hand number, `heroOnButton`, both stacks,
   blinds), `holeCards` (its own), `acted` (`who` is `hero` or `villain`, the `Action` and the chips added) and
   `street` with the board. `toObservations` drops the villain's hole cards and the showdown.
-- `createMathBrain({ villainModel })` returns a `Brain` with `observe(o)` and `decide(legal)`. It enumerates
-  equities exactly and takes no `Rng`.
-- `randomVillainModel` returns the probabilities the Java `RandomBot` samples from: facing a bet fold, passive and
-  aggressive 1/3 each, otherwise passive and aggressive 1/2 each. It is never sampled.
+- A `Brain` has `observe(o)`, `decide(legal)` and an optional `dispose()`. `createMathBrain()` returns one without
+  `dispose`; it enumerates equities exactly and takes no `Rng`.
+- The villain is modelled as the Java `RandomBot`: `randomAdvice(state)` returns the probabilities it samples from,
+  facing a bet fold, passive and aggressive 1/3 each, otherwise passive and aggressive 1/2 each. It is never
+  sampled.
 - `profitMap(solver, game, situation, knowledge)` builds the `ActionDistribution`; `knowledge` is the
-  `HeroKnowledge` (`hero`, `spectrum`, `strength`). The solver gets one `SolverRequest` per call (game, hand
-  state, effective stack, pot, spectrum, hero, strength, button).
+  `HeroKnowledge` (`hero`, `spectrum`). The solver gets one `SolverRequest` per call (game, hand state, effective
+  stack, pot, spectrum, hero, button).
 - `decide` returns `{ action, solverChoice, evByAction }`. `action` is always legal under `legal`. `solverChoice`
   is the class (`fold`, `passive`, `aggressive`) the advice creator picked, before preprocessing and clamping.
 - `evByAction` holds the expected profit of each class in chips, relative to folding now: `fold` is 0 at the top
@@ -223,7 +244,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - `inflate(bytes)` gunzips with `DecompressionStream` when the bytes start with the gzip magic and returns other
   bytes as they are. `createCfrModel(wasm, strategy)` instantiates the module and loads the strategy; a bad file
   rejects with the reader's reason. `model.newBot()` returns a `CfrBot` handle, freed with `free()`.
-- `createCfrBrain(model, rng)` is a `Brain` with `dispose()`. It forwards every `Observation` to the bot and draws
+- `createCfrBrain(model, rng)` is a `Brain` whose `dispose()` is always present. It forwards every `Observation` to the bot and draws
   one `rng.next()` per observed action (the off-tree raise mapping) and one per decision (sampling the strategy),
   so a seed fixes its play. `solverChoice` is the kind of the action; `evByAction` is `NaN` for every class.
 - Translation lives in Rust (`mallorca-core::bot`): chips scale by the big blind, an opponent raise maps to one of
@@ -295,7 +316,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   split. It equals the `win` entry of the log; an uncalled bet is its own `returned` entry.
 - `BotClient` has `observe(observations)`, `decide(legal)`, `reset()`, an optional `select(opponent, seed)` and an
   optional `dispose()`. `workerBot()` runs the brain in `bot.worker.ts` over the `WorkerRequest` and `WorkerReply`
-  messages in `workerProtocol.ts`; `createWorkerHandler(newBrain, post, load?)` in `workerHandler.ts` is the worker's
+  messages in `workerProtocol.ts`; `createWorkerHandler(newBrain, post, load)` in `workerHandler.ts` is the worker's
   message handling as a plain function. A `select` request queues every later request until the opponent's brain
   factory is ready, then replies `{ id, opponent }` or `{ id, error }` and keeps the old brain on an error. The worker
   loads the model of each cfr opponent once, on its first `select` (`loadCfrModel` with `fetch` of `WASM_URL` and the
@@ -506,6 +527,8 @@ bounded by the clamps above.
 
 ## e2e
 
+- Playwright builds and starts its own `vite preview` on `E2E_PORT` (default 4173) and never reuses a server already
+  listening there, so a run fails instead of testing another worktree's build; set `E2E_PORT` to run beside one.
 - Playwright runs against the production build (`vite preview`) on three projects: `phone` 390 × 844, `small-phone`
   360 × 740 and `desktop` 1440 × 900. `layout.spec.ts` runs only on `small-phone`, which runs only `layout.spec.ts`
   and `table.spec.ts`. Most tests open `FAST_URL` (`fixtures.ts`), `/?seed=42&botDelay=0&autoNext=off`, and fail on
@@ -527,7 +550,8 @@ bounded by the clamps above.
   recorded as `v2-10`, and a phone is not offered `cfr-v2`. `arena.spec.ts`: the published arena page lists the runs,
   a run with hands opens and shows a pair as PokerStars text.
 - `e2e/contact.ts` (`npm run contact`) captures every view state of a seeded game on `phone` and `desktop` and
-  composes one sheet per device into `e2e/contact/`.
+  composes one sheet per device into `e2e/contact/`. Its preview listens on `CONTACT_PORT` (default 4174); it stops
+  if that port already answers or its own server exits.
 
 ## arena
 
@@ -536,8 +560,9 @@ imports `engine`, `brains`, `cards`, `cfr` and `game/records/record.ts` and noth
 `.ts` files directly, including in workers. `tools/` may use the clock and Node APIs.
 
 - `bots.ts`: `BOTS`, the `BotFactory` (`(rng) => ArenaBot` with `observe`, `decide` and an optional `dispose`)
-  of each name: `math` (`createMathBrain` with `randomVillainModel`), `cfr` (`createCfrBrain` over the model that
-  `prepareBots` loads from `SHIPPED_STRATEGIES.cfr` once per process or worker; it throws before that),
+  of each name: `fromBrain(brain)` plays a `Brain`'s action and disposes it, for `math` (`createMathBrain()`) and
+  `cfr` (`createCfrBrain` over the model that `prepareBots` loads from `SHIPPED_STRATEGIES.cfr` once per process
+  or worker; it throws before that),
   `always-call` (checks or calls), `always-raise` (raises to `legal.raise.min` when it can, else checks or calls),
   `min-bettor` (bets the minimum when nobody has bet, else checks or calls) and `random` (uniform over the legal
   kinds, a raise to the minimum, from its seeded `Rng`). `cfr:<play file>` plays any play file the same way and is
@@ -546,8 +571,8 @@ imports `engine`, `brains`, `cards`, `cfr` and `game/records/record.ts` and noth
   `mulberry32((Math.imul(seed, 0x9e3779b1) + index) >>> 0)`; hand `k` (0, 1) starts both seats at the cash stakes
   (the stacks of `createTable` with `CASH`, the blinds of `rulesOf(CASH)`), button seat 0,
   `handNumber = index * 2 + k + 1`, with `a` on seat 0 in hand 0 and `b` in hand 1. Each hand
-  gets fresh bots, the bot on `seat` seeded by `mulberry32((seed ^ (index * 4 + k * 2 + seat)) >>> 0)`, and each
-  bot receives `toObservations` of the new events for its seat after every step. It returns `net`, the chips of
+  gets fresh bots, the bot on `seat` seeded by `mulberry32((seed ^ (index * 4 + k * 2 + seat)) >>> 0)`, the hand is
+  played by `playToEnd`, and each bot receives `toObservations` of the new events for its seat after every step. It returns `net`, the chips of
   `a` over both hands, and the events of both hands. The math bot against itself nets exactly 0 per pair.
 - `stats.ts`: `summarize(nets, bigBlind)`. The per-pair value is `v = net / 2 / bigBlind * 100`; `bbPer100` is the
   mean of `v` and `ci95 = 1.96 * sd(v) / sqrt(n)` with the sample standard deviation (n - 1). With fewer than 2
@@ -607,6 +632,8 @@ types.
 - Chips are integers.
 - Cards in fixtures and text are two-character strings: rank `23456789TJQKA`, suit `cdhs`.
 - Tests sit next to the code as `*.test.ts` or `*.test.tsx`; golden tests are `*.golden.test.ts` and run only
-  under `npm run test:golden`.
+  under `npm run test:golden`; timing tests are `*.bench.test.ts` and run only under `npm run bench`. `npm test`
+  has two Vitest projects: `ui` runs every test in `src/ui` and the `*.test.tsx` of `tools` under happy-dom, `node`
+  runs the other tests once.
 - Fixtures generated from the Java original live in `src/brains/fixtures/` and are written only by
   `web/tools/golden/run.sh`.

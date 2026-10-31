@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Decision } from '../brains/index.ts';
-import { CASH, legalActionsOf, toAct, TOURNAMENT } from '../engine/index.ts';
+import { CASH, checkOrCall, legalActionsOf, toAct, TOURNAMENT } from '../engine/index.ts';
 import type { TableMode } from '../engine/index.ts';
 import type { BotClient } from './botClient.ts';
 import { inProcessBot } from './botClient.ts';
@@ -40,7 +40,7 @@ function callsThenFolds(): BotClient {
   return scriptedBot((legal) => {
     decisions += 1;
     if (decisions === 1 || !legal.fold) {
-      return legal.check ? { kind: 'check' } : { kind: 'call' };
+      return checkOrCall(legal);
     }
     return { kind: 'fold' };
   });
@@ -329,9 +329,7 @@ describe('session', () => {
   });
 
   it('restarts cleanly', async () => {
-    const session = open(
-      scriptedBot((legal) => (legal.check ? { kind: 'check' } : { kind: 'call' })),
-    );
+    const session = open(scriptedBot(checkOrCall));
     await session.getState().start();
     await session.getState().act({ kind: 'passive' });
     await session.getState().start();

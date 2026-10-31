@@ -1,14 +1,11 @@
 import type { Action, LegalActions } from '../engine/index.ts';
-import type { AdviceCreatorFromMap } from './adviceFromMap.ts';
-import { LessVarianceActionFromMap } from './adviceFromMap.ts';
+import { lessVarianceAction } from './adviceFromMap.ts';
 import { GameContext, HandStateObserver } from './handState.ts';
 import type { Observation } from './observation.ts';
 import { preprocessAction, toLegalAction } from './preprocess.ts';
-import type { ActionDistribution, GameSolver, SolverActionType } from './profit.ts';
+import type { ActionDistribution, SolverActionType } from './profit.ts';
 import { profitMap } from './profit.ts';
 import { NLGameSolver } from './solver.ts';
-import { StrengthManager } from './strength.ts';
-import type { VillainModel } from './villainModel.ts';
 import { VillainSpectrumTracker } from './villainModel.ts';
 
 export interface Decision {
@@ -27,10 +24,7 @@ export interface Brain {
   observe(o: Observation): void;
   decide(legal: LegalActions): Decision;
   setStyle?(style: BotStyle): void;
-}
-
-export interface MathBrainOptions {
-  villainModel: VillainModel;
+  dispose?(): void;
 }
 
 function evOf(distribution: ActionDistribution, type: SolverActionType): number {
@@ -39,21 +33,13 @@ function evOf(distribution: ActionDistribution, type: SolverActionType): number 
 }
 
 class MathBrain implements Brain {
-  private readonly strength = new StrengthManager();
-  private readonly tracker: VillainSpectrumTracker;
+  private readonly tracker = new VillainSpectrumTracker();
   private readonly heroState = new HandStateObserver(true);
   private readonly game = new GameContext();
-  private readonly solver: GameSolver;
-  private readonly adviceCreator: AdviceCreatorFromMap = new LessVarianceActionFromMap();
-
-  constructor(villainModel: VillainModel) {
-    this.tracker = new VillainSpectrumTracker(villainModel, this.strength);
-    this.solver = new NLGameSolver(villainModel);
-  }
+  private readonly solver = new NLGameSolver();
 
   observe(o: Observation): void {
     this.heroState.observe(o);
-    this.strength.observe(o);
     this.tracker.observe(o);
     this.game.observe(o);
   }
@@ -67,9 +53,8 @@ class MathBrain implements Brain {
     const distribution = profitMap(this.solver, this.game, situation, {
       hero,
       spectrum: this.tracker.spectrum,
-      strength: this.strength,
     });
-    const advice = this.adviceCreator.create(distribution, this.game);
+    const advice = lessVarianceAction(distribution, this.game);
     const action = preprocessAction(advice, this.game, situation.amountToCall);
     return {
       action: toLegalAction(action, legal, this.game.bet('villain')),
@@ -83,6 +68,6 @@ class MathBrain implements Brain {
   }
 }
 
-export function createMathBrain(options: MathBrainOptions): Brain {
-  return new MathBrain(options.villainModel);
+export function createMathBrain(): Brain {
+  return new MathBrain();
 }

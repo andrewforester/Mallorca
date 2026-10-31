@@ -3,8 +3,8 @@ import { gzipSync } from 'node:zlib';
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { Rng } from '../cards/index.ts';
 import { fullDeck, mulberry32, parseCards, shuffle } from '../cards/index.ts';
-import type { Action, LegalActions, Seat, SeatIndex, Step } from '../engine/index.ts';
-import { applyAction, legalActions, startHandWith } from '../engine/index.ts';
+import type { Action, LegalActions, Seat, SeatIndex } from '../engine/index.ts';
+import { isLegal, playToEnd, startHandWith } from '../engine/index.ts';
 import type { Observation } from '../brains/index.ts';
 import { toObservations } from '../brains/index.ts';
 import type { CfrModel } from './index.ts';
@@ -18,19 +18,6 @@ let model: CfrModel;
 beforeAll(async () => {
   model = await createCfrModel(wasm, await inflate(strategy));
 });
-
-function isLegal(action: Action, legal: LegalActions): boolean {
-  switch (action.kind) {
-    case 'fold':
-      return legal.fold;
-    case 'check':
-      return legal.check;
-    case 'call':
-      return legal.call !== null;
-    case 'raise':
-      return legal.raise !== null && action.to >= legal.raise.min && action.to <= legal.raise.max;
-  }
-}
 
 function randomAction(legal: LegalActions, rng: Rng): Action {
   const options: Action[] = [];
@@ -55,21 +42,19 @@ function playHand(seed: number, stacks: [number, number], big: number, using = m
   const button = (seed % 2) as SeatIndex;
   const deck = shuffle(fullDeck(), rng);
   const blinds = { small: big / 2, big };
-  let step: Step = startHandWith(seats, { button, blinds, handNumber: 1 }, deck);
-  const feed = (s: Step) => toObservations(s.events, 0).forEach((o) => brain.observe(o));
-  feed(step);
+  const start = startHandWith(seats, { button, blinds, handNumber: 1 }, deck);
   const played: Action[] = [];
-  while (step.hand.street !== 'complete') {
-    const legal = legalActions(step.hand, step.seats);
-    const mine = step.hand.toAct === 0;
-    const action = mine ? brain.decide(legal).action : randomAction(legal, rng);
-    if (mine) {
-      expect(isLegal(action, legal), JSON.stringify({ action, legal })).toBe(true);
+  playToEnd(
+    start,
+    (seat, legal) => {
+      if (seat !== 0) return randomAction(legal, rng);
+      const action = brain.decide(legal).action;
+      expect(isLegal(legal, action), JSON.stringify({ action, legal })).toBe(true);
       played.push(action);
-    }
-    step = applyAction(step.hand, step.seats, action);
-    feed(step);
-  }
+      return action;
+    },
+    (step) => toObservations(step.events, 0).forEach((o) => brain.observe(o)),
+  );
   brain.dispose();
   return played;
 }

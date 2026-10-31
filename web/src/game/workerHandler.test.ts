@@ -13,6 +13,8 @@ const decision: Decision = {
   evByAction: { fold: 0, passive: 0, aggressive: 0 },
 };
 
+const noLoader = () => Promise.reject(new Error('no loader'));
+
 function fakeBrain(decide: Brain['decide'] = () => decision) {
   const observed: Observation[] = [];
   const brain: Brain = {
@@ -30,6 +32,7 @@ describe('createWorkerHandler', () => {
     const handle = createWorkerHandler(
       () => brain,
       () => undefined,
+      noLoader,
     );
     handle({ kind: 'observe', observations: [observation, observation] });
     expect(observed).toHaveLength(2);
@@ -41,6 +44,7 @@ describe('createWorkerHandler', () => {
     const handle = createWorkerHandler(
       () => brain,
       (reply) => replies.push(reply),
+      noLoader,
     );
     handle({ kind: 'decide', id: 7, legal });
     expect(replies).toEqual([{ id: 7, decision }]);
@@ -54,6 +58,7 @@ describe('createWorkerHandler', () => {
     const handle = createWorkerHandler(
       () => brain,
       (reply) => replies.push(reply),
+      noLoader,
     );
     handle({ kind: 'decide', id: 3, legal });
     expect(replies).toEqual([{ id: 3, error: 'no cards' }]);
@@ -67,6 +72,7 @@ describe('createWorkerHandler', () => {
     const handle = createWorkerHandler(
       () => brain,
       (reply) => replies.push(reply),
+      noLoader,
     );
     handle({ kind: 'decide', id: 4, legal });
     expect(replies).toEqual([{ id: 4, error: 'boom' }]);
@@ -80,6 +86,7 @@ describe('createWorkerHandler', () => {
     const handle = createWorkerHandler(
       () => brains.shift() as Brain,
       (reply) => replies.push(reply),
+      noLoader,
     );
     handle({ kind: 'observe', observations: [observation] });
     handle({ kind: 'reset' });
@@ -110,6 +117,7 @@ describe('createWorkerHandler style', () => {
     const handle = createWorkerHandler(
       () => brain,
       () => undefined,
+      noLoader,
     );
     handle({ kind: 'decide', id: 1, legal, style });
     expect(calls).toEqual([`style ${JSON.stringify(style)}`, 'decide']);
@@ -121,6 +129,7 @@ describe('createWorkerHandler style', () => {
     const handle = createWorkerHandler(
       () => brain,
       (reply) => replies.push(reply),
+      noLoader,
     );
     handle({ kind: 'decide', id: 2, legal, style });
     expect(replies).toEqual([{ id: 2, decision }]);
@@ -177,18 +186,24 @@ describe('createWorkerHandler select', () => {
     ]);
   });
 
-  it('selects the math bot without a loader', async () => {
+  it('selects the math bot without asking the loader', async () => {
     const replies: WorkerReply[] = [];
+    const asked: string[] = [];
     const handle = createWorkerHandler(
       () => fakeBrain().brain,
       (reply) => replies.push(reply),
+      (opponent) => {
+        asked.push(opponent);
+        return Promise.reject(new Error('no model'));
+      },
     );
     handle({ kind: 'select', id: 3, opponent: 'math', seed: 1 });
     handle({ kind: 'select', id: 4, opponent: 'cfr', seed: 1 });
     await settle();
+    expect(asked).toEqual(['cfr']);
     expect(replies).toEqual([
       { id: 3, opponent: 'math' },
-      { id: 4, error: 'This worker plays the math bot only' },
+      { id: 4, error: 'no model' },
     ]);
   });
 
@@ -197,6 +212,7 @@ describe('createWorkerHandler select', () => {
     const handle = createWorkerHandler(
       () => ({ ...fakeBrain().brain, dispose: () => (disposed += 1) }),
       () => undefined,
+      noLoader,
     );
     handle({ kind: 'reset' });
     handle({ kind: 'reset' });

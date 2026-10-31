@@ -1,7 +1,7 @@
 import type { Card } from '../cards/index.ts';
-import { legalActions, otherSeat } from './legal.ts';
+import { isLegal, legalActions, otherSeat } from './legal.ts';
 import { awardShowdown, evaluateShowdown } from './showdown.ts';
-import type { Action, EngineEvent, Hand, LegalActions, Seat, SeatIndex, Step } from './types.ts';
+import type { Action, EngineEvent, Hand, Seat, SeatIndex, Step } from './types.ts';
 
 export class IllegalActionError extends Error {
   constructor(message: string) {
@@ -210,24 +210,6 @@ function finish(table: Table, payout: Payout): Step {
     seats: withSeats(seats, final),
     events,
   };
-}
-
-function isLegal(legal: LegalActions, action: Action): boolean {
-  switch (action.kind) {
-    case 'fold':
-      return legal.fold;
-    case 'check':
-      return legal.check;
-    case 'call':
-      return legal.call !== null;
-    case 'raise':
-      return (
-        legal.raise !== null &&
-        Number.isInteger(action.to) &&
-        action.to >= legal.raise.min &&
-        action.to <= legal.raise.max
-      );
-  }
 }
 
 function assertLegal(hand: Hand, seats: readonly [Seat, Seat], action: Action): void {

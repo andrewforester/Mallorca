@@ -31,6 +31,46 @@ const layer = (
   };
 };
 
+const ARENA_MESSAGE =
+  'tools/arena may import from src only cards, engine, brains, cfr, talk and game/records';
+const VIEWER_MESSAGE = 'tools/arena/ui may import from src only game/records and types from engine';
+const GAME_OUTSIDE_RECORDS = '(^|/)src/game(/(?!records/)|$)';
+
+const arenaLayer = {
+  files: ['tools/arena/**/*.ts', 'tools/arena/**/*.tsx'],
+  rules: {
+    '@typescript-eslint/no-restricted-imports': [
+      'error',
+      {
+        patterns: [
+          { regex: '(^|/)src/(ui|equity|main\\.tsx)(/|$)', message: ARENA_MESSAGE },
+          { regex: GAME_OUTSIDE_RECORDS, message: ARENA_MESSAGE },
+        ],
+      },
+    ],
+  },
+};
+
+const viewerLayer = {
+  files: ['tools/arena/ui/**/*.ts', 'tools/arena/ui/**/*.tsx'],
+  ignores: ['**/*.test.ts', '**/*.test.tsx'],
+  rules: {
+    '@typescript-eslint/no-restricted-imports': [
+      'error',
+      {
+        patterns: [
+          {
+            regex: '(^|/)src/(ui|equity|cards|brains|cfr|main\\.tsx)(/|$)',
+            message: VIEWER_MESSAGE,
+          },
+          { regex: GAME_OUTSIDE_RECORDS, message: VIEWER_MESSAGE },
+          { regex: '(^|/)src/engine(/|$)', message: VIEWER_MESSAGE, allowTypeImports: true },
+        ],
+      },
+    ],
+  },
+};
+
 export default tseslint.config(
   {
     ignores: ['**/dist', '.vercel', 'node_modules', 'test-results', 'playwright-report'],
@@ -73,6 +113,9 @@ export default tseslint.config(
   layer('talk', ['cards', 'equity', 'engine'], [], ['src/talk/**/*.test.ts']),
   layer('game', ['cards', 'equity', 'engine', 'brains', 'cfr', 'talk']),
   layer('ui', ['game']),
+  layer('main', ['game', 'ui'], [], ['src/main.tsx']),
+  arenaLayer,
+  viewerLayer,
   ...pure.map((dir) => ({
     files: [`${dir}/**/*.ts`],
     rules: {
@@ -82,6 +125,14 @@ export default tseslint.config(
         { name: 'performance', message: 'Pass time in as an argument' },
         { name: 'document', message: 'No DOM in this layer' },
         { name: 'window', message: 'No DOM in this layer' },
+        { name: 'self', message: 'No DOM in this layer' },
+        { name: 'navigator', message: 'No DOM in this layer' },
+        { name: 'setTimeout', message: 'No timers in this layer' },
+        { name: 'setInterval', message: 'No timers in this layer' },
+        { name: 'fetch', message: 'Bytes enter through a reader passed in' },
+        { name: 'localStorage', message: 'No storage in this layer' },
+        { name: 'indexedDB', message: 'No storage in this layer' },
+        { name: 'crypto', message: 'Randomness enters as an Rng' },
       ],
       'no-restricted-properties': [
         'error',

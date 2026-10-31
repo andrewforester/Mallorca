@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:golden": "vitest run --config vitest.golden.config.ts",
     "test:e2e": "playwright test",
+    "bench": "vitest run --config vitest.bench.config.ts",
     "prearena": "npm run wasm",
     "arena": "node tools/arena/cli.ts",
     "arena:ui": "vite --config tools/arena/ui/vite.config.ts",

@@ -24,19 +24,16 @@ function answer(brain: Brain, request: Decide, post: (reply: WorkerReply) => voi
   }
 }
 
-const mathOnly: OpponentLoader = () =>
-  Promise.reject(new Error('This worker plays the math bot only'));
-
 export function createWorkerHandler(
   newBrain: BrainFactory,
   post: (reply: WorkerReply) => void,
-  load: OpponentLoader = mathOnly,
+  load: OpponentLoader,
 ): (request: WorkerRequest) => void {
   let make = newBrain;
   let brain = make();
   let waiting: WorkerRequest[] | null = null;
   const replace = (next: BrainFactory) => {
-    (brain as { dispose?: () => void }).dispose?.();
+    brain.dispose?.();
     make = next;
     brain = make();
   };

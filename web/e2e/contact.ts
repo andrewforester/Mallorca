@@ -1,10 +1,11 @@
 import { spawn } from 'node:child_process';
+import type { ChildProcess } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 import type { Browser, Page } from '@playwright/test';
 import { serveTalk } from './talkServer.ts';
 
-const PORT = 4174;
+const PORT = Number(process.env.CONTACT_PORT ?? 4174);
 const BASE = `http://localhost:${PORT}/`;
 const OUT_DIR = 'e2e/contact';
 const SHEET_COLUMNS = 3;
@@ -21,8 +22,20 @@ interface Shot {
   png: Buffer;
 }
 
-async function waitForServer(): Promise<void> {
+async function answers(): Promise<boolean> {
+  try {
+    await fetch(BASE);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function waitForServer(server: ChildProcess): Promise<void> {
   for (let attempt = 0; attempt < 100; attempt += 1) {
+    if (server.exitCode !== null) {
+      throw new Error(`preview server exited with code ${server.exitCode}`);
+    }
     try {
       const response = await fetch(BASE);
       if (response.ok) {
@@ -207,13 +220,16 @@ figcaption { padding: 4px 0 }
   await page.close();
 }
 
+if (await answers()) {
+  throw new Error(`${BASE} is already in use; free it or set CONTACT_PORT`);
+}
 mkdirSync(OUT_DIR, { recursive: true });
 const server = spawn('npm', ['run', 'preview', '--', '--port', String(PORT), '--strictPort'], {
   stdio: 'ignore',
 });
 const browser = await chromium.launch();
 try {
-  await waitForServer();
+  await waitForServer(server);
   for (const device of DEVICES) {
     const shots = [...(await capture(browser, device)), ...(await captureTalk(browser, device))];
     await compose(browser, shots, `${OUT_DIR}/${device.name}.png`);
