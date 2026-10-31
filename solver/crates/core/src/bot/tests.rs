@@ -738,3 +738,125 @@ fn an_impossible_step_keeps_the_previous_range() {
     steps.push(impossible_step());
     assert_eq!(range_of(model(), &steps, &[]), before);
 }
+
+fn on_the_flop(hole: [Card; 2]) -> (Bot, Legal) {
+    let mut bot = started(false, [400, 400], [10, 20], hole);
+    bot.acted(model(), false, Move::Call, 0.3);
+    bot.acted(model(), true, Move::Check, 0.3);
+    bot.street(model(), &[10, 20, 30]);
+    let legal = Legal {
+        fold: false,
+        check: true,
+        call: None,
+        raise: Some((20, 360)),
+    };
+    (bot, legal)
+}
+
+fn preflop_spot() -> (Bot, Legal) {
+    (
+        started(true, [400, 400], [10, 20], [48, 49]),
+        facing_blind(20, 400),
+    )
+}
+
+#[test]
+fn spot_is_the_node_decide_samples() {
+    for (mut bot, legal) in [preflop_spot(), on_the_flop([48, 49])] {
+        let spot = bot.spot(model(), &legal).unwrap();
+        assert!(!spot.approximate);
+        bot.decide(model(), &legal, 0.5);
+        let step = bot.history().last().unwrap();
+        assert_eq!((spot.node, spot.street), (step.node, step.street));
+    }
+}
+
+#[test]
+fn spot_moves_are_the_real_moves() {
+    for setup in [preflop_spot, || on_the_flop([48, 49])] {
+        let (bot, legal) = setup();
+        let spot = bot.spot(model(), &legal).unwrap();
+        let hand = bot.hand.as_ref().unwrap();
+        let bucket = model()
+            .abstraction
+            .bucket(hand.street, hand.hole.unwrap(), &hand.board);
+        let Node::Decision { actions, .. } = model().file.tree.node(spot.node) else {
+            panic!("not a decision");
+        };
+        assert_eq!(spot.moves.len(), actions.len());
+        for (k, &(kind, _)) in actions.iter().enumerate() {
+            let draw = draw_for(spot.node, bucket, kind);
+            if draw < 0.0 {
+                continue;
+            }
+            let (mut fresh, _) = setup();
+            assert_eq!(
+                fresh.decide(model(), &legal, draw),
+                spot.moves[k],
+                "{kind:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn spot_does_not_move_the_bot() {
+    for draw in [0.1, 0.5, 0.9] {
+        let (mut plain, legal) = on_the_flop([48, 49]);
+        let (mut asked, _) = on_the_flop([48, 49]);
+        asked.spot(model(), &legal);
+        asked.spot(model(), &legal);
+        assert_eq!(
+            asked.decide(model(), &legal, draw),
+            plain.decide(model(), &legal, draw)
+        );
+        assert_eq!(asked.history(), plain.history());
+        assert_eq!(asked.cursor(), plain.cursor());
+    }
+}
+
+#[test]
+fn approximate_after_a_resync() {
+    let mut bot = started(false, [400, 400], [10, 20], [0, 5]);
+    bot.acted(model(), false, Move::Check, 0.3);
+    let legal = Legal {
+        fold: false,
+        check: true,
+        call: None,
+        raise: Some((40, 380)),
+    };
+    let spot = bot.spot(model(), &legal).unwrap();
+    assert!(spot.approximate);
+}
+
+#[test]
+fn grid_rows_are_the_strategy() {
+    let (bot, legal) = on_the_flop([48, 49]);
+    let spot = bot.spot(model(), &legal).unwrap();
+    let n = spot.moves.len();
+    let grid = bot.strategy_grid(model(), &spot);
+    assert_eq!(grid.len(), PAIRS * n);
+    let dead = [10, 20, 30, 48, 49];
+    for i in 0..PAIRS {
+        let c = pair_cards(i);
+        let row = &grid[i * n..(i + 1) * n];
+        if dead.contains(&c[0]) || dead.contains(&c[1]) {
+            assert!(row.iter().all(|&x| x == 0.0), "{c:?}");
+            continue;
+        }
+        let bucket = model().abstraction.bucket(Street::Flop, c, &[10, 20, 30]);
+        let bytes = model().file.probabilities(spot.node, bucket);
+        let sum: u32 = bytes.iter().map(|&x| u32::from(x)).sum();
+        for (k, &x) in row.iter().enumerate() {
+            assert!((x - f32::from(bytes[k]) / sum as f32).abs() < 1e-6, "{c:?}");
+        }
+        assert!((row.iter().sum::<f32>() - 1.0).abs() < 1e-5, "{c:?}");
+    }
+}
+
+#[test]
+fn no_spot_without_a_node() {
+    let bot = started(true, [400, 400], [10, 20], [48, 48]);
+    assert!(bot.spot(model(), &facing_blind(20, 400)).is_none());
+    assert!(Bot::new().spot(model(), &facing_blind(20, 400)).is_none());
+}
