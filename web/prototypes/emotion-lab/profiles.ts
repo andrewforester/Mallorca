@@ -1,3 +1,4 @@
+import { PERSONALITIES } from '../../src/emotion/index.ts';
 import type { Personality } from '../../src/emotion/index.ts';
 import { leakOf } from '../../src/face/index.ts';
 import type { FaceLook } from '../../src/face/index.ts';
@@ -20,17 +21,7 @@ export const PROFILES = {
     hint: 'Уравновешенная, открытое лицо',
     description:
       'Дружелюбная и в меру открытая, эмоционально устойчивая. Играет средне, эмоций почти не прячет, злится по делу и быстро отходит.',
-    personality: {
-      bigFive: {
-        openness: 0.3,
-        conscientiousness: 0.2,
-        extraversion: 0.2,
-        agreeableness: 0.4,
-        neuroticism: -0.1,
-      },
-      suppression: 0.3,
-      experience: 0.5,
-    },
+    personality: PERSONALITIES.mira,
     face: {
       brows: 1,
       eyes: 1,
@@ -47,17 +38,7 @@ export const PROFILES = {
     hint: 'Каменное лицо, выдают брови',
     description:
       'Профессионалка: замкнутая, собранная, очень устойчивая и не слишком любезная. Почти не меняется в лице и почти не тильтует, а если тильтует, это не доходит до игры. Выдают её только брови.',
-    personality: {
-      bigFive: {
-        openness: -0.1,
-        conscientiousness: 0.7,
-        extraversion: -0.5,
-        agreeableness: -0.3,
-        neuroticism: -0.6,
-      },
-      suppression: 0.85,
-      experience: 0.9,
-    },
+    personality: PERSONALITIES.ingrid,
     face: {
       brows: 1.7,
       eyes: 0.7,
@@ -74,17 +55,7 @@ export const PROFILES = {
     hint: 'Душа компании, всё на лице',
     description:
       'Экстравертка с высокой эмоциональностью, пришла повеселиться. Неопытная и неорганизованная: эмоции ярко видны и быстро доходят до игры, бэд-бит превращается в громкий тильт.',
-    personality: {
-      bigFive: {
-        openness: 0.6,
-        conscientiousness: -0.4,
-        extraversion: 0.9,
-        agreeableness: 0.5,
-        neuroticism: 0.5,
-      },
-      suppression: 0.08,
-      experience: 0.2,
-    },
+    personality: PERSONALITIES.lola,
     face: {
       brows: 1.1,
       eyes: 1.1,
@@ -101,17 +72,7 @@ export const PROFILES = {
     hint: 'Нервный новичок, прячет и выдаёт',
     description:
       'Новичок с высокой тревожностью. Старается держать лицо, но страх и стыд сильные и держатся долго, а дисциплины не хватает: тревога сразу видна в игре.',
-    personality: {
-      bigFive: {
-        openness: 0.1,
-        conscientiousness: 0.3,
-        extraversion: -0.3,
-        agreeableness: 0.4,
-        neuroticism: 0.8,
-      },
-      suppression: 0.55,
-      experience: 0,
-    },
+    personality: PERSONALITIES.nina,
     face: {
       brows: 1.25,
       eyes: 1.25,
