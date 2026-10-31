@@ -22,3 +22,4 @@ solver/data/
 web/arena-out/
 web/src/cfr/mallorca.wasm
 web/.vercel/
+web/prototypes/emotion-lab/avatar.glb

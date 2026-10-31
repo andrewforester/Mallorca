@@ -9,7 +9,7 @@ export default mergeConfig(
         {
           test: {
             name: 'node',
-            include: ['src/**/*.test.ts', 'tools/**/*.test.ts'],
+            include: ['src/**/*.test.ts', 'tools/**/*.test.ts', 'prototypes/**/*.test.ts'],
             exclude: [
               ...configDefaults.exclude,
               '**/*.golden.test.ts',
