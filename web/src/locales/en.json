@@ -153,7 +153,22 @@
     "mdf": "Minimum defence",
     "bluffs": "Bluffs this bet can hold",
     "percent": "{{value}}%",
-    "noBet": "Nothing to call: pot odds apply when you face a bet."
+    "noBet": "Nothing to call: pot odds apply when you face a bet.",
+    "classes": {
+      "strong": "Sets and better",
+      "twoPair": "Two pair",
+      "topPair": "Top pair or overpair",
+      "pair": "Other pairs",
+      "draw": "Draws",
+      "air": "Nothing yet"
+    },
+    "ahead": "You are ahead of {{percent}}% of the range now",
+    "outs_one": "{{count}} out: {{cards}}",
+    "outs_other": "{{count}} outs: {{cards}}",
+    "noOuts": "No card puts you ahead of most of the range.",
+    "nextCard": "Next card {{percent}}%",
+    "byRiver": "By the river {{percent}}%",
+    "blockers": "Your cards block {{percent}}% of its two pair and better"
   },
   "over": {
     "title": "Good game",

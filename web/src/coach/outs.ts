@@ -1,4 +1,4 @@
-import { fullDeck } from '../cards/index.ts';
+import { fullDeck, rankOf } from '../cards/index.ts';
 import type { Card } from '../cards/index.ts';
 import { pheEvaluator } from '../equity/index.ts';
 import type { HandCategory } from '../equity/index.ts';
@@ -26,6 +26,24 @@ const RIVER = 5;
 
 function categoryIndex(cards: readonly Card[]): number {
   return ORDER.indexOf(pheEvaluator.category(pheEvaluator.rank(cards)));
+}
+
+const FULL_HOUSE = ORDER.indexOf('full-house');
+const QUADS = ORDER.indexOf('quads');
+const TRIPS = ORDER.indexOf('trips');
+const TWO_PAIR = ORDER.indexOf('two-pair');
+const PAIR = ORDER.indexOf('pair');
+
+function boardCategory(board: readonly Card[]): number {
+  if (board.length >= RIVER) return categoryIndex(board);
+  const counts = new Map<number, number>();
+  for (const card of board) counts.set(rankOf(card), (counts.get(rankOf(card)) ?? 0) + 1);
+  const sizes = [...counts.values()].sort((a, b) => b - a);
+  const [first = 0, second = 0] = sizes;
+  if (first >= 4) return QUADS;
+  if (first === 3) return second >= 2 ? FULL_HOUSE : TRIPS;
+  if (first === 2) return second === 2 ? TWO_PAIR : PAIR;
+  return 0;
 }
 
 function aheadShare(
@@ -57,7 +75,9 @@ export function outs(
   const unseen = fullDeck().filter((card) => !hero.includes(card) && !board.includes(card));
   const cards = unseen.filter((card) => {
     const next = [...board, card];
-    return categoryIndex([...hero, ...next]) > now && aheadShare(hero, next, weights) > 0.5;
+    const reached = categoryIndex([...hero, ...next]);
+    const improved = reached > now && reached > boardCategory(next);
+    return improved && aheadShare(hero, next, weights) > 0.5;
   });
   const n = cards.length;
   const nextCard = n / unseen.length;

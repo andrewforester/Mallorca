@@ -146,3 +146,51 @@ describe('coachFacts on a short stack', () => {
     expect(cell.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 5);
   });
 });
+
+describe('coachFacts insights', () => {
+  const flop: Observation[] = [
+    ...started(false, ACES),
+    { type: 'acted', who: 'villain', action: { kind: 'call' }, amount: 10 },
+    { type: 'acted', who: 'hero', action: { kind: 'check' }, amount: 0 },
+    {
+      type: 'street',
+      street: 'flop',
+      board: [parseCard('Kh'), parseCard('8h'), parseCard('3c')],
+    },
+  ];
+  const check: LegalActions = {
+    fold: false,
+    check: true,
+    call: null,
+    raise: { min: 20, max: 1980 },
+  };
+
+  it('has no insights before the flop', () => {
+    const facts = coachFacts({
+      model,
+      observations: started(true, ACES),
+      legal: OPEN,
+      pot: 30,
+      range: null,
+    });
+    expect(facts.composition).toBeNull();
+    expect(facts.outs).toBeNull();
+    expect(facts.blockers).toBeNull();
+  });
+
+  it('splits the range on the flop and finds outs', () => {
+    const range = new Float32Array(1326).fill(1);
+    const facts = coachFacts({ model, observations: flop, legal: check, pot: 40, range });
+    const total = Object.values(facts.composition?.shares ?? {}).reduce((a, b) => a + b, 0);
+    expect(total).toBeCloseTo(1, 6);
+    expect(facts.outs).not.toBeNull();
+    expect(facts.blockers).toBe(0);
+  });
+
+  it('keeps the outs but no composition against the math bot', () => {
+    const facts = coachFacts({ model, observations: flop, legal: check, pot: 40, range: null });
+    expect(facts.composition).toBeNull();
+    expect(facts.blockers).toBeNull();
+    expect(facts.outs).not.toBeNull();
+  });
+});

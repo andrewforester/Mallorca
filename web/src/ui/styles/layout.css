@@ -1517,3 +1517,52 @@ button {
   font-size: var(--font-size-large);
   font-weight: 600;
 }
+
+.coach-composition {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.coach-class {
+  display: grid;
+  grid-template-columns: 9rem 1fr 3rem;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.coach-class-name {
+  color: var(--color-muted);
+}
+
+.coach-class-bar {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    to right,
+    var(--color-coach-range) calc(var(--share, 0) * 100%),
+    var(--color-surface-alt) calc(var(--share, 0) * 100%)
+  );
+}
+
+.coach-class-value {
+  font-family: var(--font-numeric);
+  text-align: right;
+}
+
+.coach-outs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.coach-outs-cards {
+  margin: 0;
+  font-family: var(--font-numeric);
+}
+
+.coach-chances {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

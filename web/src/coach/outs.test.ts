@@ -28,6 +28,14 @@ describe('outs', () => {
     }
   });
 
+  it('does not count a card that only pairs the board', () => {
+    const result = outs(hole('Ks 8d'), parseCards('As Th 3h'), null);
+    for (const card of parseCards('3c 3d 3s Ac Ad Ah Tc Td Ts')) {
+      expect(result?.cards).not.toContain(card);
+    }
+    expect(result?.cards).toContain(parseCard('Kc'));
+  });
+
   it('has no chance by the river on the turn and no outs on the river or preflop', () => {
     expect(outs(hole('Ah 5h'), parseCards('Kh 8h 3c 2s'), null)?.byRiver).toBeNull();
     expect(outs(hole('Ah 5h'), parseCards('Kh 8h 3c 2s 9d'), null)).toBeNull();

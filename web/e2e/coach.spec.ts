@@ -49,3 +49,28 @@ test('on a phone the coach sheet closes with Escape and the player can act', asy
   await expect(byId(page, 'coach-hint')).toBeHidden();
   await byId(page, 'passive').click();
 });
+
+test('on the flop the range tab shows what the bot range is made of', async ({ page }) => {
+  test.setTimeout(COACH_TIMEOUT_MS);
+  await page.goto(FAST_URL);
+  await byId(page, 'start-coach').check();
+  await byId(page, 'opponent-cfr').click();
+  await byId(page, 'start-cash').click();
+  const flopCards = byId(page, 'board').getByTestId('card');
+  for (;;) {
+    const waypoint = await waitForWaypoint(page);
+    if (waypoint === 'next-hand') {
+      await byId(page, 'next-hand').click();
+    } else if ((await flopCards.count()) >= 3) {
+      break;
+    } else {
+      await byId(page, 'passive').click();
+    }
+  }
+  const toggle = byId(page, 'coach-toggle');
+  if (await toggle.isVisible()) await toggle.click();
+  await byId(page, 'coach-tab-range').click();
+  await expect(byId(page, 'coach-composition')).toContainText('%', { timeout: COACH_TIMEOUT_MS });
+  await byId(page, 'coach-tab-numbers').click();
+  await expect(byId(page, 'coach-numbers')).toBeVisible();
+});

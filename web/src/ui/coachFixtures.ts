@@ -22,6 +22,9 @@ export function coachFacts(overrides: Partial<CoachFacts> = {}): CoachFacts {
     equity: 0.852,
     versus: 'random',
     odds: { toCall: 10, requiredEquity: 0.25, mdf: 2 / 3, bluffShare: 0.25 },
+    composition: null,
+    outs: null,
+    blockers: null,
     ...overrides,
   };
 }
