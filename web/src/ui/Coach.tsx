@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks';
 import type { CoachFacts, CoachState, Hint } from '../game/index.ts';
 import { RangeGrid, StrategyGrid, moveColor } from './CoachGrid.tsx';
+import { BlockersView, CompositionView, OutsView } from './CoachInsights.tsx';
 import { isMixed, moveText, percent, shares } from './coachPhrases.ts';
 import { t } from './i18n.ts';
 
@@ -69,6 +70,7 @@ function RangeTab({ facts }: { facts: CoachFacts }) {
         label={t('coach.rangeCaption')}
       />
       <p class="coach-note">{t('coach.combos', { combos: Math.round(facts.combos ?? 0) })}</p>
+      {facts.composition !== null && <CompositionView composition={facts.composition} />}
     </>
   );
 }
@@ -106,6 +108,8 @@ function NumbersTab({ facts }: { facts: CoachFacts }) {
         )}
       </dl>
       {odds === null && <p class="coach-note">{t('coach.noBet')}</p>}
+      {facts.outs !== null && <OutsView outs={facts.outs} />}
+      {facts.blockers !== null && <BlockersView share={facts.blockers} />}
     </div>
   );
 }

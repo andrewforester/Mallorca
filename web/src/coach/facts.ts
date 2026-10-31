@@ -3,9 +3,14 @@ import type { Card } from '../cards/index.ts';
 import type { Observation } from '../brains/index.ts';
 import type { LegalActions } from '../engine/index.ts';
 import type { CfrBot, CfrModel, CfrSpot } from '../cfr/index.ts';
+import { blockers } from './blockers.ts';
+import { composition } from './composition.ts';
+import type { Composition } from './composition.ts';
 import { equityVsRange } from './equity.ts';
 import { PAIRS, cellOf, foldGrid, isLive, pairIndex } from './grid.ts';
 import { coachMove } from './moves.ts';
+import { outs } from './outs.ts';
+import type { Outs } from './outs.ts';
 import type { CoachMove } from './moves.ts';
 import { spotOdds } from './odds.ts';
 import type { SpotOdds } from './odds.ts';
@@ -33,6 +38,9 @@ export interface CoachFacts {
   equity: number;
   versus: 'range' | 'random';
   odds: SpotOdds | null;
+  composition: Composition | null;
+  outs: Outs | null;
+  blockers: number | null;
 }
 
 interface Seen {
@@ -129,6 +137,9 @@ export function coachFacts(request: CoachRequest): CoachFacts {
       equity: equityVsRange(seen.hero, seen.board, range),
       versus: range === null ? 'random' : 'range',
       odds: spotOdds(request.legal.call ?? 0, request.pot),
+      composition: range === null ? null : composition(range, seen.hero, seen.board),
+      outs: outs(seen.hero, seen.board, range),
+      blockers: request.range === null ? null : blockers(request.range, seen.hero, seen.board),
     };
   } finally {
     bot.free();

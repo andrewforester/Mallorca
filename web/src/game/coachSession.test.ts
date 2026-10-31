@@ -15,6 +15,9 @@ const FACTS: CoachFacts = {
   equity: 0.5,
   versus: 'random',
   odds: null,
+  composition: null,
+  outs: null,
+  blockers: null,
 };
 
 interface Ask {

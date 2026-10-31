@@ -107,3 +107,32 @@ describe('Coach tab', () => {
     expect(screen.getByTestId('coach-tab-numbers').getAttribute('aria-selected')).toBe('true');
   });
 });
+
+describe('Coach insights', () => {
+  const range = Array.from({ length: 169 }, () => 0.5);
+  const composition = {
+    shares: { strong: 0.1, twoPair: 0.05, topPair: 0.2, pair: 0.25, draw: 0.15, air: 0.25 },
+    ahead: 0.62,
+  };
+
+  it('shows what the range is made of and how much of it the player beats', () => {
+    render(<Coach state={readyCoach({ range, combos: 300, versus: 'range', composition })} />);
+    fireEvent.click(screen.getByTestId('coach-tab-range'));
+    const text = screen.getByTestId('coach-composition').textContent ?? '';
+    expect(text).toContain('Two pair');
+    expect(text).toContain('25%');
+    expect(text).toContain('62%');
+  });
+
+  it('shows the outs and the blockers with the numbers', () => {
+    const outs = { cards: [12, 13], nextCard: 2 / 47, byRiver: 0.084 };
+    render(<Coach state={readyCoach({ outs, blockers: 0.12 })} />);
+    fireEvent.click(screen.getByTestId('coach-tab-numbers'));
+    const text = screen.getByTestId('coach-outs').textContent ?? '';
+    expect(text).toContain('2 outs');
+    expect(text).toContain('5c');
+    expect(text).toContain('4%');
+    expect(text).toContain('8%');
+    expect(screen.getByTestId('coach-blockers').textContent).toContain('12%');
+  });
+});
