@@ -3,7 +3,7 @@ import { basename, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Action, LegalActions } from '../../src/engine/index.ts';
 import { checkOrCall } from '../../src/engine/index.ts';
-import type { Observation } from '../../src/brains/index.ts';
+import type { Brain, Observation } from '../../src/brains/index.ts';
 import { createMathBrain } from '../../src/brains/index.ts';
 import type { Rng } from '../../src/cards/index.ts';
 import type { CfrModel, ShippedStrategyKey } from '../../src/cfr/index.ts';
@@ -17,13 +17,15 @@ export interface ArenaBot {
 
 export type BotFactory = (rng: Rng) => ArenaBot;
 
-const math: BotFactory = () => {
-  const brain = createMathBrain();
+export function fromBrain(brain: Brain): ArenaBot {
   return {
     observe: (o) => brain.observe(o),
     decide: (legal) => brain.decide(legal).action,
+    dispose: () => brain.dispose?.(),
   };
-};
+}
+
+const math: BotFactory = () => fromBrain(createMathBrain());
 
 const alwaysCall: BotFactory = () => ({
   observe: () => undefined,
@@ -66,12 +68,7 @@ function cfrBot(key: string): BotFactory {
     if (model === undefined) {
       throw new Error('The cfr bot needs prepareBots before it plays');
     }
-    const brain = createCfrBrain(model, rng);
-    return {
-      observe: (o) => brain.observe(o),
-      decide: (legal) => brain.decide(legal).action,
-      dispose: () => brain.dispose(),
-    };
+    return fromBrain(createCfrBrain(model, rng));
   };
 }
 

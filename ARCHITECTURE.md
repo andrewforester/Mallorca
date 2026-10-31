@@ -443,8 +443,9 @@ imports `engine`, `brains`, `cards`, `cfr` and `game/records/record.ts` and noth
 `.ts` files directly, including in workers. `tools/` may use the clock and Node APIs.
 
 - `bots.ts`: `BOTS`, the `BotFactory` (`(rng) => ArenaBot` with `observe`, `decide` and an optional `dispose`)
-  of each name: `math` (`createMathBrain()`), `cfr` (`createCfrBrain` over the model that
-  `prepareBots` loads from `SHIPPED_STRATEGIES.cfr` once per process or worker; it throws before that),
+  of each name: `fromBrain(brain)` plays a `Brain`'s action and disposes it, for `math` (`createMathBrain()`) and
+  `cfr` (`createCfrBrain` over the model that `prepareBots` loads from `SHIPPED_STRATEGIES.cfr` once per process
+  or worker; it throws before that),
   `always-call` (checks or calls), `always-raise` (raises to `legal.raise.min` when it can, else checks or calls),
   `min-bettor` (bets the minimum when nobody has bet, else checks or calls) and `random` (uniform over the legal
   kinds, a raise to the minimum, from its seeded `Rng`). `cfr:<play file>` plays any play file the same way and is
