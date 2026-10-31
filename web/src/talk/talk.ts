@@ -3,14 +3,15 @@ import type { Card, Rng } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { BASE_HABITS, habitsAt } from './habits.ts';
 import type { Habit, Habits, Level, Situation } from './habits.ts';
-import { NO_HAND, luckOf, netOf, playerCardsShown, track } from './handTracker.ts';
+import type { Snapshot } from '../emotion/index.ts';
+import { createFeeling } from './feeling.ts';
+import type { Feeling } from './feeling.ts';
+import { NO_HAND, netOf, playerCardsShown, track } from './handTracker.ts';
 import type { HandState } from './handTracker.ts';
-import { CALM, afterHand, afterSignals, speakFactor } from './mood.ts';
-import type { Mood, Signal } from './mood.ts';
+import type { Signal } from './signals.ts';
 import { strengthOf } from './strength.ts';
 import type { StrengthClass } from './strength.ts';
 import type { Style } from './style.ts';
-import { styleOf } from './style.ts';
 import { EMPTY_SUMMARY, withHand, withSignals } from './summary.ts';
 import type { SessionSummary } from './summary.ts';
 
@@ -39,7 +40,8 @@ export interface Talk {
   hear(signals: readonly Signal[]): void;
   replyIntent(): LineIntent;
   facts(): HandFacts;
-  mood(): Mood;
+  moodWords(): string[];
+  feeling(): Snapshot;
   style(): Style;
   summary(): SessionSummary;
   setLevel(level: Level): void;
@@ -57,7 +59,7 @@ export interface Spot {
   habits: Habits;
   situation: Situation;
   strength: StrengthClass;
-  mood: Mood;
+  speakFactor: number;
 }
 
 export interface Draw {
@@ -103,7 +105,7 @@ function drawHint(habit: Habit, situation: Situation, strength: StrengthClass, r
 
 export function drawLine(spot: Spot, rng: Rng): Draw {
   const habit = spot.habits[spot.situation][spot.strength];
-  const chance = Math.min(1, habit.speak * speakFactor(spot.mood));
+  const chance = Math.min(1, habit.speak * spot.speakFactor);
   if (rng.next() >= chance) {
     return { speak: false, honest: false, hint: null };
   }
@@ -131,7 +133,7 @@ class TableTalk implements Talk {
   private readonly base: Habits;
   private habits: Habits;
   private hand: HandState = NO_HAND;
-  private feeling: Mood = CALM;
+  private readonly heart: Feeling;
   private session: SessionSummary = EMPTY_SUMMARY;
   private last: Situation | null = null;
   private lastLineAt = Number.NEGATIVE_INFINITY;
@@ -144,9 +146,11 @@ class TableTalk implements Talk {
     this.luck = options.luckRng ?? mulberry32(Math.floor(options.rng.next() * SEED_RANGE));
     this.base = options.habits ?? BASE_HABITS;
     this.habits = habitsAt(this.base, options.level);
+    this.heart = createFeeling({ seat: this.seat, rng: this.luck });
   }
 
   observe(events: readonly EngineEvent[], nowMs: number): LineIntent | null {
+    this.heart.advance(nowMs);
     let candidate: Candidate | null = null;
     for (const event of events) {
       candidate = this.step(event) ?? candidate;
@@ -155,7 +159,7 @@ class TableTalk implements Talk {
   }
 
   hear(signals: readonly Signal[]): void {
-    this.feeling = afterSignals(this.feeling, signals);
+    this.heart.hear(signals);
     this.session = withSignals(this.session, signals);
   }
 
@@ -187,12 +191,16 @@ class TableTalk implements Talk {
     };
   }
 
-  mood(): Mood {
-    return this.feeling;
+  moodWords(): string[] {
+    return this.heart.words();
+  }
+
+  feeling(): Snapshot {
+    return this.heart.snapshot();
   }
 
   style(): Style {
-    return styleOf(this.feeling);
+    return this.heart.style();
   }
 
   summary(): SessionSummary {
@@ -212,6 +220,7 @@ class TableTalk implements Talk {
     const key = this.streetKey();
     const { street } = this.hand;
     this.hand = track(this.hand, event, this.seat);
+    this.heart.see(event, this.hand);
     const situation =
       event.type === 'handEnded' ? this.endHand() : actedSituation(event, this.seat);
     if (situation === null) {
@@ -227,11 +236,6 @@ class TableTalk implements Talk {
     const won = hand.awarded[this.seat] > 0;
     const bluffCaught = !won && hand.showdown !== null && strength === 'weak' && hand.herLateBet;
     const netBb = netOf(hand, this.seat);
-    this.feeling = afterHand(this.feeling, {
-      netBb,
-      luckBb: luckOf(hand, this.seat, this.luck),
-      bluffCaught,
-    });
     this.session = withHand(this.session, {
       netBb,
       playerBluffShown: this.playerBluffShown(),
@@ -258,7 +262,7 @@ class TableTalk implements Talk {
       return null;
     }
     const draw = drawLine(
-      { habits: this.habits, situation, strength, mood: this.feeling },
+      { habits: this.habits, situation, strength, speakFactor: this.heart.speakFactor() },
       this.rng,
     );
     if (!draw.speak) {

@@ -149,8 +149,10 @@ class EmotionEngine implements Engine {
   }
 
   snapshot(): Snapshot {
-    const load = loadOf(this.emotions, this.mood, this.sessionNetBb, this.traits);
-    const drivers = driversOf(this.emotions, this.mood, this.sessionNetBb);
+    const base = this.traits.defaultMood;
+    const shift: Pad = [this.mood[0] - base[0], this.mood[1] - base[1], this.mood[2] - base[2]];
+    const load = loadOf(this.emotions, shift, this.sessionNetBb, this.traits);
+    const drivers = driversOf(this.emotions, shift, this.sessionNetBb);
     return {
       time: this.time,
       traits: this.traits,

@@ -5,7 +5,6 @@ import { call, check, deckOf, fold, raiseTo, startHand } from '../engine/testDec
 import type { Action, Step } from '../engine/types.ts';
 import { BASE_HABITS, habitsAt } from './habits.ts';
 import type { Habits, Situation } from './habits.ts';
-import { CALM, afterHand } from './mood.ts';
 import type { StrengthClass } from './strength.ts';
 import { createTalk, drawLine, endsHand } from './talk.ts';
 import type { LineIntent, Talk } from './talk.ts';
@@ -137,7 +136,8 @@ describe('observe', () => {
     const end = t.act(call, 40000);
     expect(end?.situation).toBe('bluffCaught');
     expect(end?.hint).toBeNull();
-    expect(t.talk.mood()).toEqual(afterHand(CALM, { netBb: -3, luckBb: null, bluffCaught: true }));
+    expect(t.talk.feeling().emotions.shame).toBeGreaterThan(0);
+    expect(t.talk.feeling().emotions.injustice).toBe(0);
   });
 
   it('says handLost without a bluff when she only checked and lost', () => {
@@ -153,15 +153,16 @@ describe('observe', () => {
 });
 
 describe('outcomes', () => {
-  it('applies a preflop fold to the mood without luck', () => {
+  it('counts a preflop fold in the session without injustice', () => {
     const t = chatty();
     t.begin('7c 2d', 'As Ah', 'Kd 9h 5h 3c Jd');
     t.act(raiseTo(60), 0);
     expect(t.act(fold, 2000)?.situation).toBe('handLost');
-    expect(t.talk.mood()).toEqual(afterHand(CALM, { netBb: -1, luckBb: null, bluffCaught: false }));
+    expect(t.talk.feeling().sessionNetBb).toBe(-1);
+    expect(t.talk.feeling().emotions.injustice).toBe(0);
   });
 
-  it('counts a split pot as won and keeps luck out', () => {
+  it('counts a split pot as won without distress', () => {
     const t = chatty();
     t.begin('2c 3d', '4c 5d', 'As Ks Qs Js Ts');
     t.act(raiseTo(100), 0);
@@ -171,22 +172,22 @@ describe('outcomes', () => {
       end = t.act(check, 4000 + 2000 * i);
     }
     expect(end?.situation).toBe('handWon');
-    expect(t.talk.mood()).toEqual(afterHand(CALM, { netBb: 0, luckBb: null, bluffCaught: false }));
+    expect(t.talk.feeling().sessionNetBb).toBe(0);
+    expect(t.talk.feeling().emotions.distress).toBe(0);
   });
 
-  it('measures luck in an all-in runout and tilts her after a bad beat', () => {
+  it('feels robbed after an all-in runout lost from ahead and overloads', () => {
     const t = chatty();
     t.begin('Ah Ad', '7c 2d', '7h 7d 2s 3c 4c');
     t.act(raiseTo(2000), 0);
     const end = t.act(call, 2000);
     expect(end?.situation).toBe('handLost');
-    expect(t.talk.mood()).toEqual(
-      afterHand(CALM, { netBb: -100, luckBb: -100, bluffCaught: false }),
-    );
-    expect(t.talk.mood().tilt).toBeCloseTo(0.3, 12);
+    const feeling = t.talk.feeling();
+    expect(feeling.emotions.injustice).toBeGreaterThan(0.3);
+    expect(feeling.load.overload).toBeGreaterThan(0.5);
   });
 
-  it('keeps luck out of a big loss when the money went in on the river', () => {
+  it('does not feel robbed when the money went in on the river behind', () => {
     const t = chatty();
     t.begin('Ah Ad', '7c 2d', '7h 7d 2s 3c 4c');
     for (const action of [call, check, check, check, check, check, check]) {
@@ -194,31 +195,29 @@ describe('outcomes', () => {
     }
     t.act(raiseTo(1980), 0);
     t.act(call, 0);
-    expect(t.talk.mood()).toEqual(
-      afterHand(CALM, { netBb: -100, luckBb: null, bluffCaught: false }),
-    );
-    expect(t.talk.mood().tilt).toBe(0);
+    expect(t.talk.feeling().sessionNetBb).toBe(-100);
+    expect(t.talk.feeling().emotions.injustice).toBe(0);
   });
 });
 
 describe('reproducibility', () => {
-  const play = (gap: number) => {
-    const talk = createTalk({ seat: 1, rng: mulberry32(9), level: 'obvious' });
+  const play = (habits?: Habits) => {
+    const talk = createTalk({ seat: 1, rng: mulberry32(9), level: 'obvious', habits });
     const decks = mulberry32(2);
     let now = 0;
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 12; i++) {
       let step = startHand([2000, 2000], shuffle(fullDeck(), decks), 0);
-      talk.observe(step.events, (now += gap));
+      talk.observe(step.events, (now += 3000));
       step = applyAction(step.hand, step.seats, raiseTo(2000));
-      talk.observe(step.events, (now += gap));
+      talk.observe(step.events, (now += 3000));
       step = applyAction(step.hand, step.seats, call);
-      talk.observe(step.events, (now += gap));
+      talk.observe(step.events, (now += 3000));
     }
-    return { mood: talk.mood(), style: talk.style() };
+    return { feeling: talk.feeling(), words: talk.moodWords(), style: talk.style() };
   };
 
-  it('keeps the same mood and style for a seed whatever the pacing of lines', () => {
-    expect(play(10_000)).toEqual(play(0));
+  it('keeps the same feeling and style for a seed and a clock whatever lines she speaks', () => {
+    expect(play(always())).toEqual(play());
   });
 });
 
@@ -227,7 +226,7 @@ describe('drawLine', () => {
     const rng = mulberry32(seed);
     const draws = [];
     for (let i = 0; i < count; i++) {
-      draws.push(drawLine({ habits, situation: 'herBet', strength, mood: CALM }, rng));
+      draws.push(drawLine({ habits, situation: 'herBet', strength, speakFactor: 1 }, rng));
     }
     return draws;
   };
@@ -260,7 +259,10 @@ describe('drawLine', () => {
     const rng = mulberry32(9);
     const lies: Array<StrengthClass | null> = [];
     for (let i = 0; i < 4000; i++) {
-      const d = drawLine({ habits, situation: 'playerBet', strength: 'medium', mood: CALM }, rng);
+      const d = drawLine(
+        { habits, situation: 'playerBet', strength: 'medium', speakFactor: 1 },
+        rng,
+      );
       if (d.speak && !d.honest && d.hint !== null) {
         lies.push(d.hint);
       }
@@ -276,7 +278,7 @@ describe('drawLine', () => {
     const rng = mulberry32(1);
     for (let i = 0; i < 200; i++) {
       expect(
-        drawLine({ habits, situation: 'handWon', strength: 'strong', mood: CALM }, rng).hint,
+        drawLine({ habits, situation: 'handWon', strength: 'strong', speakFactor: 1 }, rng).hint,
       ).toBeNull();
     }
   });
@@ -325,11 +327,12 @@ describe('replyIntent and state', () => {
     });
   });
 
-  it('moves mood and style with the signals it hears', () => {
+  it('moves her feeling and style with the signals it hears', () => {
     const talk = createTalk({ seat: 1, rng: mulberry32(2), level: 'obvious' });
     talk.hear(['mockBluff', 'tease']);
-    expect(talk.mood().tilt).toBeCloseTo(0.5, 12);
-    expect(talk.style().bluff).toBeCloseTo(1.4, 12);
+    expect(talk.feeling().emotions.anger).toBeGreaterThan(0.4);
+    expect(talk.moodWords()).toContain('annoyed');
+    expect(talk.style().bluff).toBeGreaterThan(1);
   });
 
   it('changes the habits with setLevel', () => {

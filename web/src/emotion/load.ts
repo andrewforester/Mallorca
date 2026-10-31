@@ -41,7 +41,12 @@ export interface LoadReading {
 export const desperationOf = (sessionNetBb: number): number =>
   saturate(Math.max(0, -sessionNetBb - DESPERATION_FREE_BB) / DESPERATION_BB);
 
-export function loadOf(e: Emotions, mood: Pad, sessionNetBb: number, traits: Traits): LoadReading {
+export function loadOf(
+  e: Emotions,
+  moodShift: Pad,
+  sessionNetBb: number,
+  traits: Traits,
+): LoadReading {
   const parts: Record<LoadSource, number> = {
     anger: LOAD_WEIGHT.anger * e.anger,
     injustice: LOAD_WEIGHT.injustice * e.injustice,
@@ -49,7 +54,7 @@ export function loadOf(e: Emotions, mood: Pad, sessionNetBb: number, traits: Tra
     distress: LOAD_WEIGHT.distress * e.distress,
     disappointment: LOAD_WEIGHT.disappointment * e.disappointment,
     fear: LOAD_WEIGHT.fear * e.fear,
-    mood: MOOD_WEIGHT * Math.max(0, -mood[0]),
+    mood: MOOD_WEIGHT * Math.max(0, -moodShift[0]),
     desperation: desperationOf(sessionNetBb),
   };
   const load = Object.values(parts).reduce((a, b) => a + b, 0);

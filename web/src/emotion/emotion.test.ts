@@ -370,6 +370,13 @@ describe('engine', () => {
     expect(engine.snapshot().emotions.hope).toBe(0);
   });
 
+  it('plays the blueprint while calm, whatever her default mood', () => {
+    for (const personality of [MALLORCA, hot, cold]) {
+      const style = createEngine(personality).snapshot().style;
+      expect(Object.values(style).every((v) => Math.abs(v - 1) < 1e-12)).toBe(true);
+    }
+  });
+
   it('clears hope and fear when the hand ends', () => {
     const after = badBeat(MALLORCA);
     expect(after.emotions.hope).toBeLessThan(0.05);

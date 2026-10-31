@@ -74,7 +74,7 @@ export const COEFFICIENTS: Readonly<Record<StyleKey, Readonly<Record<Driver, num
 
 export const STYLE_RANGE: readonly [number, number] = [0.5, 2];
 
-export function driversOf(e: Emotions, mood: Pad, sessionNetBb: number): Drivers {
+export function driversOf(e: Emotions, moodShift: Pad, sessionNetBb: number): Drivers {
   return {
     fear: e.fear,
     elation: clamp01(e.joy + e.pride + 0.5 * e.relief),
@@ -82,7 +82,7 @@ export function driversOf(e: Emotions, mood: Pad, sessionNetBb: number): Drivers
     injustice: e.injustice,
     shame: e.shame,
     sadness: clamp01(e.distress + e.disappointment),
-    dominance: mood[2],
+    dominance: moodShift[2],
     desperation: desperationOf(sessionNetBb),
   };
 }

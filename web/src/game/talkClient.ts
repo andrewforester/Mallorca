@@ -1,7 +1,6 @@
 import { formatCard } from '../cards/index.ts';
 import type { SeatIndex } from '../engine/index.ts';
-import { moodWords } from '../talk/index.ts';
-import type { HandFacts, LineIntent, Mood, SessionSummary, Signal } from '../talk/index.ts';
+import type { HandFacts, LineIntent, SessionSummary, Signal } from '../talk/index.ts';
 
 export const TALK_TIMEOUT_MS = 5000;
 
@@ -69,7 +68,7 @@ export interface HandInput {
   seat: SeatIndex;
   facts: HandFacts;
   intent: LineIntent;
-  mood: Mood;
+  mood: string[];
   recent: ChatTurn[];
 }
 
@@ -129,7 +128,7 @@ function toHand(input: HandInput): HandPayload {
       honest: input.intent.honest,
       street: input.intent.actionStreet,
     },
-    mood: moodWords(input.mood),
+    mood: [...input.mood],
     recent: recent.map((turn) => ({
       speaker: turn.speaker,
       text: turn.text.slice(0, MAX_RECENT_TEXT),

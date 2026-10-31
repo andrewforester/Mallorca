@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { parseCards } from '../cards/index.ts';
-import { CALM } from '../talk/index.ts';
 import type { HandFacts, LineIntent } from '../talk/index.ts';
 import {
   TALK_TIMEOUT_MS,
@@ -63,7 +62,7 @@ const base = {
   seat: 0 as const,
   facts,
   intent,
-  mood: { ...CALM, cheer: 0.8, form: 0.9 },
+  mood: ['pleased', 'proud'],
   recent,
 };
 
@@ -370,7 +369,7 @@ describe('remoteTalkClient', () => {
 });
 
 describe('mood words', () => {
-  it('maps the mood to words', () => {
-    expect(toLinePayload(base).mood).toEqual(['on a winning streak', 'in a good mood']);
+  it('sends the words of her feeling as they are', () => {
+    expect(toLinePayload(base).mood).toEqual(['pleased', 'proud']);
   });
 });

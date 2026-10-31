@@ -228,7 +228,7 @@ class Wiring implements SessionTalk {
       seat: this.setup.botSeat,
       facts: talk.facts(),
       intent,
-      mood: talk.mood(),
+      mood: talk.moodWords(),
       recent,
     };
   }

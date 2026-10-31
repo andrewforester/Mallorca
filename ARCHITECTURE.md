@@ -61,7 +61,7 @@ web/src/
 | `brains`  | `cards`, `equity`, `engine`                                   |
 | `cfr`     | `cards`, types from `engine`, `brains`                        |
 | `emotion` | nothing                                                       |
-| `talk`    | `cards`, `equity`, types from `engine`                        |
+| `talk`    | `cards`, `equity`, `emotion`, types from `engine`             |
 | `coach`   | `cards`, `equity`, `brains`, types from `engine`, `cfr`       |
 | `game`    | `cards`, `equity`, `engine`, `brains`, `cfr`, `talk`, `coach` |
 | `ui`      | `game`                                                        |
@@ -324,7 +324,7 @@ coloured. The model and the origin of every formula and number are in `docs/emot
   three), the hint (her hand-strength class `strong`, `medium` or `weak`, or null for a neutral line), whether the
   hint is honest, the street and hand number the line belongs to, and `actionStreet`, the street the action happened
   on. A call that closes a street belongs to the next street (its pace slot and staleness), but its cue names
-  `actionStreet`. `hear(signals)` moves the mood with what the player said, `replyIntent()` is the intent for an
+  `actionStreet`. `hear(signals)` gives what the player said to her feeling, `replyIntent()` is the intent for an
   answer, `facts()` the hand as the server sees it (her cards included, stacks by seat) and `summary()` the session
   summary from her side (`netBb` is her net); `since(current, earlier)` gives what changed between two summaries.
 - `strengthOf` classifies her hand from equity against a random hand, not from the blueprint. The habits
@@ -332,12 +332,17 @@ coloured. The model and the origin of every formula and number are in `docs/emot
   tells level (`obvious`, `subtle`, `hidden`) moves both toward the class-blind mean. Code draws every chance from
   the `Rng` it was given; the model only words the line. Pace limits her to one unprompted line per street and
   none in the 1.5 s after a line.
-- `mood.ts` keeps four axes in [-1, 1] (`cheer`, `confidence`, `tilt`, `caution`) and `form`, an exponential mean of
-  the recent results. A hand result and the player's signals move it and it decays toward calm. `styleOf(mood)`
-  maps it to the CFR style: aggression `1 + 0.5 tilt + 0.1 (confidence + form)`, bluff `1 + 0.8 tilt` and
-  tightness `1 + 0.2 caution - 0.1 cheer`, clamped to [0.8, 1.6], [0.8, 1.8] and [0.85, 1.2], sizing 1 and
-  stickiness `1 / tightness`, so folds after the flop scale by tightness as they did before the bot split them. A
-  calm mood gives the neutral style, all ones. Her words never decide a move.
+- `feeling.ts` runs the `emotion` engine for her (`MALLORCA`) on the same events: her cards as `deal`, every
+  street, bet and showdown as `street` with her perceived equity (against a random hand until the player shows,
+  then against his cards) and the money (pot, invested, stack behind, streets left), a raise of the player as
+  `opponentBet` (`raise` when it answers her own bet or raise on that street), the hand end as `result` judged by
+  her equity against his shown cards on the board when the money went in (0.5 without a showdown), a weak late bet
+  caught or through as `bluff`, and the signals as `chat`. `observe` advances the engine with `nowMs`.
+  `feeling()` is the engine's snapshot, `moodWords()` up to three words for the prompt (`on tilt` at overload 0.6
+  and more, then the emotions of 0.25 and more, strongest first), and the chance to speak is scaled by
+  `1 + 0.25 clamp((arousal above her default + overload) / 2, -1, 1)`.
+- `style()` maps the engine's `PlayStyle` to the bot: aggression, bluff, sizing and stickiness as they are and
+  tightness `1 / looseness`. A calm feeling gives the neutral style, all ones. Her words never decide a move.
 
 ## coach
 
