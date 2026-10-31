@@ -1,4 +1,4 @@
-import type { Decision } from '../../brains/index.ts';
+import type { BotStyle, Decision } from '../../brains/index.ts';
 import type { EngineEvent, SeatIndex, TableMode } from '../../engine/index.ts';
 import { SHIPPED_STRATEGIES } from '../../cfr/index.ts';
 import type { BotRecord } from '../../cfr/index.ts';
@@ -9,6 +9,7 @@ export interface RecordedDecision {
   eventIndex: number;
   solverChoice: string;
   evByAction: Record<string, number | null>;
+  style?: BotStyle;
 }
 
 export interface RecordMeta {
@@ -46,7 +47,11 @@ function finiteOrNull(value: number): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-export function recordDecision(decision: Decision, eventIndex: number): RecordedDecision {
+export function recordDecision(
+  decision: Decision,
+  eventIndex: number,
+  style?: BotStyle,
+): RecordedDecision {
   const { fold, passive, aggressive } = decision.evByAction;
   return {
     eventIndex,
@@ -56,6 +61,7 @@ export function recordDecision(decision: Decision, eventIndex: number): Recorded
       passive: finiteOrNull(passive),
       aggressive: finiteOrNull(aggressive),
     },
+    ...(style === undefined ? {} : { style }),
   };
 }
 

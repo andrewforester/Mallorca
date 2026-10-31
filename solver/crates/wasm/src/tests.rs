@@ -203,7 +203,83 @@ fn a_raise_is_the_answer_when_it_is_the_only_legal_move() {
 fn unknown_handles_are_harmless() {
     assert_eq!(bot_new(9999), -1);
     hand_started(9999, 1, 400, 400, 10, 20);
+    bot_style(9999, 1.25, 1.3, 0.85);
+    bot_style(-1, 1.25, 1.3, 0.85);
     assert_eq!(decide(9999, 1, 0, 10, -1, -1, 0.5), KIND_NONE);
+}
+
+#[test]
+fn a_styled_bot_keeps_its_style_and_plays_legal_moves() {
+    let model = loaded(&play_file());
+    let bot = bot_new(model);
+    bot_style(bot, 1.25, 1.3, 0.85);
+    for draw in [0.0, 0.3, 0.6, 0.99] {
+        hand_started(bot, 1, 400, 400, 10, 20);
+        hole_cards(bot, 48, 49);
+        let kind = decide(bot, 1, 0, 10, 40, 400, draw);
+        assert!([KIND_FOLD, KIND_CALL, KIND_RAISE].contains(&kind), "{kind}");
+    }
+    let style = with_seat(bot, None, |s| Some(s.bot.style()));
+    assert_eq!(
+        style,
+        Some(Style {
+            aggression: 1.25,
+            bluff: 1.3,
+            tightness: 0.85,
+        })
+    );
+    bot_free(bot);
+    bot_style(bot, 1.0, 1.0, 1.0);
+}
+
+#[test]
+fn a_freed_model_keeps_its_bots_and_refuses_new_ones() {
+    let model = loaded(&play_file());
+    let bot = bot_new(model);
+    model_free(model);
+    assert_eq!(bot_new(model), -1);
+    hand_started(bot, 1, 400, 400, 10, 20);
+    hole_cards(bot, 48, 49);
+    assert_eq!(decide(bot, 1, 0, 10, 40, 400, 0.99), KIND_RAISE);
+    bot_free(bot);
+    model_free(model);
+    model_free(-1);
+}
+
+#[test]
+fn a_freed_bot_handle_stays_dead_when_its_slot_is_reused() {
+    let first = seated([48, 49]);
+    bot_free(first);
+    let second = seated([48, 49]);
+    assert_ne!(first, second);
+    assert_eq!(decide(first, 1, 0, 10, 40, 400, 0.99), KIND_NONE);
+    assert_eq!(decide(second, 1, 0, 10, 40, 400, 0.99), KIND_RAISE);
+    bot_free(second);
+}
+
+#[test]
+fn a_buffer_that_alloc_did_not_hand_out_is_refused_untouched() {
+    let mut bytes = play_file();
+    assert_eq!(load(bytes.as_mut_ptr(), bytes.len() as u32), -8);
+    let ptr = alloc(16);
+    assert_eq!(load(ptr, 8), -8);
+    assert_eq!(load(ptr, 16), -1);
+    assert_eq!(load(ptr, 16), -8);
+    assert_eq!(load(std::ptr::null_mut(), 0), -8);
+}
+
+#[test]
+fn an_unknown_action_kind_abandons_the_hand_instead_of_raising() {
+    for kind in [4, KIND_NONE, u32::MAX] {
+        let bot = seated([48, 49]);
+        assert!(with_seat(bot, None, |s| s.bot.cursor()).is_some());
+        acted(bot, 1, kind, 400, 0.5);
+        assert_eq!(with_seat(bot, Some(0), |s| s.bot.cursor()), None, "{kind}");
+        for draw in [0.0, 0.5, 0.99] {
+            assert_eq!(decide(bot, 1, 0, 10, 40, 400, draw), KIND_CALL, "{kind}");
+        }
+        bot_free(bot);
+    }
 }
 
 fn read(ptr: *const f32, len: usize) -> Vec<f32> {

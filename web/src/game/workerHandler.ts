@@ -22,6 +22,9 @@ type Coach = Extract<WorkerRequest, { kind: 'coach' }>;
 
 function answer(brain: Brain, request: Decide, post: (reply: WorkerReply) => void): void {
   try {
+    if (request.style !== undefined) {
+      brain.setStyle?.(request.style);
+    }
     post({ id: request.id, decision: brain.decide(request.legal) });
   } catch (error) {
     post({ id: request.id, error: message(error) });

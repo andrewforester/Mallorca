@@ -1,3 +1,4 @@
+use crate::bytes::{u16_len, ByteReader, Truncated};
 use crate::potential::{BINS, CLUSTERS};
 use std::fmt;
 
@@ -43,56 +44,34 @@ impl fmt::Display for CentroidsError {
 
 impl std::error::Error for CentroidsError {}
 
+impl From<Truncated> for CentroidsError {
+    fn from(_: Truncated) -> CentroidsError {
+        CentroidsError::Truncated
+    }
+}
+
 fn encode_section(out: &mut Vec<u8>, values: &[f32], dimension: usize) {
-    out.extend_from_slice(&((values.len() / dimension) as u16).to_le_bytes());
-    out.extend_from_slice(&(dimension as u16).to_le_bytes());
+    out.extend_from_slice(&u16_len(values.len() / dimension));
+    out.extend_from_slice(&u16_len(dimension));
     for v in values {
         out.extend_from_slice(&v.to_le_bytes());
     }
 }
 
-struct Reader<'a> {
-    bytes: &'a [u8],
-    at: usize,
-}
-
-impl<'a> Reader<'a> {
-    fn take(&mut self, n: usize) -> Result<&'a [u8], CentroidsError> {
-        let end = self.at.checked_add(n).ok_or(CentroidsError::Truncated)?;
-        let slice = self
-            .bytes
-            .get(self.at..end)
-            .ok_or(CentroidsError::Truncated)?;
-        self.at = end;
-        Ok(slice)
+fn read_section(r: &mut ByteReader<'_>, expected: usize) -> Result<Vec<f32>, CentroidsError> {
+    let count = r.u16()?;
+    let dimension = r.u16()?;
+    if dimension as usize != expected {
+        return Err(CentroidsError::BadDimension(dimension));
     }
-
-    fn u16(&mut self) -> Result<u16, CentroidsError> {
-        let b = self.take(2)?;
-        Ok(u16::from_le_bytes([b[0], b[1]]))
+    if count == 0 || count as usize > MAX_CENTROIDS {
+        return Err(CentroidsError::BadCount(count));
     }
-
-    fn section(&mut self, expected: usize) -> Result<Vec<f32>, CentroidsError> {
-        let count = self.u16()?;
-        let dimension = self.u16()?;
-        if dimension as usize != expected {
-            return Err(CentroidsError::BadDimension(dimension));
-        }
-        if count == 0 || count as usize > MAX_CENTROIDS {
-            return Err(CentroidsError::BadCount(count));
-        }
-        let body = self.take(count as usize * expected * 4)?;
-        let values: Vec<f32> = body
-            .as_chunks::<4>()
-            .0
-            .iter()
-            .map(|&b| f32::from_le_bytes(b))
-            .collect();
-        if values.iter().any(|v| !v.is_finite()) {
-            return Err(CentroidsError::NonFinite);
-        }
-        Ok(values)
+    let values = r.f32s(count as usize * expected)?;
+    if values.iter().any(|v| !v.is_finite()) {
+        return Err(CentroidsError::NonFinite);
     }
+    Ok(values)
 }
 
 impl Centroids {
@@ -108,7 +87,7 @@ impl Centroids {
     }
 
     pub fn decode(bytes: &[u8]) -> Result<Centroids, CentroidsError> {
-        let mut reader = Reader { bytes, at: 0 };
+        let mut reader = ByteReader::new(bytes);
         if reader.take(4)? != MAGIC {
             return Err(CentroidsError::BadMagic);
         }
@@ -116,13 +95,13 @@ impl Centroids {
         if version != FORMAT_VERSION {
             return Err(CentroidsError::UnknownVersion(version));
         }
-        let clusters: [u8; 169] = reader.take(169)?.try_into().expect("169 bytes");
+        let clusters: [u8; 169] = reader.array()?;
         if let Some(&bad) = clusters.iter().find(|&&c| c as usize >= CLUSTERS) {
             return Err(CentroidsError::BadCluster(bad));
         }
-        let turn = reader.section(TURN_DIMENSION)?;
-        let river = reader.section(RIVER_DIMENSION)?;
-        if reader.at != bytes.len() {
+        let turn = read_section(&mut reader, TURN_DIMENSION)?;
+        let river = read_section(&mut reader, RIVER_DIMENSION)?;
+        if !reader.is_done() {
             return Err(CentroidsError::TrailingBytes);
         }
         Ok(Centroids {

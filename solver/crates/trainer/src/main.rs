@@ -5,6 +5,7 @@ mod lbr;
 mod measure;
 mod parallel;
 mod potential;
+mod schedule;
 mod thresholds;
 mod train;
 mod tree;
@@ -28,7 +29,7 @@ enum Command {
     Buckets(buckets::BucketsArgs),
     Tree(tree::TreeArgs),
     Train(train::TrainArgs),
-    Calibrate(train::CalibrateArgs),
+    Calibrate(train::calibrate::CalibrateArgs),
     Export(export::ExportArgs),
     Lbr(lbr::LbrArgs),
     Match(measure::MatchArgs),
@@ -52,7 +53,9 @@ fn main() -> ExitCode {
         Command::Buckets(args) => buckets::run(&args),
         Command::Tree(args) => tree::run(&args),
         Command::Train(args) => catch_ctrl_c().and_then(|()| train::run(&args, &STOP)),
-        Command::Calibrate(args) => catch_ctrl_c().and_then(|()| train::calibrate(&args, &STOP)),
+        Command::Calibrate(args) => {
+            catch_ctrl_c().and_then(|()| train::calibrate::calibrate(&args, &STOP))
+        }
         Command::Export(args) => export::run(&args),
         Command::Lbr(args) => lbr::run(&args),
         Command::Match(args) => measure::run(&args),

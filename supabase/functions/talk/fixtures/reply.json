@@ -1,0 +1,30 @@
+{
+  "kind": "reply",
+  "sessionId": "5f2c9a1e-7b3d-4e8a-9c61-2d4f8b0a7e13",
+  "locale": "ru",
+  "facts": {
+    "street": "turn",
+    "board": ["9h", "9c", "3d", "Js"],
+    "pot": 16,
+    "stacks": [92, 92],
+    "her": ["7c", "6c"],
+    "actions": [
+      "Player posts the small blind 1",
+      "Mallorca posts the big blind 2",
+      "Player raises to 4",
+      "Mallorca calls 4",
+      "Mallorca checks on the flop",
+      "Player bets 4",
+      "Mallorca calls 4"
+    ],
+    "bigBlind": 2
+  },
+  "intent": { "situation": "playerBet", "hint": "strong", "honest": false, "street": "turn" },
+  "mood": ["annoyed"],
+  "recent": [
+    { "speaker": "player", "text": "Опять ты со своими тузами?" },
+    { "speaker": "mallorca", "text": "Не дождёшься, что я скажу." }
+  ],
+  "text": "  Ты блефуешь, я вижу по глазам.  ",
+  "quick": false
+}

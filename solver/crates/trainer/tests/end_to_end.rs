@@ -1,4 +1,5 @@
 use mallorca_core::abstraction::{decode_table, Abstraction};
+use mallorca_core::bot::Model;
 use mallorca_core::checkpoint::{read_checkpoint, CheckpointHeader};
 use mallorca_core::fingerprint::fingerprint;
 use mallorca_core::preset::Preset;
@@ -112,18 +113,20 @@ fn figure_check_rejects_infinity_next_to_the_unit() {
     assert_prints_number("random: +inf bb/100 ± 3.21 over 2000 deals", "random: ");
 }
 
-fn export(preset: &Path, data: &Path, streets: &str, out: &Path) {
-    run(&[
+fn export(preset: &Path, data: &Path, streets: Option<&str>, out: &Path) {
+    let mut args = vec![
         "export",
         "--preset",
         path(preset),
         "--data",
         path(data),
-        "--streets",
-        streets,
         "--out",
         path(out),
-    ]);
+    ];
+    if let Some(streets) = streets {
+        args.extend(["--streets", streets]);
+    }
+    run(&args);
 }
 
 fn build_and_train(dir: &Path, text: &str) -> (PathBuf, PathBuf) {
@@ -196,17 +199,13 @@ fn tiny_runs_through_every_subcommand() {
     let dir = scratch("tiny");
     let (preset, data) = build_and_train(&dir, TINY);
 
-    let browser = dir.join("browser.bin");
     let all = dir.join("all.bin");
-    export(&preset, &data, "browser", &browser);
-    export(&preset, &data, "all", &all);
+    export(&preset, &data, Some("all"), &all);
 
     let header = trained_header(TINY, &data);
-    let browser_file = StrategyFile::from_bytes(&std::fs::read(&browser).unwrap()).unwrap();
     let all_file = StrategyFile::from_bytes(&std::fs::read(&all).unwrap()).unwrap();
-    check_file(&browser_file, &header.fingerprint, 0b0011);
     check_file(&all_file, &header.fingerprint, 0b1111);
-    assert_eq!(browser_file.iterations, header.iterations);
+    assert_eq!(all_file.iterations, header.iterations);
 
     measure(&all, "2000");
 
@@ -222,16 +221,14 @@ fn tiny_potential_runs_through_every_subcommand() {
         assert!(data.join(name).is_file(), "{name} is written");
     }
 
-    let browser = dir.join("browser.bin");
     let play = dir.join("play.bin");
-    export(&preset, &data, "browser", &browser);
-    export(&preset, &data, "play", &play);
+    let default = dir.join("default.bin");
+    export(&preset, &data, Some("play"), &play);
+    export(&preset, &data, None, &default);
 
     let header = trained_header(TINY_POTENTIAL, &data);
-    let browser_file = StrategyFile::from_bytes(&std::fs::read(&browser).unwrap()).unwrap();
-    check_file(&browser_file, &header.fingerprint, 0b0011);
-
     let play_bytes = std::fs::read(&play).unwrap();
+    assert_eq!(std::fs::read(&default).unwrap(), play_bytes);
     assert_eq!(u16::from_le_bytes([play_bytes[4], play_bytes[5]]), 3);
     let play_file = StrategyFile::from_bytes(&play_bytes).unwrap();
     check_file(&play_file, &header.fingerprint, 0b1111);
@@ -240,6 +237,7 @@ fn tiny_potential_runs_through_every_subcommand() {
         assert!(play_file.centroids_of(street).is_some(), "{street:?}");
     }
     Abstraction::from_strategy(&play_file).expect("live turn and river buckets");
+    Model::new(play_file).expect("the bot loads the default export");
 
     measure(&play, "100");
 

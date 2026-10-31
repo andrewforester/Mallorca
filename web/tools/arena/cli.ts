@@ -6,6 +6,8 @@ import { BOTS, botLabel, isBotName } from './bots.ts';
 import { resultsDir, runName } from './paths.ts';
 import { runArena } from './run.ts';
 
+const percent = (value: number): string => `${(value * 100).toFixed(1)}%`;
+
 function signed(value: number): string {
   const text = Math.abs(value).toFixed(1);
   return value < 0 ? `-${text}` : `+${text}`;
@@ -22,6 +24,7 @@ const { values } = parseArgs({
     'save-hands': { type: 'string' },
     dir: { type: 'string' },
     'no-hands': { type: 'boolean', default: false },
+    stats: { type: 'boolean', default: false },
   },
 });
 
@@ -73,6 +76,7 @@ const report = await runArena({
   workers,
   saveHands,
   reportDir: dirname(out),
+  stats: values.stats,
 });
 
 writeFileSync(out, JSON.stringify(report, null, 2) + '\n');
@@ -82,3 +86,10 @@ const interval = report.ci95 === null ? 'n/a' : report.ci95.toFixed(1);
 console.log(
   `${report.a} vs ${report.b}: ${signed(report.bbPer100)} ± ${interval} bb/100 over ${report.hands} hands in ${Math.round(report.durationMs / 1000)} s`,
 );
+
+const style = report.styleStats;
+if (style !== undefined) {
+  console.log(
+    `${report.a} style: vpip ${percent(style.vpip)} pfr ${percent(style.pfr)} af ${style.aggressionFactor.toFixed(2)} bet ${percent(style.betFrequency)} fold to bet ${percent(style.foldToBet)} raise ${percent(style.raiseFrequency)} over ${style.hands} hands, ${style.postflopDecisions} decisions after the flop, ${style.facedBets} facing a bet`,
+  );
+}

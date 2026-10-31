@@ -8,8 +8,10 @@ import {
   createTable,
   legalActionsOf,
   startHand,
+  startingStack,
   toAct,
   TOURNAMENT,
+  TOURNAMENT_STACK,
 } from './table.ts';
 import type { Table } from './table.ts';
 import type { EngineEvent } from './types.ts';
@@ -44,6 +46,14 @@ describe('blindsFor', () => {
     expect(blindsFor(21)).toEqual({ small: 20, big: 40 });
     expect(blindsFor(200)).toEqual({ small: 1000, big: 2000 });
     expect(blindsFor(201)).toEqual({ small: 1200, big: 2400 });
+  });
+});
+
+describe('startingStack', () => {
+  it('is the tournament stack in a tournament and the buy-in at a cash table', () => {
+    expect(startingStack(TOURNAMENT)).toBe(TOURNAMENT_STACK);
+    expect(startingStack(CASH)).toBe(2000);
+    expect(startingStack({ kind: 'cash', bigBlind: 50, buyIn: 5000 })).toBe(5000);
   });
 });
 
