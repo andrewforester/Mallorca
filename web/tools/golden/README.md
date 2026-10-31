@@ -15,18 +15,8 @@ with Prettier. Two runs produce byte-identical files.
 
 | File                                             | Content                                                 |
 | ------------------------------------------------ | ------------------------------------------------------- |
-| `src/equity/fixtures/equity.json`                | 100 street equities: 34 flops, 33 turns, 33 rivers      |
 | `src/brains/fixtures/decisions.json`             | Decisions of the Java math bot, at least 40 per street  |
 | `src/brains/fixtures/preflop-strength-java.json` | The 169 by 169 preflop strength table the Java bot uses |
-
-### `equity.json`
-
-`{ hero, board, range, strength, positivePotential, negativePotential }`. `range` is one string of space-separated
-`<card><card>:<weight>` items, for example `"AsKd:1 QhQc:0.5"`. Ranges rotate through
-three kinds: every combination without dead cards at weight 1, a random subset with weights 0.25, 0.5 and 1, and
-pairs at 1, suited broadways at 1, offsuit broadways at 0.5, suited aces at 0.25. Flop and turn values come from
-`PokerEquilatorBrecher.equityVsSpectrum`, river strength from `PokerEquilatorBrecher.strengthVsSpectrum` with
-both potentials 0.
 
 ### `decisions.json`
 
@@ -69,10 +59,6 @@ the fixture keeps indices 0 to 168.
 
 ## Changes to the Java path
 
-- `src/mallorcatour/equilator/PokerEquilatorBrecher.java` is a copy of the original that comes first on the source
-  path and shadows it. The one change: in `equityVsSpectrum`, the villain hole cards of the potential computation
-  use `intValueForBrecher()` instead of `intValue()` (lines 579 and 580). The bot's decision path does not call this
-  method; it only affects `equity.json`.
 - `src/mallorcatour/equilator/SpectrumEquilatorImpl.java` shadows the original. The one change: the dead-card
   checks of `strengthVsSpectrum` test a `deadCards` array holding only the hero and board cards, instead of the
   reused `allHeroCards` array whose turn and river slots keep stale cards from earlier villain combos; a river still

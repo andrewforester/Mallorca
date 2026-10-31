@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Card } from '../cards/index.ts';
 import { parseCards } from '../cards/index.ts';
-import { streetEquity } from '../equity/index.ts';
+import { pheEvaluator } from '../equity/index.ts';
 import javaTable from './fixtures/preflop-strength-java.json' with { type: 'json' };
 import { HandState } from './handState.ts';
 import type { Observation } from './observation.ts';
@@ -15,6 +15,22 @@ import { StrengthManager } from './strength.ts';
 import { randomVillainModel, VillainSpectrumTracker } from './villainModel.ts';
 
 const hand = (text: string) => parseCards(text) as [Card, Card];
+
+function strengthByEnumeration(hero: [Card, Card], range: Spectrum, board: Card[]): number {
+  const heroRank = pheEvaluator.rank([...hero, ...board]);
+  let total = 0;
+  let won = 0;
+  for (const { cards, weight } of range.entries()) {
+    const villainRank = pheEvaluator.rank([...cards, ...board]);
+    total += weight;
+    if (heroRank > villainRank) {
+      won += weight;
+    } else if (heroRank === villainRank) {
+      won += weight / 2;
+    }
+  }
+  return won / total;
+}
 
 function expectEquity(
   actual: { strength: number; positivePotential: number; negativePotential: number } | undefined,
@@ -137,11 +153,8 @@ describe('StrengthManager', () => {
   it('measures flop strength against every live hand', () => {
     const range = Spectrum.random();
     range.remove(...flop, ...hand('2c 2d'));
-    const exact = streetEquity(hand('2c 2d'), range.entries(), flop);
-    expect(managerAt(flop).map('flop').get(hand('2c 2d'))?.strength).toBeCloseTo(
-      exact.strength,
-      12,
-    );
+    const exact = strengthByEnumeration(hand('2c 2d'), range, flop);
+    expect(managerAt(flop).map('flop').get(hand('2c 2d'))?.strength).toBeCloseTo(exact, 12);
   });
 
   it('computes turn and river strengths', () => {

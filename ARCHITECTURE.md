@@ -37,7 +37,7 @@ interface.
 ```
 web/src/
   cards/    Card, parse and format ("As Kd"), seeded RNG, shuffle
-  equity/   hand evaluation and equity
+  equity/   hand evaluation and the equity types
   engine/   heads-up NLHE rules as a pure reducer, table with a mode and its rules, hand history
   brains/   port of the Mallorca math bot
   cfr/      the CFR bot: the WASM module, the strategy file and a Brain over them
@@ -81,13 +81,10 @@ enforces it with `no-restricted-globals` and `no-restricted-properties`. Randomn
 - `HandEvaluator` has `rank(cards)` for 5 to 7 cards, higher is better, and `category(rank)`, a `HandCategory`:
   `high-card`, `pair`, `two-pair`, `trips`, `straight`, `flush`, `full-house`, `quads`, `straight-flush`.
   `pheEvaluator` implements it over `phe`.
-- `equityVsHand(hero, villain, board)` enumerates the remaining board exactly.
-- `equityVsRange(hero, range, board, { rng, samples })` weighs a `WeightedHands` range: exact on the turn and river,
-  seeded Monte Carlo on earlier streets.
-- `streetEquity(hero, range, board)` returns `StreetEquity`: `strength`, `positivePotential` and
-  `negativePotential` on a board of 3 to 5 cards. `realEquity` combines them.
-- `src/equity/golden.test.ts`, part of `npm test`, checks `streetEquity` against 100 equities of the Java
-  `PokerEquilatorBrecher`, within 0.02 on the flop and 0.01 on the turn and river.
+- `StreetEquity` (`strength`, `positivePotential`, `negativePotential`) and `WeightedHands` (hole cards with a
+  weight) are the types `brains` computes equity with; the computation itself lives in `brains` (`strength.ts`,
+  `spectrumEquilator.ts`, `preflopEquilator.ts`).
+- `index.ts` exports `pheEvaluator`, `HandCategory`, `StreetEquity` and `WeightedHands`.
 
 ## engine
 
@@ -463,5 +460,5 @@ types.
 - Cards in fixtures and text are two-character strings: rank `23456789TJQKA`, suit `cdhs`.
 - Tests sit next to the code as `*.test.ts` or `*.test.tsx`; golden tests are `*.golden.test.ts` and run only
   under `npm run test:golden`.
-- Fixtures generated from the Java original live in `src/equity/fixtures/` and `src/brains/fixtures/` and are
-  written only by `web/tools/golden/run.sh`.
+- Fixtures generated from the Java original live in `src/brains/fixtures/` and are written only by
+  `web/tools/golden/run.sh`.
