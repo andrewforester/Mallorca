@@ -203,7 +203,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - `v1.mlcs.gz` is the play file of `solver/` (`export --streets play`, strategy format 2, `v1` checkpoint 18),
   gzipped: all four streets, the flop bucket table and the turn and river thresholds. Strategy format 3, written
   for `v2` presets with `bucketing = "potential"`, carries turn and river centroids instead of thresholds and
-  buckets those streets live; the same loader reads it, and the browser still ships `v1`. `mallorca.wasm` is
+  buckets those streets live; the same loader reads it. `v2.mlcs.gz` is the `v2` play file (format 3, checkpoint
+  10, 51 MB gzipped). The worker loads each file on first use and keeps it. `mallorca.wasm` is
   `solver/crates/wasm`, a plain `extern "C"` ABI over `mallorca-core::bot`; it imports nothing.
 - `inflate(bytes)` gunzips with `DecompressionStream` when the bytes start with the gzip magic and returns other
   bytes as they are. `createCfrModel(wasm, strategy)` instantiates the module and loads the strategy; a bad file
@@ -225,10 +226,11 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - `createSession({ bot, seed, botDelayMs, humanSeat, names, mode, startingStacks?, records? })` returns a
   zustand store with `SessionState` (its engine state is `table`) and the actions `start(mode?, opponent?)`,
   `nextHand`, `act(intent)`, `leave` and `dispose`. `start(mode)` replaces the session's mode for this and later
-  starts; `start()` keeps the current one. `opponent` (`math` or `cfr`, `OPPONENTS` in `opponent.ts`) works the
+  starts; `start()` keeps the current one. `opponent` (`math`, `cfr` or `cfr-v2`, `OPPONENTS` in `opponent.ts`;
+  `opponentsFor(finePointer)` leaves `cfr-v2` out on touch screens, so a phone never downloads it) works the
   same way: when it differs from the current one, `start` first awaits `bot.select(opponent, seed)` and
   `SessionState.opponent` becomes the opponent the bot answered with; hand records carry its id (`math` version
-  `1`, `cfr` version `v1-18`). `seed` drives `mulberry32` for every shuffle. The actions are module functions
+  `1`, `cfr` version `v1-18`, `cfr-v2` as id `cfr` version `v2-10`). `seed` drives `mulberry32` for every shuffle. The actions are module functions
   over one shared `Runtime` per session: the store accessors, the bot, the RNG, the timers, the hand recorder, the
   mode, the session tally and an epoch that `start` and `dispose` advance.
 - `phase` is one of `idle` (before `start`), `humanToAct`, `botThinking` (waiting for `decide`), `animating`

@@ -11,7 +11,8 @@
     "opponent": "Opponent",
     "opponents": {
       "math": "Classic",
-      "cfr": "Solver"
+      "cfr": "Solver",
+      "cfr-v2": "Solver v2"
     },
     "loading": "Bringing the solver to the table"
   },

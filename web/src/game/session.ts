@@ -37,10 +37,10 @@ import {
 import type { HandResult, SeatActions } from './outcome.ts';
 import { handRecorder } from './records/recorder.ts';
 import type { HandRecorder, RecordsOptions } from './records/recorder.ts';
-import { CFR_BOT, MATH_BOT } from './records/record.ts';
+import { CFR_BOT, CFR_V2_BOT, MATH_BOT } from './records/record.ts';
 import type { Opponent } from './opponent.ts';
 
-const BOT_RECORDS = { math: MATH_BOT, cfr: CFR_BOT } as const;
+const BOT_RECORDS = { math: MATH_BOT, cfr: CFR_BOT, 'cfr-v2': CFR_V2_BOT } as const;
 
 export { resolveIntent, toIntent } from './intent.ts';
 export type { Intent } from './intent.ts';

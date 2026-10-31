@@ -646,6 +646,25 @@ describe('session opponent', () => {
     expect(records[0]?.bot).toEqual({ id: 'cfr', version: 'v1-18' });
   });
 
+  it('records the v2 blueprint as its own bot version', async () => {
+    const { bot } = selecting((o) => Promise.resolve(o));
+    const store = memoryStore();
+    const session = createSession({
+      bot,
+      seed: 7,
+      botDelayMs: 0,
+      humanSeat: 1,
+      names: ['Mallorca', 'You'],
+      mode: CASH,
+      records: { store, sessionId: 's1', now: () => '2026-10-24T18:00:00.000Z' },
+    });
+    await session.getState().start(CASH, 'cfr-v2');
+    expect(session.getState().opponent).toBe('cfr-v2');
+    await session.getState().act({ kind: 'fold' });
+    const records = await store.list();
+    expect(records[0]?.bot).toEqual({ id: 'cfr', version: 'v2-10' });
+  });
+
   it('shows the math bot when the chosen opponent could not load', async () => {
     const { bot } = selecting(() => Promise.resolve('math'));
     const session = open(bot);
