@@ -11,9 +11,28 @@ Deno.test("an allowed origin is echoed with the allowed headers", () => {
   assertEquals(headers["Vary"], "Origin");
 });
 
-Deno.test("the pages origin and vercel previews are allowed by default", () => {
-  for (const origin of ["https://andrewforester.github.io", "https://mallorca-abc.vercel.app"]) {
+Deno.test("the pages origin, the vercel production domain and its previews are allowed", () => {
+  for (
+    const origin of [
+      "https://andrewforester.github.io",
+      "https://mallorca-omega.vercel.app",
+      "https://mallorca-u5ou0auw0-andriipanasiuks-projects.vercel.app",
+      "https://mallorca-git-feat-table-talk-andriipanasiuks-projects.vercel.app",
+    ]
+  ) {
     assertEquals(corsHeaders(origin, DEFAULT_ORIGINS)["Access-Control-Allow-Origin"], origin);
+  }
+});
+
+Deno.test("other vercel projects are not allowed", () => {
+  for (
+    const origin of [
+      "https://mallorca-abc.vercel.app",
+      "https://other-andriipanasiuks-projects.vercel.app",
+      "https://mallorca-x-someone-elses-projects.vercel.app",
+    ]
+  ) {
+    assertEquals(corsHeaders(origin, DEFAULT_ORIGINS)["Access-Control-Allow-Origin"], undefined);
   }
 });
 

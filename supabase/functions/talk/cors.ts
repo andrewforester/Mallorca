@@ -2,7 +2,8 @@ export const DEFAULT_ORIGINS: readonly string[] = [
   "http://localhost:5173",
   "http://localhost:4173",
   "https://andrewforester.github.io",
-  "https://*.vercel.app",
+  "https://mallorca-omega.vercel.app",
+  "https://mallorca-*-andriipanasiuks-projects.vercel.app",
 ];
 
 const ALLOWED_HEADERS = "authorization, content-type, apikey, x-client-info";

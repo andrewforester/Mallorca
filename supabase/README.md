@@ -22,9 +22,12 @@ Function that gives Mallorca her voice. The game works without it: with no Supab
    `supabase secrets set ANTHROPIC_API_KEY=... TALK_DAILY_LIMIT=200 TALK_GLOBAL_DAILY_LIMIT=5000`.
    Two more are optional:
    - `TALK_ALLOWED_ORIGINS`, a comma-separated list of the origins the browser may call from, where `*` stands for
-     one subdomain. The default is
-     `http://localhost:5173,http://localhost:4173,https://andrewforester.github.io,https://*.vercel.app`; set it to
-     the game's own origins in production.
+     one run of letters, digits, dots and hyphens. The default covers local development, GitHub Pages, the Vercel
+     production domain and every Vercel preview of this project:
+     `http://localhost:5173,http://localhost:4173,https://andrewforester.github.io,https://mallorca-omega.vercel.app,https://mallorca-*-andriipanasiuks-projects.vercel.app`.
+     Previews get a new URL per deployment (`mallorca-<hash>-andriipanasiuks-projects.vercel.app`) and a stable one
+     per branch (`mallorca-git-<branch>-andriipanasiuks-projects.vercel.app`); the pattern covers both. Set the
+     secret only to add a custom domain.
    - `TALK_MODEL`, the model id. Unset or empty, it is `claude-haiku-5-5`.
 6. Deploy the function: `supabase functions deploy talk`. `config.toml` sets `[functions.talk]` with
    `import_map = "./functions/deno.json"`, so the CLI resolves the npm imports, and `verify_jwt = false`: the gateway
