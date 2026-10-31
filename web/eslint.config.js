@@ -5,9 +5,9 @@ import { importX } from 'eslint-plugin-import-x';
 
 const typescriptSettings = importX.flatConfigs.typescript.settings;
 
-const pure = ['src/cards', 'src/equity', 'src/engine', 'src/brains', 'src/cfr'];
+const pure = ['src/cards', 'src/equity', 'src/engine', 'src/brains', 'src/cfr', 'src/coach'];
 
-const LAYERS = ['cards', 'equity', 'engine', 'brains', 'cfr', 'game', 'ui'];
+const LAYERS = ['cards', 'equity', 'engine', 'brains', 'cfr', 'coach', 'game', 'ui'];
 
 const layer = (
   dir,
@@ -109,7 +109,9 @@ export default tseslint.config(
   layer('brains', ['cards', 'equity', 'engine'], [], ['src/brains/**/*.test.ts']),
   layer('cfr', ['cards'], ['engine', 'brains']),
   layer('cfr', ['cards', 'engine', 'brains'], [], ['src/cfr/**/*.test.ts']),
-  layer('game', ['cards', 'equity', 'engine', 'brains', 'cfr']),
+  layer('coach', ['cards', 'equity', 'brains'], ['engine', 'cfr']),
+  layer('coach', ['cards', 'equity', 'brains', 'engine', 'cfr'], [], ['src/coach/**/*.test.ts']),
+  layer('game', ['cards', 'equity', 'engine', 'brains', 'cfr', 'coach']),
   layer('ui', ['game']),
   layer('main', ['game', 'ui'], [], ['src/main.tsx']),
   arenaLayer,
