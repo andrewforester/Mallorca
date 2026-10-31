@@ -1,0 +1,28 @@
+name = "v2"
+small_blind = 10
+big_blind = 20
+stack = 2000
+buckets = [256, 256, 256]
+memory_limit_gb = 12.0
+threads = 12
+bucketing = "potential"
+checkpoint_minutes = 30
+
+[preflop]
+open_bb = [2.0, 3.0, 4.0]
+iso_vs_limp_bb = [3.0, 4.5]
+three_bet_x = [3.0, 4.0]
+four_bet_x = [2.2]
+
+[postflop]
+first_bet_pot = [0.25, 0.66, 1.0, 1.5, 2.0]
+first_raise_pot = [1.0]
+min_raise = true
+max_aggressive = 3
+all_in_threshold = 0.6667
+
+[cfr]
+alpha = 1.5
+beta = 0.0
+gamma = 2.0
+discount_interval = 1000000

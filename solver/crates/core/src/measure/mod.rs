@@ -8,7 +8,7 @@ pub(crate) mod fixtures {
     use crate::abstraction::Abstraction;
     use crate::cfr::{iterate, Game, Storage};
     use crate::holdem::Holdem;
-    use crate::preset::Preset;
+    use crate::preset::{Preset, Sizes};
     use crate::rng::Rng;
     use crate::strategy::{quantize, StrategyFile, StrategyHeader};
     use crate::tree::{Node, Tree};
@@ -38,8 +38,21 @@ pub(crate) mod fixtures {
 
     pub fn trained() -> &'static StrategyFile {
         static F: OnceLock<StrategyFile> = OnceLock::new();
+        F.get_or_init(|| train(tiny_tree().clone(), 400))
+    }
+
+    pub fn trained_multi_open() -> &'static StrategyFile {
+        static F: OnceLock<StrategyFile> = OnceLock::new();
         F.get_or_init(|| {
-            let tree = tiny_tree().clone();
+            let mut preset = Preset::from_toml(TINY).unwrap();
+            preset.preflop.open_bb = Sizes(vec![2.0, 3.0, 4.0]);
+            preset.stack = 2000;
+            train(Tree::build(&preset), preset.stack)
+        })
+    }
+
+    fn train(tree: Tree, stack: u32) -> StrategyFile {
+        {
             let tables = tables();
             let abstraction = Abstraction::new(tables.clone().try_into().unwrap());
             let game = Holdem::new(&tree, &abstraction);
@@ -66,13 +79,13 @@ pub(crate) mod fixtures {
                 fingerprint: [0; 32],
                 small_blind: 10,
                 big_blind: 20,
-                stack: 400,
+                stack,
                 streets: 0b1111,
                 iterations: TRAIN_ITERATIONS,
                 checkpoint: 1,
             };
             StrategyFile::new(header, tree, tables, probabilities)
-        })
+        }
     }
 
     pub fn abstraction() -> &'static Abstraction {

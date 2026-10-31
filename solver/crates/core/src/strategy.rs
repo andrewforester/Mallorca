@@ -1,12 +1,24 @@
 use crate::iso::street_indexers;
+use crate::potential::{BINS, CLUSTERS};
 use crate::tree::{Node, NodeId, Street, Tree};
 use std::fmt;
 
 pub const MAGIC: &[u8; 4] = b"MLCS";
 pub const FORMAT_VERSION: u16 = 1;
 pub const PLAY_FORMAT_VERSION: u16 = 2;
+pub const CENTROID_FORMAT_VERSION: u16 = 3;
 const KIND_TABLE: u8 = 0;
 const KIND_THRESHOLDS: u8 = 1;
+const KIND_CENTROIDS: u8 = 2;
+const CLUSTER_MAP_LEN: usize = 169;
+
+pub fn centroid_dimension(street: Street) -> Option<usize> {
+    match street {
+        Street::Turn => Some(BINS),
+        Street::River => Some(CLUSTERS),
+        _ => None,
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StrategyError {
@@ -85,6 +97,8 @@ pub struct StrategyFile {
     pub tree: Tree,
     pub tables: Vec<Vec<u8>>,
     pub thresholds: Vec<(Street, Vec<f32>)>,
+    pub centroids: Vec<(Street, Vec<f32>)>,
+    pub clusters: Option<[u8; CLUSTER_MAP_LEN]>,
     pub probabilities: Vec<u8>,
     offsets: Vec<u64>,
 }
@@ -158,7 +172,53 @@ impl<'a> Cursor<'a> {
     }
 }
 
-type Buckets = (Vec<Vec<u8>>, Vec<(Street, Vec<f32>)>);
+#[derive(Default)]
+struct Buckets {
+    tables: Vec<Vec<u8>>,
+    thresholds: Vec<(Street, Vec<f32>)>,
+    centroids: Vec<(Street, Vec<f32>)>,
+    clusters: Option<[u8; CLUSTER_MAP_LEN]>,
+}
+
+fn read_f32s(t: &mut Cursor<'_>, count: usize) -> Result<Vec<f32>, StrategyError> {
+    let bytes = t
+        .take(count.checked_mul(4).ok_or(StrategyError::Inconsistent)?)
+        .map_err(|_| StrategyError::Inconsistent)?;
+    let values: Vec<f32> = bytes
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .map(|&c| f32::from_le_bytes(c))
+        .collect();
+    if values.iter().any(|v| !v.is_finite()) {
+        return Err(StrategyError::Inconsistent);
+    }
+    Ok(values)
+}
+
+fn read_centroids(
+    t: &mut Cursor<'_>,
+    street: Street,
+    expected: u16,
+) -> Result<Vec<f32>, StrategyError> {
+    let dimension = centroid_dimension(street).ok_or(StrategyError::Inconsistent)?;
+    let count = t.u16().map_err(|_| StrategyError::Inconsistent)?;
+    let stored = t.u16().map_err(|_| StrategyError::Inconsistent)?;
+    if count != expected || usize::from(stored) != dimension {
+        return Err(StrategyError::Inconsistent);
+    }
+    read_f32s(t, usize::from(count) * dimension)
+}
+
+fn read_clusters(t: &mut Cursor<'_>) -> Result<[u8; CLUSTER_MAP_LEN], StrategyError> {
+    let bytes = t
+        .take(CLUSTER_MAP_LEN)
+        .map_err(|_| StrategyError::Inconsistent)?;
+    if bytes.iter().any(|&c| usize::from(c) >= CLUSTERS) {
+        return Err(StrategyError::Inconsistent);
+    }
+    Ok(bytes.try_into().expect("169 bytes"))
+}
 
 fn read_table(t: &mut Cursor<'_>, street: Street) -> Result<Vec<u8>, StrategyError> {
     let table = t.prefixed().map_err(|_| StrategyError::Inconsistent)?;
@@ -173,17 +233,8 @@ fn read_thresholds(t: &mut Cursor<'_>, expected: u16) -> Result<Vec<f32>, Strate
     if count != expected.saturating_sub(1) {
         return Err(StrategyError::Inconsistent);
     }
-    let bytes = t
-        .take(usize::from(count) * 4)
-        .map_err(|_| StrategyError::Inconsistent)?;
-    let values: Vec<f32> = bytes
-        .as_chunks::<4>()
-        .0
-        .iter()
-        .map(|&c| f32::from_le_bytes(c))
-        .collect();
-    let ordered = values.windows(2).all(|w| w[0] <= w[1]);
-    if !ordered || values.iter().any(|v| !v.is_finite()) {
+    let values = read_f32s(t, usize::from(count))?;
+    if !values.windows(2).all(|w| w[0] <= w[1]) {
         return Err(StrategyError::Inconsistent);
     }
     Ok(values)
@@ -193,33 +244,40 @@ fn read_buckets(
     section: &[u8],
     tree: &Tree,
     streets: u8,
-    tagged: bool,
+    version: u16,
 ) -> Result<Buckets, StrategyError> {
-    let mut tables = Vec::new();
-    let mut thresholds = Vec::new();
+    let mut out = Buckets::default();
     let mut t = Cursor {
         bytes: section,
         pos: 0,
     };
     for street in POSTFLOP.into_iter().filter(|&s| included(streets, s)) {
-        let kind = if tagged {
-            t.u8().map_err(|_| StrategyError::Inconsistent)?
-        } else {
+        let kind = if version == FORMAT_VERSION {
             KIND_TABLE
+        } else {
+            t.u8().map_err(|_| StrategyError::Inconsistent)?
         };
+        let expected = tree.buckets()[street.as_index()];
         match kind {
-            KIND_TABLE => tables.push(read_table(&mut t, street)?),
-            KIND_THRESHOLDS => {
-                let expected = tree.buckets()[street.as_index()];
-                thresholds.push((street, read_thresholds(&mut t, expected)?));
+            KIND_TABLE => out.tables.push(read_table(&mut t, street)?),
+            KIND_THRESHOLDS => out
+                .thresholds
+                .push((street, read_thresholds(&mut t, expected)?)),
+            KIND_CENTROIDS if version == CENTROID_FORMAT_VERSION => {
+                out.centroids
+                    .push((street, read_centroids(&mut t, street, expected)?));
+                if street == Street::River {
+                    out.clusters = Some(read_clusters(&mut t)?);
+                }
             }
             _ => return Err(StrategyError::Inconsistent),
         }
     }
-    if t.pos != section.len() {
+    let centroids_match_version = out.centroids.is_empty() != (version == CENTROID_FORMAT_VERSION);
+    if t.pos != section.len() || !centroids_match_version {
         return Err(StrategyError::Inconsistent);
     }
-    Ok((tables, thresholds))
+    Ok(out)
 }
 
 impl StrategyFile {
@@ -241,9 +299,28 @@ impl StrategyFile {
             tree,
             tables,
             thresholds: Vec::new(),
+            centroids: Vec::new(),
+            clusters: None,
             probabilities,
             offsets,
         }
+    }
+
+    pub fn with_centroids(
+        mut self,
+        centroids: Vec<(Street, Vec<f32>)>,
+        clusters: [u8; CLUSTER_MAP_LEN],
+    ) -> StrategyFile {
+        self.centroids = centroids;
+        self.clusters = Some(clusters);
+        self
+    }
+
+    pub fn centroids_of(&self, street: Street) -> Option<&[f32]> {
+        self.centroids
+            .iter()
+            .find(|(s, _)| *s == street)
+            .map(|(_, c)| &c[..])
     }
 
     pub fn with_thresholds(mut self, thresholds: Vec<(Street, Vec<f32>)>) -> StrategyFile {
@@ -260,7 +337,7 @@ impl StrategyFile {
 
     fn bucket_section(&self) -> Vec<u8> {
         let mut out = Vec::new();
-        if self.thresholds.is_empty() {
+        if self.thresholds.is_empty() && self.centroids.is_empty() {
             for table in &self.tables {
                 out.extend_from_slice(&(table.len() as u32).to_le_bytes());
                 out.extend_from_slice(table);
@@ -269,7 +346,9 @@ impl StrategyFile {
         }
         let mut tables = self.tables.iter();
         for street in POSTFLOP.into_iter().filter(|&s| self.includes(s)) {
-            if let Some(t) = self.thresholds_of(street) {
+            if let Some(c) = self.centroids_of(street) {
+                self.write_centroids(&mut out, street, c);
+            } else if let Some(t) = self.thresholds_of(street) {
                 out.push(KIND_THRESHOLDS);
                 out.extend_from_slice(&(t.len() as u16).to_le_bytes());
                 for v in t {
@@ -284,6 +363,21 @@ impl StrategyFile {
         out
     }
 
+    fn write_centroids(&self, out: &mut Vec<u8>, street: Street, centroids: &[f32]) {
+        let dimension = centroid_dimension(street).unwrap_or(BINS);
+        out.push(KIND_CENTROIDS);
+        out.extend_from_slice(&((centroids.len() / dimension) as u16).to_le_bytes());
+        out.extend_from_slice(&(dimension as u16).to_le_bytes());
+        for v in centroids {
+            out.extend_from_slice(&v.to_le_bytes());
+        }
+        if street == Street::River {
+            if let Some(clusters) = &self.clusters {
+                out.extend_from_slice(clusters);
+            }
+        }
+    }
+
     pub fn includes(&self, street: Street) -> bool {
         included(self.streets, street)
     }
@@ -295,10 +389,12 @@ impl StrategyFile {
                 + self.tables.iter().map(Vec::len).sum::<usize>()
                 + self.probabilities.len(),
         );
-        let version = if self.thresholds.is_empty() {
-            FORMAT_VERSION
-        } else {
+        let version = if !self.centroids.is_empty() {
+            CENTROID_FORMAT_VERSION
+        } else if !self.thresholds.is_empty() {
             PLAY_FORMAT_VERSION
+        } else {
+            FORMAT_VERSION
         };
         out.extend_from_slice(MAGIC);
         out.extend_from_slice(&version.to_le_bytes());
@@ -324,7 +420,7 @@ impl StrategyFile {
             return Err(StrategyError::BadMagic);
         }
         let version = c.u16()?;
-        if version != FORMAT_VERSION && version != PLAY_FORMAT_VERSION {
+        if !(FORMAT_VERSION..=CENTROID_FORMAT_VERSION).contains(&version) {
             return Err(StrategyError::UnknownVersion(version));
         }
         let fingerprint: [u8; 32] = c.take(32)?.try_into().expect("32 bytes");
@@ -341,12 +437,7 @@ impl StrategyFile {
             return Err(StrategyError::Inconsistent);
         }
         let tree = Tree::deserialize(tree_bytes).map_err(|_| StrategyError::Inconsistent)?;
-        let (tables, thresholds) = read_buckets(
-            table_section,
-            &tree,
-            streets,
-            version == PLAY_FORMAT_VERSION,
-        )?;
+        let buckets = read_buckets(table_section, &tree, streets, version)?;
         let (offsets, expected) = offsets_for(&tree, streets);
         if probabilities.len() as u64 != expected {
             return Err(StrategyError::Inconsistent);
@@ -360,8 +451,10 @@ impl StrategyFile {
             iterations,
             checkpoint,
             tree,
-            tables,
-            thresholds,
+            tables: buckets.tables,
+            thresholds: buckets.thresholds,
+            centroids: buckets.centroids,
+            clusters: buckets.clusters,
             probabilities: probabilities.to_vec(),
             offsets,
         })
@@ -524,13 +617,198 @@ mod tests {
     }
 
     #[test]
-    fn version_three() {
-        let mut b = sample(0b0011).to_bytes();
-        b[4] = 3;
+    fn version_four_is_rejected() {
+        let mut b = centroid_sample().to_bytes();
+        b[4] = 4;
         assert_eq!(
             StrategyFile::from_bytes(&b).err(),
-            Some(StrategyError::UnknownVersion(3))
+            Some(StrategyError::UnknownVersion(4))
         );
+    }
+
+    fn centroid_values(count: usize, dimension: usize) -> Vec<f32> {
+        (0..count * dimension)
+            .map(|i| (i % 97) as f32 / 97.0)
+            .collect()
+    }
+
+    fn cluster_map() -> [u8; 169] {
+        std::array::from_fn(|i| (i * 5 % 8) as u8)
+    }
+
+    fn centroid_sample() -> StrategyFile {
+        sample(0b1111).with_centroids(
+            vec![
+                (Street::Turn, centroid_values(8, 50)),
+                (Street::River, centroid_values(8, 8)),
+            ],
+            cluster_map(),
+        )
+    }
+
+    fn bucket_section_start(b: &[u8]) -> usize {
+        let tree_len = u32::from_le_bytes(b[63..67].try_into().unwrap()) as usize;
+        67 + tree_len + 4
+    }
+
+    #[test]
+    fn centroid_file_round_trips_as_version_three() {
+        let f = centroid_sample();
+        let b = f.to_bytes();
+        assert_eq!(&b[4..6], &3u16.to_le_bytes());
+        let g = StrategyFile::from_bytes(&b).unwrap();
+        assert_eq!(g, f);
+        assert_eq!(g.tables.len(), 1);
+        assert_eq!(
+            g.centroids_of(Street::Turn),
+            Some(&centroid_values(8, 50)[..])
+        );
+        assert_eq!(
+            g.centroids_of(Street::River),
+            Some(&centroid_values(8, 8)[..])
+        );
+        assert_eq!(g.centroids_of(Street::Flop), None);
+        assert_eq!(g.clusters, Some(cluster_map()));
+        let start = bucket_section_start(&b);
+        let section_len = u32::from_le_bytes(b[start - 4..start].try_into().unwrap()) as usize;
+        let end = start + section_len;
+        assert_eq!(&b[end - 169..end], &cluster_map()[..]);
+        let turn = start + 1 + 4 + FLOP_CLASSES;
+        assert_eq!(b[turn], 2);
+        assert_eq!(&b[turn + 1..turn + 5], &[8, 0, 50, 0]);
+        let river = turn + 5 + 8 * 50 * 4;
+        assert_eq!(b[river], 2);
+        assert_eq!(&b[river + 1..river + 5], &[8, 0, 8, 0]);
+        assert_eq!(river + 5 + 8 * 8 * 4 + 169, end);
+    }
+
+    #[test]
+    fn centroids_mix_with_thresholds_and_tables() {
+        let f = sample(0b1111)
+            .with_thresholds(vec![(Street::Turn, thresholds())])
+            .with_centroids(vec![(Street::River, centroid_values(8, 8))], cluster_map());
+        let g = StrategyFile::from_bytes(&f.to_bytes()).unwrap();
+        assert_eq!(g, f);
+    }
+
+    #[test]
+    fn centroid_count_must_match_buckets() {
+        for count in [7, 9] {
+            let f = sample(0b1111).with_centroids(
+                vec![
+                    (Street::Turn, centroid_values(count, 50)),
+                    (Street::River, centroid_values(8, 8)),
+                ],
+                cluster_map(),
+            );
+            assert_eq!(
+                StrategyFile::from_bytes(&f.to_bytes()).err(),
+                Some(StrategyError::Inconsistent),
+                "{count}"
+            );
+        }
+    }
+
+    #[test]
+    fn centroid_dimension_must_match_street() {
+        let b = centroid_sample().to_bytes();
+        let turn = bucket_section_start(&b) + 1 + 4 + FLOP_CLASSES;
+        let river = turn + 5 + 8 * 50 * 4;
+        for (at, dimension) in [(turn, 8u16), (turn, 49), (river, 50), (river, 7)] {
+            let mut c = b.clone();
+            c[at + 3..at + 5].copy_from_slice(&dimension.to_le_bytes());
+            assert_eq!(
+                StrategyFile::from_bytes(&c).err(),
+                Some(StrategyError::Inconsistent),
+                "{at} {dimension}"
+            );
+        }
+        let mut c = b.clone();
+        let flop = bucket_section_start(&b);
+        c[flop] = 2;
+        assert_eq!(
+            StrategyFile::from_bytes(&c).err(),
+            Some(StrategyError::Inconsistent)
+        );
+    }
+
+    #[test]
+    fn centroid_values_must_be_finite() {
+        for bad in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY] {
+            let mut river = centroid_values(8, 8);
+            river[13] = bad;
+            let f = sample(0b1111).with_centroids(
+                vec![
+                    (Street::Turn, centroid_values(8, 50)),
+                    (Street::River, river),
+                ],
+                cluster_map(),
+            );
+            assert_eq!(
+                StrategyFile::from_bytes(&f.to_bytes()).err(),
+                Some(StrategyError::Inconsistent),
+                "{bad}"
+            );
+        }
+    }
+
+    #[test]
+    fn cluster_map_values_must_be_below_eight() {
+        let mut clusters = cluster_map();
+        clusters[100] = 8;
+        let f = sample(0b1111).with_centroids(
+            vec![
+                (Street::Turn, centroid_values(8, 50)),
+                (Street::River, centroid_values(8, 8)),
+            ],
+            clusters,
+        );
+        assert_eq!(
+            StrategyFile::from_bytes(&f.to_bytes()).err(),
+            Some(StrategyError::Inconsistent)
+        );
+    }
+
+    #[test]
+    fn cluster_map_must_be_complete() {
+        let b = centroid_sample().to_bytes();
+        let start = bucket_section_start(&b);
+        let section_len = u32::from_le_bytes(b[start - 4..start].try_into().unwrap());
+        let mut c = b.clone();
+        c[start - 4..start].copy_from_slice(&(section_len - 1).to_le_bytes());
+        c.remove(start + section_len as usize - 1);
+        assert_eq!(
+            StrategyFile::from_bytes(&c).err(),
+            Some(StrategyError::Inconsistent)
+        );
+    }
+
+    #[test]
+    fn centroids_need_version_three() {
+        let mut b = centroid_sample().to_bytes();
+        b[4] = 2;
+        assert_eq!(
+            StrategyFile::from_bytes(&b).err(),
+            Some(StrategyError::Inconsistent)
+        );
+    }
+
+    #[test]
+    fn shipped_v1_play_file_still_loads() {
+        use std::io::Read;
+        let gz = include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../../web/src/cfr/v1.mlcs.gz"
+        ));
+        let mut bytes = Vec::new();
+        flate2::read::GzDecoder::new(&gz[..])
+            .read_to_end(&mut bytes)
+            .unwrap();
+        assert_eq!(&bytes[4..6], &2u16.to_le_bytes());
+        let f = StrategyFile::from_bytes(&bytes).unwrap();
+        assert!(f.centroids.is_empty());
+        assert_eq!(f.clusters, None);
+        assert_eq!(f.to_bytes(), bytes);
     }
 
     fn thresholds() -> Vec<f32> {

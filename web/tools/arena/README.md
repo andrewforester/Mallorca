@@ -6,7 +6,7 @@ Duplicate matches between two bots, reported in bb/100 with a 95% confidence int
 npm run arena -- --a math --b always-call --pairs 2000
 ```
 
-Flags: `--a`, `--b` (`math`, `cfr`, `always-call`, `always-raise`, `min-bettor`, `random`), `--pairs` (1000), `--seed` (1), `--workers` (available cores), `--dir <path>` (results directory), `--out <file>` (JSON report), `--save-hands <file>` (JSONL hand records), `--no-hands`.
+Flags: `--a`, `--b` (`math`, `cfr`, `cfr:<play file>`, `always-call`, `always-raise`, `min-bettor`, `random`), `--pairs` (1000), `--seed` (1), `--workers` (available cores), `--dir <path>` (results directory), `--out <file>` (JSON report), `--save-hands <file>` (JSONL hand records), `--no-hands`.
 
 Every run is saved. The report goes to `<dir>/<a>-<b>-<pairs>-s<seed>-<YYYYMMDD-HHMMSS>.json` and the hands next to
 it as `.jsonl`, unless `--out` or `--save-hands` name other paths; `--no-hands` skips the hands. The default
@@ -34,7 +34,9 @@ math vs always-call: +272.8 ± 42.4 bb/100 over 4000 hands in 37 s
 ```
 
 `cfr` is the `v1` blueprint of `solver/` (checkpoint 18) in `src/cfr/v1.mlcs.gz`, played through
-`src/cfr/mallorca.wasm`; `npm run arena` builds the module first. Reference runs on the same machine, seed in
+`src/cfr/mallorca.wasm`; `npm run arena` builds the module first. `cfr:<play file>` plays any play file
+(`.mlcs` or `.mlcs.gz`, for example `cfr:../solver/data/v2/v2-18-play.mlcs`) and is named `cfr-<file name>` in the
+report, so two blueprints can meet: `npm run arena -- --a cfr:<v2 play file> --b cfr --pairs 20000`. Reference runs on the same machine, seed in
 brackets:
 
 ```

@@ -1,16 +1,17 @@
 use mallorca_core::abstraction::{decode_table, Abstraction};
-use mallorca_core::checkpoint::read_checkpoint;
+use mallorca_core::checkpoint::{read_checkpoint, CheckpointHeader};
 use mallorca_core::fingerprint::fingerprint;
 use mallorca_core::preset::Preset;
 use mallorca_core::strategy::StrategyFile;
-use mallorca_core::tree::{Node, Tree};
+use mallorca_core::tree::{Node, Street, Tree};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 const TINY: &str = include_str!("../../../presets/tiny.toml");
+const TINY_POTENTIAL: &str = include_str!("../../../presets/tiny-potential.toml");
 
-fn scratch() -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("mallorca-e2e-{}", std::process::id()));
+fn scratch(name: &str) -> PathBuf {
+    let dir = std::env::temp_dir().join(format!("mallorca-e2e-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir
@@ -111,16 +112,26 @@ fn figure_check_rejects_infinity_next_to_the_unit() {
     assert_prints_number("random: +inf bb/100 ± 3.21 over 2000 deals", "random: ");
 }
 
-#[test]
-#[ignore]
-fn tiny_runs_through_every_subcommand() {
-    let dir = scratch();
-    let preset = dir.join("tiny.toml");
-    std::fs::write(&preset, TINY).unwrap();
+fn export(preset: &Path, data: &Path, streets: &str, out: &Path) {
+    run(&[
+        "export",
+        "--preset",
+        path(preset),
+        "--data",
+        path(data),
+        "--streets",
+        streets,
+        "--out",
+        path(out),
+    ]);
+}
+
+fn build_and_train(dir: &Path, text: &str) -> (PathBuf, PathBuf) {
+    let preset = dir.join("preset.toml");
+    std::fs::write(&preset, text).unwrap();
     let data = dir.join("data");
     std::fs::create_dir_all(&data).unwrap();
     let (preset_arg, data_arg) = (path(&preset), path(&data));
-
     run(&["buckets", "--preset", preset_arg, "--out", data_arg]);
     let tree_out = run(&["tree", "--preset", preset_arg]);
     assert!(tree_out.contains("action slots"));
@@ -135,33 +146,11 @@ fn tiny_runs_through_every_subcommand() {
         "--threads",
         "2",
     ]);
+    (preset, data)
+}
 
-    let browser = dir.join("browser.bin");
-    let all = dir.join("all.bin");
-    run(&[
-        "export",
-        "--preset",
-        preset_arg,
-        "--data",
-        data_arg,
-        "--streets",
-        "browser",
-        "--out",
-        path(&browser),
-    ]);
-    run(&[
-        "export",
-        "--preset",
-        preset_arg,
-        "--data",
-        data_arg,
-        "--streets",
-        "all",
-        "--out",
-        path(&all),
-    ]);
-
-    let preset_value = Preset::from_toml(TINY).unwrap();
+fn trained_header(text: &str, data: &Path) -> CheckpointHeader {
+    let preset_value = Preset::from_toml(text).unwrap();
     let tree = Tree::build(&preset_value);
     let read = |name: &str| {
         let (_, table) = decode_table(std::fs::read(data.join(name)).unwrap()).unwrap();
@@ -172,19 +161,16 @@ fn tiny_runs_through_every_subcommand() {
     let checkpoint = std::fs::read(latest_checkpoint(&data.join("checkpoints"))).unwrap();
     let (header, _) = read_checkpoint(&checkpoint, &expected).expect("checkpoint fingerprint");
     assert!(header.iterations >= 20000);
+    header
+}
 
-    let browser_file = StrategyFile::from_bytes(&std::fs::read(&browser).unwrap()).unwrap();
-    let all_file = StrategyFile::from_bytes(&std::fs::read(&all).unwrap()).unwrap();
-    check_file(&browser_file, &header.fingerprint, 0b0011);
-    check_file(&all_file, &header.fingerprint, 0b1111);
-    assert_eq!(browser_file.iterations, header.iterations);
-
+fn measure(strategy: &Path, hands: &str) {
     let lbr = run(&[
         "lbr",
         "--strategy",
-        path(&all),
+        path(strategy),
         "--hands",
-        "2000",
+        hands,
         "--threads",
         "2",
     ]);
@@ -193,7 +179,7 @@ fn tiny_runs_through_every_subcommand() {
     let matches = run(&[
         "match",
         "--strategy",
-        path(&all),
+        path(strategy),
         "--opponent",
         "all",
         "--deals",
@@ -202,6 +188,60 @@ fn tiny_runs_through_every_subcommand() {
     for name in ["call", "raise", "random"] {
         assert_prints_number(&matches, &format!("{name}: "));
     }
+}
+
+#[test]
+#[ignore]
+fn tiny_runs_through_every_subcommand() {
+    let dir = scratch("tiny");
+    let (preset, data) = build_and_train(&dir, TINY);
+
+    let browser = dir.join("browser.bin");
+    let all = dir.join("all.bin");
+    export(&preset, &data, "browser", &browser);
+    export(&preset, &data, "all", &all);
+
+    let header = trained_header(TINY, &data);
+    let browser_file = StrategyFile::from_bytes(&std::fs::read(&browser).unwrap()).unwrap();
+    let all_file = StrategyFile::from_bytes(&std::fs::read(&all).unwrap()).unwrap();
+    check_file(&browser_file, &header.fingerprint, 0b0011);
+    check_file(&all_file, &header.fingerprint, 0b1111);
+    assert_eq!(browser_file.iterations, header.iterations);
+
+    measure(&all, "2000");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+#[ignore]
+fn tiny_potential_runs_through_every_subcommand() {
+    let dir = scratch("tiny-potential");
+    let (preset, data) = build_and_train(&dir, TINY_POTENTIAL);
+    for name in ["river_hs.f32", "centroids.bin"] {
+        assert!(data.join(name).is_file(), "{name} is written");
+    }
+
+    let browser = dir.join("browser.bin");
+    let play = dir.join("play.bin");
+    export(&preset, &data, "browser", &browser);
+    export(&preset, &data, "play", &play);
+
+    let header = trained_header(TINY_POTENTIAL, &data);
+    let browser_file = StrategyFile::from_bytes(&std::fs::read(&browser).unwrap()).unwrap();
+    check_file(&browser_file, &header.fingerprint, 0b0011);
+
+    let play_bytes = std::fs::read(&play).unwrap();
+    assert_eq!(u16::from_le_bytes([play_bytes[4], play_bytes[5]]), 3);
+    let play_file = StrategyFile::from_bytes(&play_bytes).unwrap();
+    check_file(&play_file, &header.fingerprint, 0b1111);
+    assert_eq!(play_file.iterations, header.iterations);
+    for street in [Street::Turn, Street::River] {
+        assert!(play_file.centroids_of(street).is_some(), "{street:?}");
+    }
+    Abstraction::from_strategy(&play_file).expect("live turn and river buckets");
+
+    measure(&play, "100");
 
     let _ = std::fs::remove_dir_all(&dir);
 }
