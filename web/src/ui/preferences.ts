@@ -91,3 +91,21 @@ export function writeTells(level: Level): void {
     return;
   }
 }
+
+const COACH_KEY = 'mallorca.coach';
+
+export function readCoach(): boolean {
+  try {
+    return localStorage.getItem(COACH_KEY) === 'on';
+  } catch {
+    return false;
+  }
+}
+
+export function writeCoach(on: boolean): void {
+  try {
+    localStorage.setItem(COACH_KEY, on ? 'on' : 'off');
+  } catch {
+    return;
+  }
+}

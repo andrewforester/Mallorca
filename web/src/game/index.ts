@@ -4,7 +4,18 @@ export type { BotClient } from './botClient.ts';
 export { inProcessBot, workerBot } from './botClient.ts';
 export type { Opponent } from './opponent.ts';
 export { opponentsFor } from './opponent.ts';
-export type { ChatLine, Intent, Phase, QuickPhrase, Session } from './session.ts';
+export type {
+  ChatLine,
+  CoachState,
+  CoachStatus,
+  Intent,
+  Phase,
+  QuickPhrase,
+  Session,
+  SessionState,
+} from './session.ts';
+export type { CoachFacts, CoachMove, Hint, MoveTone, SpotOdds } from '../coach/index.ts';
+export { CELLS, cellName } from '../coach/index.ts';
 export { createSession } from './session.ts';
 export type { LogEntry, SeatIndex, TableMode } from '../engine/index.ts';
 export { CASH, TOURNAMENT } from '../engine/index.ts';

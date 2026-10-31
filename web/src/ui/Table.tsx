@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import type { Intent, Phase, QuickPhrase, SeatIndex, ViewModel } from '../game/index.ts';
 import { ActionBar } from './ActionBar.tsx';
 import { BetChips } from './BetChips.tsx';
@@ -21,6 +22,7 @@ export interface TableProps {
   autoNextMs?: number | null;
   onAct: (intent: Intent) => void;
   onNextHand: () => void;
+  coach?: ComponentChildren;
   onSay?: (text: string) => void;
   onQuick?: (id: QuickPhrase, text: string) => void;
 }
@@ -163,7 +165,7 @@ function herLine(vm: ViewModel, chat: ChatProps | null): string {
   return chat === null ? '' : (vm.talk.herBubble?.text ?? '');
 }
 
-function TableSide({ chat }: { chat: ChatProps | null }) {
+function TableSide({ chat, coach }: { chat: ChatProps | null; coach: ComponentChildren }) {
   return (
     <div class="table-side">
       {chat !== null && (
@@ -171,7 +173,9 @@ function TableSide({ chat }: { chat: ChatProps | null }) {
           <Chat {...chat} />
         </section>
       )}
-      <aside class="coach" data-testid="coach" aria-label={t('coach.label')} />
+      <aside class="coach" data-testid="coach" aria-label={t('coach.label')}>
+        {coach}
+      </aside>
     </div>
   );
 }
@@ -239,7 +243,7 @@ export function Table(props: TableProps) {
       )}
       <Seats vm={vm} humanSeat={humanSeat} held={held} thinking={thinking} chat={chat} />
       <ActionBar key={barKey} controls={vm.controls} onAct={onAct} />
-      <TableSide chat={chat} />
+      <TableSide chat={chat} coach={props.coach} />
     </div>
   );
 }

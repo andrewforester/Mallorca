@@ -47,20 +47,22 @@ web/src/
   brains/   port of the Mallorca math bot
   cfr/      the CFR bot: the WASM module, the strategy file and a Brain over them
   talk/     table talk: hand-strength class, tells, mood and the style it maps to
+  coach/    the coach's facts: hint, strategy and range grids, equity, odds
   game/     session store, turn loop, bot worker client, view-model, hand records
   ui/       Preact components, layout, tokens, i18n
 ```
 
-| Layer    | May import from                                      |
-| -------- | ---------------------------------------------------- |
-| `cards`  | nothing                                              |
-| `equity` | `cards`                                              |
-| `engine` | `cards`, `equity`                                    |
-| `brains` | `cards`, `equity`, `engine`                          |
-| `cfr`    | `cards`, types from `engine`, `brains`               |
-| `talk`   | `cards`, `equity`, types from `engine`               |
-| `game`   | `cards`, `equity`, `engine`, `brains`, `cfr`, `talk` |
-| `ui`     | `game`                                               |
+| Layer    | May import from                                               |
+| -------- | ------------------------------------------------------------- |
+| `cards`  | nothing                                                       |
+| `equity` | `cards`                                                       |
+| `engine` | `cards`, `equity`                                             |
+| `brains` | `cards`, `equity`, `engine`                                   |
+| `cfr`    | `cards`, types from `engine`, `brains`                        |
+| `talk`   | `cards`, `equity`, types from `engine`                        |
+| `coach`  | `cards`, `equity`, `brains`, types from `engine`, `cfr`       |
+| `game`   | `cards`, `equity`, `engine`, `brains`, `cfr`, `talk`, `coach` |
+| `ui`     | `game`                                                        |
 
 `brains` takes only types from `engine`: `Action`, `LegalActions`, the events it turns into observations and
 `BoardSize`, which pins its board sizes to the engine's.
@@ -70,8 +72,8 @@ web/src/
 `toPokerStars`.
 
 Each layer's `index.ts` exports only what other layers and `tools/` import; a test reaches the internals of its
-own layer by path. `brains/index.ts` holds `Brain`, `Decision`, `Observation`, `createMathBrain` and
-`toObservations`; `engine/index.ts` the types of a hand and a table, the reducers (`startHandWith`, `applyAction`,
+own layer by path. `brains/index.ts` holds `Brain`, `Decision`, `Observation`, `createMathBrain`,
+`toObservations` and, for `coach`, `Spectrum`, `HoleCards`, `SpectrumEquilator` and `preflopStrengthVsSpectrum`; `engine/index.ts` the types of a hand and a table, the reducers (`startHandWith`, `applyAction`,
 `startHand`, `apply`, `legalActionsOf`, `toAct`), `isLegal`, `checkOrCall`, `playToEnd`, `createTable`, `rulesOf`,
 the modes, `startingStack`, `BOARD_SIZE` and `handHistory`; `cfr/index.ts` `createCfrBrain`, `CfrModel`,
 `loadCfrModel`, `SHIPPED_STRATEGIES`, `ShippedStrategyKey` and `BotRecord`; `game/index.ts` is the surface of `ui`
@@ -85,7 +87,7 @@ types from `engine`; `tools/evaluator-golden/**` only `cards` and `equity`. `imp
 
 ### Purity
 
-`cards`, `equity`, `engine`, `brains`, `cfr` and `talk` use no DOM (`document`, `window`, `self`, `navigator`), no
+`cards`, `equity`, `engine`, `brains`, `cfr`, `talk` and `coach` use no DOM (`document`, `window`, `self`, `navigator`), no
 `Math.random` or `crypto`, no `Date` or `performance`, no timers (`setTimeout`, `setInterval`), no `fetch` and no
 storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-globals` and
 `no-restricted-properties`. Randomness enters as an `Rng` argument, bytes through a reader passed in; `cfr`'s
@@ -297,6 +299,24 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   bluff `1 + 0.8 tilt` and tightness `1 + 0.2 caution - 0.1 cheer`, clamped to [0.8, 1.6], [0.8, 1.8] and
   [0.85, 1.2]. A calm mood gives the neutral style 1, 1, 1. Her words never decide a move.
 
+## coach
+
+- `coachFacts(request)` (`facts.ts`) turns a `CoachRequest` (`model`, the hand's `observations` from the player's
+  seat, `legal`, `pot` with every bet on the table, and the bot's `range` or null) into `CoachFacts`, plain data. It
+  replays the observations into a fresh `CfrBot` in the player's seat (off-tree draws from `mulberry32(handNumber)`,
+  so the same request gives the same facts), reads `spot(legal)` and frees the bot.
+- `hint` holds the spot's `moves` (`CoachMove`: `label` fold, check, call, bet, raise or allIn, `amount`, `tone`
+  fold, passive, small, large or allIn; a raise is large above 0.75 of the pot after the call; tree actions that land
+  on the same real move are merged and their probabilities summed), `mine`, the
+  probabilities of the player's own hand, `approximate` and `heroCell`. `strategy` is the spot's grid folded to 169
+  cells (`grid.ts`: cell `row * 13 + col` from ace to two, pairs on the diagonal, suited above, offsuit below; a cell is
+  the mean of its live pairs, null when none is live); `range` folds the bot's range the same way after the player's
+  cards and the board are removed, and `combos` is its total weight. Both are null without a spot or a range.
+- `equity` is the player's equity against that range, or against a random hand when there is none (`versus`
+  `range` or `random`), through `SpectrumEquilator` on a board and the preflop table before it (`equity.ts`).
+- `odds` (`odds.ts`) is null with nothing to call, else `requiredEquity = toCall / (pot + toCall)`,
+  `mdf = (pot - toCall) / pot` and `bluffShare`, the bluff share the bet can hold, equal to `requiredEquity`.
+
 ## game
 
 - `createSession({ bot, seed, botDelayMs, humanSeat, names, mode, startingStacks?, records? })` returns a
@@ -333,21 +353,31 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 - `result` is set when a hand completes: `winner` (null for a split), `category` of the shown hand or null,
   `showdown` and `amount`. `amount` is the pot collected, twice the smaller contribution, or each share for a
   split. It equals the `win` entry of the log; an uncalled bet is its own `returned` entry.
-- `BotClient` has `observe(observations)`, `decide(legal)`, `reset()`, an optional `select(opponent, seed)` and an
-  optional `dispose()`. `workerBot()` runs the brain in `bot.worker.ts` over the `WorkerRequest` and `WorkerReply`
+- `BotClient` has `observe(observations)`, `decide(legal)`, `reset()`, an optional `select(opponent, seed)`, an
+  optional `coach(observations, legal, pot)` and an optional `dispose()`. `workerBot()` runs the brain in `bot.worker.ts` over the `WorkerRequest` and `WorkerReply`
   messages in `workerProtocol.ts`; `createWorkerHandler(newBrain, post, load)` in `workerHandler.ts` is the worker's
   message handling as a plain function. A `select` request queues every later request until the opponent's brain
   factory is ready, then replies `{ id, opponent }` or `{ id, error }` and keeps the old brain on an error. The worker
   loads the model of each cfr opponent once, on its first `select` (`loadCfrModel` with `fetch` of `WASM_URL` and the
   opponent's `SHIPPED_STRATEGIES` url; a failed load is retried on the next `select`), and seeds its brains with
-  `mulberry32(seed)`. Replacing a brain disposes it. `inProcessBot()` runs the math brain on the main thread and
+  `mulberry32(seed)`. A `coach` request (`{ id, observations, legal, pot }`) reads `range()` of the playing brain when
+  it arrives (a cfr brain has it, the math brain has none), loads the coach model (`coachModel(opponent)` in
+  `createWorkerHandler`, the opponent's own strategy, `cfr` for the math bot) and replies `{ id, facts }` or
+  `{ id, error }`. The coach never touches the playing brain's RNG. Replacing a brain disposes it. `inProcessBot()` runs the math brain on the main thread and
   rejects `select('cfr')`.
 - `withFallback` wraps a client: when `decide` rejects or takes longer than 5 s, it disposes the primary, replays
   the observations of the hand into an in-process bot and uses it from then on. It falls back once, and a failure
-  from before `reset` or `dispose` does not trigger it. The session drops a decision that arrives after `start`
+  from before `reset` or `dispose` does not trigger it. Its `coach` forwards to the active client with the same timeout as
+  `decide` and rejects after a fallback or when the client has none. The session drops a decision that arrives after `start`
   or `dispose`.
   Its `select` answers `math` without asking a client that has no `select`; when the client's `select` rejects or
   takes longer than 60 s, it falls back the same way and answers `math`.
+- Coach (`coach.ts`): `SessionOptions.coach` and `setCoach(on)` switch it; `SessionState.coach` is `{ status, facts }`
+  with status `off`, `idle` (on, nothing to show), `waiting`, `ready` or `unavailable`. At every `humanToAct`, and
+  when it is switched on at the player's turn, the session sends every observation of the hand from the player's
+  seat with the legal actions and the pot. A reply after the player acted, a new hand, `setCoach` or `dispose` is
+  dropped; facts clear when the player acts and when a hand starts. A rejection, or a client without `coach`, is
+  `unavailable`.
 - `toViewModel(state, humanSeat)` returns the `ViewModel`: per seat the name, stack, street bet, button, whether
   it is to act, the cards (`'back'` for the bot's cards until a showdown), the last action tag and the closing
   action tag; the board; `pot` as `{ collected, total }`, `collected` the chips of the previous streets and
@@ -461,8 +491,17 @@ text)` (the caller's localized label) append the player's line at once and call 
   bb, bb/100 and the hands, with play again and the export of the session. `signed` formats a bb value as sign
   and one-decimal absolute value.
 - Layout: portrait for phones (bot at the top, the human's cards and controls at the bottom), landscape for wide
-  screens, switched by a `min-aspect-ratio: 1/1` media query. The layout has no side log. The `coach` panel is
-  the slot for a later training mode and is empty.
+  screens, switched by a `min-aspect-ratio: 1/1` media query. The layout has no side log.
+- Coach mode: the `mallorca.coach` preference (off unless stored `on`), switched by the start screen checkbox
+  `start-coach` and the menu checkbox `coach-mode`; `useCoach` calls `setCoach` from it. On wide screens `Coach` fills
+  the `coach` slot of the table; on narrow ones the status bar button `coach-toggle` (`aria-expanded`) opens it in
+  `CoachSheet`, a bottom sheet over a scrim closed by its button, Escape or the scrim (`useWide`, `(min-aspect-ratio: 1/1) and
+(min-height: 561px)` like the floating hand log, decides, so the panel exists once and a short landscape screen
+  gets the sheet). `Coach` shows the hint line (shares of 0.5 % and more, a mixed-strategy line when
+  two moves reach 10 %, an approximate line), then tabs: the strategy grid (each cell striped by its moves' shares,
+  the player's cell outlined), the bot range grid (shaded by weight relative to the heaviest cell) or the math-bot
+  line, and the numbers. Fold, passive and all-in have their own colour tokens; sized bets and raises are shaded
+  from `--color-coach-small` to `--color-coach-large` by size.
 - The hand log is a drawer grouped by street (`groupHand` of `game`), opened by the status bar toggle
   `hand-log-toggle` (`aria-expanded`). Opening moves focus to `hand-log-close`; closing, by the close button,
   Escape, the toggle or the scrim, returns focus to the toggle. On portrait screens it is a full-height sheet over
@@ -497,7 +536,9 @@ text)` (the caller's localized label) append the player's line at once and call 
   `bubble-aggressive` or `bubble-fold`), `thinking-<i>`, `card` (with `data-card`), `card-back`, `board`, `pot` (with
   `data-amount` = total and `data-collected`), `result`, `next-hand`, `fold`, `passive`, `raise`, `raise-amount`,
   `preset-half`, `preset-pot`, `preset-allin`, `hand-log-toggle`, `sound-toggle`, `simple-table`, `auto-next`,
-  `sound`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`, `live-region`, `tournament-over`, `leave-tonight`,
+  `sound`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`, `coach-mode`, `start-coach`, `coach-toggle`,
+  `coach-close`, `coach-scrim`, `coach-status`, `coach-hint`, `coach-tab-hint`, `coach-tab-range`, `coach-tab-numbers`,
+  `coach-strategy`, `coach-range`, `coach-numbers`, `live-region`, `tournament-over`, `leave-tonight`,
   `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and `export-text` (the session
   dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu). Table talk adds
   `bubble-mallorca`, `bubble-player`, `talk-region`, `chat-panel`, `chat-open`, `chat-sheet`, `chat-close`,
@@ -568,7 +609,9 @@ bounded by the clamps above.
   and the deal animation follows `prefers-reduced-motion`. `solver.spec.ts`: the `cfr` opponent loads the module and
   its strategy in the worker and plays cash hands recorded as `cfr`, `cfr-v2` loads its own file on desktop and is
   recorded as `v2-10`, and a phone is not offered `cfr-v2`. `arena.spec.ts`: the published arena page lists the runs,
-  a run with hands opens and shows a pair as PokerStars text.
+  a run with hands opens and shows a pair as PokerStars text. `coach.spec.ts`: in coach mode the hint, both grids
+  and the numbers appear against `cfr`, against `math` the range tab explains why it is empty, and on a phone the
+  sheet closes with Escape and the player can act.
 - `e2e/contact.ts` (`npm run contact`) captures every view state of a seeded game on `phone` and `desktop` and
   composes one sheet per device into `e2e/contact/`. Its preview listens on `CONTACT_PORT` (default 4174); it stops
   if that port already answers or its own server exits.

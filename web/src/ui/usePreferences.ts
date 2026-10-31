@@ -2,11 +2,13 @@ import { useState } from 'preact/hooks';
 import type { Level } from '../game/index.ts';
 import {
   readAutoNext,
+  readCoach,
   readSound,
   readTableStyle,
   readTalk,
   readTells,
   writeAutoNext,
+  writeCoach,
   writeSound,
   writeTableStyle,
   writeTalk,
@@ -19,12 +21,14 @@ export interface Preferences {
   autoNext: boolean;
   talk: boolean;
   tells: Level;
+  sound: boolean;
+  coach: boolean;
   toggleSimple: () => void;
   toggleAutoNext: () => void;
   setTalk: (on: boolean) => void;
   setTells: (level: Level) => void;
-  sound: boolean;
   toggleSound: () => void;
+  toggleCoach: () => void;
 }
 
 export function usePreferences(): Preferences {
@@ -33,6 +37,7 @@ export function usePreferences(): Preferences {
   const [talk, setTalk] = useState(readTalk);
   const [tells, setTells] = useState<Level>(readTells);
   const [sound, setSound] = useState(readSound);
+  const [coach, setCoach] = useState(readCoach);
   const simple = tableStyle === 'simple';
   return {
     simple,
@@ -40,6 +45,7 @@ export function usePreferences(): Preferences {
     talk,
     tells,
     sound,
+    coach,
     toggleSimple: () => {
       const next: TableStyle = simple ? 'room' : 'simple';
       writeTableStyle(next);
@@ -60,6 +66,10 @@ export function usePreferences(): Preferences {
     setTells: (level) => {
       writeTells(level);
       setTells(level);
+    },
+    toggleCoach: () => {
+      writeCoach(!coach);
+      setCoach(!coach);
     },
   };
 }

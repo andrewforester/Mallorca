@@ -133,3 +133,14 @@ describe('tells preference', () => {
     expect(readTells()).toBe('subtle');
   });
 });
+
+describe('coach preference', () => {
+  it('is off unless stored on', async () => {
+    const { readCoach, writeCoach } = await import('./preferences.ts');
+    expect(readCoach()).toBe(false);
+    writeCoach(true);
+    expect(readCoach()).toBe(true);
+    writeCoach(false);
+    expect(readCoach()).toBe(false);
+  });
+});

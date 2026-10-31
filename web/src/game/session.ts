@@ -17,7 +17,6 @@ import type {
   Action,
   EngineEvent,
   LegalActions,
-  LogEntry,
   SeatIndex,
   Table,
   TableMode,
@@ -34,86 +33,41 @@ import {
   resultOf,
   streetActions,
 } from './outcome.ts';
-import type { HandResult, SeatActions } from './outcome.ts';
 import { handRecorder } from './records/recorder.ts';
-import type { HandRecorder, RecordsOptions } from './records/recorder.ts';
+import type { HandRecorder } from './records/recorder.ts';
 import { botRecord } from './records/record.ts';
 import type { Opponent } from './opponent.ts';
 import { initialTalk, sessionTalk } from './sessionTalk.ts';
 import { createTimers } from './timers.ts';
 import type { Timers } from './timers.ts';
-import type { QuickPhrase, SessionTalk, TalkState } from './sessionTalk.ts';
+import type { SessionTalk } from './sessionTalk.ts';
 import { silentTalkClient } from './talkClient.ts';
-import type { TalkClient } from './talkClient.ts';
-import type { Level, Style } from '../talk/index.ts';
+import type { Style } from '../talk/index.ts';
+import { COACH_OFF, createCoach } from './coach.ts';
+import type { Coach } from './coach.ts';
 
 export { resolveIntent, toIntent } from './intent.ts';
 export type { Intent } from './intent.ts';
 export { potCollected, resultOf } from './outcome.ts';
 export type { HandResult } from './outcome.ts';
 export type { ChatLine, QuickPhrase, TalkState } from './sessionTalk.ts';
+export type { CoachState, CoachStatus } from './coach.ts';
 
-export type Phase =
-  | 'idle'
-  | 'humanToAct'
-  | 'botThinking'
-  | 'animating'
-  | 'handOver'
-  | 'tournamentOver'
-  | 'sessionOver';
-
-export interface SessionResult {
-  hands: number;
-  net: number;
-}
-
-export interface SessionState {
-  table: Table;
-  phase: Phase;
-  log: LogEntry[];
-  lastActions: SeatActions;
-  closingActions: SeatActions;
-  lastDecision: Decision | null;
-  seed: number;
-  result: HandResult | null;
-  session: SessionResult;
-  sessionId: string | null;
-  opponent: Opponent;
-  talk: TalkState;
-}
-
-export interface SessionActions {
-  start(mode?: TableMode, opponent?: Opponent): Promise<void>;
-  leave(): void;
-  nextHand(): Promise<void>;
-  act(intent: Intent): Promise<void>;
-  dispose(): void;
-  say(text: string): void;
-  quick(id: QuickPhrase, text: string): void;
-  setTalk(on: boolean): void;
-  setTells(level: Level): void;
-  attachTalk(client: TalkClient): void;
-  pageHidden(): void;
-}
-
-export type Session = StoreApi<SessionState & SessionActions>;
-
-export interface SessionOptions {
-  bot: BotClient;
-  seed: number;
-  botDelayMs: number;
-  humanSeat: SeatIndex;
-  names: [string, string];
-  startingStacks?: [number, number];
-  mode: TableMode;
-  records?: RecordsOptions;
-  talk?: TalkClient;
-  connectTalk?: () => Promise<TalkClient>;
-  now?: () => number;
-  locale?: string;
-  talkOn?: boolean;
-  tells?: Level;
-}
+export type {
+  Phase,
+  Session,
+  SessionActions,
+  SessionOptions,
+  SessionResult,
+  SessionState,
+} from './sessionTypes.ts';
+import type {
+  Session,
+  SessionActions,
+  SessionOptions,
+  SessionResult,
+  SessionState,
+} from './sessionTypes.ts';
 
 type Store = SessionState & SessionActions;
 type Step = { state: Table; events: EngineEvent[] };
@@ -122,6 +76,7 @@ interface Runtime {
   set: StoreApi<Store>['setState'];
   get: StoreApi<Store>['getState'];
   bot: BotClient;
+  coach: Coach;
   rng: Rng;
   timers: Timers;
   recorder: HandRecorder;
@@ -162,6 +117,7 @@ function tally(rt: Runtime, table: Table): SessionResult {
 
 function record(rt: Runtime, events: EngineEvent[], opens = false): void {
   rt.recorder.observe(events);
+  rt.coach.observe(events);
   rt.bot.observe(toObservations(events, rt.botSeat));
   rt.talk.observe(events);
   for (const event of events) {
@@ -250,6 +206,7 @@ async function drive(rt: Runtime, myEpoch: number): Promise<void> {
     }
     if (toAct(table) === rt.humanSeat) {
       rt.set({ phase: 'humanToAct' });
+      rt.coach.ask(legalActionsOf(table), table.hand.pot);
       return;
     }
     if (!(await botTurn(rt, myEpoch))) {
@@ -266,6 +223,7 @@ function beginHand(rt: Runtime): Promise<void> {
     seats[1].stack + (hand?.committed[1] ?? 0),
   ];
   rt.bot.reset();
+  rt.coach.handStarted();
   rt.recorder.begin();
   rt.set({
     table: step.state,
@@ -324,6 +282,7 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
       rt.talk.leave();
       rt.epoch += 1;
       rt.timers.cancel();
+      rt.coach.acted();
       rt.bot.dispose?.();
     },
     nextHand() {
@@ -337,6 +296,7 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
       if (phase !== 'humanToAct' || toAct(table) !== rt.humanSeat) {
         return Promise.resolve();
       }
+      rt.coach.acted();
       play(rt, resolveIntent(intent, legalActionsOf(table)));
       return drive(rt, rt.epoch);
     },
@@ -346,6 +306,13 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
     setTells: (level) => rt.talk.setLevel(level),
     attachTalk: (client) => rt.talk.attach(client),
     pageHidden: () => rt.talk.pageHidden(),
+    setCoach(on) {
+      rt.coach.setOn(on);
+      const { phase, table } = rt.get();
+      if (on && phase === 'humanToAct' && table.hand !== null) {
+        rt.coach.ask(legalActionsOf(table), table.hand.pot);
+      }
+    },
   };
 }
 
@@ -380,10 +347,14 @@ export function createSession(options: SessionOptions): Session {
   const recorder = handRecorder(options.records, { names, humanSeat });
   const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
   return createStore<Store>((set, get) => {
+    const coach = createCoach(bot, humanSeat, options.coach ?? false, (state) =>
+      set({ coach: state }),
+    );
     const rt: Runtime = {
       set,
       get,
       bot,
+      coach,
       rng,
       timers,
       recorder,
@@ -413,6 +384,7 @@ export function createSession(options: SessionOptions): Session {
       sessionId: options.records?.sessionId ?? null,
       opponent: rt.opponent,
       talk: initialTalk(options.talkOn ?? true, options.tells ?? 'subtle'),
+      coach: COACH_OFF,
       ...sessionActions(rt, options),
     };
   });

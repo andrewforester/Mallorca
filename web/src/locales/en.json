@@ -115,7 +115,45 @@
     }
   },
   "coach": {
-    "label": "Coach"
+    "label": "Coach",
+    "open": "Coach",
+    "close": "Close the coach",
+    "mode": "Coach mode",
+    "idle": "The coach speaks on your turn.",
+    "waiting": "The coach is thinking.",
+    "unavailable": "The coach is not available right now.",
+    "hintHeading": "Strategy with your hand",
+    "share": "{{move}} {{percent}}%",
+    "mixed": "A mixed strategy: play each action about this often.",
+    "approximate": "Approximate: this spot is off the strategy tree.",
+    "noHint": "The strategy has no advice for this spot.",
+    "tabs": {
+      "hint": "Strategy",
+      "range": "Bot range",
+      "numbers": "Numbers"
+    },
+    "move": {
+      "fold": "Fold",
+      "check": "Check",
+      "call": "Call {{amount}}",
+      "bet": "Bet {{amount}}",
+      "raise": "Raise to {{amount}}",
+      "allIn": "All-in {{amount}}"
+    },
+    "strategyCaption": "What the strategy plays from your seat with every hand",
+    "rangeCaption": "How likely the bot holds each hand after its actions",
+    "noRange": "The math bot does not play from the strategy, so it has no range to show.",
+    "combos": "{{combos}} combos in the range",
+    "equity": "Your equity",
+    "versus": {
+      "range": "against the bot range",
+      "random": "against a random hand"
+    },
+    "required": "Equity to call",
+    "mdf": "Minimum defence",
+    "bluffs": "Bluffs this bet can hold",
+    "percent": "{{value}}%",
+    "noBet": "Nothing to call: pot odds apply when you face a bet."
   },
   "over": {
     "title": "Good game",

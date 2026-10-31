@@ -46,6 +46,7 @@ const handle = createWorkerHandler(
     scope.postMessage(reply);
   },
   loadOpponent,
+  (opponent) => cfrModel(opponent === 'math' ? 'cfr' : opponent),
 );
 
 scope.onmessage = (event) => {

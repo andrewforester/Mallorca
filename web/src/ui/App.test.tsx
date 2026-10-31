@@ -364,3 +364,29 @@ describe('App', () => {
     session.getState().dispose();
   });
 });
+
+describe('App coach mode', () => {
+  it('turns on from the start screen and shows the panel at the player turn', async () => {
+    const { session } = setup();
+    const box = screen.getByTestId('start-coach') as HTMLInputElement;
+    expect(box.checked).toBe(false);
+    fireEvent.click(box);
+    expect(localStorage.getItem('mallorca.coach')).toBe('on');
+    fireEvent.click(screen.getByTestId('start-tournament'));
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    await waitFor(() => expect(session.getState().coach.status).toBe('unavailable'));
+    expect(screen.getByTestId('coach-status').textContent).toContain('not available');
+    session.getState().dispose();
+  });
+
+  it('turns off from the menu', async () => {
+    localStorage.setItem('mallorca.coach', 'on');
+    const { session } = setup();
+    fireEvent.click(screen.getByTestId('start-tournament'));
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    fireEvent.click(screen.getByTestId('coach-mode'));
+    expect(session.getState().coach.status).toBe('off');
+    expect(screen.queryByTestId('coach-status')).toBeNull();
+    session.getState().dispose();
+  });
+});

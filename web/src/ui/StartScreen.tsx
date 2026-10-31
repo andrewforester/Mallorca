@@ -10,6 +10,8 @@ export interface StartScreenProps {
   farewell?: boolean;
   simple?: boolean;
   finePointer?: boolean;
+  coach?: boolean;
+  onToggleCoach?: () => void;
 }
 
 function OpponentChoice({
@@ -40,6 +42,25 @@ function OpponentChoice({
   );
 }
 
+function CoachChoice({ coach, onToggle }: { coach: boolean; onToggle?: () => void }) {
+  return (
+    <label class="start-coach">
+      <input type="checkbox" data-testid="start-coach" checked={coach} onChange={onToggle} />
+      <span>{t('coach.mode')}</span>
+    </label>
+  );
+}
+
+function SeedLine({ loading, seed }: { loading: boolean; seed: number }) {
+  return loading ? (
+    <p class="start-seed" role="status" data-testid="start-loading">
+      {t('start.loading')}
+    </p>
+  ) : (
+    <p class="start-seed">{t('status.seed', { seed })}</p>
+  );
+}
+
 function hasFinePointer(): boolean {
   return globalThis.matchMedia?.('(pointer: fine)').matches ?? true;
 }
@@ -50,6 +71,8 @@ export function StartScreen({
   farewell = false,
   simple = false,
   finePointer = hasFinePointer(),
+  coach = false,
+  onToggleCoach,
 }: StartScreenProps) {
   const [opponent, setOpponent] = useState<Opponent>('math');
   const [starting, setStarting] = useState(false);
@@ -73,6 +96,7 @@ export function StartScreen({
           onChange={setOpponent}
           opponents={opponentsFor(finePointer)}
         />
+        <CoachChoice coach={coach} onToggle={onToggleCoach} />
         <div class="start-actions">
           <button
             type="button"
@@ -91,13 +115,7 @@ export function StartScreen({
             {t('start.tournament')}
           </button>
         </div>
-        {starting && opponent !== 'math' ? (
-          <p class="start-seed" role="status" data-testid="start-loading">
-            {t('start.loading')}
-          </p>
-        ) : (
-          <p class="start-seed">{t('status.seed', { seed })}</p>
-        )}
+        <SeedLine loading={starting && opponent !== 'math'} seed={seed} />
       </main>
     </Scene>
   );

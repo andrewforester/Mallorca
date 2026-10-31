@@ -329,3 +329,17 @@ describe('workerBot select', () => {
     await expect(pending).resolves.toBe('cfr');
   });
 });
+
+describe('withFallback coach', () => {
+  it('gives up on a coach that never answers', async () => {
+    const silent: BotClient = {
+      observe: () => undefined,
+      reset: () => undefined,
+      decide: () => new Promise(() => undefined),
+      coach: () => new Promise(() => undefined),
+    };
+    const client = withFallback(silent, 10);
+    const legal = { fold: false, check: true, call: null, raise: null };
+    await expect(client.coach?.([], legal, 40)).rejects.toThrow();
+  });
+});
