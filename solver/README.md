@@ -12,6 +12,12 @@ Start with `CLAUDE.md` for the working rules.
 
 Checkpoints are keyed by a fingerprint of blinds, stack, buckets, bet sizes, the tree and the bucket tables, so `name`, `threads`, `checkpoint_minutes`, `memory_limit_gb` and the `[cfr]` parameters may change between resumes.
 
+Reproducibility: with `--threads 1` and a fixed `--seed`, a run is bit-reproducible, and a periodic checkpoint
+equals a fresh run of its iteration count. A resume reseeds the workers from the seed, the worker index and the
+iteration count it starts at, so a run stopped and resumed differs from an uninterrupted one. With more threads the
+discount still runs once per `discount_interval`, after exactly that many iterations and while no iteration runs,
+but concurrent iterations update shared regrets without locks, so the result depends on timing and thread count.
+
 ## Overnight runbook for `v1`
 
 Run everything from `solver/` in release mode. `D=data/v1` below; the preset is `presets/v1.toml` (stack 2000,
