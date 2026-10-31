@@ -219,10 +219,9 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   point, or, with the turn solver off and the river on, from the end of the flop again. The solve's `action_evs`
   (`Bot::last_evs`) are chips measured from the start of the hand, so a fold is minus the folder's whole
   contribution to the pot.
-  `BROWSER_SOLVER` (`solver.ts`, `{ turn: 12, river: 200 }`) is the game's setting. Measured in Node on an Apple M3
-  Pro, a turn decision takes 854 ms at the 95th percentile with 12 iterations and 1208 ms with 15; river 200 was
-  not varied (about 70 ms a decision). The slowest browser turn decision in the e2e game is about 1.1 s, so a phone
-  four times slower needs about 3.4 to 4.4 s, a thin margin under the 5 s fallback budget. The module is built with
+  The game does not use the solver: on the `v2` blueprint it wins only at 50 turn iterations, and a turn decision
+  then takes 3.2 s at the median and up to 10 s on an Apple M3 Pro, while at 12 iterations (about 1 s) it gains
+  nothing (`solver/RESULTS.md`). The arena turns it on with `cfr-solve`. The module is built with
   `+simd128` (`solver/.cargo/config.toml`) and needs WASM SIMD: a browser without it fails to load the module and
   the game falls back to the math bot.
 - `createCfrBrain(model, rng, options?)` is a `Brain` with `dispose()`; `options` goes to `model.newBot`. It
@@ -277,7 +276,7 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   worker's message handling as a plain function. A `select` request queues every later request until the opponent's
   brain factory is ready, then replies `{ id, opponent }` or `{ id, error }` and keeps the old brain on an error.
   The worker loads the CFR model once (`fetch` of the two `new URL(..., import.meta.url)` assets) and seeds its
-  brains with `mulberry32(seed)`; the `cfr` opponent is `createCfrBrain` with `{ solver: BROWSER_SOLVER }`.
+  brains with `mulberry32(seed)`; the `cfr` and `cfr-v2` opponents are `createCfrBrain` without the solver.
   Replacing a brain disposes it. `inProcessBot()` runs the math brain on the main thread and rejects
   `select('cfr')`.
 - `withFallback` wraps a client: when `decide` rejects or takes longer than 5 s, it disposes the primary, replays

@@ -1,6 +1,6 @@
 import { createMathBrain, randomVillainModel } from '../brains/index.ts';
 import { mulberry32 } from '../cards/index.ts';
-import { BROWSER_SOLVER, createCfrBrain, createCfrModel, inflate } from '../cfr/index.ts';
+import { createCfrBrain, createCfrModel, inflate } from '../cfr/index.ts';
 import type { CfrModel } from '../cfr/index.ts';
 import type { Opponent } from './opponent.ts';
 import type { WorkerReply, WorkerRequest } from './workerProtocol.ts';
@@ -45,7 +45,7 @@ const loadOpponent: OpponentLoader = async (opponent, seed) => {
   if (opponent === 'math') throw new Error('The math bot needs no model');
   const loaded = await cfrModel(opponent);
   const rng = mulberry32(seed);
-  return () => createCfrBrain(loaded, rng, { solver: BROWSER_SOLVER });
+  return () => createCfrBrain(loaded, rng);
 };
 
 const handle = createWorkerHandler(

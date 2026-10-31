@@ -28,7 +28,7 @@ const BOT_TURN_TRACKER = `
   }).observe(document, { childList: true, subtree: true });
 `;
 
-const DECISION_BUDGET_MS = 5000;
+const QUICK_DECISION_MS = 500;
 const TURN_BOARD = 4;
 
 interface Played {
@@ -103,7 +103,7 @@ test('a phone is not offered the v2 solver', async ({ page, isMobile }) => {
   await expect(byId(page, 'opponent-cfr-v2')).toHaveCount(0);
 });
 
-test('the solver decides every turn and river within the 5 s fallback budget', async ({ page }) => {
+test('the solver opponent answers every turn and river at once', async ({ page }) => {
   test.setTimeout(SOLVER_TIMEOUT_MS * 2);
   await page.addInitScript(BOT_TURN_TRACKER);
   await page.goto(FAST_URL);
@@ -123,5 +123,5 @@ test('the solver decides every turn and river within the 5 s fallback budget', a
   test.info().annotations.push({ type: 'bot decisions', description: JSON.stringify(turns) });
   expect(turns.length).toBeGreaterThan(0);
   expect(turns.filter((turn) => turn.board >= TURN_BOARD).length).toBeGreaterThan(0);
-  expect(turns.filter((turn) => turn.ms >= DECISION_BUDGET_MS)).toEqual([]);
+  expect(turns.filter((turn) => turn.ms >= QUICK_DECISION_MS)).toEqual([]);
 });

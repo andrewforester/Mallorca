@@ -36,9 +36,9 @@ math vs always-call: +272.8 ± 42.4 bb/100 over 4000 hands in 37 s
 `cfr-solve` is the same blueprint with the turn and river subgame solver on (`ARENA_SOLVER` in `bots.ts`): it plays
 preflop and the flop from the blueprint and solves the turn with 50 iterations and the river with 200. These are
 the largest counts that keep `cfr-solve` vs `cfr` at about 1.4 s per hand on one worker (a turn decision takes
-3.4 s at the median, a river decision 70 ms), so 20,000 pairs over 12 workers take about 1.5 hours. The game's
-Solver opponent uses fewer turn iterations (`BROWSER_SOLVER` in `src/cfr/solver.ts`, 12 and 200) to stay inside
-the 5 s decision budget on a phone.
+3.4 s at the median, a river decision 70 ms), so 20,000 pairs over 12 workers take about 1.5 hours. The game plays
+the blueprint without the solver: at 12 turn iterations, the most that fit in about a second, the solver gains
+nothing (`solver/RESULTS.md`).
 
 `cfr` is the `v1` blueprint of `solver/` (checkpoint 18) in `src/cfr/v1.mlcs.gz`, played through
 `src/cfr/mallorca.wasm`; `npm run arena` builds the module first. `cfr:<play file>` plays any play file
