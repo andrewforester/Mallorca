@@ -39,33 +39,31 @@ describe('HandLogDrawer', () => {
 
   it('lists the street headings in order', () => {
     setup();
-    const headings = [...document.querySelectorAll('.hand-log-street-name')].map(
-      (node) => node.textContent,
-    );
+    const headings = screen.getAllByRole('heading', { level: 3 }).map((node) => node.textContent);
     expect(headings).toEqual(['Preflop', 'Flop']);
   });
 
   it('shows the flop as three card chips and hides the preflop pot', () => {
     setup();
-    const sections = document.querySelectorAll('section');
-    expect(sections[0]?.querySelectorAll('.log-card').length).toBe(0);
-    expect(sections[0]?.textContent).not.toContain('Pot');
-    const chips = sections[1]?.querySelectorAll('.log-card') ?? [];
+    const preflop = screen.getByRole('heading', { name: 'Preflop' }).closest('section');
+    const flop = screen.getByRole('heading', { name: 'Flop' }).closest('section');
+    expect(preflop?.querySelectorAll('.log-card').length).toBe(0);
+    expect(preflop?.textContent).not.toContain('Pot');
+    const chips = flop?.querySelectorAll('.log-card') ?? [];
     expect(chips.length).toBe(3);
     expect(chips[0]?.textContent).toBe('A♠');
     expect(chips[2]?.classList.contains('log-card-red')).toBe(true);
     expect(chips[0]?.classList.contains('log-card-red')).toBe(false);
-    expect(sections[1]?.textContent).toContain('Pot 120');
+    expect(flop?.textContent).toContain('Pot 120');
   });
 
   it('words tokens with the log line and marks aggression', () => {
     setup();
-    const tokens = [...document.querySelectorAll('.log-token')];
-    expect(tokens.some((node) => node.textContent === 'You bet 80')).toBe(true);
-    const raise = tokens.find((node) => node.textContent === 'You raise to 60');
-    expect(raise?.classList.contains('log-token-aggressive')).toBe(true);
-    const call = tokens.find((node) => node.textContent === 'Mallorca calls 40');
-    expect(call?.classList.contains('log-token-aggressive')).toBe(false);
+    expect(screen.getByText('You bet 80')).not.toBeNull();
+    const raise = screen.getByText('You raise to 60');
+    expect(raise.classList.contains('log-token-aggressive')).toBe(true);
+    const call = screen.getByText('Mallorca calls 40');
+    expect(call.classList.contains('log-token-aggressive')).toBe(false);
   });
 
   it('shows only the current hand', () => {

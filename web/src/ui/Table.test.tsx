@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen } from '@testing-library/preact';
+import { act, cleanup, render, screen, within } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fixtureResult, viewModel } from './fixtures.ts';
 import { Table } from './Table.tsx';
@@ -11,9 +11,9 @@ function table(vm = viewModel(), phase: 'humanToAct' | 'botThinking' | 'handOver
 
 describe('Table layout', () => {
   it('keeps the coach slot and holds no hand log', () => {
-    const { container } = table();
+    table();
     expect(screen.getByTestId('coach')).not.toBeNull();
-    expect(container.querySelector('[data-testid="hand-log"]')).toBeNull();
+    expect(screen.queryByTestId('hand-log')).toBeNull();
   });
 });
 
@@ -48,11 +48,9 @@ describe('Table result and announcements', () => {
     const { container } = table();
     const felt = container.querySelector('.table-felt');
     expect(felt).not.toBeNull();
-    expect(felt?.querySelector('[data-testid="board"]')).not.toBeNull();
-    expect(felt?.querySelector('[data-testid="pot"]')).not.toBeNull();
-    expect(screen.getByTestId('seat-1').querySelectorAll('[data-testid="card-back"]').length).toBe(
-      2,
-    );
+    expect(felt?.contains(screen.getByTestId('board'))).toBe(true);
+    expect(felt?.contains(screen.getByTestId('pot'))).toBe(true);
+    expect(within(screen.getByTestId('seat-1')).getAllByTestId('card-back').length).toBe(2);
   });
 
   it('puts the dealer button once on the felt beside the button seat bet', () => {
@@ -69,7 +67,8 @@ describe('Table result and announcements', () => {
 
   it('puts the bets on the felt instead of the seat tags', () => {
     const { container } = table();
-    expect(container.querySelector('.tag-bet')).toBeNull();
+    expect(screen.getByTestId('seat-0').contains(screen.getByTestId('bet-0'))).toBe(false);
+    expect(screen.getByTestId('seat-1').contains(screen.getByTestId('bet-1'))).toBe(false);
     const felt = container.querySelector('.table-felt');
     expect(felt?.contains(screen.getByTestId('bet-0'))).toBe(true);
     expect(felt?.contains(screen.getByTestId('bet-1'))).toBe(true);
