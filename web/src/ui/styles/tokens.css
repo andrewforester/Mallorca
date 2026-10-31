@@ -53,6 +53,7 @@
   --card-width: 56px;
   --action-bar-width: 380px;
   --chat-button-size: 40px;
+  --action-bubble-height: 28px;
   --status-bar-height: calc(2 * var(--space-3) + var(--tap-size));
   --color-amount-bg: rgba(10, 6, 3, 0.6);
   --color-slot-border: rgba(246, 236, 218, 0.14);
