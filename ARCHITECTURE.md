@@ -67,8 +67,11 @@ build events. `import-x/no-cycle` forbids import cycles inside `src`.
 
 ### Purity
 
-`cards`, `equity`, `engine`, `brains` and `cfr` use no DOM, no `Math.random`, no `Date` and no `performance`. ESLint
-enforces it with `no-restricted-globals` and `no-restricted-properties`. Randomness enters as an `Rng` argument.
+`cards`, `equity`, `engine`, `brains` and `cfr` use no DOM (`document`, `window`, `self`, `navigator`), no
+`Math.random` or `crypto`, no `Date` or `performance`, no timers (`setTimeout`, `setInterval`), no `fetch` and no
+storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-globals` and
+`no-restricted-properties`. Randomness enters as an `Rng` argument, bytes through a reader passed in; `cfr`'s
+`inflate` uses `Blob`, `Response` and `DecompressionStream`, which stay allowed.
 
 ## cards
 
