@@ -1,85 +1,134 @@
-# Coach phase 1: the bot's range and the player's equity
+# Coach mode, first version
 
-Issue #5, phase 1. The coach panel shows a 13x13 heatmap of the bot's range and the player's equity against it, in
-every spot, on phone and desktop, computed off the main thread.
+Issue #5. A training mode on the same table: the coach shows what the CFR strategy would do with the player's hand,
+the bot's range narrowed by its actions, the numbers of the spot, and after each hand a review of the player's
+decisions and the leaks of the session. It covers phase 1 and the strategy part of phase 2; EV per action, the EV
+lost in the review and the LLM explanations come later.
 
-## Decision: the range comes from the CFR strategy
+## Scope
 
-The issue proposed `Spectrum` and `VillainSpectrumTracker`. They model the opponent as the Java `RandomBot`, whose
-action probabilities do not depend on the cards, so Bayes multiplies every hand by the same factor and the heatmap
-stays flat apart from card removal. The owner chose the exact range instead: the bot is our own CFR bot, so the
-probability of each action for every hole-card pair is in the strategy file.
+In the spot, while the player is to act:
 
-- Opponents `cfr` and `cfr-v2`: exact range, narrowed by each bot action.
-- Opponent `math`: no range model. The panel shows equity against a random hand and no heatmap, with a line that says
-  why.
+1. **Move hint**: the strategy's distribution over actions for the player's hand ("check 60%, bet half pot 30%,
+   bet pot 10%"), with a sentence of its own for a mixed strategy.
+2. **Strategy grid**: 13x13, what the strategy does with every hand from the player's seat in this spot, each cell
+   split into action colours by frequency.
+3. **Bot range grid**: 13x13, the bot's range narrowed by Bayes over its actions.
+4. **Numbers**: equity against the bot's range, pot odds, the equity a call needs, the minimum defence frequency
+   facing a bet, and the bluff share a bet of that size implies.
+5. **Range composition**: the bot's range split by made hand and draw on this board (sets and better, two pair,
+   top pair, other pairs, draws, air), and the share of it the player is ahead of.
+6. **Outs**: the cards that improve the player to a hand ahead of most of the range, and the chance to hit by the
+   next card and by the river.
+7. **Blockers**: how much of the bot's strong part (two pair and better, its nut draws) the player's cards remove.
 
-## Range in Rust (`mallorca-core::bot`)
+After the hand and over the session:
 
-The bot already knows, at every decision, the tree node it sampled from and the tree action it chose. The range is
-the bot's own range as the player sees it: every hole-card pair the bot could hold, weighted by the probability that
-the bot's strategy took the actions it took.
+8. **Hand review**: every decision of the player beside the strategy's distribution in that spot, marked as a
+   strategy action (frequency at least 25 %), a rare one (5 to 25 %) or off-strategy (under 5 %).
+9. **Leaks**: the session's frequencies against the strategy's in the same spots: preflop open, 3-bet and fold to
+   3-bet, flop c-bet and fold to c-bet, turn and river aggression, fold facing a river bet. Shown with the number
+   of spots, and only once a line has at least 10.
 
-- `Bot` keeps `history: Vec<Step>`, one `Step { node, action, street, board }` per decision that sampled the
-  strategy. A decision that plays the passive action without sampling (no node, shifted resync, unknown hole cards)
-  adds no step: the action did not depend on the cards. The resync draw does not depend on the cards either, so it
-  cancels out of Bayes.
-- `Range::of(model, history, board)` returns 1326 weights indexed by the pair index of `(a, b)`, `a < b`. It starts
-  at 1, sets 0 for pairs that touch the board, and multiplies each pair by `p(action | node, bucket(pair))`, with
-  `p` the quantized byte over the sum of the node's bytes. Pairs are grouped by bucket, so each step reads the
-  strategy once per bucket.
-- Bucketing every pair is the cost. Flop buckets are a table lookup. Live turn and river buckets reuse one
-  computation per board instead of one per pair: the river strength of every pair on a five-card board is one sort of
-  the 1081 live pairs (`river_strength`), and the turn value or histogram aggregates the 46 river boards. Target:
-  under 150 ms for a full river range in release WASM on a desktop, checked by an ignored release test.
-- The player's hole cards are unknown to the bot; the TS side zeroes the pairs that touch them.
+Not in this version: EV per action and EV lost, quiz mode, preflop charts, LLM explanations, a range or hints for
+the math bot.
 
-WASM ABI: `bot_range(bot) -> *const f32`, a pointer to 1326 `f32` in a buffer owned by the seat, valid until the next
-call on that seat. `abi.test.ts` pins it like the other exports.
+## Mode
 
-## TS layers
+A coach switch on the start screen and in the menu (`mallorca.coach`, off by default). Off, the table is the game
+as today. On, the coach panel opens and the review follows each hand. The coach needs a CFR strategy: with the
+`math` opponent the switch also loads `cfr` into a coach engine (below), and the bot range and composition are
+hidden, since the math bot's play does not come from the strategy; the hint, the strategy grid and the numbers
+against a random hand remain.
+
+## The strategy from both seats
+
+The strategy file holds, for every decision node and bucket, the probability of each tree action, for both seats.
+The coach reads it in two ways.
+
+- **Hint and strategy grid**: a coach `Bot` sits in the player's seat and follows the hand exactly as the bot does
+  for its own seat (the same tree walk, off-tree mapping and resync). At the player's turn it returns the node and,
+  for every hole-card pair, the action probabilities of its bucket.
+- **Bot range**: the playing bot records each decision that sampled the strategy as
+  `Step { node, action, street, board }`. A decision that plays the passive action without sampling adds no step:
+  it did not depend on the cards, and the resync draw does not either, so both cancel out of Bayes. The range is
+  1326 weights, 1 at the start, 0 for pairs that touch the board, each multiplied by `p(action | node, bucket)` of
+  every step, `p` the quantized byte over the node's byte sum. With the `math` opponent there is no playing CFR
+  bot and no range.
+
+Bucketing all 1326 pairs is the cost. Pairs are grouped by bucket so each step reads the strategy once per bucket.
+Flop buckets are a table lookup; live turn and river buckets reuse one computation per board instead of one per
+pair (the river strength of every pair on a five-card board is one sort of the live pairs, the turn value or
+histogram aggregates the river boards). Target: a full river grid and range under 150 ms in release WASM on a
+desktop, held by an ignored release test.
+
+When the hand is off the tree (an off-tree size mapped to a neighbour, a resync), the hint is approximate and the
+panel says so.
+
+## Rust (`mallorca-core::bot`, `mallorca-wasm`)
+
+- `Bot::history()` and `range(model, board) -> [f32; 1326]`, indexed by the pair index of `(a, b)`, `a < b`.
+- `Bot::spot(model, legal) -> Option<SpotView>`: the node the bot would decide at (the same validity and resync as
+  `decide`, without sampling or moving) and its action labels (`fold`, `check`, `call`, raise as a pot fraction,
+  all-in).
+- `strategy_grid(model, spot, board) -> Vec<f32>`: 1326 rows of action probabilities.
+- WASM: `bot_range`, `bot_spot`, `bot_spot_grid`, each writing into a buffer owned by the seat and returning its
+  pointer, valid until the next call on that seat. `abi.test.ts` pins them.
+
+## TS
 
 A new layer `coach/` between `brains`/`cfr` and `game`.
 
-| Layer   | May import from                                     |
-| ------- | --------------------------------------------------- |
-| `coach` | `cards`, `equity`, `brains`, types from `cfr`       |
-| `game`  | adds `coach`                                        |
+| Layer   | May import from                               |
+| ------- | --------------------------------------------- |
+| `coach` | `cards`, `equity`, `brains`, types from `cfr` |
+| `game`  | adds `coach`                                  |
 
-- `coach/grid.ts`: `toGrid(weights)` folds 1326 weights into 169 cells (row and column by rank, pairs on the
-  diagonal, suited above it), each cell the mean weight of its live combos and the share of the range it holds.
-- `coach/equity.ts`: `equityVsRange(hero, board, weights)`. Postflop it builds a `Spectrum` and calls
-  `SpectrumEquilator`; preflop it sums the 169x169 preflop table over the weighted classes.
-- `coach/odds.ts`: pot odds and the price of the call from the view of the player: `toCall / (pot + toCall)`, and the
-  equity needed to call.
-- `CoachFacts`: `{ grid | null, equity, potOdds | null, toCall }`.
+- `grid.ts`: folds 1326 values into 169 cells (rows and columns by rank, pairs on the diagonal, suited above it).
+- `equity.ts`: equity against a weighted range: postflop through `Spectrum` and `SpectrumEquilator`, preflop from
+  the 169x169 preflop table.
+- `odds.ts`: pot odds, required equity, MDF and the implied bluff share of a bet.
+- `composition.ts`, `outs.ts`, `blockers.ts`: items 5 to 7 from the range, the board and the hand evaluator.
+- `review.ts`: grades each player decision against the hint of that spot (item 8).
+- `leaks.ts`: counts the spots of item 9 over the session's hands and the strategy's frequency in the same spots.
+- `CoachFacts`: everything the panel shows for one spot, plain data.
 
 ## Where it runs
 
-The bot worker already holds the model and the bot whose history is the range. It is idle while the player acts.
+The bot worker holds the model and the playing bot, and is idle while the player acts. The coach `Bot` lives there
+too, fed the same observations from the player's side.
 
-- New request `{ kind: 'coach'; id; hero; board }`, reply `{ id; facts: CoachFacts }`. The worker reads the range
-  from the cfr brain (`CfrBrain.range()`), zeroes the player's cards, computes the grid and the equity and replies.
-  For `math` it replies with a uniform range and no grid.
-- `BotClient.coach?(hero, board)`; `withFallback` and `inProcessBot` answer the uniform facts.
-- The session asks for facts when the phase becomes `humanToAct` and stores them as `coach` in `SessionState`; a
-  reply for an older step is dropped, like a late decision.
+- `WorkerRequest` gains `{ kind: 'coach'; id; hero; board; legal }`, reply `{ id; facts: CoachFacts }`.
+- `BotClient.coach?(...)`; `withFallback` and `inProcessBot` answer no facts, and the panel shows that the coach is
+  unavailable.
+- The session asks for facts when the phase becomes `humanToAct` and keeps them as `coach`; a reply for an older
+  step is dropped, like a late decision. Each player decision stores its hint in the hand record (`coachHint`), so
+  the review and the leaks read the records and the export carries them.
 
 ## UI
 
-`Coach` renders into the existing `coach` slot: the equity, pot odds and price of the call on one line, the 13x13
-grid below, cell opacity by weight. Landscape: the side panel. Portrait: a toggle in the status bar opens it as a
-sheet, like the hand log. A preference `mallorca.coach` turns it on or off; off by default so the game stays a game.
-Strings go to `en.json`; tokens to `tokens.css`.
+- `Coach` in the existing `coach` slot: the hint line on top, then tabs **Hint** (strategy grid), **Range** (bot
+  range grid and composition) and **Numbers** (equity, odds, MDF, outs, blockers). Landscape: the side panel.
+  Portrait: a status bar toggle opens it as a sheet, like the hand log.
+- `HandReview` after each hand in coach mode: one row per player decision, its grade and the strategy's
+  distribution. `Leaks` in the session-over dialog and in the menu.
+- Strings in `en.json`, colours of the action classes as tokens in `tokens.css`, in light and dark themes.
 
 ## Tests
 
-- Rust: the range of a hand where the bot only checks is unchanged; after a bet the pairs with a higher bet
-  probability gain weight; board pairs are 0; the per-bucket grouping equals a per-pair reference.
-- TS: `toGrid` sums, `equityVsRange` against a one-hand range equals the head-to-head equity, the worker handler
-  answers `coach`, the session drops stale facts, `Coach` renders the grid.
-- e2e: the coach panel shows a grid with the `cfr` opponent on phone and desktop. Contact sheets after the UI change.
+- Rust: a check-only line leaves the range unchanged; after a bet, pairs with a higher bet probability gain weight;
+  board pairs are 0; per-bucket grouping equals a per-pair reference; `spot` matches the node `decide` samples from.
+- TS: grid folding, equity against a one-hand range equals the head-to-head equity, odds formulas, composition on
+  fixed boards, outs, blockers, review grading, leak counting, the worker handler answers `coach`, the session drops
+  stale facts, the components render.
+- e2e: in coach mode with `cfr`, the panel shows the hint and both grids on phone and desktop, the review appears
+  after a hand. Contact sheets after the UI change.
 
-## Out of scope
+## Delivery
 
-Hints, EV and hand review (phase 2), the LLM and server storage (phase 3), a range for the math bot.
+Four pull requests, each usable on its own:
+
+1. Rust: range, spot and strategy grid, the WASM ABI.
+2. `coach/` layer and the worker request: hint, grids and numbers in the panel, coach switch.
+3. Range composition, outs and blockers.
+4. Hand review, coach hints in the records, leaks.
