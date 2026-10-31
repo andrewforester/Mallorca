@@ -1,4 +1,4 @@
-use crate::bytes::{ByteReader, Truncated};
+use crate::bytes::{u16_len, ByteReader, Truncated};
 use crate::potential::{BINS, CLUSTERS};
 use std::fmt;
 
@@ -51,8 +51,8 @@ impl From<Truncated> for CentroidsError {
 }
 
 fn encode_section(out: &mut Vec<u8>, values: &[f32], dimension: usize) {
-    out.extend_from_slice(&((values.len() / dimension) as u16).to_le_bytes());
-    out.extend_from_slice(&(dimension as u16).to_le_bytes());
+    out.extend_from_slice(&u16_len(values.len() / dimension));
+    out.extend_from_slice(&u16_len(dimension));
     for v in values {
         out.extend_from_slice(&v.to_le_bytes());
     }

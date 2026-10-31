@@ -1,4 +1,4 @@
-use crate::bytes::{ByteReader, Truncated};
+use crate::bytes::{u32_len, u8_len, ByteReader, Truncated};
 use crate::preset::Preset;
 use std::fmt;
 
@@ -188,7 +188,7 @@ impl Tree {
         for b in self.buckets {
             out.extend_from_slice(&b.to_le_bytes());
         }
-        out.extend_from_slice(&(self.nodes.len() as u32).to_le_bytes());
+        out.extend_from_slice(&u32_len(self.nodes.len()));
         let put_pair = |out: &mut Vec<u8>, v: &[u32; 2]| {
             out.extend_from_slice(&v[0].to_le_bytes());
             out.extend_from_slice(&v[1].to_le_bytes());
@@ -207,7 +207,7 @@ impl Tree {
                     out.push(street.as_index() as u8);
                     put_pair(&mut out, committed);
                     put_pair(&mut out, street_bets);
-                    out.push(actions.len() as u8);
+                    out.push(u8_len(actions.len()));
                     for &(kind, child) in actions {
                         match kind {
                             ActionKind::Fold => out.push(0),

@@ -70,6 +70,22 @@ pub fn f32s(bytes: &[u8]) -> Vec<f32> {
         .collect()
 }
 
+pub fn u32_len(n: usize) -> [u8; 4] {
+    u32::try_from(n)
+        .expect("length exceeds its u32 field")
+        .to_le_bytes()
+}
+
+pub fn u16_len(n: usize) -> [u8; 2] {
+    u16::try_from(n)
+        .expect("length exceeds its u16 field")
+        .to_le_bytes()
+}
+
+pub fn u8_len(n: usize) -> u8 {
+    u8::try_from(n).expect("length exceeds its u8 field")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -106,6 +122,31 @@ mod tests {
         assert_eq!(r.u16(), Ok(0x0201));
         assert_eq!(r.u16(), Err(Truncated));
         assert_eq!(r.u64(), Err(Truncated));
+    }
+
+    #[test]
+    fn lengths_are_written_little_endian() {
+        assert_eq!(u32_len(0x0102_0304), [4, 3, 2, 1]);
+        assert_eq!(u16_len(0xffff), [0xff, 0xff]);
+        assert_eq!(u8_len(255), 255);
+    }
+
+    #[test]
+    #[should_panic(expected = "length exceeds its u16 field")]
+    fn a_length_beyond_u16_is_refused() {
+        u16_len(0x1_0000);
+    }
+
+    #[test]
+    #[should_panic(expected = "length exceeds its u8 field")]
+    fn a_length_beyond_u8_is_refused() {
+        u8_len(256);
+    }
+
+    #[test]
+    #[should_panic(expected = "length exceeds its u32 field")]
+    fn a_length_beyond_u32_is_refused() {
+        u32_len(usize::try_from(u64::from(u32::MAX) + 1).unwrap());
     }
 
     #[test]

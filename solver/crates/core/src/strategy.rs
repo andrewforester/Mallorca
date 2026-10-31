@@ -1,4 +1,4 @@
-use crate::bytes::{ByteReader, Truncated};
+use crate::bytes::{u16_len, u32_len, ByteReader, Truncated};
 use crate::iso::street_indexer;
 use crate::potential::{BINS, CLUSTERS};
 use crate::tree::{Node, NodeId, Street, Tree};
@@ -291,7 +291,7 @@ impl StrategyFile {
         let mut out = Vec::new();
         if self.thresholds.is_empty() && self.centroids.is_empty() {
             for table in &self.tables {
-                out.extend_from_slice(&(table.len() as u32).to_le_bytes());
+                out.extend_from_slice(&u32_len(table.len()));
                 out.extend_from_slice(table);
             }
             return out;
@@ -302,13 +302,13 @@ impl StrategyFile {
                 self.write_centroids(&mut out, street, c);
             } else if let Some(t) = self.thresholds_of(street) {
                 out.push(KIND_THRESHOLDS);
-                out.extend_from_slice(&(t.len() as u16).to_le_bytes());
+                out.extend_from_slice(&u16_len(t.len()));
                 for v in t {
                     out.extend_from_slice(&v.to_le_bytes());
                 }
             } else if let Some(table) = tables.next() {
                 out.push(KIND_TABLE);
-                out.extend_from_slice(&(table.len() as u32).to_le_bytes());
+                out.extend_from_slice(&u32_len(table.len()));
                 out.extend_from_slice(table);
             }
         }
@@ -318,8 +318,8 @@ impl StrategyFile {
     fn write_centroids(&self, out: &mut Vec<u8>, street: Street, centroids: &[f32]) {
         let dimension = centroid_dimension(street).unwrap_or(BINS);
         out.push(KIND_CENTROIDS);
-        out.extend_from_slice(&((centroids.len() / dimension) as u16).to_le_bytes());
-        out.extend_from_slice(&(dimension as u16).to_le_bytes());
+        out.extend_from_slice(&u16_len(centroids.len() / dimension));
+        out.extend_from_slice(&u16_len(dimension));
         for v in centroids {
             out.extend_from_slice(&v.to_le_bytes());
         }
@@ -357,10 +357,10 @@ impl StrategyFile {
         out.push(self.streets);
         out.extend_from_slice(&self.iterations.to_le_bytes());
         out.extend_from_slice(&self.checkpoint.to_le_bytes());
-        out.extend_from_slice(&(tree.len() as u32).to_le_bytes());
+        out.extend_from_slice(&u32_len(tree.len()));
         out.extend_from_slice(&tree);
         let section = self.bucket_section();
-        out.extend_from_slice(&(section.len() as u32).to_le_bytes());
+        out.extend_from_slice(&u32_len(section.len()));
         out.extend_from_slice(&section);
         out.extend_from_slice(&self.probabilities);
         out
