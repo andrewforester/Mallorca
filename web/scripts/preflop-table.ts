@@ -3,12 +3,13 @@ import { availableParallelism } from 'node:os';
 import { Worker, isMainThread, parentPort } from 'node:worker_threads';
 import { cardOf, fullDeck } from '../src/cards/index.ts';
 import type { Suit } from '../src/cards/index.ts';
+import { BOARD_SIZE } from '../src/engine/index.ts';
 import { pheEvaluator } from '../src/equity/index.ts';
 
 const VALUES = 13;
 const SIZE = VALUES * VALUES;
 const DECK = fullDeck();
-const BOARD_SIZE = 5;
+const BOARD_CARDS = BOARD_SIZE.river;
 const CLUBS: Suit = 0;
 const DIAMONDS: Suit = 1;
 const HEARTS: Suit = 2;
@@ -47,9 +48,9 @@ function strengthsOf(heroPosition: number): number[] {
   const onBoard = new Uint8Array(DECK.length);
   const heroCards = [hero[0] as number, hero[1] as number, 0, 0, 0, 0, 0];
   const villainCards = [0, 0, 0, 0, 0, 0, 0];
-  const board = new Array<number>(BOARD_SIZE).fill(0);
+  const board = new Array<number>(BOARD_CARDS).fill(0);
   const visit = (): void => {
-    for (let k = 0; k < BOARD_SIZE; k++) {
+    for (let k = 0; k < BOARD_CARDS; k++) {
       heroCards[2 + k] = board[k] as number;
       villainCards[2 + k] = board[k] as number;
       onBoard[board[k] as number] = 1;
@@ -70,16 +71,16 @@ function strengthsOf(heroPosition: number): number[] {
       }
       counts[v] = (counts[v] as number) + 1;
     }
-    for (let k = 0; k < BOARD_SIZE; k++) {
+    for (let k = 0; k < BOARD_CARDS; k++) {
       onBoard[board[k] as number] = 0;
     }
   };
   const fill = (slot: number, from: number): void => {
-    if (slot === BOARD_SIZE) {
+    if (slot === BOARD_CARDS) {
       visit();
       return;
     }
-    for (let i = from; i <= deck.length - (BOARD_SIZE - slot); i++) {
+    for (let i = from; i <= deck.length - (BOARD_CARDS - slot); i++) {
       board[slot] = deck[i] as number;
       fill(slot + 1, i + 1);
     }

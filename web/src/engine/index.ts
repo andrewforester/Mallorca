@@ -13,6 +13,7 @@ export type {
 } from './types.ts';
 export { applyAction, startHandWith } from './hand.ts';
 export type { BoardSize } from './streets.ts';
+export { BOARD_SIZE } from './streets.ts';
 export { checkOrCall, isLegal } from './legal.ts';
 export { playToEnd } from './play.ts';
 export type { Table, TableMode } from './table.ts';

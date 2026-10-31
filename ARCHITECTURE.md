@@ -73,7 +73,7 @@ Each layer's `index.ts` exports only what other layers and `tools/` import; a te
 own layer by path. `brains/index.ts` holds `Brain`, `Decision`, `Observation`, `createMathBrain` and
 `toObservations`; `engine/index.ts` the types of a hand and a table, the reducers (`startHandWith`, `applyAction`,
 `startHand`, `apply`, `legalActionsOf`, `toAct`), `isLegal`, `checkOrCall`, `playToEnd`, `createTable`, `rulesOf`,
-the modes, `startingStack` and `handHistory`; `game/index.ts` is the surface of `ui` (with `createSession`,
+the modes, `startingStack`, `BOARD_SIZE` and `handHistory`; `game/index.ts` is the surface of `ui` (with `createSession`,
 `toViewModel`, `groupHand`, `workerBot` and `inProcessBot`).
 
 ESLint enforces the table with a `@typescript-eslint/no-restricted-imports` rule per directory. For `brains` the
@@ -137,7 +137,7 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
   holds the undealt cards.
 - `Street` (`types.ts`) is the one list of street names; `BettingStreet` drops `showdown` and `complete`,
   `DealtStreet` also drops `preflop`, and every other street type in `src` and `tools/` derives from them.
-  `BOARD_SIZE` (`streets.ts`) is the board length per betting street, and its type `BoardSize` is exported.
+  `BOARD_SIZE` (`streets.ts`) is the board length per betting street; it and its type `BoardSize` are exported.
 - `Hand.bets` is the street bet per seat, `committed` the total per seat for the hand, `pot` is the sum of
   `committed`. `canRaise` is false for a seat that faces a short all-in raise.
 - `seats` stacks are the chips behind. `LegalActions` is `{ fold, check, call, raise }`: `call` is the amount the
