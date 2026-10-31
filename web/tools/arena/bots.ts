@@ -3,7 +3,7 @@ import type { Action, LegalActions } from '../../src/engine/index.ts';
 import type { Observation } from '../../src/brains/index.ts';
 import { createMathBrain, randomVillainModel } from '../../src/brains/index.ts';
 import type { Rng } from '../../src/cards/index.ts';
-import type { CfrModel } from '../../src/cfr/index.ts';
+import type { BotOptions, CfrModel, SolverOptions } from '../../src/cfr/index.ts';
 import { createCfrBrain } from '../../src/cfr/index.ts';
 import { loadCfrModel } from './cfrModel.ts';
 
@@ -56,16 +56,19 @@ const random: BotFactory = (rng) => ({
 });
 
 const CFR_FILE = 'cfr:';
+const CFR_SOLVE_FILE = 'cfr-solve:';
 const SHIPPED = 'cfr';
 const cfrModels = new Map<string, CfrModel>();
 
-function cfrBot(key: string): BotFactory {
+export const ARENA_SOLVER: SolverOptions = { turn: 50, river: 200 };
+
+function cfrBot(key: string, options?: BotOptions): BotFactory {
   return (rng) => {
     const model = cfrModels.get(key);
     if (model === undefined) {
       throw new Error('The cfr bot needs prepareBots before it plays');
     }
-    const brain = createCfrBrain(model, rng);
+    const brain = createCfrBrain(model, rng, options);
     return {
       observe: (o) => brain.observe(o),
       decide: (legal) => brain.decide(legal).action,
@@ -75,11 +78,12 @@ function cfrBot(key: string): BotFactory {
 }
 
 export const BOTS: Record<
-  'math' | 'cfr' | 'always-call' | 'always-raise' | 'min-bettor' | 'random',
+  'math' | 'cfr' | 'cfr-solve' | 'always-call' | 'always-raise' | 'min-bettor' | 'random',
   BotFactory
 > = {
   math,
   cfr: cfrBot(SHIPPED),
+  'cfr-solve': cfrBot(SHIPPED, { solver: ARENA_SOLVER }),
   'always-call': alwaysCall,
   'always-raise': alwaysRaise,
   'min-bettor': minBettor,
@@ -88,10 +92,26 @@ export const BOTS: Record<
 
 export type BotName = keyof typeof BOTS;
 
-function cfrFile(name: string): string | null {
-  return name.startsWith(CFR_FILE) && name.length > CFR_FILE.length
-    ? name.slice(CFR_FILE.length)
-    : null;
+interface CfrFile {
+  path: string;
+  solve: boolean;
+}
+
+function cfrFile(name: string): CfrFile | null {
+  for (const [prefix, solve] of [
+    [CFR_FILE, false],
+    [CFR_SOLVE_FILE, true],
+  ] as const) {
+    if (name.startsWith(prefix) && name.length > prefix.length) {
+      return { path: name.slice(prefix.length), solve };
+    }
+  }
+  return null;
+}
+
+function modelKey(name: string): string | null {
+  if (name === 'cfr' || name === 'cfr-solve') return SHIPPED;
+  return cfrFile(name)?.path ?? null;
 }
 
 export function isBotName(name: string): boolean {
@@ -99,7 +119,8 @@ export function isBotName(name: string): boolean {
 }
 
 export function botFactory(name: string): BotFactory {
-  if (cfrFile(name) !== null) return cfrBot(name);
+  const file = cfrFile(name);
+  if (file !== null) return cfrBot(file.path, file.solve ? { solver: ARENA_SOLVER } : undefined);
   if (!Object.hasOwn(BOTS, name)) {
     throw new Error(`unknown bot "${name}", choose from: ${Object.keys(BOTS).join(', ')}`);
   }
@@ -109,17 +130,16 @@ export function botFactory(name: string): BotFactory {
 export function botLabel(name: string): string {
   const file = cfrFile(name);
   if (file === null) return name;
-  const base = basename(file)
+  const base = basename(file.path)
     .replace(/\.gz$/, '')
     .replace(/\.mlcs$/, '');
-  return `cfr-${base}`;
+  return `${file.solve ? 'cfr-solve' : 'cfr'}-${base}`;
 }
 
 export async function prepareBots(names: readonly string[]): Promise<void> {
   for (const name of names) {
-    if (cfrModels.has(name)) continue;
-    const file = cfrFile(name);
-    if (name === SHIPPED) cfrModels.set(name, await loadCfrModel());
-    else if (file !== null) cfrModels.set(name, await loadCfrModel(file));
+    const key = modelKey(name);
+    if (key === null || cfrModels.has(key)) continue;
+    cfrModels.set(key, await (key === SHIPPED ? loadCfrModel() : loadCfrModel(key)));
   }
 }

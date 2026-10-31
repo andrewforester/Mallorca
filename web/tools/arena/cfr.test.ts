@@ -18,6 +18,12 @@ describe('the cfr bot in the arena', () => {
     expect(Number.isInteger(first.net)).toBe(true);
   }, 60_000);
 
+  it('plays reproducible pairs with the solver on', async () => {
+    await prepareBots(['cfr-solve']);
+    const first = playPair(BOTS['cfr-solve'], BOTS.cfr, 3, 1);
+    expect(first).toEqual(playPair(BOTS['cfr-solve'], BOTS.cfr, 3, 1));
+  }, 600_000);
+
   it('plays a blueprint from a file under cfr:<path> like the shipped one', async () => {
     const file = `cfr:${fileURLToPath(new URL('../../src/cfr/v1.mlcs.gz', import.meta.url))}`;
     expect(isBotName(file)).toBe(true);
@@ -30,6 +36,8 @@ describe('the cfr bot in the arena', () => {
   it('labels a blueprint file by its name without the extensions', () => {
     expect(botLabel('cfr:/data/v2/v2-36-play.mlcs')).toBe('cfr-v2-36-play');
     expect(botLabel('cfr:v1.mlcs.gz')).toBe('cfr-v1');
+    expect(botLabel('cfr-solve:/data/v2/v2-36-play.mlcs')).toBe('cfr-solve-v2-36-play');
+    expect(isBotName('cfr-solve:/data/v2/v2-36-play.mlcs')).toBe(true);
     expect(botLabel('math')).toBe('math');
     expect(isBotName('cfr:')).toBe(false);
     expect(isBotName('nope')).toBe(false);

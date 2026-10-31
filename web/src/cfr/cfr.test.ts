@@ -6,7 +6,7 @@ import { fullDeck, mulberry32, parseCards, shuffle } from '../cards/index.ts';
 import type { Action, LegalActions, Seat, SeatIndex, Step } from '../engine/index.ts';
 import { applyAction, legalActions, startHandWith } from '../engine/index.ts';
 import { toObservations } from '../brains/index.ts';
-import type { CfrModel } from './index.ts';
+import type { BotOptions, CfrModel } from './index.ts';
 import { createCfrBrain, createCfrModel, inflate } from './index.ts';
 
 const wasm = readFileSync(new URL('./mallorca.wasm', import.meta.url));
@@ -44,9 +44,15 @@ function randomAction(legal: LegalActions, rng: Rng): Action {
   return options[Math.floor(rng.next() * options.length)] ?? { kind: 'check' };
 }
 
-function playHand(seed: number, stacks: [number, number], big: number, using = model): Action[] {
+function playHand(
+  seed: number,
+  stacks: [number, number],
+  big: number,
+  options?: BotOptions,
+  using = model,
+): Action[] {
   const rng = mulberry32(seed);
-  const brain = createCfrBrain(using, mulberry32(seed + 1));
+  const brain = createCfrBrain(using, mulberry32(seed + 1), options);
   const seats: [Seat, Seat] = [
     { name: 'cfr', stack: stacks[0] },
     { name: 'random', stack: stacks[1] },
@@ -103,13 +109,23 @@ describe('CfrBrain', () => {
       await inflate(readFileSync(new URL('./v2.mlcs.gz', import.meta.url))),
     );
     for (let seed = 1; seed <= 30; seed++) {
-      playHand(seed, [2000, 2000], 20, v2);
+      playHand(seed, [2000, 2000], 20, undefined, v2);
     }
   }, 60_000);
 
   it('is reproducible from its seed', () => {
     expect(playHand(7, [2000, 2000], 20)).toEqual(playHand(7, [2000, 2000], 20));
   });
+
+  it('plays legal actions to the river with the solver on', () => {
+    const solver = { turn: 4, river: 8 };
+    for (let seed = 1; seed <= 6; seed++) {
+      playHand(seed, [2000, 2000], 20, { solver });
+    }
+    expect(playHand(7, [2000, 2000], 20, { solver })).toEqual(
+      playHand(7, [2000, 2000], 20, { solver }),
+    );
+  }, 60_000);
 
   it('never folds aces before the flop', () => {
     for (let seed = 0; seed < 40; seed++) {

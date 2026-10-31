@@ -36,6 +36,23 @@ pub fn sample(probabilities: &[u8], draw: f64) -> usize {
         .unwrap_or(probabilities.len() - 1)
 }
 
+pub fn sample_f32(probabilities: &[f32], draw: f64) -> usize {
+    let total: f64 = probabilities.iter().map(|&p| f64::from(p.max(0.0))).sum();
+    let target = draw * total;
+    let mut acc = 0.0;
+    for (i, &p) in probabilities.iter().enumerate() {
+        let p = f64::from(p.max(0.0));
+        acc += p;
+        if p > 0.0 && target < acc {
+            return i;
+        }
+    }
+    probabilities
+        .iter()
+        .rposition(|&p| p > 0.0)
+        .unwrap_or(probabilities.len().saturating_sub(1))
+}
+
 pub fn fraction(to: u32, opp_bet: u32, pot_after_call: u32) -> f64 {
     if pot_after_call == 0 {
         return 0.0;
@@ -107,6 +124,18 @@ mod tests {
         assert_eq!(to, 250);
         assert_eq!(scaled_raise(0.75, 100, 200, (300, 5000)), 300);
         assert_eq!(scaled_raise(9.0, 100, 200, (150, 1000)), 1000);
+    }
+
+    #[test]
+    fn sample_f32_walks_the_cumulative_probabilities() {
+        let p = [0.25, 0.0, 0.5, 0.25];
+        assert_eq!(sample_f32(&p, 0.0), 0);
+        assert_eq!(sample_f32(&p, 0.24), 0);
+        assert_eq!(sample_f32(&p, 0.25), 2);
+        assert_eq!(sample_f32(&p, 0.8), 3);
+        assert_eq!(sample_f32(&p, 1.0), 3);
+        assert_eq!(sample_f32(&[0.5, 0.5, 0.0], 1.0), 1);
+        assert_eq!(sample_f32(&[0.0, 0.0], 0.5), 1);
     }
 
     #[test]

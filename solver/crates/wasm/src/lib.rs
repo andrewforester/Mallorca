@@ -1,4 +1,4 @@
-use mallorca_core::bot::{Bot, Legal, Model, Move};
+use mallorca_core::bot::{Bot, Legal, Model, Move, SolverConfig};
 use mallorca_core::cards::Card;
 use mallorca_core::strategy::{StrategyError, StrategyFile};
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -97,6 +97,16 @@ pub extern "C" fn bot_new(model: i32) -> i32 {
     };
     r.bots.push(Some(seat));
     (r.bots.len() - 1) as i32
+}
+
+#[no_mangle]
+pub extern "C" fn bot_solver(bot: i32, turn_iterations: u32, river_iterations: u32) {
+    with_seat(bot, (), |s| {
+        s.bot.set_solver(Some(SolverConfig {
+            turn_iterations,
+            river_iterations,
+        }));
+    });
 }
 
 #[no_mangle]

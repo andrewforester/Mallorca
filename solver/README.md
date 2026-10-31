@@ -4,6 +4,7 @@ A Rust workspace for a CFR poker trainer.
 
 - `crates/core`: pure game logic, cards, RNG, the card abstraction, the CFR core, checkpoints, the strategy file and
   measurement. Builds for `wasm32-unknown-unknown`.
+- `crates/core/src/subgame`: the turn and river subgame solver, a CFR over both ranges that the bot runs in play.
 - `crates/trainer`: the command line trainer that owns threads, files and clocks.
 - `crates/wasm`: the WebAssembly module the web arena and the browser bot load, a plain `extern "C"` ABI over
   `mallorca-core::bot`.

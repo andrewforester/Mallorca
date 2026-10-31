@@ -28,6 +28,7 @@ interface Exports {
     draw: number,
   ): number;
   decided_to(bot: number): number;
+  bot_solver(bot: number, turn: number, river: number): void;
 }
 
 export interface HandStart {
@@ -47,8 +48,17 @@ export interface CfrBot {
   free(): void;
 }
 
+export interface SolverOptions {
+  turn: number;
+  river: number;
+}
+
+export interface BotOptions {
+  solver?: SolverOptions;
+}
+
 export interface CfrModel {
-  newBot(): CfrBot;
+  newBot(options?: BotOptions): CfrBot;
 }
 
 const KINDS = ['fold', 'check', 'call', 'raise'] as const;
@@ -71,6 +81,10 @@ export async function inflate(bytes: Uint8Array): Promise<Uint8Array> {
   const source = new Blob([bytes as BlobPart]).stream();
   const stream = source.pipeThrough(new DecompressionStream('gzip'));
   return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+export function iterationCount(n: number): number {
+  return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
 }
 
 function kindOf(action: Action): number {
@@ -137,5 +151,14 @@ export async function createCfrModel(wasm: BufferSource, strategy: Uint8Array): 
   if (model < 0) {
     throw new Error(LOAD_ERRORS[model] ?? `cannot load the strategy (${model})`);
   }
-  return { newBot: () => bot(e, e.bot_new(model)) };
+  return {
+    newBot(options) {
+      const handle = e.bot_new(model);
+      if (options?.solver) {
+        const { turn, river } = options.solver;
+        e.bot_solver(handle, iterationCount(turn), iterationCount(river));
+      }
+      return bot(e, handle);
+    },
+  };
 }

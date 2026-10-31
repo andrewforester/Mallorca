@@ -15,4 +15,5 @@ pub mod preset;
 pub mod rng;
 pub mod strategy;
 pub mod strength;
+pub mod subgame;
 pub mod tree;

@@ -123,3 +123,23 @@ fn unknown_handles_are_harmless() {
     hand_started(9999, 1, 400, 400, 10, 20);
     assert_eq!(decide(9999, 1, 0, 10, -1, -1, 0.5), KIND_NONE);
 }
+
+#[test]
+fn bot_solver_turns_the_solver_on() {
+    let model = loaded(&play_file());
+    let bot = bot_new(model);
+    bot_solver(bot, 4, 8);
+    hand_started(bot, 1, 400, 400, 10, 20);
+    hole_cards(bot, 48, 49);
+    acted(bot, 1, KIND_CALL, 0, 0.5);
+    acted(bot, 0, KIND_CHECK, 0, 0.5);
+    street(bot, 3, 0, 4, 8, 0, 0);
+    acted(bot, 0, KIND_CHECK, 0, 0.5);
+    acted(bot, 1, KIND_CHECK, 0, 0.5);
+    street(bot, 4, 0, 4, 8, 13, 0);
+    acted(bot, 0, KIND_CHECK, 0, 0.5);
+    let kind = decide(bot, 0, 1, -1, 20, 380, 0.3);
+    assert!(kind == KIND_CHECK || kind == KIND_RAISE, "{kind}");
+    bot_solver(9999, 4, 8);
+    bot_free(bot);
+}

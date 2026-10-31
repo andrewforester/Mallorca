@@ -3,6 +3,34 @@ import { byId, expect, FAST_URL, test, waitForWaypoint } from './fixtures.ts';
 
 const SOLVER_TIMEOUT_MS = 120_000;
 
+declare global {
+  interface Window {
+    __botTurns: { board: number; ms: number }[];
+  }
+}
+
+const BOT_TURN_TRACKER = `
+  window.__botTurns = [];
+  let started = null;
+  let board = 0;
+  new MutationObserver(() => {
+    const thinking = document.querySelector('.seat-top [data-testid^="thinking-"]') !== null;
+    if (thinking && started === null) {
+      started = performance.now();
+    }
+    if (thinking) {
+      board = document.querySelectorAll('[data-testid="board"] [data-testid="card"]').length;
+    }
+    if (!thinking && started !== null) {
+      window.__botTurns.push({ board, ms: performance.now() - started });
+      started = null;
+    }
+  }).observe(document, { childList: true, subtree: true });
+`;
+
+const DECISION_BUDGET_MS = 5000;
+const TURN_BOARD = 4;
+
 interface Played {
   loaded: string[];
   bots: { id: string; version: string }[];
@@ -73,4 +101,27 @@ test('a phone is not offered the v2 solver', async ({ page, isMobile }) => {
   await page.goto(FAST_URL);
   await expect(byId(page, 'opponent-cfr')).toBeVisible();
   await expect(byId(page, 'opponent-cfr-v2')).toHaveCount(0);
+});
+
+test('the solver decides every turn and river within the 5 s fallback budget', async ({ page }) => {
+  test.setTimeout(SOLVER_TIMEOUT_MS * 2);
+  await page.addInitScript(BOT_TURN_TRACKER);
+  await page.goto(FAST_URL);
+  await byId(page, 'opponent-cfr').click();
+  await byId(page, 'start-cash').click();
+  let hands = 0;
+  while (hands < 3) {
+    const waypoint = await waitForWaypoint(page);
+    if (waypoint === 'next-hand') {
+      hands += 1;
+      await byId(page, 'next-hand').click();
+    } else {
+      await byId(page, 'passive').click();
+    }
+  }
+  const turns = await page.evaluate(() => window.__botTurns);
+  test.info().annotations.push({ type: 'bot decisions', description: JSON.stringify(turns) });
+  expect(turns.length).toBeGreaterThan(0);
+  expect(turns.filter((turn) => turn.board >= TURN_BOARD).length).toBeGreaterThan(0);
+  expect(turns.filter((turn) => turn.ms >= DECISION_BUDGET_MS)).toEqual([]);
 });

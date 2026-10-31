@@ -83,6 +83,30 @@ The play file of checkpoint 18 (`export --streets play`, 7.37 MB raw, 3.61 MB gz
 - Against always-call it keeps most of the on-tree `match` figure (+190.1 ± 4.0), so translation costs little
   there.
 
+## Turn and river subgame solver in the arena (2026-10-28)
+
+Code at efecf9c, M3 Pro, the same play file as above, 100 bb, blinds 10/20, duplicate pairs. Each match ran in
+chunks of 1000 pairs with seeds 101 to 110 (`cfr-solve` vs `cfr`), 301 to 305 (`cfr-solve` vs `math`) and 201 to
+202 (`cfr-browser` vs `cfr`, the game's `BROWSER_SOLVER` counts). The totals are the mean of the chunks, with the
+95% interval as the square root of the sum of the squared chunk intervals over the number of chunks.
+
+| bot         | opponent | turn, river iterations | hands  | bb/100 (95% interval) |
+| ----------- | -------- | ---------------------- | ------ | --------------------- |
+| cfr-solve   | cfr      | 50, 200                | 20,000 | +10.6 ± 12.7          |
+| cfr-solve   | math     | 50, 200                | 10,000 | +20.7 ± 20.5          |
+| cfr-browser | cfr      | 12, 200                | 4,000  | -7.6 ± 32.2           |
+
+Chunks of `cfr-solve` vs `cfr`: -9.5, +10.6, +27.9, +20.8, -6.3, -21.4, +17.6, +33.7, +7.1, +25.6. Chunks of
+`cfr-solve` vs `math`: +28.9, +17.9, +22.1, +23.5, +11.0. A chunk of 1000 pairs took about an hour.
+
+- Neither success criterion of the solver design is met. Against the blueprint the interval still includes zero;
+  at this effect size a significant answer needs about 50,000 to 60,000 hands.
+- Against `math` the solver does not beat the blueprint's +32.8 ± 9.2; the intervals overlap, so it is not shown to
+  be worse either.
+- The browser counts are too few hands to say anything.
+- Likely causes, not measured: unsafe re-solving with Bayes ranges from a coarse blueprint, the single river size
+  inside a turn tree, and 50 turn iterations short of convergence.
+
 ## How to improve
 
 The first run sets the baseline; no threshold is fixed before it. Each lever names the number it should move.
