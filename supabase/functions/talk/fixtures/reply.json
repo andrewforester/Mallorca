@@ -19,11 +19,12 @@
     ],
     "bigBlind": 2
   },
-  "intent": { "situation": "playerBet", "hint": "strong", "honest": false },
+  "intent": { "situation": "playerBet", "hint": "strong", "honest": false, "street": "turn" },
   "mood": ["annoyed"],
   "recent": [
     { "speaker": "player", "text": "Опять ты со своими тузами?" },
     { "speaker": "mallorca", "text": "Не дождёшься, что я скажу." }
   ],
-  "text": "  Ты блефуешь, я вижу по глазам.  "
+  "text": "  Ты блефуешь, я вижу по глазам.  ",
+  "quick": false
 }

@@ -1,6 +1,6 @@
 import { assert, assertEquals } from "../_shared/testing.ts";
 import { FALLBACK_LINES } from "./filter.ts";
-import { handle, handleSafely } from "./handler.ts";
+import { handle, handleSafely, inBackground } from "./handler.ts";
 import type { Deps } from "./handler.ts";
 import { fixture } from "./fixtures/fixtures.ts";
 
@@ -12,6 +12,7 @@ interface Fake {
   saved: { speaker: string; text: string }[][];
   facts: string[][];
   consumed: number;
+  tasks: Promise<void>[];
 }
 
 interface Options {
@@ -30,6 +31,7 @@ function fake(options: Options = {}): Fake {
     saved: [],
     facts: [],
     consumed: 0,
+    tasks: [],
   };
   const texts = [...(options.texts ?? ["Nice try, friend."])];
   const allow = options.allow ?? Infinity;
@@ -51,6 +53,7 @@ function fake(options: Options = {}): Fake {
       state.facts.push(facts);
       return Promise.resolve();
     },
+    background: (task) => void state.tasks.push(task),
     complete: (input) => {
       state.inputs.push(input);
       if (input.tool?.name === "signals") {
@@ -255,8 +258,66 @@ Deno.test("a failing save is logged and does not fail the answer", async () => {
   try {
     const res = await handle(post(fixture("line")), f.deps);
     assertEquals(res.status, 200);
+    await Promise.all(f.tasks);
   } finally {
     console.error = original;
   }
   assertEquals(logged.length, 1);
+});
+
+Deno.test("a quick reply makes one model call and spends one call", async () => {
+  const f = fake({ signals: { signals: ["tease"] } });
+  const res = await handle(post({ ...fixture("reply"), quick: true }), f.deps);
+  assertEquals(res.status, 200);
+  assertEquals(await json(res), { text: "Nice try, friend.", signals: [] });
+  assertEquals(f.inputs.length, 1);
+  assertEquals(f.inputs[0].tool, undefined);
+  assertEquals(f.consumed, 1);
+});
+
+Deno.test("the answer does not wait for the saves", async () => {
+  const f = fake({ facts: { facts: ["a"] } });
+  f.deps.saveLines = () => new Promise(() => undefined);
+  f.deps.saveFacts = () => new Promise(() => undefined);
+  assertEquals((await handle(post(fixture("line")), f.deps)).status, 200);
+  assertEquals((await handle(post(fixture("reply")), f.deps)).status, 200);
+  assertEquals((await handle(post(fixture("summary")), f.deps)).status, 200);
+  assertEquals(f.tasks.length, 3);
+});
+
+Deno.test("memories load while the first call is being counted", async () => {
+  const f = fake();
+  let loaded = false;
+  let release: (ok: boolean) => void = () => undefined;
+  f.deps.memories = () => {
+    loaded = true;
+    return Promise.resolve([]);
+  };
+  f.deps.consume = () => new Promise((resolve) => (release = resolve));
+  const pending = handle(post(fixture("line")), f.deps);
+  for (let i = 0; i < 10 && !loaded; i += 1) await Promise.resolve();
+  assert(loaded);
+  release(true);
+  assertEquals((await pending).status, 200);
+});
+
+Deno.test("over the limit answers 429 even when memories fail", async () => {
+  const f = fake({ allow: 0 });
+  f.deps.memories = () => Promise.reject(new Error("db"));
+  assertEquals((await handle(post(fixture("line")), f.deps)).status, 429);
+});
+
+Deno.test("failing memories within the limit answer 502", async () => {
+  const f = fake();
+  f.deps.memories = () => Promise.reject(new Error("db"));
+  assertEquals((await handle(post(fixture("line")), f.deps)).status, 502);
+});
+
+Deno.test("background work goes to the edge runtime when there is one", async () => {
+  const kept: Promise<unknown>[] = [];
+  const task = Promise.resolve();
+  inBackground({ waitUntil: (p: Promise<unknown>) => void kept.push(p) })(task);
+  assertEquals(kept, [task]);
+  inBackground(undefined)(Promise.resolve());
+  await task;
 });

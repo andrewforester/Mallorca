@@ -20,7 +20,10 @@ const MEMORIES = ["Bluffs a lot on the river.", "Likes to talk about football."]
 const context = (req: LineRequest | ReplyRequest, strict = false, memories = MEMORIES): string =>
   buildMessages(req, memories, strict).system[1].text;
 
-const withIntent = (intent: LineRequest["intent"]): LineRequest => ({ ...LINE, intent });
+const withIntent = (
+  intent: Omit<LineRequest["intent"], "street">,
+  street: LineRequest["intent"]["street"] = "river",
+): LineRequest => ({ ...LINE, intent: { ...intent, street } });
 
 Deno.test("the system prompt carries her character and rules", () => {
   for (
@@ -232,4 +235,21 @@ Deno.test("blank recent lines never become empty messages", () => {
   const { messages } = buildMessages(req, [], false);
   assertEquals(messages.length, 1);
   for (const message of messages) assert(message.content.trim().length > 0);
+});
+
+Deno.test("the first stack is hers and the second the player's", () => {
+  const text = context({ ...LINE, facts: { ...LINE.facts, stacks: [30, 170] } });
+  assertIncludes(text, "Stacks: you 30, the player 170.");
+});
+
+Deno.test("the cue names the street of her action, not the street it opened", () => {
+  const req = withIntent({ situation: "herCall", hint: null, honest: true }, "flop");
+  const closed = { ...req, facts: { ...req.facts, street: "turn" as const }, recent: [] };
+  const { messages } = buildMessages(closed, [], false);
+  assertIncludes(messages[0].content, "[You just called on the flop. Say something.]");
+});
+
+Deno.test("the summary reports netBb as the player's net result", () => {
+  const { messages } = buildSummaryMessages(SUMMARY, []);
+  assertIncludes(messages[0].content, "Player net result: -12.5 big blinds.");
 });

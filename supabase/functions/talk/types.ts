@@ -40,6 +40,7 @@ export interface Intent {
   situation: Situation;
   hint: Hint | null;
   honest: boolean;
+  street: Street;
 }
 
 export interface RecentLine {
@@ -74,6 +75,7 @@ export interface LineRequest extends HandContext {
 export interface ReplyRequest extends HandContext {
   kind: "reply";
   text: string;
+  quick: boolean;
 }
 
 export interface SummaryRequest extends Envelope {
@@ -147,10 +149,11 @@ function parseFacts(value: unknown): Facts | null {
 
 function parseIntent(value: unknown): Intent | null {
   if (!isRecord(value)) return null;
-  const { situation, hint, honest } = value;
+  const { situation, hint, honest, street } = value;
   if (!isOneOf(SITUATIONS, situation) || typeof honest !== "boolean") return null;
   if (hint !== null && !isOneOf(HINTS, hint)) return null;
-  return { situation, hint, honest };
+  if (!isOneOf(STREETS, street)) return null;
+  return { situation, hint, honest, street };
 }
 
 function parseRecentLine(value: unknown): RecentLine | null {
@@ -222,5 +225,7 @@ export function parseRequest(body: unknown): TalkRequest | null {
   if (context === null) return null;
   if (body.kind === "line") return { kind: "line", ...context };
   const text = parseText(body.text);
-  return text === null ? null : { kind: "reply", ...context, text };
+  const quick = body.quick ?? false;
+  if (text === null || typeof quick !== "boolean") return null;
+  return { kind: "reply", ...context, text, quick };
 }

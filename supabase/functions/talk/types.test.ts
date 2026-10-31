@@ -141,3 +141,24 @@ Deno.test("rejects a locale with spaces or punctuation", () => {
     assert(parseRequest({ ...line, locale }) !== null, locale);
   }
 });
+
+Deno.test("an intent needs the street of the action", () => {
+  const line = fixture("line");
+  const intent = line.intent as Record<string, unknown>;
+  assertEquals(parseRequest({ ...line, intent: without(intent, "street") }), null);
+  assertEquals(parseRequest({ ...line, intent: { ...intent, street: "fifth" } }), null);
+  const req = parseRequest({ ...line, intent: { ...intent, street: "flop" } });
+  assert(req !== null && req.kind === "line");
+  assertEquals(req.intent.street, "flop");
+});
+
+Deno.test("a reply may be marked quick, and is not quick by default", () => {
+  const reply = fixture("reply");
+  const quick = parseRequest({ ...reply, quick: true });
+  assert(quick !== null && quick.kind === "reply");
+  assertEquals(quick.quick, true);
+  const plain = parseRequest(without(reply, "quick"));
+  assert(plain !== null && plain.kind === "reply");
+  assertEquals(plain.quick, false);
+  assertEquals(parseRequest({ ...reply, quick: "yes" }), null);
+});

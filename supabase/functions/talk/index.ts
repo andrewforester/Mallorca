@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { corsHeaders, parseOrigins, preflight } from "./cors.ts";
-import { handleSafely } from "./handler.ts";
+import { handleSafely, inBackground } from "./handler.ts";
 import type { Deps } from "./handler.ts";
 import { createComplete } from "./model.ts";
 import {
@@ -58,6 +58,9 @@ const deps: Deps = {
     if (error) throw error;
   },
   complete: createComplete(Deno.env.get("ANTHROPIC_API_KEY")),
+  background: inBackground(
+    (globalThis as { EdgeRuntime?: { waitUntil(task: Promise<unknown>): void } }).EdgeRuntime,
+  ),
 };
 
 Deno.serve(async (req) => {

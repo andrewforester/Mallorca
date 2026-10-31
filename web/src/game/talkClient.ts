@@ -1,4 +1,5 @@
 import { formatCard } from '../cards/index.ts';
+import type { SeatIndex } from '../engine/index.ts';
 import { moodWords } from '../talk/index.ts';
 import type { HandFacts, LineIntent, Mood, SessionSummary, Signal } from '../talk/index.ts';
 
@@ -32,6 +33,7 @@ export interface IntentPayload {
   situation: string;
   hint: string | null;
   honest: boolean;
+  street: string;
 }
 
 interface Envelope {
@@ -53,6 +55,7 @@ export interface LinePayload extends HandPayload {
 export interface ReplyPayload extends HandPayload {
   kind: 'reply';
   text: string;
+  quick: boolean;
 }
 
 export interface SummaryPayload extends Envelope {
@@ -63,6 +66,7 @@ export interface SummaryPayload extends Envelope {
 export interface HandInput {
   sessionId: string;
   locale: string;
+  seat: SeatIndex;
   facts: HandFacts;
   intent: LineIntent;
   mood: Mood;
@@ -88,12 +92,12 @@ export const silentTalkClient: TalkClient = {
   summary: () => Promise.resolve(),
 };
 
-function toFacts(facts: HandFacts): FactsPayload {
+function toFacts(facts: HandFacts, seat: SeatIndex): FactsPayload {
   return {
     street: facts.street,
     board: facts.board.map(formatCard),
     pot: facts.pot,
-    stacks: [facts.stacks[0], facts.stacks[1]],
+    stacks: [facts.stacks[seat], facts.stacks[seat === 0 ? 1 : 0]],
     her: facts.her === null ? null : [formatCard(facts.her[0]), formatCard(facts.her[1])],
     actions: facts.actions.slice(-MAX_ACTIONS).map((action) => action.slice(0, MAX_ACTION_LENGTH)),
     bigBlind: facts.bigBlind,
@@ -114,11 +118,12 @@ function toHand(input: HandInput): HandPayload {
   return {
     sessionId: toSessionId(input.sessionId),
     locale: toLocale(input.locale),
-    facts: toFacts(input.facts),
+    facts: toFacts(input.facts, input.seat),
     intent: {
       situation: input.intent.situation,
       hint: input.intent.hint,
       honest: input.intent.honest,
+      street: input.intent.actionStreet,
     },
     mood: moodWords(input.mood),
     recent: recent.map((turn) => ({
@@ -132,8 +137,13 @@ export function toLinePayload(input: HandInput): LinePayload {
   return { kind: 'line', ...toHand(input) };
 }
 
-export function toReplyPayload(input: HandInput & { text: string }): ReplyPayload {
-  return { kind: 'reply', ...toHand(input), text: input.text.trim().slice(0, MAX_TEXT) };
+export function toReplyPayload(input: HandInput & { text: string; quick?: boolean }): ReplyPayload {
+  return {
+    kind: 'reply',
+    ...toHand(input),
+    text: input.text.trim().slice(0, MAX_TEXT),
+    quick: input.quick ?? false,
+  };
 }
 
 export function toSummaryPayload(input: {
@@ -145,6 +155,6 @@ export function toSummaryPayload(input: {
     kind: 'summary',
     sessionId: toSessionId(input.sessionId),
     locale: toLocale(input.locale),
-    summary: input.summary,
+    summary: { ...input.summary, netBb: 0 - input.summary.netBb },
   };
 }

@@ -196,6 +196,7 @@ class Wiring implements SessionTalk {
     return {
       sessionId: this.host.sessionId(),
       locale: this.setup.locale,
+      seat: this.setup.botSeat,
       facts: talk.facts(),
       intent,
       mood: talk.mood(),

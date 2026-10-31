@@ -187,7 +187,7 @@ function turns(req: LineRequest | ReplyRequest): Message[] {
   if (messages.length > 0 && messages[0].role === "assistant") {
     messages.unshift({ role: "user", content: OPENING });
   }
-  const final = req.kind === "reply" ? req.text : cue(req.intent.situation, req.facts.street);
+  const final = req.kind === "reply" ? req.text : cue(req.intent.situation, req.intent.street);
   pushTurn(messages, "user", final);
   return messages;
 }

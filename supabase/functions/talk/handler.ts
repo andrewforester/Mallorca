@@ -28,6 +28,18 @@ export interface Deps {
   ): Promise<void>;
   saveFacts(userId: string, facts: string[]): Promise<void>;
   complete(input: CompleteInput): Promise<{ text: string; toolInput: unknown }>;
+  background(task: Promise<void>): void;
+}
+
+interface EdgeRuntime {
+  waitUntil(task: Promise<unknown>): void;
+}
+
+export function inBackground(runtime: EdgeRuntime | undefined): Deps["background"] {
+  return (task) => {
+    if (runtime === undefined) void task;
+    else runtime.waitUntil(task);
+  };
 }
 
 const SIGNALS_SYSTEM: SystemBlock[] = [{
@@ -64,12 +76,20 @@ async function readBody(req: Request): Promise<unknown | Response> {
   }
 }
 
-async function safeSave(task: Promise<void>): Promise<void> {
+async function safeSave(save: () => Promise<void>): Promise<void> {
   try {
-    await task;
+    await save();
   } catch (error) {
     console.error("talk: save failed", error);
   }
+}
+
+function keep(deps: Deps, save: () => Promise<void>): void {
+  deps.background(safeSave(save));
+}
+
+async function loadMemories(user: string, deps: Deps): Promise<string[]> {
+  return (await deps.memories(user)).slice(0, MEMORY_LIMIT);
 }
 
 async function allowed(user: string, deps: Deps): Promise<boolean> {
@@ -120,7 +140,7 @@ async function handleLine(
   deps: Deps,
 ): Promise<Response> {
   const text = await writeText(req, user, memories, deps);
-  await safeSave(deps.saveLines(user, req.sessionId, [{ speaker: "mallorca", text: text }]));
+  keep(deps, () => deps.saveLines(user, req.sessionId, [{ speaker: "mallorca", text }]));
   return json(200, { text });
 }
 
@@ -130,15 +150,16 @@ async function handleReply(
   memories: string[],
   deps: Deps,
 ): Promise<Response> {
-  if (!(await allowed(user, deps))) return silent();
+  if (!req.quick && !(await allowed(user, deps))) return silent();
   const [text, signals] = await Promise.all([
     writeText(req, user, memories, deps),
-    readSignals(req, deps),
+    req.quick ? [] : readSignals(req, deps),
   ]);
-  await safeSave(deps.saveLines(user, req.sessionId, [
-    { speaker: "player", text: req.text },
-    { speaker: "mallorca", text: text },
-  ]));
+  keep(deps, () =>
+    deps.saveLines(user, req.sessionId, [
+      { speaker: "player", text: req.text },
+      { speaker: "mallorca", text },
+    ]));
   return json(200, { text, signals });
 }
 
@@ -151,7 +172,7 @@ async function handleSummary(
   const prompt = buildSummaryMessages(req, memories);
   const { toolInput } = await deps.complete({ purpose: "summary", ...prompt });
   const facts = parseFacts(toolInput);
-  if (facts.length > 0) await safeSave(deps.saveFacts(user, facts));
+  if (facts.length > 0) keep(deps, () => deps.saveFacts(user, facts));
   return json(200, { facts });
 }
 
@@ -163,9 +184,11 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   if (body instanceof Response) return body;
   const parsed = parseRequest(body);
   if (parsed === null) return json(400, { error: "body" });
+  const known = loadMemories(user, deps);
+  known.catch(() => undefined);
   if (!(await allowed(user, deps))) return silent();
   try {
-    const memories = (await deps.memories(user)).slice(0, MEMORY_LIMIT);
+    const memories = await known;
     if (parsed.kind === "line") return await handleLine(parsed, user, memories, deps);
     if (parsed.kind === "reply") return await handleReply(parsed, user, memories, deps);
     return await handleSummary(parsed, user, memories, deps);

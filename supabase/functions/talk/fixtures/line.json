@@ -21,7 +21,7 @@
     ],
     "bigBlind": 2
   },
-  "intent": { "situation": "herBet", "hint": "strong", "honest": true },
+  "intent": { "situation": "herBet", "hint": "strong", "honest": true, "street": "river" },
   "mood": ["on a winning streak", "cheerful"],
   "recent": [
     { "speaker": "mallorca", "text": "Another cup of tea before the flop?" },

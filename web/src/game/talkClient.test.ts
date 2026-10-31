@@ -60,6 +60,7 @@ const recent = [
 const base = {
   sessionId: 's1',
   locale: 'en',
+  seat: 0 as const,
   facts,
   intent,
   mood: { ...CALM, cheer: 0.8, form: 0.9 },
@@ -93,7 +94,12 @@ describe('payload builders', () => {
     expect(shapeOf(payload)).toEqual(shapeOf(fixture('line')));
     expect(payload.facts.board).toEqual(['Kd', '7s', '2c', 'Th', '4h']);
     expect(payload.facts.her).toEqual(['Ks', 'Qd']);
-    expect(payload.intent).toEqual({ situation: 'herBet', hint: 'strong', honest: true });
+    expect(payload.intent).toEqual({
+      situation: 'herBet',
+      hint: 'strong',
+      honest: true,
+      street: 'river',
+    });
   });
 
   it('reply payload has the shape of the reply fixture and trims the text', () => {
@@ -112,6 +118,33 @@ describe('payload builders', () => {
     };
     const payload = toSummaryPayload({ sessionId: 's1', locale: 'en', summary });
     expect(shapeOf(payload)).toEqual(shapeOf(fixture('summary')));
+  });
+
+  it('sends her stack first whatever her seat', () => {
+    expect(toLinePayload({ ...base, seat: 0 }).facts.stacks).toEqual([88, 112]);
+    expect(toLinePayload({ ...base, seat: 1 }).facts.stacks).toEqual([112, 88]);
+    expect(toReplyPayload({ ...base, seat: 1, text: 'x' }).facts.stacks).toEqual([112, 88]);
+  });
+
+  it('sends the street of her action as the intent street', () => {
+    const closing = { ...intent, street: 'flop', actionStreet: 'preflop' };
+    expect(toLinePayload({ ...base, intent: closing }).intent.street).toBe('preflop');
+  });
+
+  it('marks quick replies and leaves typed replies unmarked', () => {
+    expect(toReplyPayload({ ...base, text: 'Nice hand', quick: true }).quick).toBe(true);
+    expect(toReplyPayload({ ...base, text: 'Hello' }).quick).toBe(false);
+  });
+
+  it("sends the player's net, the opposite of hers", () => {
+    const summary = { hands: 2, netBb: 7.5, playerBluffsShown: 0, playerAllIns: 0, signals: {} };
+    expect(toSummaryPayload({ sessionId: 's', locale: 'en', summary }).summary.netBb).toBe(-7.5);
+    const even = toSummaryPayload({
+      sessionId: 's',
+      locale: 'en',
+      summary: { ...summary, netBb: 0 },
+    });
+    expect(Object.is(even.summary.netBb, 0)).toBe(true);
   });
 
   it('keeps a hidden hand null and a null hint', () => {
