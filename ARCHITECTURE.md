@@ -556,6 +556,9 @@ bounded by the clamps above.
 - `e2e/contact.ts` (`npm run contact`) captures every view state of a seeded game on `phone` and `desktop` and
   composes one sheet per device into `e2e/contact/`. Its preview listens on `CONTACT_PORT` (default 4174); it stops
   if that port already answers or its own server exits.
+- `e2e/shared.ts` holds what the tests and the contact sheets share: the devices (`DEVICES`, the Playwright projects
+  and the sheets), `byId`, `waitForWaypoint` and `playToTheEnd`. `fixtures.ts` re-exports them beside the `test`
+  fixture, and `TOTAL_CHIPS` is `2 * startingStack(TOURNAMENT)` from `engine`.
 
 ## arena
 
