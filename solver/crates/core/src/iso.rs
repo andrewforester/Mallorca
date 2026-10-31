@@ -6,6 +6,30 @@ const RANKS: u32 = 13;
 const SHAPE_BITS: u32 = 4;
 const KEY_BITS: u32 = 16;
 
+const SUIT_PERMUTATIONS: [[u8; SUITS]; 24] = suit_permutations();
+
+const fn suit_permutations() -> [[u8; SUITS]; 24] {
+    let mut out = [[0u8; SUITS]; 24];
+    let mut n = 0;
+    let mut a = 0;
+    while a < 4 {
+        let mut b = 0;
+        while b < 4 {
+            let mut c = 0;
+            while c < 4 {
+                if a != b && a != c && b != c {
+                    out[n] = [a, b, c, 6 - a - b - c];
+                    n += 1;
+                }
+                c += 1;
+            }
+            b += 1;
+        }
+        a += 1;
+    }
+    out
+}
+
 const SMALL_BINOM: [[u32; 14]; 14] = small_binom();
 
 const fn small_binom() -> [[u32; 14]; 14] {
@@ -381,6 +405,28 @@ impl HandIndexer {
         }
         cards
     }
+
+    pub fn class_weight(&self, round: usize, index: u64) -> u32 {
+        let cards = self.unindex(round, index);
+        let original = self.round_masks(&cards, round, [0, 1, 2, 3]);
+        let fixed = SUIT_PERMUTATIONS
+            .iter()
+            .filter(|&&perm| self.round_masks(&cards, round, perm) == original)
+            .count() as u32;
+        SUIT_PERMUTATIONS.len() as u32 / fixed
+    }
+
+    fn round_masks(&self, cards: &[Card], round: usize, perm: [u8; SUITS]) -> [u64; MAX_ROUNDS] {
+        let mut masks = [0u64; MAX_ROUNDS];
+        let mut start = 0usize;
+        for (mask, &end) in masks.iter_mut().zip(&self.cumulative[..=round]) {
+            for &c in &cards[start..end] {
+                *mask |= 1 << ((c / 4) * 4 + perm[(c % 4) as usize]);
+            }
+            start = end;
+        }
+        masks
+    }
 }
 
 pub fn street_indexers() -> [HandIndexer; 4] {
@@ -579,6 +625,40 @@ mod tests {
             rng.shuffle(&mut shuffled[2..7]);
             assert_eq!(river.index(&cards), river.index(&shuffled));
         }
+    }
+
+    #[test]
+    fn preflop_class_weights() {
+        let pre = HandIndexer::new(&[2]);
+        let aa = pre.index(&parse_cards("As Ad").unwrap());
+        let aks = pre.index(&parse_cards("As Ks").unwrap());
+        let ako = pre.index(&parse_cards("As Kd").unwrap());
+        assert_eq!(pre.class_weight(0, aa), 6);
+        assert_eq!(pre.class_weight(0, aks), 4);
+        assert_eq!(pre.class_weight(0, ako), 12);
+        let total: u64 = (0..pre.size(0))
+            .map(|i| u64::from(pre.class_weight(0, i)))
+            .sum();
+        assert_eq!(total, 1_326);
+    }
+
+    #[test]
+    fn class_weights_sum_to_raw_counts() {
+        let flop = &street_indexers()[1];
+        let total: u64 = (0..flop.size(1))
+            .map(|i| u64::from(flop.class_weight(1, i)))
+            .sum();
+        assert_eq!(total, 25_989_600);
+    }
+
+    #[test]
+    #[ignore]
+    fn turn_class_weights_sum_to_raw_counts() {
+        let turn = &street_indexers()[2];
+        let total: u64 = (0..turn.size(1))
+            .map(|i| u64::from(turn.class_weight(1, i)))
+            .sum();
+        assert_eq!(total, 305_377_800);
     }
 
     #[test]

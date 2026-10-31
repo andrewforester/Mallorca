@@ -4,8 +4,7 @@ import { dirname, relative } from 'node:path';
 import { Worker } from 'node:worker_threads';
 import { CASH } from '../../src/engine/index.ts';
 import { handRecord } from '../../src/game/records/record.ts';
-import { BOTS, prepareBots } from './bots.ts';
-import type { BotName } from './bots.ts';
+import { botFactory, botLabel, prepareBots } from './bots.ts';
 import { playPair } from './match.ts';
 import { summarize } from './stats.ts';
 import type { WorkerInput, WorkerResult } from './worker.ts';
@@ -58,7 +57,7 @@ function chunks(count: number, parts: number): number[][] {
 
 function runInProcess(input: WorkerInput): WorkerResult[] {
   return input.indices.map((index) => {
-    const { net, hands } = playPair(BOTS[input.a], BOTS[input.b], input.seed, index);
+    const { net, hands } = playPair(botFactory(input.a), botFactory(input.b), input.seed, index);
     return input.withHands ? { index, net, hands } : { index, net };
   });
 }
@@ -76,14 +75,11 @@ export function runInWorker(input: WorkerInput): Promise<WorkerResult[]> {
 }
 
 export async function runArena(options: ArenaOptions): Promise<Report> {
-  for (const name of [options.a, options.b]) {
-    if (!Object.hasOwn(BOTS, name)) {
-      throw new Error(`unknown bot "${name}", choose from: ${Object.keys(BOTS).join(', ')}`);
-    }
-  }
+  botFactory(options.a);
+  botFactory(options.b);
   const started = Date.now();
-  const a = options.a as BotName;
-  const b = options.b as BotName;
+  const { a, b } = options;
+  const labels: [string, string] = [botLabel(a), botLabel(b)];
   const withHands = options.saveHands !== undefined;
   const inputs: WorkerInput[] = chunks(options.pairs, Math.max(1, options.workers)).map(
     (indices) => ({ a, b, seed: options.seed, indices, withHands }),
@@ -102,14 +98,14 @@ export async function runArena(options: ArenaOptions): Promise<Report> {
     const lines: string[] = [];
     for (const result of results) {
       (result.hands ?? []).forEach((events, k) => {
-        const names: [string, string] = k === 0 ? [a, b] : [b, a];
+        const names: [string, string] = k === 0 ? labels : [labels[1], labels[0]];
         const playedAt = new Date(started + (result.index * 2 + k) * 1000).toISOString();
         const record = handRecord(events, [], {
           sessionId: `arena-${options.seed}`,
           mode: CASH,
           names,
           humanSeat: null,
-          bot: { id: `${a}-vs-${b}`, version: '1' },
+          bot: { id: `${labels[0]}-vs-${labels[1]}`, version: '1' },
           playedAt,
         });
         lines.push(JSON.stringify(record));
@@ -119,8 +115,8 @@ export async function runArena(options: ArenaOptions): Promise<Report> {
     writeFileSync(options.saveHands, lines.join('\n') + '\n');
   }
   return {
-    a,
-    b,
+    a: labels[0],
+    b: labels[1],
     pairs: stats.pairs,
     hands: stats.hands,
     seed: options.seed,

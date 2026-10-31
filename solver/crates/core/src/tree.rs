@@ -334,6 +334,10 @@ impl Reader<'_> {
     }
 }
 
+fn scaled(values: &[f64], unit: f64) -> Vec<f64> {
+    values.iter().map(|v| v * unit).collect()
+}
+
 #[derive(Clone, Copy)]
 struct State {
     street: Street,
@@ -401,7 +405,7 @@ impl Builder<'_> {
         let min_to = s.street_bets[opp] + s.last_inc;
         let limit = self.preset.postflop.all_in_threshold * f64::from(behind);
         let mut raises = Vec::new();
-        for target in self.raise_targets(s, to_call) {
+        for target in self.raise_targets(s, to_call, min_to) {
             let to = (target.round() as u32).max(min_to);
             if to < all_in_to && f64::from(to - s.street_bets[me]) <= limit && !raises.contains(&to)
             {
@@ -414,16 +418,16 @@ impl Builder<'_> {
         kinds
     }
 
-    fn raise_targets(&self, s: &State, to_call: u32) -> Vec<f64> {
+    fn raise_targets(&self, s: &State, to_call: u32, min_to: u32) -> Vec<f64> {
         let opp_bet = f64::from(s.street_bets[1 - usize::from(s.to_act)]);
         if s.street == Street::Preflop {
             let pf = &self.preset.preflop;
             let bb = f64::from(self.preset.big_blind);
             return match s.aggressive {
-                0 if to_call > 0 => vec![pf.open_bb * bb],
-                0 => vec![pf.iso_vs_limp_bb * bb],
-                1 => vec![pf.three_bet_x * opp_bet],
-                2 => vec![pf.four_bet_x * opp_bet],
+                0 if to_call > 0 => scaled(pf.open_bb.values(), bb),
+                0 => scaled(pf.iso_vs_limp_bb.values(), bb),
+                1 => scaled(pf.three_bet_x.values(), opp_bet),
+                2 => scaled(pf.four_bet_x.values(), opp_bet),
                 _ => Vec::new(),
             };
         }
@@ -434,10 +438,14 @@ impl Builder<'_> {
             _ => &[],
         };
         let pot_after_call = f64::from(s.committed[0] + s.committed[1] + to_call);
-        fractions
+        let mut targets: Vec<f64> = fractions
             .iter()
             .map(|f| opp_bet + f * pot_after_call)
-            .collect()
+            .collect();
+        if post.min_raise && s.aggressive == 1 && !post.first_raise_pot.is_empty() {
+            targets.push(f64::from(min_to));
+        }
+        targets
     }
 
     fn apply(&mut self, s: &State, kind: ActionKind) -> NodeId {
@@ -500,6 +508,16 @@ mod tests {
 
     const V1: &str = include_str!("../../../presets/v1.toml");
     const TINY: &str = include_str!("../../../presets/tiny.toml");
+    const V2: &str = include_str!("../../../presets/v2.toml");
+    const TINY_POTENTIAL: &str = include_str!("../../../presets/tiny-potential.toml");
+
+    fn v2() -> Preset {
+        Preset::from_toml(V2).unwrap()
+    }
+
+    fn tiny_potential() -> Preset {
+        Preset::from_toml(TINY_POTENTIAL).unwrap()
+    }
 
     fn v1() -> Preset {
         Preset::from_toml(V1).unwrap()
@@ -811,8 +829,76 @@ mod tests {
     }
 
     #[test]
+    fn v2_root_has_three_opens() {
+        let t = Tree::build(&v2());
+        assert_eq!(
+            kinds(&t, t.root()),
+            vec![Fold, Call, RaiseTo(40), RaiseTo(60), RaiseTo(80), AllIn]
+        );
+    }
+
+    #[test]
+    fn v2_big_blind_facing_limp_has_two_isos() {
+        let t = Tree::build(&v2());
+        let id = path(&t, &[Call]);
+        assert_eq!(kinds(&t, id), vec![Check, RaiseTo(60), RaiseTo(90), AllIn]);
+    }
+
+    #[test]
+    fn v2_three_bets_scale_with_the_open() {
+        let t = Tree::build(&v2());
+        let a = path(&t, &[RaiseTo(60)]);
+        assert_eq!(
+            kinds(&t, a),
+            vec![Fold, Call, RaiseTo(180), RaiseTo(240), AllIn]
+        );
+        let b = path(&t, &[RaiseTo(80)]);
+        assert_eq!(
+            kinds(&t, b),
+            vec![Fold, Call, RaiseTo(240), RaiseTo(320), AllIn]
+        );
+    }
+
+    #[test]
+    fn v2_flop_bets() {
+        let t = Tree::build(&v2());
+        let id = path(&t, &[RaiseTo(60), Call]);
+        assert_eq!(
+            kinds(&t, id),
+            vec![
+                Check,
+                RaiseTo(30),
+                RaiseTo(79),
+                RaiseTo(120),
+                RaiseTo(180),
+                RaiseTo(240),
+                AllIn
+            ]
+        );
+    }
+
+    #[test]
+    fn v2_flop_raise_has_the_minimum() {
+        let t = Tree::build(&v2());
+        let bet = path(&t, &[RaiseTo(60), Call, RaiseTo(120)]);
+        assert_eq!(
+            kinds(&t, bet),
+            vec![Fold, Call, RaiseTo(240), RaiseTo(480), AllIn]
+        );
+    }
+
+    #[test]
+    fn min_raise_needs_a_first_raise_size() {
+        let plain = tiny_potential();
+        let mut with_min = plain.clone();
+        with_min.postflop.min_raise = true;
+        assert!(with_min.postflop.first_raise_pot.is_empty());
+        assert_eq!(Tree::build(&with_min).nodes(), Tree::build(&plain).nodes());
+    }
+
+    #[test]
     fn every_action_is_legal() {
-        for p in [v1(), tiny()] {
+        for p in [v1(), tiny(), v2(), tiny_potential()] {
             let t = Tree::build(&p);
             check_legal(&t, &p, t.root(), p.big_blind, 0);
         }
@@ -894,5 +980,16 @@ mod tests {
             other => panic!("{other:?}"),
         };
         t.offset(t.root(), t.buckets()[street.as_index()]);
+    }
+
+    #[test]
+    fn v1_tree_bytes_are_pinned() {
+        use sha2::{Digest, Sha256};
+        let digest = Sha256::digest(Tree::build(&v1()).serialize());
+        let hex: String = digest.iter().map(|b| format!("{b:02x}")).collect();
+        assert_eq!(
+            hex,
+            "1807bf640a19d2092c2e3aa5cac694785683a4baadaadb75d48931cda73be244"
+        );
     }
 }
