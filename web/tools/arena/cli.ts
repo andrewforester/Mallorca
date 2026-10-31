@@ -90,6 +90,6 @@ console.log(
 const style = report.styleStats;
 if (style !== undefined) {
   console.log(
-    `${report.a} style: vpip ${percent(style.vpip)} pfr ${percent(style.pfr)} af ${style.aggressionFactor.toFixed(2)} bet ${percent(style.betFrequency)} fold to bet ${percent(style.foldToBet)} raise ${percent(style.raiseFrequency)} over ${style.hands} hands, ${style.postflopDecisions} decisions after the flop, ${style.facedBets} facing a bet`,
+    `${report.a} style: vpip ${percent(style.vpip)} pfr ${percent(style.pfr)} af ${style.aggressionFactor.toFixed(2)} bet ${percent(style.betFrequency)} fold to bet ${percent(style.foldToBet)} raise ${percent(style.raiseFrequency)} bet size ${style.betSize.toFixed(2)} pot, preflop raise ${style.preflopRaiseSize.toFixed(2)} pot over ${style.hands} hands, ${style.postflopDecisions} decisions after the flop, ${style.facedBets} facing a bet`,
   );
 }

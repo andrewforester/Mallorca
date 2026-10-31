@@ -10,6 +10,8 @@ export interface StyleStats {
   raiseFrequency: number;
   postflopDecisions: number;
   facedBets: number;
+  betSize: number;
+  preflopRaiseSize: number;
 }
 
 interface Counts {
@@ -21,6 +23,9 @@ interface Counts {
   faced: number;
   foldsFacing: number;
   raisesFacing: number;
+  betSizes: number;
+  preflopSizes: number;
+  preflopRaises: number;
 }
 
 const ratio = (part: number, whole: number): number => (whole === 0 ? 0 : part / whole);
@@ -35,22 +40,36 @@ function countPostflop(counts: Counts, kind: string, facing: boolean): void {
   if (kind === 'raise') counts.raisesFacing += 1;
 }
 
+function countSize(counts: Counts, postflop: boolean, size: number): void {
+  if (postflop) {
+    counts.betSizes += size;
+  } else {
+    counts.preflopSizes += size;
+    counts.preflopRaises += 1;
+  }
+}
+
 function countHand(counts: Counts, events: EngineEvent[], seat: SeatIndex): void {
   const committed = [0, 0];
+  let pot = 0;
   let postflop = false;
   let voluntary = false;
   let raised = false;
   for (const event of events) {
     if (event.type === 'blindPosted') {
       committed[event.seat] = (committed[event.seat] ?? 0) + event.amount;
+      pot += event.amount;
     } else if (event.type === 'streetDealt') {
       committed.fill(0);
       postflop = true;
     } else if (event.type === 'acted') {
       const facing = (committed[1 - event.seat] ?? 0) > (committed[event.seat] ?? 0);
       committed[event.seat] = (committed[event.seat] ?? 0) + event.amount;
+      const before = pot;
+      pot += event.amount;
       if (event.seat !== seat) continue;
       const kind = event.action.kind;
+      if (kind === 'raise' && before > 0) countSize(counts, postflop, event.amount / before);
       if (postflop) countPostflop(counts, kind, facing);
       else if (kind === 'call' || kind === 'raise') {
         voluntary = true;
@@ -75,6 +94,9 @@ export function styleStats(
     faced: 0,
     foldsFacing: 0,
     raisesFacing: 0,
+    betSizes: 0,
+    preflopSizes: 0,
+    preflopRaises: 0,
   };
   hands.forEach((events, index) => countHand(counts, events, seatOf(index)));
   return {
@@ -90,5 +112,7 @@ export function styleStats(
     raiseFrequency: ratio(counts.raisesFacing, counts.faced),
     postflopDecisions: counts.decisions,
     facedBets: counts.faced,
+    betSize: ratio(counts.betSizes, counts.aggressive),
+    preflopRaiseSize: ratio(counts.preflopSizes, counts.preflopRaises),
   };
 }
