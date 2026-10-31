@@ -1,7 +1,17 @@
 import { mulberry32 } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex, Table } from '../engine/index.ts';
 import { EMPTY_SUMMARY, createTalk, endsHand, since } from '../talk/index.ts';
-import type { Level, LineIntent, SessionSummary, Signal, Style, Talk } from '../talk/index.ts';
+import type {
+  JournalEntry,
+  Level,
+  LineIntent,
+  Personality,
+  SessionSummary,
+  Signal,
+  Snapshot,
+  Style,
+  Talk,
+} from '../talk/index.ts';
 import type { Opponent } from './opponent.ts';
 import { silentTalkClient, toLinePayload, toReplyPayload, toSummaryPayload } from './talkClient.ts';
 import type { ChatTurn, HandInput, TalkClient, TalkReply } from './talkClient.ts';
@@ -30,6 +40,12 @@ export interface TalkHost {
   table(): Table;
   epoch(): number;
   sessionId(): string;
+  felt?(): void;
+}
+
+export interface FeelingView {
+  snapshot: Snapshot;
+  journal: JournalEntry[];
 }
 
 export interface TalkSetup {
@@ -54,6 +70,9 @@ export interface SessionTalk {
   leave(): void;
   pageHidden(): void;
   active(): Talk | null;
+  setPersonality(p: Personality): void;
+  resetFeeling(): void;
+  feeling(): FeelingView | null;
 }
 
 const MAX_LINES = 100;
@@ -84,6 +103,7 @@ class Wiring implements SessionTalk {
   private unsent = 0;
   private nextId = 0;
   private rangeAsks = 0;
+  private personality: Personality | null = null;
   private readonly setup: TalkSetup;
   private readonly host: TalkHost;
 
@@ -98,12 +118,16 @@ class Wiring implements SessionTalk {
     const { level } = this.host.read();
     this.talk = createTalk({ seat: this.setup.botSeat, rng: mulberry32(seed ^ TALK_SALT), level });
     this.solver = opponent !== 'math';
+    if (this.personality !== null) {
+      this.talk.setPersonality(this.personality);
+    }
     this.herRaised = false;
     this.acted = false;
     this.sent = EMPTY_SUMMARY;
     this.unsent = 0;
     this.update({ available: this.available(), lines: [], bubbles: [null, null] });
     this.connect();
+    this.host.felt?.();
   }
 
   observe(events: readonly EngineEvent[]): void {
@@ -112,6 +136,7 @@ class Wiring implements SessionTalk {
     }
     const ended = this.track(events);
     const intent = this.talk.observe(events, this.setup.now());
+    this.host.felt?.();
     if (intent !== null && this.speaking()) {
       this.requestLine(intent);
     }
@@ -141,7 +166,22 @@ class Wiring implements SessionTalk {
       return;
     }
     this.talk?.hear(this.quickSignals(id));
+    this.host.felt?.();
     this.send(trimmed, false);
+  }
+
+  setPersonality(p: Personality): void {
+    this.personality = p;
+    this.talk?.setPersonality(p);
+  }
+
+  resetFeeling(): void {
+    this.talk?.resetFeeling();
+  }
+
+  feeling(): FeelingView | null {
+    const talk = this.talk;
+    return talk === null ? null : { snapshot: talk.feeling(), journal: talk.journal() };
   }
 
   setOn(on: boolean): void {
@@ -327,6 +367,7 @@ class Wiring implements SessionTalk {
     }
     if (hear) {
       this.talk.hear(reply.signals);
+      this.host.felt?.();
     }
     this.append('mallorca', reply.text, this.host.table().handNumber);
   }

@@ -458,6 +458,8 @@ mask, acted)` blends the felt point toward the acted one (neutral when null).
   per spot in that order, the number of decisions, the player's share of the spot's kind (raises, or folds for the
   three folding spots) and the strategy's mean share of moves of that kind; the panel shows a spot from `MIN_SPOTS`
   (10) decisions.
+- `coachMove(action, legal, pot)` (`moves.ts`) labels a real action as a `CoachMove`; the session's debug state
+  uses it too.
 - `odds` (`odds.ts`) is null with nothing to call, else `requiredEquity = toCall / (pot + toCall)`,
   `mdf = (pot - toCall) / pot` and `bluffShare`, the bluff share the bet can hold, equal to `requiredEquity`.
 
@@ -592,10 +594,12 @@ text)` (the caller's localized label) append the player's line at once and call 
 - Emotion debug (`debug.ts`, development builds only): with `SessionOptions.debug` true and
   `import.meta.env.DEV`, `SessionState.debug` is a `DebugState`, otherwise null and the code that fills it is dead
   and left out of the production bundle. It holds the `personality` (a `PersonalityKey`, or `custom` with its
-  `Personality`), her `snapshot` (`Talk.feeling()`), the `style` sent with the last `decide` (null before one, or
-  against the math bot), the last `DebugDecision` (her hole cards, the board, the `Breakdown` and the action the
-  session applied; null until a Solver decision) and `journal` (`Talk.journal()`). It is refreshed after every
-  step's `Talk.observe`, every `hear`, every bot decision and each action below. With it, every `decide` request
+  `Personality`), her `snapshot` (`Talk.feeling()`, which runs for every opponent since the face reads it), `sentStyle`, the style sent with
+  the last `decide` (null before one, or against the math bot), the last `DebugDecision` (her hole cards, the board,
+  one `DecisionRow` per move of the `Breakdown`, its `coachMove` label and amount with its `base` and `styled`
+  probability and whether it was `chosen`, and the action the session applied as a `coachMove`; null until a
+  decision with a breakdown) and `journal` (`Talk.journal()`). It is refreshed after every step's `Talk.observe`,
+  every `hear`, every `start`, every bot decision and each action below. With it, every `decide` request
   carries `explain: true`; without it none does, and the worker never calls `explain()`. The actions
   `setPersonality(key | personality)` (applied to the running `Talk` and to every `Talk` a later `start` makes) and
   `resetFeeling()` do nothing without it. Opening or closing the panel calls nothing on the session.
@@ -603,9 +607,8 @@ text)` (the caller's localized label) append the player's line at once and call 
   `suppression`, `experience` and the derived `traits` (default mood, composure, discipline, the gain of each
   emotion); `emotions` as `[emotion, value]` in `EMOTIONS` order; `mood`, `defaultMood` and `octant`; `load` with
   its `sources`, the `overload`, `composure` and `leakage`; `sessionNetBb` and `pressure`; `engineStyle` (the five
-  `PlayStyle` multipliers) and `sentStyle` (the `BotStyle`, `tightness = 1 / looseness`, or null); `decision`, its
-  rows (`label` fold, check, call, bet, raise or allIn, `amount`, `base`, `styled`, `chosen`) and the action taken;
-  and `journal`.
+  `PlayStyle` multipliers in `STYLE_KEYS` order, all ones without a feeling) and `sentStyle` (the `BotStyle`,
+  `tightness = 1 / looseness`, or null); `decision`; and `journal`.
 - `simulation.test.ts` plays full tournaments between the bot and a seeded random human through the session and
   checks that chips are conserved, the session never stalls and the winner holds every chip.
 
@@ -701,7 +704,8 @@ text)` (the caller's localized label) append the player's line at once and call 
   (`debug-decision`, her cards, each move with its blueprint and styled probability, the chosen one marked) and the
   journal (`debug-journal`, newest first). Its colours follow `ui/styles/tokens.css`.
 - `scripts/check-dist.ts` runs at the end of `npm run build` and fails when any file in `dist` contains
-  `emotion-debug`, so the panel, its copy and the session's debug code stay out of production.
+  `emotion-debug` (the panel and its copy), `sentStyle` (the session's debug state) or `engineStyle`
+  (`toDebugView`), so none of them reaches production.
 - The hand log is a drawer grouped by street (`groupHand` of `game`), opened by the status bar toggle
   `hand-log-toggle` (`aria-expanded`). Opening moves focus to `hand-log-close`; closing, by the close button,
   Escape, the toggle or the scrim, returns focus to the toggle. On portrait screens it is a full-height sheet over
