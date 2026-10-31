@@ -445,6 +445,8 @@ describe('session talk', () => {
         aggression: expect.any(Number) as number,
         bluff: expect.any(Number) as number,
         tightness: expect.any(Number) as number,
+        sizing: expect.any(Number) as number,
+        stickiness: expect.any(Number) as number,
       });
     }
     const records = await store.list();

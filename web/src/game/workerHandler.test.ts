@@ -100,7 +100,7 @@ describe('createWorkerHandler', () => {
 const settle = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 describe('createWorkerHandler style', () => {
-  const style = { aggression: 1.2, bluff: 0.8, tightness: 1 };
+  const style = { aggression: 1.2, bluff: 0.8, tightness: 1, sizing: 1, stickiness: 1 };
 
   it('passes the style before decide', () => {
     const calls: string[] = [];

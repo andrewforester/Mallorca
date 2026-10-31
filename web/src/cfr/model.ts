@@ -29,7 +29,14 @@ interface Exports {
     draw: number,
   ): number;
   decided_to(bot: number): number;
-  bot_style(bot: number, aggression: number, bluff: number, tightness: number): void;
+  bot_style(
+    bot: number,
+    aggression: number,
+    bluff: number,
+    tightness: number,
+    sizing: number,
+    stickiness: number,
+  ): void;
   bot_range(bot: number): number;
   bot_spot(
     bot: number,
@@ -160,8 +167,8 @@ function bot(e: Exports, handle: number): CfrBot {
       const kind = e.decide(handle, ...legalArgs(legal), draw);
       return toAction(kind, e.decided_to(handle));
     },
-    setStyle({ aggression, bluff, tightness }) {
-      e.bot_style(handle, aggression, bluff, tightness);
+    setStyle({ aggression, bluff, tightness, sizing, stickiness }) {
+      e.bot_style(handle, aggression, bluff, tightness, sizing, stickiness);
     },
     range() {
       return floats(e, e.bot_range(handle), PAIRS);

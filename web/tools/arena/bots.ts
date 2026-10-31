@@ -78,7 +78,8 @@ function cfrBot(key: string, style?: BotStyle): BotFactory {
 
 const cfr = cfrBot(SHIPPED);
 
-const styled = (style: BotStyle): BotFactory => cfrBot(SHIPPED, style);
+const styled = (style: Omit<BotStyle, 'sizing' | 'stickiness'>): BotFactory =>
+  cfrBot(SHIPPED, { ...style, sizing: 1, stickiness: 1 / style.tightness });
 
 const talking =
   (level: Level): BotFactory =>
@@ -125,17 +126,50 @@ export const BOTS: Record<
 
 export type BotName = keyof typeof BOTS;
 
+const NEUTRAL: BotStyle = { aggression: 1, bluff: 1, tightness: 1, sizing: 1, stickiness: 1 };
+const STYLE_MARK = '@';
+
 function cfrFile(name: string): string | null {
   return name.startsWith(CFR_FILE) && name.length > CFR_FILE.length
     ? name.slice(CFR_FILE.length)
     : null;
 }
 
+function splitStyle(name: string): { base: string; axes: string | null } {
+  const at = name.lastIndexOf(STYLE_MARK);
+  return at < 0
+    ? { base: name, axes: null }
+    : { base: name.slice(0, at), axes: name.slice(at + 1) };
+}
+
+function parseAxes(axes: string): BotStyle | null {
+  const style: BotStyle = { ...NEUTRAL };
+  for (const part of axes.split(',')) {
+    const [key, raw] = part.split('=');
+    const value = Number(raw);
+    if (key === undefined || !Object.hasOwn(NEUTRAL, key) || !(value > 0)) return null;
+    style[key as keyof BotStyle] = value;
+  }
+  return style;
+}
+
+const isCfr = (base: string): boolean => base === SHIPPED || cfrFile(base) !== null;
+
+export function styleOfName(name: string): BotStyle | null {
+  const { base, axes } = splitStyle(name);
+  return axes === null || !isCfr(base) ? null : parseAxes(axes);
+}
+
 export function isBotName(name: string): boolean {
-  return Object.hasOwn(BOTS, name) || cfrFile(name) !== null;
+  const { base, axes } = splitStyle(name);
+  if (axes !== null) return styleOfName(name) !== null;
+  return Object.hasOwn(BOTS, base) || cfrFile(base) !== null;
 }
 
 export function botFactory(name: string): BotFactory {
+  const { base } = splitStyle(name);
+  const style = styleOfName(name);
+  if (style !== null) return cfrBot(base, style);
   if (cfrFile(name) !== null) return cfrBot(name);
   if (!Object.hasOwn(BOTS, name)) {
     throw new Error(`unknown bot "${name}", choose from: ${Object.keys(BOTS).join(', ')}`);
@@ -143,13 +177,23 @@ export function botFactory(name: string): BotFactory {
   return BOTS[name as BotName];
 }
 
-export function botLabel(name: string): string {
+function baseLabel(name: string): string {
   const file = cfrFile(name);
   if (file === null) return name;
   const base = basename(file)
     .replace(/\.gz$/, '')
     .replace(/\.mlcs$/, '');
   return `cfr-${base}`;
+}
+
+export function botLabel(name: string): string {
+  const { base, axes } = splitStyle(name);
+  if (axes === null) return baseLabel(name);
+  const suffix = axes
+    .split(',')
+    .map((part) => part.replace('=', ''))
+    .join('-');
+  return `${baseLabel(base)}-${suffix}`;
 }
 
 function strategyUrl(name: string): URL | null {
@@ -159,7 +203,7 @@ function strategyUrl(name: string): URL | null {
 }
 
 export async function prepareBots(names: readonly string[]): Promise<void> {
-  for (const name of names) {
+  for (const name of names.map((n) => splitStyle(n).base)) {
     const key = cfrFile(name) === null && name.startsWith(SHIPPED) ? SHIPPED : name;
     const url = strategyUrl(key);
     if (url !== null && !cfrModels.has(key)) cfrModels.set(key, await loadCfrModel(url, read));

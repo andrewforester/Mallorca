@@ -18,6 +18,8 @@ export interface BotStyle {
   aggression: number;
   bluff: number;
   tightness: number;
+  sizing: number;
+  stickiness: number;
 }
 
 export interface Brain {
