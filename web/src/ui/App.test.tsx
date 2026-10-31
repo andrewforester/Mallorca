@@ -78,6 +78,21 @@ describe('App auto next hand', () => {
     session.getState().dispose();
   });
 
+  it('pauses while the hand log is open and resumes when it closes', async () => {
+    localStorage.clear();
+    const { session } = setup();
+    await foldFirstHand(session);
+    fireEvent.click(screen.getByTestId('hand-log-toggle'));
+    await pause(1300);
+    expect(session.getState().phase).toBe('handOver');
+    expect(screen.getByTestId('hand-number').textContent).toBe('Hand 1');
+    fireEvent.click(screen.getByTestId('hand-log-close'));
+    await waitFor(() => expect(screen.getByTestId('hand-number').textContent).toBe('Hand 2'), {
+      timeout: 2500,
+    });
+    session.getState().dispose();
+  });
+
   it('stays put when the page turns auto next hand off', async () => {
     localStorage.clear();
     const { session } = setup(TOURNAMENT, memoryStore(), false);
@@ -134,7 +149,42 @@ describe('App', () => {
     const bets = [...document.querySelectorAll('[data-testid^="bet-"]')].length;
     expect(bets).toBeGreaterThan(0);
     expect(stacks).toBeLessThan(4000);
+    expect(screen.queryByTestId('hand-log')).toBeNull();
+    expect(screen.queryByTestId('hand-log-menu')).toBeNull();
+    session.getState().dispose();
+  });
+
+  it('opens the hand log from the status bar and returns focus on close', async () => {
+    const { session } = setup();
+    fireEvent.click(screen.getByTestId('start-tournament'));
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    const toggle = screen.getByTestId('hand-log-toggle');
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
     expect(screen.getByTestId('hand-log')).not.toBeNull();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(toggle.getAttribute('aria-controls')).toBe(screen.getByTestId('hand-log').id);
+    expect(screen.getByTestId('hand-log').id).not.toBe('');
+    expect(document.activeElement).toBe(screen.getByTestId('hand-log-close'));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByTestId('hand-log')).toBeNull());
+    expect(document.activeElement).toBe(toggle);
+    fireEvent.click(toggle);
+    fireEvent.click(screen.getByTestId('hand-log-close'));
+    expect(screen.queryByTestId('hand-log')).toBeNull();
+    session.getState().dispose();
+  });
+
+  it('closes the hand log when the menu opens', async () => {
+    const { session } = setup();
+    fireEvent.click(screen.getByTestId('start-tournament'));
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    fireEvent.click(screen.getByTestId('hand-log-toggle'));
+    expect(screen.getByTestId('hand-log')).not.toBeNull();
+    const menu = document.querySelector('details.menu') as HTMLDetailsElement;
+    fireEvent.click(menu.querySelector('summary') as HTMLElement);
+    await waitFor(() => expect(screen.queryByTestId('hand-log')).toBeNull());
+    expect(menu.open).toBe(true);
     session.getState().dispose();
   });
 
@@ -163,6 +213,24 @@ describe('App', () => {
     expect(screen.getByTestId('session-over').textContent).toContain('+12.5 bb over 1 hand');
     fireEvent.click(screen.getByTestId('play-again'));
     expect(onNewGame).toHaveBeenCalledOnce();
+    session.getState().dispose();
+  });
+
+  it('closes the hand log when the session ends', async () => {
+    const { session } = setup(CASH);
+    fireEvent.click(screen.getByTestId('start-cash'));
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    fireEvent.click(screen.getByTestId('hand-log-toggle'));
+    expect(screen.getByTestId('hand-log')).not.toBeNull();
+    session.setState({ phase: 'handOver', session: { hands: 1, net: 250 } });
+    await waitFor(() =>
+      expect(screen.queryByTestId('leave')?.hasAttribute('disabled')).toBe(false),
+    );
+    fireEvent.click(screen.getByTestId('hand-log-close'));
+    fireEvent.click(screen.getByTestId('hand-log-toggle'));
+    fireEvent.click(screen.getByTestId('leave'));
+    await waitFor(() => expect(screen.queryByTestId('session-over')).not.toBeNull());
+    expect(screen.queryByTestId('hand-log')).toBeNull();
     session.getState().dispose();
   });
 

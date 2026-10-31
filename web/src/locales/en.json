@@ -69,6 +69,16 @@
   },
   "log": {
     "title": "Hand log",
+    "hand": "Hand {{number}}",
+    "close": "Close hand log",
+    "open": "Hand log",
+    "street": {
+      "preflop": "Preflop",
+      "flop": "Flop",
+      "turn": "Turn",
+      "river": "River",
+      "showdown": "Showdown"
+    },
     "handStarted": "Hand {{number}}, blinds {{small}}/{{big}}",
     "flop": "Flop {{cards}}",
     "turn": "Turn {{cards}}",

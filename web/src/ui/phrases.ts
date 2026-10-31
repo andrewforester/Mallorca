@@ -34,3 +34,9 @@ const KINDS: Record<string, ActionKind> = {
 export function actionKind(entry: LogEntry): ActionKind {
   return KINDS[entry.key] ?? 'passive';
 }
+
+export function logKind(entry: LogEntry): 'aggressive' | 'plain' {
+  return entry.key === 'raise' || entry.key === 'bet' || entry.key === 'allIn'
+    ? 'aggressive'
+    : 'plain';
+}

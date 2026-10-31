@@ -1,9 +1,8 @@
-import type { Intent, LogEntry, Phase, SeatIndex, ViewModel } from '../game/index.ts';
+import type { Intent, Phase, SeatIndex, ViewModel } from '../game/index.ts';
 import { ActionBar } from './ActionBar.tsx';
 import { BetChips } from './BetChips.tsx';
 import { BoardRow } from './BoardRow.tsx';
 import { DealerButton } from './DealerButton.tsx';
-import { HandLog } from './HandLog.tsx';
 import { t } from './i18n.ts';
 import { handName } from './phrases.ts';
 import { Seat } from './Seat.tsx';
@@ -15,7 +14,6 @@ export interface TableProps {
   vm: ViewModel;
   phase: Phase;
   humanSeat: SeatIndex;
-  log: LogEntry[];
   autoNextMs?: number | null;
   onAct: (intent: Intent) => void;
   onNextHand: () => void;
@@ -132,15 +130,7 @@ function Result({ text, canContinue, autoNextMs, onNextHand }: ResultProps) {
   );
 }
 
-export function Table({
-  vm,
-  phase,
-  humanSeat,
-  log,
-  autoNextMs = null,
-  onAct,
-  onNextHand,
-}: TableProps) {
+export function Table({ vm, phase, humanSeat, autoNextMs = null, onAct, onNextHand }: TableProps) {
   const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
   const botWaiting = phase === 'botThinking' || phase === 'animating';
   const text = resultText(vm, humanSeat);
@@ -183,7 +173,6 @@ export function Table({
       />
       <ActionBar key={barKey} controls={vm.controls} onAct={onAct} />
       <div class="table-side">
-        <HandLog entries={log} names={[vm.seats[0].name, vm.seats[1].name]} humanSeat={humanSeat} />
         <aside class="coach" data-testid="coach" aria-label={t('coach.label')} />
       </div>
     </div>

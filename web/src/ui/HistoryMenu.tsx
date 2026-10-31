@@ -8,10 +8,34 @@ export interface HistoryMenuProps {
   seed: number;
   store: HandStore;
   onNewGame: () => void;
+  onOpen?: () => void;
   children?: ComponentChildren;
 }
 
-export function HistoryMenu({ seed, store, onNewGame, children }: HistoryMenuProps) {
+function ExportButtons({ store }: { store: HandStore }) {
+  return (
+    <>
+      <button
+        type="button"
+        class="button button-small"
+        data-testid="export-all-json"
+        onClick={() => void exportHistory(store, null, 'json')}
+      >
+        {t('history.exportAllJson')}
+      </button>
+      <button
+        type="button"
+        class="button button-small"
+        data-testid="export-all-text"
+        onClick={() => void exportHistory(store, null, 'text')}
+      >
+        {t('history.exportAllText')}
+      </button>
+    </>
+  );
+}
+
+export function HistoryMenu({ seed, store, onNewGame, onOpen, children }: HistoryMenuProps) {
   const [confirmClear, setConfirmClear] = useState(false);
   const clear = () => {
     if (!confirmClear) {
@@ -25,7 +49,9 @@ export function HistoryMenu({ seed, store, onNewGame, children }: HistoryMenuPro
     <details
       class="menu"
       onToggle={(event) => {
-        if (!(event.currentTarget as HTMLDetailsElement).open) {
+        if ((event.currentTarget as HTMLDetailsElement).open) {
+          onOpen?.();
+        } else {
           setConfirmClear(false);
         }
       }}
@@ -42,22 +68,7 @@ export function HistoryMenu({ seed, store, onNewGame, children }: HistoryMenuPro
         >
           {t('status.newGame')}
         </button>
-        <button
-          type="button"
-          class="button button-small"
-          data-testid="export-all-json"
-          onClick={() => void exportHistory(store, null, 'json')}
-        >
-          {t('history.exportAllJson')}
-        </button>
-        <button
-          type="button"
-          class="button button-small"
-          data-testid="export-all-text"
-          onClick={() => void exportHistory(store, null, 'text')}
-        >
-          {t('history.exportAllText')}
-        </button>
+        <ExportButtons store={store} />
         <button
           type="button"
           class="button button-small"

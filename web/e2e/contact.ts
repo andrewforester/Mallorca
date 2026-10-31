@@ -92,6 +92,10 @@ async function capture(browser: Browser, device: (typeof DEVICES)[number]): Prom
     await id(page, 'passive').click();
   }
   await snap(page, 'showdown', shots);
+  await id(page, 'hand-log-toggle').click();
+  await id(page, 'hand-log').waitFor();
+  await snap(page, 'hand log', shots);
+  await id(page, 'hand-log-close').click();
 
   const slow = await open(`seed=42&botDelay=${THINKING_DELAY_MS}&autoNext=off`);
   await id(slow, 'start-tournament').click();

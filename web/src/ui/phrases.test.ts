@@ -1,6 +1,6 @@
 import i18next from 'i18next';
 import { describe, expect, it } from 'vitest';
-import { actionTag, handName, logLine } from './phrases.ts';
+import { actionTag, handName, logKind, logLine } from './phrases.ts';
 
 const names: [string, string] = ['You', 'Mallorca'];
 
@@ -65,5 +65,12 @@ describe('phrases', () => {
     expect(actionTag({ key: 'raiseTo', params: { amount: 100 } })).toBe('Raise to 100');
     expect(actionTag({ key: 'bet', params: { amount: 80 } })).toBe('Bet 80');
     expect(actionTag({ key: 'allIn', params: {} })).toBe('All-in');
+  });
+
+  it('marks raises, bets and all-ins as aggressive log entries', () => {
+    expect(logKind({ key: 'raise', params: {} })).toBe('aggressive');
+    expect(logKind({ key: 'bet', params: {} })).toBe('aggressive');
+    expect(logKind({ key: 'allIn', params: {} })).toBe('aggressive');
+    expect(logKind({ key: 'call', params: {} })).toBe('plain');
   });
 });

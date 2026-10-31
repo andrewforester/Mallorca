@@ -60,6 +60,12 @@
   --chip-size-small: 22px;
   --dealer-size: 28px;
   --bubble-tail: 10px;
+  --drawer-width: 310px;
+  --drawer-width-wide: 380px;
+  --drawer-top: 64px;
+  --action-bar-reserve: 220px;
+  --color-token: rgba(246, 236, 218, 0.08);
+  --color-token-aggressive: rgba(227, 176, 110, 0.22);
 }
 
 @media (prefers-color-scheme: dark) {
