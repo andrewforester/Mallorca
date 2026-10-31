@@ -73,7 +73,9 @@ jobs:
           rm -rf .vercel/output
           mkdir -p .vercel/output
           cp -r dist .vercel/output/static
-          cp vercel-output-config.json .vercel/output/config.json
+          node tools/deploy/vercelConfig.ts vercel-output-config.json .vercel/output/config.json
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
       - if: steps.credentials.outputs.ready == 'true'
         working-directory: .github/vercel
         run: npm ci
