@@ -1,6 +1,13 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { CASH, createSession, inProcessBot, memoryStore, TOURNAMENT } from '../game/index.ts';
+import {
+  CASH,
+  createSession,
+  inProcessBot,
+  memoryStore,
+  toViewModel,
+  TOURNAMENT,
+} from '../game/index.ts';
 import { App } from './App.tsx';
 import { readSound } from './preferences.ts';
 import type { SoundPlayer } from './sound/player.ts';
@@ -233,7 +240,9 @@ describe('App', () => {
       Number(screen.getByTestId('stack-1').textContent);
     const bets = screen.queryAllByTestId(/^bet-/).length;
     expect(bets).toBeGreaterThan(0);
-    expect(stacks).toBeLessThan(4000);
+    const view = toViewModel(session.getState(), 0);
+    const chips = view.seats.reduce((sum, seat) => sum + seat.stack + seat.bet, view.pot.collected);
+    expect(stacks).toBeLessThan(chips);
     expect(screen.queryByTestId('hand-log')).toBeNull();
     expect(screen.queryByTestId('hand-log-menu')).toBeNull();
     session.getState().dispose();
