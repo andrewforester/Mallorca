@@ -176,9 +176,9 @@ task, aggression 1.6 and bluff 1.8 with tightness unchanged, and the mood coeffi
 
 Decision: at 1.6 and 1.8 tilt counts as noticeable. Duplicate runs with the same seed play the same decks, so the
 paired interval is the test for them; the combined interval assumes independent runs and overstates the noise. The
-exploiter gains +17.4 ± 8.4 bb/100 on `cfr-tilted`, above the paired interval. Bets after the flop rise by
-4.9 points (30.3% against 25.4%, each known to about ±0.5 points), which reaches the 5 point bar within the
-precision of the frequencies; raises facing a bet rise by 2.1. The cost against
+exploiter gains +17.4 ± 8.4 bb/100 on `cfr-tilted`, above the paired interval, and the decision rests on that paired
+gain. Bets after the flop rise by 4.9 points (30.3% against 25.4%, each known to about ±0.5 points), just under the
+5 point bar, so the betting shift alone does not meet it; raises facing a bet rise by 2.1. The cost against
 `cfr` stays inside the 5 bb/100 allowance (+0.4 ± 2.7), and the exploited cost of 17.4 bb/100 is under the 25 bb/100
 stop. The clamps are not widened further.
 

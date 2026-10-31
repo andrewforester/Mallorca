@@ -12,8 +12,10 @@ Function that gives Mallorca her voice. The game works without it: with no Supab
 ## Deploy
 
 1. Create a Supabase project.
-2. In Authentication, Sign In / Providers, enable anonymous sign-ins. Enabling CAPTCHA protection (Authentication,
-   Attack Protection) for them is recommended, so that scripts cannot mint users to spend the daily limits.
+2. In Authentication, Sign In / Providers, enable anonymous sign-ins. Do not enable CAPTCHA protection: the client
+   calls `signInAnonymously()` without a `captchaToken`, so with CAPTCHA on every sign-in fails and talk is off for
+   everyone. Supporting it needs a captcha widget that passes `captchaToken`, a later project. Until then abuse is
+   bounded by the per-user and global daily limits and by Supabase's rate limits for anonymous sign-ins.
 3. Link the project: `supabase link --project-ref <ref>`.
 4. Apply the schema: `supabase db push`.
 5. Set the secrets:
