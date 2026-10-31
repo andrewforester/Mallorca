@@ -26,7 +26,7 @@ Done when (from the issue):
   itself, so `winnings - baseline_winnings` is a duplicate-style estimate. It is unbiased when both positions are
   played equally often, because Slumbot against itself nets zero over a pair of positions; Slumbot alternates
   `client_pos` every hand, and the report shows the count per position. The headline figure for the ±10 target is
-  the baseline-adjusted one; the raw and all-in EV figures are always reported next to it. After about 2000 hands
+  the one with the lowest variance on the live data (all-in EV after 2058 hands, not the baseline); the raw and all-in EV figures are always reported next to it. After about 2000 hands
   we measure the standard deviations and project the hands needed for ±10. If the projection is more than three
   nights, AIVAT becomes a separate issue; it is not part of this task.
 - **Credentials.** Optional `SLUMBOT_USERNAME` and `SLUMBOT_PASSWORD` in the environment; without them the runner
