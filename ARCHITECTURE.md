@@ -866,7 +866,10 @@ bounded by the clamps above. The debug path only reads: `explain` reads the deci
 - `game.spec.ts` also checks that the production build has no `emotion-debug-toggle`.
 - `e2e/contact.ts` (`npm run contact`) captures every view state of a seeded game on `phone` and `desktop` and
   composes one sheet per device into `e2e/contact/`. `npm run contact:debug` runs it against the Vite dev server
-  instead, with the emotion debug panel open in each state, and writes `phone-debug.png` and `desktop-debug.png`. Its preview listens on `CONTACT_PORT` (default 4174); it stops
+  instead (`e2e/contactDebug.ts`): a Solver cash game with the emotion debug panel open, her first decision, Lola after a
+  run of all-ins, her style, her next decision and the journal, on a phone in portrait and landscape and on desktop,
+  written to `phone-debug.png` and `desktop-debug.png`. The panel is closed while the script acts, since on a phone
+  in portrait it covers the action bar. Both scripts share `e2e/sheet.ts` (the server wait, `snap` and `compose`). Its preview listens on `CONTACT_PORT` (default 4174); it stops
   if that port already answers or its own server exits.
 - `e2e/shared.ts` holds what the tests and the contact sheets share: the devices (`DEVICES`, the Playwright projects
   and the sheets), `byId`, `waitForWaypoint` and `playToTheEnd`. `fixtures.ts` re-exports them beside the `test`
