@@ -204,11 +204,12 @@ describe('a persona at the table', () => {
   });
 
   it('judges her hand at the end before his cards were shown', () => {
-    const played = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
-    [call, check, check, check, check, check, raiseTo(40)].forEach((action, k) =>
+    const played = deal('As Ah', '9s 9h', 'Kc 9d 2s 3h Qh');
+    [call, check, check, check, check, check, check].forEach((action, k) =>
       played.act(action, (k + 1) * 500),
     );
-    const end = played.act(call, 5000);
-    expect(end.find((m) => m.event.type === 'handEnded')?.strength).toBe('weak');
+    const end = played.act(check, 5000);
+    expect(end.some((m) => m.event.type === 'showdown')).toBe(true);
+    expect(end.find((m) => m.event.type === 'handEnded')?.strength).toBe('strong');
   });
 });
