@@ -242,4 +242,39 @@ describe('a persona at the table', () => {
     played.act(call, 5000);
     expect(entries(played.persona, 'mistake')[0]?.event).toEqual({ kind: 'mistake', costBb: 3 });
   });
+
+  it('folds to what she has left to call after his re-raise', () => {
+    const played = deal('Kh Qd', '7c 6c', 'Kc 8d 4s 2h 3c');
+    [call, check, raiseTo(40), raiseTo(120)].forEach((action, k) =>
+      played.act(action, (k + 1) * 500),
+    );
+    played.act({ kind: 'fold' }, 3000);
+    expect(entries(played.persona, 'ownMove')[0]?.event).toMatchObject({
+      move: 'fold',
+      facingBb: 4,
+    });
+  });
+
+  it('folds to the bet of this street only', () => {
+    const played = deal('Kh Qd', '7c 6c', 'Kc 8d 4s 2h 3c');
+    [call, check, check, raiseTo(40), call, check, raiseTo(60)].forEach((action, k) =>
+      played.act(action, (k + 1) * 500),
+    );
+    played.act({ kind: 'fold' }, 4000);
+    expect(entries(played.persona, 'ownMove')[0]?.event).toMatchObject({
+      move: 'fold',
+      facingBb: 3,
+    });
+  });
+
+  it('sees no mistake in a weak river call that wins or a strong one that loses', () => {
+    const river = [call, check, check, check, check, check, check, raiseTo(60)];
+    const weakWins = deal('7c 2d', '5c 3d', 'Qs Jh 8d 4c 9h');
+    const strongLoses = deal('As Ah', '9s 9h', 'Kc 9d 2s 3h Qh');
+    for (const played of [weakWins, strongLoses]) {
+      river.forEach((action, k) => played.act(action, (k + 1) * 500));
+      played.act(call, 5000);
+      expect(entries(played.persona, 'mistake')).toEqual([]);
+    }
+  });
 });

@@ -22,8 +22,8 @@ A river call with a weak class that loses at showdown is the existing `mistake` 
 
 ## Where it comes from
 
-`persona/perception.ts` feeds them: her raise as `bet` with the chips it added, her fold as `fold` with the last
-bet of the player on that street, both with her perceived equity (the number her hope and fear follow); her river
+`persona/perception.ts` feeds them: her raise as `bet` with the chips it added, her fold as `fold` with what she had left to call on that street (both seats' chips
+on the street, blinds included), both with her perceived equity (the number her hope and fear follow); her river
 call is remembered with its class, and a lost showdown after a weak one is a `mistake`. Her own calls and checks
 add no event: the money they commit already moves her hope and fear.
 

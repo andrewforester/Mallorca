@@ -49,7 +49,7 @@ class TableFeeling implements Feeling {
   private readonly equities = new Map<string, number>();
   private range: WeightedHands = ALL_HANDS;
   private lastPerceived = NO_SHOWDOWN_EQUITY;
-  private facingBb = 0;
+  private streetChips: [number, number] = [0, 0];
   private riverCall: { costBb: number; weak: boolean } | null = null;
   private handNumber = 0;
   private felt: Felt[] = [];
@@ -75,15 +75,18 @@ class TableFeeling implements Feeling {
         this.equities.clear();
         this.range = ALL_HANDS;
         this.lastPerceived = NO_SHOWDOWN_EQUITY;
-        this.facingBb = 0;
+        this.streetChips = [0, 0];
         this.riverCall = null;
+        return;
+      case 'blindPosted':
+        this.streetChips[event.seat] += event.amount;
         return;
       case 'holeCards':
         if (event.seat === this.seat) this.dealt(hand);
         return;
       case 'streetDealt':
         this.herAggressive = false;
-        this.facingBb = 0;
+        this.streetChips = [0, 0];
         this.moved(hand);
         return;
       case 'acted':
@@ -177,7 +180,6 @@ class TableFeeling implements Feeling {
       this.herAggressive ||= raise;
       this.own(event, hand);
     } else if (raise) {
-      this.facingBb = event.amount / hand.bigBlind;
       this.feel({
         kind: 'opponentBet',
         sizeBb: event.amount / hand.bigBlind,
@@ -185,13 +187,15 @@ class TableFeeling implements Feeling {
         raise: raise && this.herAggressive,
       });
     }
+    this.streetChips[event.seat] += event.amount;
     this.moved(hand);
   }
 
   private own(event: Extract<EngineEvent, { type: 'acted' }>, hand: HandState): void {
     const bb = hand.bigBlind;
     const equity = this.equity(hand);
-    const facingBb = this.facingBb;
+    const other = this.seat === 0 ? 1 : 0;
+    const facingBb = (this.streetChips[other] - this.streetChips[this.seat]) / bb;
     const { kind } = event.action;
     if (kind === 'raise') {
       this.feel({ kind: 'ownMove', move: 'bet', amountBb: event.amount / bb, equity, facingBb });
