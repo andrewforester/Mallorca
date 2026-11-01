@@ -148,6 +148,8 @@ export const COPY = {
     bluffThrough: 'Her bluff got through',
     bluffCaught: 'Her bluff was caught',
     mistake: 'Her mistake',
+    herBet: 'She bets',
+    herFold: 'She folds to',
     chat: 'Player says',
     equity: 'equity',
     pot: 'pot',
