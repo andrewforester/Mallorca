@@ -192,6 +192,47 @@ describe('appraisal', () => {
   });
 });
 
+describe('her own moves', () => {
+  const traits = traitsOf(MALLORCA);
+  const felt = (event: Parameters<typeof appraise>[0], emotion: string): number =>
+    appraise(event, noEmotions(), traits).find((i) => i.emotion === emotion)?.amount ?? 0;
+
+  it('frightens her by what she risks when she bets behind a weak hand', () => {
+    const bluff = { kind: 'ownMove', move: 'bet', amountBb: 20, equity: 0.2, facingBb: 0 } as const;
+    expect(felt(bluff, 'fear')).toBeGreaterThan(0.2);
+    expect(felt(bluff, 'pride')).toBe(0);
+    const small = { ...bluff, amountBb: 2 };
+    expect(felt(small, 'fear')).toBeLessThan(felt(bluff, 'fear'));
+  });
+
+  it('makes her a little proud when she takes the lead with a strong hand', () => {
+    const value = { kind: 'ownMove', move: 'bet', amountBb: 20, equity: 0.9, facingBb: 0 } as const;
+    expect(felt(value, 'pride')).toBeGreaterThan(0.05);
+    expect(felt(value, 'pride')).toBeLessThan(0.2);
+    expect(felt(value, 'fear')).toBe(0);
+  });
+
+  it('angers her to fold a hand she believed in and relieves her to fold junk', () => {
+    const pushed = {
+      kind: 'ownMove',
+      move: 'fold',
+      amountBb: 0,
+      equity: 0.75,
+      facingBb: 30,
+    } as const;
+    expect(felt(pushed, 'anger')).toBeGreaterThan(0.1);
+    expect(felt(pushed, 'relief')).toBe(0);
+    const junk = { ...pushed, equity: 0.1 };
+    expect(felt(junk, 'relief')).toBeGreaterThan(0.1);
+    expect(felt(junk, 'anger')).toBe(0);
+  });
+
+  it('leaves a small bet with a middling hand unfelt', () => {
+    const plain = { kind: 'ownMove', move: 'bet', amountBb: 2, equity: 0.55, facingBb: 0 } as const;
+    expect(appraise(plain, noEmotions(), traits)).toEqual([]);
+  });
+});
+
 describe('mood', () => {
   const config = { changeTimeS: 600, returnTimeS: 1200 };
 

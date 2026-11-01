@@ -212,4 +212,34 @@ describe('a persona at the table', () => {
     expect(end.some((m) => m.event.type === 'showdown')).toBe(true);
     expect(end.find((m) => m.event.type === 'handEnded')?.strength).toBe('strong');
   });
+
+  const entries = (persona: Persona, kind: string) =>
+    persona.journal().filter((e) => e.event.kind === kind);
+
+  it('feels her own weak bet as a risk', () => {
+    const played = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
+    played.act(call, 500);
+    played.act(raiseTo(60), 1000);
+    const [bet] = entries(played.persona, 'ownMove');
+    expect(bet?.event).toMatchObject({ kind: 'ownMove', move: 'bet', amountBb: 2 });
+    expect(bet?.impulses.some((i) => i.emotion === 'fear')).toBe(true);
+  });
+
+  it('is angered to fold a strong hand to his bet', () => {
+    const played = deal('Kh Qd', '7c 6c', 'Kc 8d 4s 2h 3c');
+    [call, check, check, raiseTo(40)].forEach((action, k) => played.act(action, (k + 1) * 500));
+    played.act({ kind: 'fold' }, 3000);
+    const [fold] = entries(played.persona, 'ownMove');
+    expect(fold?.event).toMatchObject({ kind: 'ownMove', move: 'fold', facingBb: 2 });
+    expect(fold?.impulses.some((i) => i.emotion === 'anger')).toBe(true);
+  });
+
+  it('feels a lost river call with a weak hand as a mistake', () => {
+    const played = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
+    [call, check, check, check, check, check, check, raiseTo(60)].forEach((action, k) =>
+      played.act(action, (k + 1) * 500),
+    );
+    played.act(call, 5000);
+    expect(entries(played.persona, 'mistake')[0]?.event).toEqual({ kind: 'mistake', costBb: 3 });
+  });
 });

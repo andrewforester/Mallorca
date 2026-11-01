@@ -26,6 +26,7 @@ export type TableEvent =
   | { kind: 'result'; netBb: number; lastEquity?: number }
   | { kind: 'bluff'; succeeded: boolean; potBb: number }
   | { kind: 'mistake'; costBb: number }
+  | { kind: 'ownMove'; move: 'bet' | 'fold'; amountBb: number; equity: number; facingBb: number }
   | { kind: 'chat'; signal: ChatSignal };
 
 export interface Impulse {
@@ -159,6 +160,42 @@ function lossImpulses(netBb: number, lastEquity: number, emotions: Emotions): Im
   return list;
 }
 
+export const WEAK_EQUITY = 0.45;
+
+function ownMoveImpulses(event: Extract<TableEvent, { kind: 'ownMove' }>): Impulse[] {
+  const { equity } = event;
+  if (event.move === 'bet') {
+    const size = saturate(event.amountBb / STAKE_BB);
+    const label = `she bets ${event.amountBb} bb with equity ${pct(equity)}`;
+    if (equity < WEAK_EQUITY) {
+      return [
+        { emotion: 'fear', amount: 0.5 * size * (1 - equity), reason: `${label}: a bluff at risk` },
+      ];
+    }
+    return [
+      {
+        emotion: 'pride',
+        amount: 0.2 * size * smoothstep(0.7, 0.9, equity),
+        reason: `${label}: she takes the lead`,
+      },
+    ];
+  }
+  const facing = saturate(event.facingBb / STAKE_BB);
+  const label = `she folds to ${event.facingBb} bb with equity ${pct(equity)}`;
+  return [
+    {
+      emotion: 'anger',
+      amount: 0.35 * smoothstep(0.35, 0.75, equity) * facing,
+      reason: `${label}: pushed off a hand she believed in`,
+    },
+    {
+      emotion: 'relief',
+      amount: 0.35 * (1 - smoothstep(0.2, WEAK_EQUITY, equity)) * facing,
+      reason: `${label}: out of a hand she could not win`,
+    },
+  ];
+}
+
 const CHAT: Readonly<Record<ChatSignal, ReadonlyArray<[Emotion, number]>>> = {
   tease: [['anger', 0.25]],
   mockBluff: [
@@ -212,6 +249,8 @@ function rawImpulses(event: TableEvent, emotions: Emotions): Impulse[] {
           reason: `the mistake cost ${event.costBb} bb`,
         },
       ];
+    case 'ownMove':
+      return ownMoveImpulses(event);
     case 'chat':
       return CHAT[event.signal].map(([emotion, amount]) => ({
         emotion,
