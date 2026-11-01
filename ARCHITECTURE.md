@@ -868,7 +868,8 @@ range     player action -> bot.observe -> bot.opponentRange() (worker, after the
 ```
 
 The player's range reaches her feeling after the bot's next decision and a worker round trip, so that decision uses
-the bias from before it; nothing in the hand waits for it. The read buckets each street of the hand once: the first
+the bias from before it, and a line at the player's raise reads her class, what she presents and her mask from
+before his raise narrows him; her face follows once the range arrives; nothing in the hand waits for it. The read buckets each street of the hand once: the first
 read on the turn costs about 30 ms on a desktop and 130 to 170 ms at a 4 to 6 times slower CPU (v1), every other
 read under 4 ms; her equity against the range costs up to 4 ms on a desktop and 17 ms at 6 times slower. The session never waits for the server: a line is requested without awaiting it, a late or missing answer is
 dropped, and an error leaves the game as it is. Her feeling reaches a move only through the bias, bounded by the

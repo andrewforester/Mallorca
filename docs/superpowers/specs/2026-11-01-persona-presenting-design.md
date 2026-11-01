@@ -53,6 +53,12 @@ is `presenting?.stance`.
   `acting` as before (the hint of a false line).
 - **Voice.** The prosody already reads the face's shown point, so it follows.
 
+The player's range arrives from the worker after the bot's next decision. A line drawn at the player's raise
+therefore reads her class, what she presents and her mask from before his raise narrows him, and her face changes a
+moment later, when the range arrives. Holding the line until the range answers would let the bot's next action
+overtake it, so this stage accepts the lag: the line is her first reaction to the raise, the face her second
+thought.
+
 ## The tells setting goes
 
 The select in the settings, the preference `mallorca.tells` (no longer read or written), `SessionOptions.tells`,
