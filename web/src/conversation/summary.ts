@@ -1,4 +1,4 @@
-import type { Signal } from './signals.ts';
+import type { Signal } from '../persona/index.ts';
 
 export interface SessionSummary {
   hands: number;

@@ -5,7 +5,7 @@ import { call, check, deckOf, fold, raiseTo, startHand } from '../engine/testDec
 import type { Action, Step } from '../engine/types.ts';
 import { BASE_HABITS, habitsAt } from './habits.ts';
 import type { Habits, Situation } from './habits.ts';
-import type { StrengthClass } from './strength.ts';
+import type { StrengthClass } from '../persona/index.ts';
 import { MALLORCA } from '../emotion/index.ts';
 import { characterOf } from './state.ts';
 import { createConversation, drawLine, endsHand } from './conversation.ts';

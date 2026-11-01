@@ -1,6 +1,6 @@
 import { EMOTIONS, maskOf } from '../emotion/index.ts';
 import type { Emotion, LoadSource, Octant, Personality, Snapshot } from '../emotion/index.ts';
-import type { StrengthClass } from './strength.ts';
+import type { StrengthClass } from '../persona/index.ts';
 
 export const FEELING_VERSION = 1;
 export const ACTING_EFFORT = 0.6;

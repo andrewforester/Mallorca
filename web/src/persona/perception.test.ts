@@ -3,10 +3,10 @@ import { mulberry32, parseCard } from '../cards/index.ts';
 import { applyAction } from '../engine/hand.ts';
 import { call, check, deckOf, raiseTo, startHand } from '../engine/testDeck.ts';
 import type { Action, Step } from '../engine/types.ts';
-import { createFeeling } from './feeling.ts';
-import type { Feeling } from './feeling.ts';
-import { NO_HAND, track } from './handTracker.ts';
-import type { HandState } from './handTracker.ts';
+import { createFeeling } from './perception.ts';
+import type { Feeling } from './perception.ts';
+import { NO_HAND, track } from './hand.ts';
+import type { HandState } from './hand.ts';
 
 const HER = 1;
 

@@ -1,4 +1,4 @@
-import type { StrengthClass } from './strength.ts';
+import type { StrengthClass } from '../persona/index.ts';
 
 export type Situation = 'herBet' | 'herCall' | 'playerBet' | 'handWon' | 'handLost' | 'bluffCaught';
 export type Level = 'obvious' | 'subtle' | 'hidden';

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { parseCards } from '../cards/index.ts';
 import { call, check, deckOf, playEvents, raiseTo, startHand } from '../engine/testDeck.ts';
 import type { EngineEvent, SeatIndex } from '../engine/types.ts';
-import { NO_HAND, netOf, track } from './handTracker.ts';
-import type { HandState } from './handTracker.ts';
+import { NO_HAND, netOf, track } from './hand.ts';
+import type { HandState } from './hand.ts';
 
 const HER: SeatIndex = 1;
 

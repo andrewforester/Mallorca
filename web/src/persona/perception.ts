@@ -1,24 +1,17 @@
 import type { Card, Rng } from '../cards/index.ts';
 import { MALLORCA, createEngine } from '../emotion/index.ts';
-import type {
-  Emotion,
-  Engine,
-  Impulse,
-  Money,
-  Personality,
-  Snapshot,
-  TableEvent,
-} from '../emotion/index.ts';
+import type { Engine, Money, Personality, Snapshot, TableEvent } from '../emotion/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { equityVsHand, equityVsRange } from '../equity/index.ts';
 import type { WeightedHands } from '../equity/index.ts';
-import type { HandState } from './handTracker.ts';
+import type { HandState } from './hand.ts';
 import type { Felt } from './journal.ts';
-import { netOf, playerCardsShown } from './handTracker.ts';
+import { netOf, playerCardsShown } from './hand.ts';
 import { liveRange } from './range.ts';
 import type { Signal } from './signals.ts';
 import { ALL_HANDS, strengthOf } from './strength.ts';
 import type { Bias } from './bias.ts';
+import { botBiasOf, speakFactorOf, wordsOf } from './view.ts';
 
 export interface FeelingOptions {
   seat: SeatIndex;
@@ -33,7 +26,6 @@ export interface Feeling {
   hear(signals: readonly Signal[]): void;
   snapshot(): Snapshot;
   at(nowMs: number): Snapshot;
-  drain(): Impulse[];
   takeFelt(): Felt[];
   setPersonality(p: Personality): void;
   reset(): void;
@@ -44,37 +36,7 @@ export interface Feeling {
 
 const SAMPLES = 600;
 const STREETS_LEFT: Readonly<Record<number, number>> = { 0: 3, 3: 2, 4: 1, 5: 0 };
-const WORD_THRESHOLD = 0.25;
-const MAX_WORDS = 3;
-const OVERLOADED = 0.6;
-const SPEAK_GAIN = 0.25;
 const NO_SHOWDOWN_EQUITY = 0.5;
-const MAX_PENDING = 64;
-
-const WORDS: Readonly<Record<Emotion, string>> = {
-  hope: 'hopeful',
-  fear: 'nervous',
-  joy: 'pleased',
-  distress: 'upset',
-  relief: 'relieved',
-  disappointment: 'disappointed',
-  pride: 'proud',
-  shame: 'embarrassed',
-  anger: 'annoyed',
-  injustice: 'feeling robbed',
-  surprise: 'surprised',
-};
-
-const clamp = (v: number, low: number, high: number): number => Math.max(low, Math.min(high, v));
-
-export function wordsOf(s: Snapshot): string[] {
-  const found = (Object.keys(WORDS) as Emotion[])
-    .filter((e) => s.emotions[e] >= WORD_THRESHOLD)
-    .sort((a, b) => s.emotions[b] - s.emotions[a])
-    .map((e) => WORDS[e]);
-  const words = s.load.overload >= OVERLOADED ? ['on tilt', ...found] : found;
-  return words.slice(0, MAX_WORDS);
-}
 
 class TableFeeling implements Feeling {
   private readonly seat: SeatIndex;
@@ -83,7 +45,6 @@ class TableFeeling implements Feeling {
   private lastMs: number | null = null;
   private herAggressive = false;
   private readonly equities = new Map<string, number>();
-  private pending: Impulse[] = [];
   private range: WeightedHands = ALL_HANDS;
   private handNumber = 0;
   private felt: Felt[] = [];
@@ -157,12 +118,6 @@ class TableFeeling implements Feeling {
       : this.engine.ahead((nowMs - last) / 1000);
   }
 
-  drain(): Impulse[] {
-    const out = this.pending;
-    this.pending = [];
-    return out;
-  }
-
   takeFelt(): Felt[] {
     const out = this.felt;
     this.felt = [];
@@ -175,25 +130,16 @@ class TableFeeling implements Feeling {
 
   reset(): void {
     this.engine.reset();
-    this.pending = [];
     this.felt = [];
   }
 
   private feel(e: TableEvent): void {
     const impulses = this.engine.event(e);
-    this.pending = [...this.pending, ...impulses].slice(-MAX_PENDING);
     this.felt.push({ handNumber: this.handNumber, event: e, impulses });
   }
 
   bias(): Bias {
-    const s = this.engine.snapshot().bias;
-    return {
-      aggression: s.aggression,
-      bluff: s.bluff,
-      tightness: 1 / s.looseness,
-      sizing: s.sizing,
-      stickiness: s.stickiness,
-    };
+    return botBiasOf(this.engine.snapshot());
   }
 
   words(): string[] {
@@ -201,10 +147,7 @@ class TableFeeling implements Feeling {
   }
 
   speakFactor(): number {
-    const s = this.engine.snapshot();
-    return (
-      1 + SPEAK_GAIN * clamp((s.mood[1] - s.traits.defaultMood[1] + s.load.overload) / 2, -1, 1)
-    );
+    return speakFactorOf(this.engine.snapshot());
   }
 
   private dealt(hand: HandState): void {

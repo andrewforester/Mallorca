@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BASE_HABITS, habitsAt } from './habits.ts';
 import type { Situation } from './habits.ts';
-import type { StrengthClass } from './strength.ts';
+import type { StrengthClass } from '../persona/index.ts';
 
 const CLASSES: StrengthClass[] = ['strong', 'medium', 'weak'];
 const SITUATIONS = Object.keys(BASE_HABITS) as Situation[];

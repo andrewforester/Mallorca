@@ -6,7 +6,7 @@ import { call, deckOf, raiseTo, startHand } from '../engine/testDeck.ts';
 import type { Action, Step } from '../engine/types.ts';
 import { BASE_HABITS } from './habits.ts';
 import type { Habits, Situation } from './habits.ts';
-import { JOURNAL_SIZE } from './journal.ts';
+import { JOURNAL_SIZE } from '../persona/index.ts';
 import { createConversation } from './conversation.ts';
 import type { LineIntent, Conversation } from './conversation.ts';
 
