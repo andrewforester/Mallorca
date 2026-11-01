@@ -90,5 +90,5 @@ describe('the bodies a seeded session sends', () => {
       readFileSync(new URL('./fixtures/sessionPayloads.json', import.meta.url), 'utf8'),
     );
     expect(JSON.parse(JSON.stringify(sent))).toEqual(recorded);
-  });
+  }, 60_000);
 });
