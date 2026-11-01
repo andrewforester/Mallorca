@@ -49,6 +49,8 @@ import type { Style } from '../talk/index.ts';
 import { COACH_OFF, createCoach } from './coach.ts';
 import type { Coach } from './coach.ts';
 import type { CoachDecision } from '../coach/index.ts';
+import { createProbe } from './debug.ts';
+import type { DebugProbe } from './debug.ts';
 
 export { resolveIntent, toIntent } from './intent.ts';
 export type { Intent } from './intent.ts';
@@ -96,6 +98,7 @@ interface Runtime {
   seed: number;
   talk: SessionTalk;
   face: SessionFace;
+  probe: DebugProbe | null;
 }
 
 function freshTable(options: SessionOptions, mode: TableMode): Table {
@@ -185,7 +188,7 @@ function play(rt: Runtime, action: Action, played: Played = {}): void {
 
 async function decide(rt: Runtime, legal: LegalActions, style?: Style): Promise<Decision | null> {
   try {
-    return await rt.bot.decide(legal, style);
+    return await rt.bot.decide(legal, style, rt.probe !== null);
   } catch {
     return null;
   }
@@ -210,7 +213,9 @@ async function botTurn(rt: Runtime, myEpoch: number): Promise<boolean> {
     }
   }
   const intent: Intent = decision === null ? { kind: 'passive' } : toIntent(decision.action);
-  play(rt, resolveIntent(intent, legal), { decision, style });
+  const action = resolveIntent(intent, legal);
+  rt.probe?.decided({ decision, style, action, legal, table: rt.get().table, seat: rt.botSeat });
+  play(rt, action, { decision, style });
   return true;
 }
 
@@ -335,6 +340,8 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
     setCoach: (on) => switchCoach(rt, on),
     setFace: (on) => rt.face.setOn(on),
     faceNow: () => rt.face.now(),
+    setPersonality: (choice) => rt.probe?.choose(choice),
+    resetFeeling: () => rt.probe?.reset(),
   };
 }
 
@@ -345,6 +352,7 @@ function hostOf(runtime: () => Runtime): WiringHost {
     set: (patch) => runtime().set(patch),
     epoch: () => runtime().epoch,
     seed: () => runtime().seed,
+    felt: () => runtime().probe?.refresh(),
   };
 }
 
@@ -381,7 +389,11 @@ export function createSession(options: SessionOptions): Session {
       opponent: 'math',
       talk,
       face: wireFace(host, talk, options, botSeat),
+      probe: null,
     };
+    if (import.meta.env.DEV && options.debug === true) {
+      rt.probe = createProbe(rt.talk, (debug) => set({ debug }));
+    }
     const initial = freshTable(options, rt.mode);
     return {
       table: initial,
@@ -398,6 +410,7 @@ export function createSession(options: SessionOptions): Session {
       talk: initialTalk(options.talkOn ?? true, options.tells ?? 'subtle'),
       coach: COACH_OFF,
       face: initialFace(options.faceOn ?? true),
+      debug: rt.probe?.initial() ?? null,
       ...sessionActions(rt, options),
     };
   });

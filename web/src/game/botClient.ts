@@ -7,7 +7,7 @@ import type { WorkerReply, WorkerRequest } from './workerProtocol.ts';
 
 export interface BotClient {
   observe(o: Observation[]): void;
-  decide(legal: LegalActions, style?: BotStyle): Promise<Decision>;
+  decide(legal: LegalActions, style?: BotStyle, explain?: boolean): Promise<Decision>;
   reset(): void;
   select?(opponent: Opponent, seed: number): Promise<Opponent>;
   coach?(observations: Observation[], legal: LegalActions, pot: number): Promise<CoachFacts>;
@@ -119,11 +119,11 @@ export function withFallback(primary: BotClient, timeoutMs = BOT_TIMEOUT_MS): Bo
       seen = [];
       active.reset();
     },
-    async decide(legal, style) {
+    async decide(legal, style, explain) {
       const mine = generation;
       try {
         return await withTimeout(
-          Promise.resolve().then(() => active.decide(legal, style)),
+          Promise.resolve().then(() => active.decide(legal, style, explain)),
           timeoutMs,
         );
       } catch (error) {
@@ -215,9 +215,15 @@ function rawWorkerBot(): BotClient {
     observe(observations) {
       send({ kind: 'observe', observations });
     },
-    decide(legal, style) {
+    decide(legal, style, explain) {
       return ask(
-        (id) => ({ kind: 'decide', id, legal, ...(style === undefined ? {} : { style }) }),
+        (id) => ({
+          kind: 'decide',
+          id,
+          legal,
+          ...(style === undefined ? {} : { style }),
+          ...(explain === true ? { explain } : {}),
+        }),
         (r) => ('decision' in r ? r.decision : undefined),
       );
     },

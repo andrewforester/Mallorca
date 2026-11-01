@@ -1,5 +1,5 @@
 import type { Rng } from '../cards/index.ts';
-import type { BotStyle, Brain, Decision, Observation } from '../brains/index.ts';
+import type { BotStyle, Brain, Breakdown, Decision, Observation } from '../brains/index.ts';
 import type { Action, LegalActions } from '../engine/index.ts';
 import type { CfrModel } from './model.ts';
 
@@ -23,6 +23,7 @@ function choiceOf(action: Action): Decision['solverChoice'] {
 export type CfrBrain = Required<Brain> & {
   range(): Float32Array | null;
   opponentRange(): Float32Array | null;
+  explain(): Breakdown | null;
 };
 
 export function createCfrBrain(model: CfrModel, rng: Rng): CfrBrain {
@@ -53,6 +54,9 @@ export function createCfrBrain(model: CfrModel, rng: Rng): CfrBrain {
     },
     opponentRange() {
       return bot.opponentRange();
+    },
+    explain() {
+      return bot.explain();
     },
     setStyle(style: BotStyle) {
       bot.setStyle(style);

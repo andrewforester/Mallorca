@@ -13,6 +13,7 @@ import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { equityVsHand, equityVsRange } from '../equity/index.ts';
 import type { WeightedHands } from '../equity/index.ts';
 import type { HandState } from './handTracker.ts';
+import type { Felt } from './journal.ts';
 import { netOf, playerCardsShown } from './handTracker.ts';
 import { liveRange } from './range.ts';
 import type { Signal } from './signals.ts';
@@ -33,6 +34,9 @@ export interface Feeling {
   snapshot(): Snapshot;
   at(nowMs: number): Snapshot;
   drain(): Impulse[];
+  takeFelt(): Felt[];
+  setPersonality(p: Personality): void;
+  reset(): void;
   style(): Style;
   words(): string[];
   speakFactor(): number;
@@ -81,6 +85,8 @@ class TableFeeling implements Feeling {
   private readonly equities = new Map<string, number>();
   private pending: Impulse[] = [];
   private range: WeightedHands = ALL_HANDS;
+  private handNumber = 0;
+  private felt: Felt[] = [];
 
   constructor(options: FeelingOptions) {
     this.seat = options.seat;
@@ -96,6 +102,7 @@ class TableFeeling implements Feeling {
   }
 
   see(event: EngineEvent, hand: HandState): void {
+    this.handNumber = hand.handNumber;
     switch (event.type) {
       case 'handStarted':
         this.herAggressive = false;
@@ -156,8 +163,26 @@ class TableFeeling implements Feeling {
     return out;
   }
 
+  takeFelt(): Felt[] {
+    const out = this.felt;
+    this.felt = [];
+    return out;
+  }
+
+  setPersonality(p: Personality): void {
+    this.engine.setPersonality(p);
+  }
+
+  reset(): void {
+    this.engine.reset();
+    this.pending = [];
+    this.felt = [];
+  }
+
   private feel(e: TableEvent): void {
-    this.pending = [...this.pending, ...this.engine.event(e)].slice(-MAX_PENDING);
+    const impulses = this.engine.event(e);
+    this.pending = [...this.pending, ...impulses].slice(-MAX_PENDING);
+    this.felt.push({ handNumber: this.handNumber, event: e, impulses });
   }
 
   style(): Style {

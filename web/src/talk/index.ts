@@ -14,3 +14,21 @@ export type { SessionSummary } from './summary.ts';
 export { EMPTY_SUMMARY, since } from './summary.ts';
 export type { Draw, HandFacts, LineIntent, Spot, Stance, Talk, TalkOptions } from './talk.ts';
 export { createTalk, drawLine, endsHand } from './talk.ts';
+export type { JournalEntry } from './journal.ts';
+export { JOURNAL_SIZE } from './journal.ts';
+export { EMOTIONS, LOAD_SOURCES, PERSONALITIES, STYLE_KEYS } from '../emotion/index.ts';
+export type {
+  BigFive,
+  Emotion,
+  Impulse,
+  LoadSource,
+  Octant,
+  Pad,
+  Personality,
+  PersonalityKey,
+  PlayStyle,
+  Snapshot,
+  StyleKey,
+  TableEvent,
+  Traits,
+} from '../emotion/index.ts';

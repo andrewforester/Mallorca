@@ -51,6 +51,10 @@ const connectTalk = talkConnector({
 
 onPageExit(window, document, () => session?.getState().pageHidden());
 
+const debugPanel = import.meta.env.DEV
+  ? (await import('./ui/debug/EmotionDebug.tsx')).EmotionDebug
+  : undefined;
+
 const root = document.getElementById('app');
 if (root === null) {
   throw new Error('Missing #app element');
@@ -71,6 +75,7 @@ function mount(farewell = false): void {
     talkOn: readTalk(),
     tells: readTells(),
     faceOn: readFace(),
+    debug: import.meta.env.DEV,
     records: {
       store,
       sessionId: crypto.randomUUID(),
@@ -85,6 +90,7 @@ function mount(farewell = false): void {
       farewell={farewell}
       autoNext={autoNext}
       player={player}
+      debugPanel={debugPanel}
       onNewGame={() => mount()}
       onLeaveTonight={() => mount(true)}
     />,

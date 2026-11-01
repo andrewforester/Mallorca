@@ -6,7 +6,7 @@ import type { Opponent } from './opponent.ts';
 export type WorkerRequest =
   | { kind: 'reset' }
   | { kind: 'observe'; observations: Observation[] }
-  | { kind: 'decide'; id: number; legal: LegalActions; style?: BotStyle }
+  | { kind: 'decide'; id: number; legal: LegalActions; style?: BotStyle; explain?: boolean }
   | { kind: 'select'; id: number; opponent: Opponent; seed: number }
   | { kind: 'coach'; id: number; observations: Observation[]; legal: LegalActions; pot: number }
   | { kind: 'opponentRange'; id: number };

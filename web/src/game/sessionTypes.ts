@@ -1,9 +1,10 @@
 import type { StoreApi } from 'zustand/vanilla';
 import type { Decision } from '../brains/index.ts';
 import type { LogEntry, SeatIndex, Table, TableMode } from '../engine/index.ts';
-import type { Level } from '../talk/index.ts';
+import type { Level, Personality, PersonalityKey } from '../talk/index.ts';
 import type { BotClient } from './botClient.ts';
 import type { CoachState } from './coach.ts';
+import type { DebugState } from './debug.ts';
 import type { Intent } from './intent.ts';
 import type { Opponent } from './opponent.ts';
 import type { HandResult, SeatActions } from './outcome.ts';
@@ -42,6 +43,7 @@ export interface SessionState {
   talk: TalkState;
   coach: CoachState;
   face: FaceState;
+  debug: DebugState | null;
 }
 
 export interface SessionActions {
@@ -59,6 +61,8 @@ export interface SessionActions {
   pageHidden(): void;
   setFace(on: boolean): void;
   faceNow(): FaceFrame | null;
+  setPersonality(choice: PersonalityKey | Personality): void;
+  resetFeeling(): void;
 }
 
 export type Session = StoreApi<SessionState & SessionActions>;
@@ -80,4 +84,5 @@ export interface SessionOptions {
   tells?: Level;
   coach?: boolean;
   faceOn?: boolean;
+  debug?: boolean;
 }

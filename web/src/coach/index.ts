@@ -1,6 +1,7 @@
 export { coachFacts } from './facts.ts';
 export type { CoachFacts, CoachRequest, Hint } from './facts.ts';
 export { CELLS, cellName } from './grid.ts';
+export { coachMove } from './moves.ts';
 export type { CoachMove, MoveLabel, MoveTone } from './moves.ts';
 export type { SpotOdds } from './odds.ts';
 export { HAND_CLASSES } from './composition.ts';

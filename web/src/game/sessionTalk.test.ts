@@ -272,7 +272,7 @@ describe('session talk', () => {
     await table.session.getState().start(CASH, 'cfr');
     await flush();
     expect(table.session.getState().talk.available).toBe(false);
-    expect(table.bot.styles.every((style) => style === undefined)).toBe(true);
+    expect(table.bot.styles.every((style) => style !== undefined)).toBe(true);
   });
 
   it('drops a line after the session restarts', async () => {
@@ -460,13 +460,13 @@ describe('session talk', () => {
     expect(table.bot.styles[0]).toBeDefined();
   });
 
-  it('no client, no style', async () => {
+  it('without a client her feeling still sets the style', async () => {
     const table = open(silentTalkClient);
     await table.session.getState().start(CASH, 'cfr');
     await foldHand(table);
     expect(table.session.getState().talk.available).toBe(false);
     expect(table.bot.styles.length).toBeGreaterThan(0);
-    expect(table.bot.styles.every((style) => style === undefined)).toBe(true);
+    expect(table.bot.styles.every((style) => style !== undefined)).toBe(true);
   });
 
   it('quick phrases are marked quick and typed words are not', async () => {

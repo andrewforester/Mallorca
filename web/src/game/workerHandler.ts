@@ -28,7 +28,9 @@ function answer(brain: Brain, request: Decide, post: (reply: WorkerReply) => voi
     if (request.style !== undefined) {
       brain.setStyle?.(request.style);
     }
-    post({ id: request.id, decision: brain.decide(request.legal) });
+    const decision = brain.decide(request.legal);
+    const breakdown = request.explain === true ? brain.explain?.() : undefined;
+    post({ id: request.id, decision: breakdown ? { ...decision, breakdown } : decision });
   } catch (error) {
     post({ id: request.id, error: message(error) });
   }

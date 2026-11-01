@@ -207,6 +207,19 @@ describe('workerBot', () => {
     await pending.catch(() => undefined);
   });
 
+  it('asks for the explanation only when told to', async () => {
+    const bot = workerBot();
+    const first = bot.decide(legal, undefined, true);
+    await settle();
+    expect(currentWorker().sent.at(-1)).toMatchObject({ kind: 'decide', explain: true });
+    const second = bot.decide(legal);
+    await settle();
+    expect(currentWorker().sent.at(-1)).not.toHaveProperty('explain');
+    bot.dispose?.();
+    await first.catch(() => undefined);
+    await second.catch(() => undefined);
+  });
+
   it('fallback ignores style', async () => {
     vi.useFakeTimers();
     const bot = workerBot();

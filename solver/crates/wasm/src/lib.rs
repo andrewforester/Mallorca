@@ -25,6 +25,7 @@ struct Seat {
     spot: Option<SpotView>,
     head: Vec<f32>,
     grid: Vec<f32>,
+    decision: Vec<f32>,
 }
 
 struct Registry {
@@ -136,6 +137,7 @@ pub extern "C" fn bot_new(model: i32) -> i32 {
         spot: None,
         head: Vec::new(),
         grid: Vec::new(),
+        decision: Vec::new(),
     };
     r.bots.insert(seat).unwrap_or(-1)
 }
@@ -290,6 +292,26 @@ pub extern "C" fn bot_spot_grid(bot: i32) -> *const f32 {
         };
         s.grid = s.bot.strategy_grid(&s.model, spot);
         s.grid.as_ptr()
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn bot_decision(bot: i32) -> *const f32 {
+    with_seat(bot, std::ptr::null(), |s| {
+        let Some(view) = s.bot.last_decision() else {
+            return std::ptr::null();
+        };
+        s.decision.clear();
+        s.decision.push(view.moves.len() as f32);
+        s.decision.push(view.chosen as f32);
+        for &mv in &view.moves {
+            let (kind, to) = from_move(mv);
+            s.decision.push(kind as f32);
+            s.decision.push(to as f32);
+        }
+        s.decision.extend(view.base.iter().map(|&p| p as f32));
+        s.decision.extend(view.styled.iter().map(|&p| p as f32));
+        s.decision.as_ptr()
     })
 }
 

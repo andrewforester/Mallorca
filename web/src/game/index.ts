@@ -46,3 +46,20 @@ export type { Level } from '../talk/index.ts';
 export type { FaceCue, FaceState } from './sessionFace.ts';
 export type { FaceFrame, GazeTarget, Pulse, VisemeCue, Weights } from '../face/index.ts';
 export { speechOf } from '../face/index.ts';
+export type { DebugDecision, DebugState, DecisionRow, PersonalityChoice } from './debug.ts';
+export type { DebugLoad, DebugTraits, DebugView } from './debugView.ts';
+export { toDebugView } from './debugView.ts';
+export { EMOTIONS, LOAD_SOURCES, PERSONALITIES, STYLE_KEYS } from '../talk/index.ts';
+export type {
+  BigFive,
+  Emotion,
+  Impulse,
+  JournalEntry,
+  LoadSource,
+  Pad,
+  Personality,
+  PersonalityKey,
+  Style,
+  StyleKey,
+  TableEvent,
+} from '../talk/index.ts';

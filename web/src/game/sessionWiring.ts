@@ -13,6 +13,7 @@ export interface WiringHost {
   set(patch: Partial<SessionState>): void;
   epoch(): number;
   seed(): number;
+  felt(): void;
 }
 
 export function wireTalk(
@@ -35,6 +36,7 @@ export function wireTalk(
       table: () => host.get().table,
       epoch: () => host.epoch(),
       sessionId: () => host.get().sessionId ?? `seed-${host.seed()}`,
+      felt: () => host.felt(),
     },
   );
 }

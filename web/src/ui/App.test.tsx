@@ -390,3 +390,35 @@ describe('App coach mode', () => {
     session.getState().dispose();
   });
 });
+
+describe('App debug panel slot', () => {
+  it('renders the debug panel at the table with the session', async () => {
+    const session = createSession({
+      bot: inProcessBot(),
+      seed: 42,
+      botDelayMs: 0,
+      humanSeat: 0,
+      names: ['You', 'Mallorca'],
+      mode: TOURNAMENT,
+    });
+    const seen: unknown[] = [];
+    const Panel = ({ session: given }: { session: unknown }) => {
+      seen.push(given);
+      return <div data-testid="panel-slot" />;
+    };
+    render(
+      <App
+        session={session}
+        store={memoryStore()}
+        humanSeat={0}
+        onNewGame={vi.fn()}
+        onLeaveTonight={vi.fn()}
+        debugPanel={Panel}
+      />,
+    );
+    expect(screen.queryByTestId('panel-slot')).toBeNull();
+    fireEvent.click(screen.getByTestId('start-tournament'));
+    await waitFor(() => expect(screen.getByTestId('panel-slot')).toBeTruthy());
+    expect(seen.at(-1)).toBe(session);
+  });
+});

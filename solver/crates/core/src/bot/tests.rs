@@ -1253,3 +1253,90 @@ fn a_styled_range_follows_the_styled_strategy() {
         );
     }
 }
+
+fn root_shares(hole: [Card; 2]) -> Vec<f64> {
+    let root = model().file.tree.root();
+    let bucket = model().abstraction.bucket(Street::Preflop, hole, &[]);
+    let p = model().file.probabilities(root, bucket);
+    let sum: f64 = p.iter().map(|&x| f64::from(x)).sum();
+    p.iter().map(|&x| f64::from(x) / sum).collect()
+}
+
+#[test]
+fn no_decision_is_explained_before_one() {
+    let bot = started(true, [400, 400], [10, 20], [48, 49]);
+    assert!(bot.last_decision().is_none());
+}
+
+#[test]
+fn a_sampled_decision_is_explained() {
+    let root = model().file.tree.root();
+    let hole = [48, 49];
+    let bucket = model().abstraction.bucket(Street::Preflop, hole, &[]);
+    let draw = draw_for(root, bucket, ActionKind::RaiseTo(50));
+    let mut bot = started(true, [400, 400], [10, 20], hole);
+    let mv = bot.decide(model(), &facing_blind(20, 400), draw);
+    let view = bot.last_decision().unwrap();
+    let Node::Decision { actions, .. } = model().file.tree.node(root) else {
+        panic!("not a decision");
+    };
+    assert_eq!(view.moves.len(), actions.len());
+    assert_eq!(view.moves[view.chosen], mv);
+    assert_eq!(
+        actions[view.chosen].0,
+        ActionKind::RaiseTo(50),
+        "{:?}",
+        view.moves
+    );
+    let shares = root_shares(hole);
+    for (k, (&b, &s)) in view.base.iter().zip(&view.styled).enumerate() {
+        assert!((b - shares[k]).abs() < 1e-9, "{k}: {b} vs {}", shares[k]);
+        assert!((b - s).abs() < 1e-9, "{k}: {b} vs {s}");
+    }
+}
+
+#[test]
+fn a_styled_decision_shows_the_reweighted_shares() {
+    let root = model().file.tree.root();
+    let hole = [48, 49];
+    let bucket = model().abstraction.bucket(Street::Preflop, hole, &[]);
+    let style = Style {
+        aggression: 1.6,
+        tightness: 0.6,
+        ..Style::NEUTRAL
+    };
+    let mut bot = started(true, [400, 400], [10, 20], hole);
+    bot.set_style(style);
+    bot.decide(model(), &facing_blind(20, 400), 0.5);
+    let view = bot.last_decision().unwrap();
+    let spot = model().spot(root).unwrap();
+    let weights = styled(
+        model(),
+        &spot,
+        model().file.probabilities(root, bucket),
+        bucket,
+        &style,
+    );
+    let total: f64 = weights.iter().sum();
+    let total_styled: f64 = view.styled.iter().sum();
+    assert!((total_styled - 1.0).abs() < 1e-9);
+    for (k, &s) in view.styled.iter().enumerate() {
+        assert!((s - weights[k] / total).abs() < 1e-9, "{k}");
+    }
+    assert!(view.styled != view.base);
+}
+
+#[test]
+fn a_new_hand_or_a_passive_play_clears_the_explanation() {
+    let mut bot = opened([48, 49]);
+    assert!(bot.last_decision().is_some());
+    bot.hand_started(model(), true, [400, 400], [10, 20]);
+    assert!(bot.last_decision().is_none());
+    let mut bot = opened([48, 49]);
+    bot.abandon_hand();
+    bot.decide(model(), &facing_blind(20, 400), 0.5);
+    assert!(bot.last_decision().is_none());
+    let mut bot = started(true, [400, 400], [10, 20], [48, 48]);
+    bot.decide(model(), &facing_blind(20, 400), 0.5);
+    assert!(bot.last_decision().is_none());
+}

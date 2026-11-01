@@ -1,56 +1,19 @@
 import { spawn } from 'node:child_process';
-import type { ChildProcess } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 import type { Browser, Page } from '@playwright/test';
 import { byId, DEVICES, playToTheEnd, waitForWaypoint } from './shared.ts';
+import { answers, compose, snap, waitForServer } from './sheet.ts';
+import type { Shot } from './sheet.ts';
 import { serveTalk } from './talkServer.ts';
 
 const PORT = Number(process.env.CONTACT_PORT ?? 4174);
 const BASE = `http://localhost:${PORT}/`;
 const OUT_DIR = 'e2e/contact';
-const SHEET_COLUMNS = 3;
 const THINKING_DELAY_MS = 600_000;
-const SETTLE_MS = 400;
 
 const SHEETS = ['phone', 'desktop'] as const;
 type Sheet = (typeof SHEETS)[number];
-
-interface Shot {
-  label: string;
-  png: Buffer;
-}
-
-async function answers(): Promise<boolean> {
-  try {
-    await fetch(BASE);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function waitForServer(server: ChildProcess): Promise<void> {
-  for (let attempt = 0; attempt < 100; attempt += 1) {
-    if (server.exitCode !== null) {
-      throw new Error(`preview server exited with code ${server.exitCode}`);
-    }
-    try {
-      const response = await fetch(BASE);
-      if (response.ok) {
-        return;
-      }
-    } catch {
-      await new Promise((resolve) => setTimeout(resolve, 200));
-    }
-  }
-  throw new Error('preview server did not start');
-}
-
-async function snap(page: Page, label: string, shots: Shot[]): Promise<void> {
-  await page.waitForTimeout(SETTLE_MS);
-  shots.push({ label, png: await page.screenshot() });
-}
 
 async function boardCards(page: Page): Promise<number> {
   return byId(page, 'board').getByTestId('card').count();
@@ -167,27 +130,7 @@ async function captureTalk(browser: Browser, sheet: Sheet): Promise<Shot[]> {
   return shots;
 }
 
-async function compose(browser: Browser, shots: Shot[], out: string): Promise<void> {
-  const cells = shots
-    .map(
-      ({ label, png }) =>
-        `<figure><img src="data:image/png;base64,${png.toString('base64')}"><figcaption>${label}</figcaption></figure>`,
-    )
-    .join('');
-  const html = `<!doctype html><html><head><meta charset="utf-8"><style>
-body { margin: 0; background: #111; color: #ddd; font: 14px system-ui }
-main { display: grid; grid-template-columns: repeat(${SHEET_COLUMNS}, 1fr); gap: 8px; padding: 8px; align-items: start }
-figure { margin: 0 }
-img { width: 100%; display: block; border: 1px solid #333 }
-figcaption { padding: 4px 0 }
-</style></head><body><main>${cells}</main></body></html>`;
-  const page = await browser.newPage({ viewport: { width: 1800, height: 1000 } });
-  await page.setContent(html, { waitUntil: 'load' });
-  writeFileSync(out, await page.screenshot({ fullPage: true }));
-  await page.close();
-}
-
-if (await answers()) {
+if (await answers(BASE)) {
   throw new Error(`${BASE} is already in use; free it or set CONTACT_PORT`);
 }
 mkdirSync(OUT_DIR, { recursive: true });
@@ -198,7 +141,7 @@ const browser = await chromium.launch({
   args: process.platform === 'darwin' ? ['--use-angle=metal'] : [],
 });
 try {
-  await waitForServer(server);
+  await waitForServer(server, BASE);
   for (const sheet of SHEETS) {
     const shots = [...(await capture(browser, sheet)), ...(await captureTalk(browser, sheet))];
     await compose(browser, shots, `${OUT_DIR}/${sheet}.png`);

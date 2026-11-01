@@ -1,4 +1,4 @@
-import type { BotStyle } from '../brains/index.ts';
+import type { BotStyle, Breakdown } from '../brains/index.ts';
 import type { Card } from '../cards/index.ts';
 import type { Action, LegalActions } from '../engine/index.ts';
 
@@ -48,6 +48,7 @@ interface Exports {
     max: number,
   ): number;
   bot_spot_grid(bot: number): number;
+  bot_decision(bot: number): number;
 }
 
 export interface HandStart {
@@ -68,6 +69,7 @@ export interface CfrBot {
   range(): Float32Array | null;
   opponentRange(): Float32Array | null;
   spot(legal: LegalActions): CfrSpot | null;
+  explain(): Breakdown | null;
   free(): void;
 }
 
@@ -148,6 +150,21 @@ function readSpot(e: Exports, handle: number, legal: LegalActions): CfrSpot | nu
   return { approximate: head[0] === 1, moves, grid };
 }
 
+function readDecision(e: Exports, handle: number): Breakdown | null {
+  const ptr = e.bot_decision(handle);
+  const count = floats(e, ptr, 1)?.[0] ?? 0;
+  const all = floats(e, ptr, 2 + 4 * count);
+  if (all === null) {
+    return null;
+  }
+  const moves = Array.from({ length: count }, (_, k) =>
+    toAction(all[2 + 2 * k] ?? -1, all[3 + 2 * k] ?? 0),
+  );
+  const base = Array.from(all.subarray(2 + 2 * count, 2 + 3 * count));
+  const styled = Array.from(all.subarray(2 + 3 * count, 2 + 4 * count));
+  return { moves, base, styled, chosen: all[1] ?? 0 };
+}
+
 function bot(e: Exports, handle: number): CfrBot {
   return {
     handStarted(s) {
@@ -180,6 +197,9 @@ function bot(e: Exports, handle: number): CfrBot {
     },
     spot(legal) {
       return readSpot(e, handle, legal);
+    },
+    explain() {
+      return readDecision(e, handle);
     },
     free() {
       e.bot_free(handle);

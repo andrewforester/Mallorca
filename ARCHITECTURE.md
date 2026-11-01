@@ -76,8 +76,9 @@ web/src/
 `BoardSize`, which pins its board sizes to the engine's.
 `ui` imports only from `game`; for the table, `game` re-exports `Card`, `formatCard`, `rankOf`, `SeatIndex`,
 `LogEntry`, `HandCategory`, `TableMode`, `CASH` and `TOURNAMENT`, for the opponent choice `Opponent` and
-`opponentsFor`, and for the history `HandRecord`, `HandStore`, `openHandStore`, `memoryStore` and
-`toPokerStars`.
+`opponentsFor`, for the history `HandRecord`, `HandStore`, `openHandStore`, `memoryStore` and
+`toPokerStars`, and for the emotion debug panel `toDebugView`, `DebugView` and its parts, `PERSONALITIES`,
+`PersonalityKey`, `Personality`, `EMOTIONS`, `Emotion`, `STYLE_KEYS` and `LOAD_SOURCES`.
 
 Each layer's `index.ts` exports only what other layers and `tools/` import; a test reaches the internals of its
 own layer by path. `brains/index.ts` holds `Brain`, `Decision`, `Observation`, `createMathBrain`,
@@ -225,6 +226,9 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   stack, pot, spectrum, hero, button).
 - `decide` returns `{ action, solverChoice, evByAction }`. `action` is always legal under `legal`. `solverChoice`
   is the class (`fold`, `passive`, `aggressive`) the advice creator picked, before preprocessing and clamping.
+  A `Brain` may have `explain()`, returning the `Breakdown` of its last decision or null (`moves`, `base`,
+  `styled`, `chosen`, see "cfr"); the math brain has none. A `Decision` carries it as `breakdown` only when the
+  session asked for it; hand records never store it.
 - `evByAction` holds the expected profit of each class in chips, relative to folding now: `fold` is 0 at the top
   of the tree.
 - `passive` counts as won only the chips in the pot from the current street, after the call: on the flop, turn
@@ -287,6 +291,14 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   every pair of a board at once and equals the per-pair `bucket`; the ABI exports `bot_range`, `bot_opponent_range`,
   `bot_spot` (`[approximate, n, kind, to, ...]`) and `bot_spot_grid`, each a pointer into a buffer of the seat, valid
   until the next call on it. `createCfrBrain` exposes `range()` and `opponentRange()` of its bot.
+- `explain()` is the bot's last sampled decision, read after `decide`: `moves` (the real actions of the node under
+  the `legal` of that decision), `base` (the probability of each move for the bot's own bucket, the node's bytes over
+  their sum), `styled` (the same after the style, equal to `base` with the neutral style; the distribution `decide`
+  sampled from) and `chosen`, the index of the sampled move. It is null before a decision, after a new hand starts,
+  and when the last `decide` played passive without sampling (no node, no strategy, a held street). In Rust it is
+  `Bot::last_decision`, filled by `decide` from the same `styled` weights it samples, and the ABI exports
+  `bot_decision` (`[n, chosen, kind, to, ..., base..., styled...]`). `createCfrBrain` exposes it as
+  `explain()`, which the worker reads only for a `decide` request with `explain: true`.
 - Translation lives in Rust (`mallorca-core::bot`): chips scale by the big blind, an opponent raise maps to one of
   the two neighbouring tree sizes by the pseudo-harmonic mapping on pot fractions, the bot's own raise keeps the
   tree's pot fraction and is clamped into `legal.raise`, and a hand that leaves the tree resyncs to the nearest
@@ -309,7 +321,11 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
 - `Personality` is the Big Five in [-1, 1] plus `suppression` (habitual poker face) and `experience`, both in
   [0, 1]. `traitsOf` derives the default mood (Mehrabian's weights, as in ALMA), the gain and the half-life factor of
   every emotion, `composure` (the overload threshold), `discipline`, `expressiveness`, `mask` and `talkativeness`.
-  `MALLORCA` is the personality of the shipped opponent.
+  `MALLORCA` is the personality of the shipped opponent. `PERSONALITIES` (`profiles.ts`) maps a `PersonalityKey` to
+  a personality: `mallorca` and the four presets of the sandbox, `mira`, `ingrid`, `lola` and `nina`. The sandbox
+  imports them from here and keeps only their names, descriptions and face looks.
+- `setPersonality(p)` changes the traits from the next event or step and keeps the emotions, mood, session result
+  and pressure; `reset()` then starts the feeling over at the new default mood.
 - Eleven emotions in [0, 1] (`EMOTIONS`): ten OCC types with their PAD point from ALMA and `injustice` and
   `surprise` of our own. An impulse adds with saturation, `1 - (1 - e)(1 - a)`; every emotion decays with its own
   half-life. Hope and fear follow targets while a hand runs: equity times what can still be won, and the missed
@@ -400,6 +416,13 @@ mask, acted)` blends the felt point toward the acted one (neutral when null).
   two decimals.
 - `style()` maps the engine's `PlayStyle` to the bot: aggression, bluff, sizing and stickiness as they are and
   tightness `1 / looseness`. A calm feeling gives the neutral style, all ones. Her words never decide a move.
+- `setPersonality(p)` gives her feeling another `Personality` (the engine's `setPersonality`) from the next event;
+  `resetFeeling()` starts the feeling over (the engine's `reset`). Neither touches the habits, the summary or the
+  pace.
+- `journal()` returns her newest `JournalEntry`s first, at most 50 (`JOURNAL_SIZE`): one per `TableEvent` the
+  feeling gave the engine (`chat` included), with `handNumber`, the `event`, the `impulses` it returned (empty for an
+  ignored event), `words`, the mood words after the `observe` or `hear` call that made it, and `spoke`, true on the
+  entries of an `observe` call that returned a `LineIntent`. `resetFeeling()` empties it.
 
 ## coach
 
@@ -435,6 +458,8 @@ mask, acted)` blends the felt point toward the acted one (neutral when null).
   per spot in that order, the number of decisions, the player's share of the spot's kind (raises, or folds for the
   three folding spots) and the strategy's mean share of moves of that kind; the panel shows a spot from `MIN_SPOTS`
   (10) decisions.
+- `coachMove(action, legal, pot)` (`moves.ts`) labels a real action as a `CoachMove`; the session's debug state
+  uses it too.
 - `odds` (`odds.ts`) is null with nothing to call, else `requiredEquity = toCall / (pot + toCall)`,
   `mdf = (pot - toCall) / pot` and `bluffShare`, the bluff share the bet can hold, equal to `requiredEquity`.
 
@@ -474,7 +499,8 @@ mask, acted)` blends the felt point toward the acted one (neutral when null).
 - `result` is set when a hand completes: `winner` (null for a split), `category` of the shown hand or null,
   `showdown` and `amount`. `amount` is the pot collected, twice the smaller contribution, or each share for a
   split. It equals the `win` entry of the log; an uncalled bet is its own `returned` entry.
-- `BotClient` has `observe(observations)`, `decide(legal)`, `reset()`, an optional `select(opponent, seed)`, an
+- `BotClient` has `observe(observations)`, `decide(legal, style?, explain?)` (with `explain` the decision carries
+  the brain's `explain()` as `breakdown` when the brain has one), `reset()`, an optional `select(opponent, seed)`, an
   optional `coach(observations, legal, pot)`, an optional `opponentRange()` and an optional `dispose()`. `workerBot()` runs the brain in `bot.worker.ts` over the `WorkerRequest` and `WorkerReply`
   messages in `workerProtocol.ts`; `createWorkerHandler(newBrain, post, load)` in `workerHandler.ts` is the worker's
   message handling as a plain function. A `select` request queues every later request until the opponent's brain
@@ -542,8 +568,8 @@ text)` (the caller's localized label) append the player's line at once and call 
   `quick: true`. `say` feeds the reply's signals to `Talk.hear`, `quick` its own (`compliment`, `mockBluff` after any
   raise of hers in the hand, else `tease`, `claimStrength`). A reply that is null or fails marks the player's line
   `undelivered`. `setTalk`, `setTells` and `attachTalk(client)` change the switch, the tells level and the client.
-  With a `Talk` and an enabled client, every `decide` and the recorded decision get `Talk.style()`, also with talk
-  switched off; without an enabled client the bot plays with no style. A `summary` goes out on an effective `leave`,
+  With a `Talk` (a Solver opponent), every `decide` and the recorded decision get `Talk.style()`, whatever the
+  client and the talk switch: her feeling always reaches her play. The math bot gets no style. A `summary` goes out on an effective `leave`,
   on `dispose`, at the end of a tournament, before a new `start` replaces the `Talk`, every 50th hand and on
   `pageHidden()` (with `keepalive`), only when a hand completed since the last one, and it holds what changed since
   the last summary. Nothing is sent when talk is off or unavailable, and every client error is ignored. `toViewModel`
@@ -565,6 +591,24 @@ text)` (the caller's localized label) append the player's line at once and call 
   to `createSession` as `connectTalk`, so the anonymous sign-in happens only for the Solver opponent with talk on, and
   `onPageExit` (`pageExit.ts`, `pagehide` or the document becoming hidden) calls `pageHidden()`. The remote client
   keeps the latest access token, so a `keepalive` summary is sent at once with `fetch(..., { keepalive: true })`.
+- Emotion debug (`debug.ts`, development builds only): with `SessionOptions.debug` true and
+  `import.meta.env.DEV`, `SessionState.debug` is a `DebugState`, otherwise null and the code that fills it is dead
+  and left out of the production bundle. It holds the `personality` (a `PersonalityKey`, or `custom` with its
+  `Personality`), her `snapshot` (`Talk.feeling()`, which runs for every opponent since the face reads it), `sentStyle`, the style sent with
+  the last `decide` (null before one, or against the math bot), the last `DebugDecision` (her hole cards, the board,
+  one `DecisionRow` per move of the `Breakdown`, its `coachMove` label and amount with its `base` and `styled`
+  probability and whether it was `chosen`, and the action the session applied as a `coachMove`; null until a
+  decision with a breakdown) and `journal` (`Talk.journal()`). It is refreshed after every step's `Talk.observe`,
+  every `hear`, every `start`, every bot decision and each action below. With it, every `decide` request
+  carries `explain: true`; without it none does, and the worker never calls `explain()`. The actions
+  `setPersonality(key | personality)` (applied to the running `Talk` and to every `Talk` a later `start` makes) and
+  `resetFeeling()` do nothing without it. Opening or closing the panel calls nothing on the session.
+- `toDebugView(debug)` returns the `DebugView`, plain data for the panel: `personality` and the `bigFive`,
+  `suppression`, `experience` and the derived `traits` (default mood, composure, discipline, the gain of each
+  emotion); `emotions` as `[emotion, value]` in `EMOTIONS` order; `mood`, `defaultMood` and `octant`; `load` with
+  its `sources`, the `overload`, `composure` and `leakage`; `sessionNetBb` and `pressure`; `engineStyle` (the five
+  `PlayStyle` multipliers in `STYLE_KEYS` order, all ones without a feeling) and `sentStyle` (the `BotStyle`,
+  `tightness = 1 / looseness`, or null); `decision`; and `journal`.
 - `simulation.test.ts` plays full tournaments between the bot and a seeded random human through the session and
   checks that chips are conserved, the session never stalls and the winner holds every chip.
 
@@ -647,6 +691,22 @@ text)` (the caller's localized label) append the player's line at once and call 
   player's turn the panel shows the hand's review (`coach-review`: street, action, grade and the strategy's top
   shares) and the leaks. Fold, passive and all-in have their own colour tokens; sized bets and raises are shaded
   from `--color-coach-small` to `--color-coach-large` by size.
+- Emotion debug panel (`ui/debug/`, development builds only): `main.tsx` imports `EmotionDebug` dynamically
+  under `import.meta.env.DEV`, creates the session with `debug: true` and passes the component to `App`, which
+  renders it beside the table; the production build has neither the import nor the option. Its copy lives in
+  `ui/debug/copy.ts`, in plain English, not in `en.json`, so no string of it reaches the production bundle. A toggle
+  on the left edge of the table (`emotion-debug-toggle`, `aria-expanded`) opens and hides a panel fixed over the
+  left side of the screen (`emotion-debug`), which scrolls on its own and moves neither the cards nor the action
+  bar; its open state is kept in `localStorage` (`mallorca.debugPanel`). It renders `toDebugView` in five sections:
+  personality (`debug-personality-<key>` buttons with `aria-pressed`, `debug-reset`, and folded Big Five sliders with
+  the derived traits), state (`debug-emotions`, `debug-mood` with the octant and the default mood marked,
+  `debug-load`), play style (`debug-style`, the five multipliers around 1 and the style sent), the last decision
+  (`debug-decision`, her cards, each move with its blueprint and styled probability, the chosen one marked) and the
+  journal (`debug-journal`, newest first). Its colours follow `ui/styles/tokens.css`.
+- `scripts/check-dist.ts` (over `distTraces` in `scripts/distTraces.ts`, tested under `npm test`) runs at the end
+  of `npm run build` and fails when any file in `dist` contains
+  `emotion-debug` (the panel and its copy), `sentStyle` (the session's debug state) or `engineStyle`
+  (`toDebugView`), so none of them reaches production.
 - The hand log is a drawer grouped by street (`groupHand` of `game`), opened by the status bar toggle
   `hand-log-toggle` (`aria-expanded`). Opening moves focus to `hand-log-close`; closing, by the close button,
   Escape, the toggle or the scrim, returns focus to the toggle. On portrait screens it is a full-height sheet over
@@ -704,7 +764,9 @@ text)` (the caller's localized label) append the player's line at once and call 
   dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu). Table talk adds
   `bubble-mallorca`, `bubble-player`, `talk-region`, `chat-panel`, `chat-open`, `chat-sheet`, `chat-close`,
   `chat-line`, `chat-input`, `chat-send`, `quick-<id>`, `table-talk` and `tells`. The face adds `face-seat` (with
-  `data-face` = `portrait` or `live`), `face` and `voice`.
+  `data-face` = `portrait` or `live`), `face` and `voice`. The emotion debug panel, in development builds only, adds
+  `emotion-debug-toggle`, `emotion-debug`, `debug-personality-<key>`, `debug-reset`, `debug-emotions`, `debug-mood`,
+  `debug-load`, `debug-style`, `debug-decision` and `debug-journal`.
 
 ## Table talk server
 
@@ -751,8 +813,10 @@ text)` (the caller's localized label) append the player's line at once and call 
 ### Data flow
 
 ```
-style     talk.observe -> Talk.style() (enabled client only) -> session decide(legal, style) -> worker
+style     talk.observe -> Talk.style() (Solver opponent, any client) -> session decide(legal, style) -> worker
           -> CfrBot.setStyle -> bot_style (wasm)
+debug     (dev) decide(legal, style, explain) -> worker -> CfrBot.explain() -> bot_decision (wasm)
+          -> Decision.breakdown -> SessionState.debug -> toDebugView -> panel
 line      engine events -> Talk.observe -> LineIntent -> client.line(facts, intent, mood, feeling, character)
           -> function -> text
           -> session (kept if epoch, hand and street match, a hand-end line until the next hand's first action)
@@ -768,7 +832,7 @@ the style from before it; nothing in the hand waits for it. The read buckets eac
 read on the turn costs about 30 ms on a desktop and 130 to 170 ms at a 4 to 6 times slower CPU (v1), every other
 read under 4 ms; her equity against the range costs up to 4 ms on a desktop and 17 ms at 6 times slower. The session never waits for the server: a line is requested without awaiting it, a late or missing answer is
 dropped, and an error leaves the game as it is. The style path is the only way talk touches a move, and it is
-bounded by the clamps above.
+bounded by the clamps above. The debug path only reads: `explain` reads the decision after it is sampled.
 
 ## e2e
 
@@ -799,8 +863,13 @@ bounded by the clamps above.
   a run with hands opens and shows a pair as PokerStars text. `coach.spec.ts`: in coach mode the hint, both grids
   and the numbers appear against `cfr`, against `math` the range tab explains why it is empty, and on a phone the
   sheet closes with Escape and the player can act.
+- `game.spec.ts` also checks that the production build has no `emotion-debug-toggle`.
 - `e2e/contact.ts` (`npm run contact`) captures every view state of a seeded game on `phone` and `desktop` and
-  composes one sheet per device into `e2e/contact/`. Its preview listens on `CONTACT_PORT` (default 4174); it stops
+  composes one sheet per device into `e2e/contact/`. `npm run contact:debug` runs it against the Vite dev server
+  instead (`e2e/contactDebug.ts`): a Solver cash game with the emotion debug panel open, her first decision, Lola after a
+  run of all-ins, her style, her next decision and the journal, on a phone in portrait and landscape and on desktop,
+  written to `phone-debug.png` and `desktop-debug.png`. The panel is closed while the script acts, since on a phone
+  in portrait it covers the action bar. Both scripts share `e2e/sheet.ts` (the server wait, `snap` and `compose`). Its preview listens on `CONTACT_PORT` (default 4174); it stops
   if that port already answers or its own server exits.
 - `e2e/shared.ts` holds what the tests and the contact sheets share: the devices (`DEVICES`, the Playwright projects
   and the sheets), `byId`, `waitForWaypoint` and `playToTheEnd`. `fixtures.ts` re-exports them beside the `test`

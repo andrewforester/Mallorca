@@ -1,3 +1,4 @@
+import type { ComponentType } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { toViewModel } from '../game/index.ts';
 import type {
@@ -38,6 +39,7 @@ export interface AppProps {
   farewell?: boolean;
   autoNext?: boolean;
   player?: SoundPlayer;
+  debugPanel?: ComponentType<{ session: Session }>;
 }
 
 function useSessionState(session: Session) {
@@ -116,6 +118,13 @@ function useUnlockingPreferences(player: SoundPlayer): UnlockingPreferences {
   };
 }
 
+function actWith(session: Session, preferences: UnlockingPreferences) {
+  return (intent: Intent) => {
+    preferences.unlock();
+    void session.getState().act(intent);
+  };
+}
+
 export function App(props: AppProps) {
   const { session, humanSeat } = props;
   const state = useSessionState(session);
@@ -135,10 +144,7 @@ export function App(props: AppProps) {
   if (vm === null) {
     return <Start app={props} seed={state.seed} preferences={preferences} />;
   }
-  const act = (intent: Intent) => {
-    preferences.unlock();
-    void session.getState().act(intent);
-  };
+  const act = actWith(session, preferences);
   return (
     <Scene simple={preferences.simple}>
       <div class="app">
@@ -172,6 +178,7 @@ export function App(props: AppProps) {
           />
         )}
         <GameOver props={props} vm={vm} phase={state.phase} sessionId={state.sessionId} />
+        {props.debugPanel !== undefined && <props.debugPanel session={session} />}
       </div>
     </Scene>
   );
