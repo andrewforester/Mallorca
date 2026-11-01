@@ -20,6 +20,15 @@ interface Sent {
 }
 
 const HANDS = 40;
+const DIGITS = 9;
+
+const rounded = (bias: BotBias): BotBias => ({
+  aggression: Number(bias.aggression.toFixed(DIGITS)),
+  bluff: Number(bias.bluff.toFixed(DIGITS)),
+  tightness: Number(bias.tightness.toFixed(DIGITS)),
+  sizing: Number(bias.sizing.toFixed(DIGITS)),
+  stickiness: Number(bias.stickiness.toFixed(DIGITS)),
+});
 
 function capture(sent: Sent): ConversationClient {
   return {
@@ -55,7 +64,7 @@ describe('the bodies a seeded session sends', () => {
       ...inner,
       select: (opponent: 'math' | 'cfr' | 'cfr-v2') => Promise.resolve(opponent),
       decide: (legal: LegalActions, bias?: BotBias) => {
-        sent.biases.push(bias);
+        sent.biases.push(bias === undefined ? undefined : rounded(bias));
         return inner.decide(legal);
       },
     };
