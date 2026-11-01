@@ -4,6 +4,9 @@ import { createSession } from './session.ts';
 import type { Session } from './session.ts';
 import { shovingBot } from './testBot.ts';
 import { toViewModel } from './viewModel.ts';
+import { initialFace, sessionFace } from './sessionFace.ts';
+import { createPersona } from '../persona/index.ts';
+import { mulberry32 } from '../cards/index.ts';
 
 interface Table {
   session: Session;
@@ -100,6 +103,28 @@ describe('her face in the session', () => {
     const vm = toViewModel(table.session.getState(), 1);
     expect(vm.face.on).toBe(true);
     expect(vm.face.cues).toBe(table.session.getState().face.cues);
+  });
+
+  it('reads a new persona from its first entry', () => {
+    const old = createPersona({ seat: 0, rng: mulberry32(1) });
+    for (let k = 0; k < 20; k += 1) old.hear(['friendly']);
+    const next = createPersona({ seat: 0, rng: mulberry32(2) });
+    let current = old;
+    let face = initialFace(true);
+    const watcher = sessionFace({
+      read: () => face,
+      write: (f) => {
+        face = f;
+      },
+      persona: () => current,
+      now: () => 0,
+      botSeat: 0,
+    });
+    watcher.observe([]);
+    current = next;
+    next.hear(['mockBluff', 'mockBluff']);
+    watcher.observe([]);
+    expect(face.cues.some((c) => c.kind === 'pulse')).toBe(true);
   });
 
   it('reads the face ahead in time without changing her feeling', async () => {

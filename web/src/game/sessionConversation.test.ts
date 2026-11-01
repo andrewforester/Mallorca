@@ -292,6 +292,27 @@ describe('session conversation', () => {
     expect(table.session.getState().conversation.lines).toEqual([]);
   });
 
+  it('sends her feeling at the moment of the reply', async () => {
+    const feelingAfter = async (waitMs: number) => {
+      const client = fakeClient({
+        reply: () => Promise.resolve({ text: 'Hm', signals: ['mockBluff', 'mockBluff'] }),
+      });
+      const table = open(client);
+      await table.session.getState().start(CASH, 'cfr');
+      table.session.getState().say('You are bluffing');
+      await flush();
+      table.tick(waitMs);
+      table.session.getState().say('Again');
+      await flush();
+      return client.replies[1]?.feeling;
+    };
+    const soon = await feelingAfter(0);
+    const later = await feelingAfter(600_000);
+    const anger = (f: typeof soon) => f?.emotions.find((e) => e.name === 'anger')?.intensity ?? 0;
+    expect(anger(soon)).toBeGreaterThan(0.1);
+    expect(anger(later)).toBeLessThan(anger(soon));
+  });
+
   it('say sends a reply and applies signals', async () => {
     const client = fakeClient({
       reply: () => Promise.resolve({ text: 'Thank you', signals: ['compliment'] }),
