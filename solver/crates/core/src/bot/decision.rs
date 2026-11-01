@@ -1,11 +1,11 @@
-use super::style::styled;
-use super::{to_real, Bot, Hand, Legal, Model, Move, Spot, Style};
+use super::bias::biased;
+use super::{to_real, Bias, Bot, Hand, Legal, Model, Move, Spot};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DecisionView {
     pub moves: Vec<Move>,
     pub base: Vec<f64>,
-    pub styled: Vec<f64>,
+    pub biased: Vec<f64>,
     pub chosen: usize,
 }
 
@@ -21,17 +21,17 @@ pub(super) struct Sampled<'a> {
     pub spot: &'a Spot<'a>,
     pub probabilities: &'a [u8],
     pub bucket: u16,
-    pub style: &'a Style,
+    pub bias: &'a Bias,
     pub chosen: usize,
 }
 
 pub(super) fn explain(model: &Model, hand: &Hand, legal: &Legal, s: &Sampled<'_>) -> DecisionView {
     let raw: Vec<f64> = s.probabilities.iter().map(|&x| f64::from(x)).collect();
     let base = shares(&raw);
-    let styled = if *s.style == Style::NEUTRAL {
+    let biased = if *s.bias == Bias::NEUTRAL {
         base.clone()
     } else {
-        shares(&styled(model, s.spot, s.probabilities, s.bucket, s.style))
+        shares(&biased(model, s.spot, s.probabilities, s.bucket, s.bias))
     };
     let moves = s
         .spot
@@ -42,7 +42,7 @@ pub(super) fn explain(model: &Model, hand: &Hand, legal: &Legal, s: &Sampled<'_>
     DecisionView {
         moves,
         base,
-        styled,
+        biased,
         chosen: s.chosen,
     }
 }

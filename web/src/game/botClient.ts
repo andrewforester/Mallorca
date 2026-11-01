@@ -1,5 +1,5 @@
 import { createMathBrain } from '../brains/index.ts';
-import type { BotStyle, Decision, Observation } from '../brains/index.ts';
+import type { BotBias, Decision, Observation } from '../brains/index.ts';
 import type { CoachFacts } from '../coach/index.ts';
 import type { LegalActions } from '../engine/index.ts';
 import type { Opponent } from './opponent.ts';
@@ -7,7 +7,7 @@ import type { WorkerReply, WorkerRequest } from './workerProtocol.ts';
 
 export interface BotClient {
   observe(o: Observation[]): void;
-  decide(legal: LegalActions, style?: BotStyle, explain?: boolean): Promise<Decision>;
+  decide(legal: LegalActions, style?: BotBias, explain?: boolean): Promise<Decision>;
   reset(): void;
   select?(opponent: Opponent, seed: number): Promise<Opponent>;
   coach?(observations: Observation[], legal: LegalActions, pot: number): Promise<CoachFacts>;
@@ -34,7 +34,7 @@ export function inProcessBot(): BotClient {
       const current = brain;
       return Promise.resolve().then(() => {
         if (style !== undefined) {
-          current.setStyle?.(style);
+          current.setBias?.(style);
         }
         return current.decide(legal);
       });

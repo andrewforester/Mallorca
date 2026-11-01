@@ -62,7 +62,7 @@ function shownOf({ decision, action, legal, table, seat }: Decided): DebugDecisi
   const rows = breakdown.moves.map((move, k) => ({
     move: coachMove(move, legal, hand.pot),
     base: breakdown.base[k] ?? 0,
-    styled: breakdown.styled[k] ?? 0,
+    styled: breakdown.biased[k] ?? 0,
     chosen: k === breakdown.chosen,
   }));
   return {

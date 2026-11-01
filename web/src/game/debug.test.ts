@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { BotStyle, Breakdown } from '../brains/index.ts';
+import type { BotBias, Breakdown } from '../brains/index.ts';
 import { CASH } from '../engine/index.ts';
 import type { LegalActions } from '../engine/index.ts';
 import { PERSONALITIES } from '../talk/index.ts';
@@ -11,13 +11,13 @@ import type { ScriptedBot } from './testBot.ts';
 
 interface ExplainingBot extends ScriptedBot {
   asked: (boolean | undefined)[];
-  styles: (BotStyle | undefined)[];
+  styles: (BotBias | undefined)[];
 }
 
 const breakdown: Breakdown = {
   moves: [{ kind: 'fold' }, { kind: 'call' }],
   base: [0.4, 0.6],
-  styled: [0.3, 0.7],
+  biased: [0.3, 0.7],
   chosen: 1,
 };
 
@@ -28,7 +28,7 @@ function explainingBot(): ExplainingBot {
     asked: [],
     styles: [],
     select: (opponent) => Promise.resolve(opponent),
-    decide: async (legal: LegalActions, style?: BotStyle, explain?: boolean) => {
+    decide: async (legal: LegalActions, style?: BotBias, explain?: boolean) => {
       bot.asked.push(explain);
       bot.styles.push(style);
       const decision = await inner.decide(legal);

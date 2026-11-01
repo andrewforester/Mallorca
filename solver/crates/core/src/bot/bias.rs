@@ -3,7 +3,7 @@ use super::{Model, Spot};
 use crate::tree::{ActionKind, Street};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Style {
+pub struct Bias {
     pub aggression: f64,
     pub bluff: f64,
     pub tightness: f64,
@@ -11,8 +11,8 @@ pub struct Style {
     pub stickiness: f64,
 }
 
-impl Style {
-    pub const NEUTRAL: Style = Style {
+impl Bias {
+    pub const NEUTRAL: Bias = Bias {
         aggression: 1.0,
         bluff: 1.0,
         tightness: 1.0,
@@ -21,9 +21,9 @@ impl Style {
     };
 }
 
-impl Default for Style {
-    fn default() -> Style {
-        Style::NEUTRAL
+impl Default for Bias {
+    fn default() -> Bias {
+        Bias::NEUTRAL
     }
 }
 
@@ -37,13 +37,13 @@ fn is_raise(kind: ActionKind) -> bool {
     matches!(kind, ActionKind::RaiseTo(_) | ActionKind::AllIn)
 }
 
-fn factor(kind: ActionKind, style: &Style, situation: &Situation<'_>) -> f64 {
+fn factor(kind: ActionKind, bias: &Bias, situation: &Situation<'_>) -> f64 {
     match kind {
-        ActionKind::Fold if situation.preflop => style.tightness,
-        ActionKind::Fold => 1.0 / style.stickiness,
-        ActionKind::Check | ActionKind::Call => 1.0 / style.aggression,
-        _ if situation.bluffing => style.aggression * style.bluff,
-        _ => style.aggression,
+        ActionKind::Fold if situation.preflop => bias.tightness,
+        ActionKind::Fold => 1.0 / bias.stickiness,
+        ActionKind::Check | ActionKind::Call => 1.0 / bias.aggression,
+        _ if situation.bluffing => bias.aggression * bias.bluff,
+        _ => bias.aggression,
     }
 }
 
@@ -72,15 +72,15 @@ fn resize(weights: &mut [f64], kinds: &[ActionKind], ratios: &[f64], sizing: f64
 pub fn reweight(
     probabilities: &[u8],
     kinds: &[ActionKind],
-    style: &Style,
+    bias: &Bias,
     situation: &Situation<'_>,
 ) -> Vec<f64> {
     let mut weights: Vec<f64> = probabilities
         .iter()
         .zip(kinds)
-        .map(|(&p, &kind)| f64::from(p) * factor(kind, style, situation))
+        .map(|(&p, &kind)| f64::from(p) * factor(kind, bias, situation))
         .collect();
-    resize(&mut weights, kinds, situation.raise_ratios, style.sizing);
+    resize(&mut weights, kinds, situation.raise_ratios, bias.sizing);
     weights
 }
 
@@ -114,12 +114,12 @@ fn raise_ratios(model: &Model, spot: &Spot<'_>) -> Vec<f64> {
         .collect()
 }
 
-pub(super) fn styled(
+pub(super) fn biased(
     model: &Model,
     spot: &Spot<'_>,
     probabilities: &[u8],
     bucket: u16,
-    style: &Style,
+    bias: &Bias,
 ) -> Vec<f64> {
     let kinds: Vec<ActionKind> = spot.actions.iter().map(|a| a.0).collect();
     let late = matches!(spot.street, Street::Turn | Street::River);
@@ -131,7 +131,7 @@ pub(super) fn styled(
         preflop: spot.street == Street::Preflop,
         raise_ratios: &ratios,
     };
-    reweight(probabilities, &kinds, style, &situation)
+    reweight(probabilities, &kinds, bias, &situation)
 }
 
 pub(super) fn choose(
@@ -139,13 +139,13 @@ pub(super) fn choose(
     spot: &Spot<'_>,
     probabilities: &[u8],
     bucket: u16,
-    style: &Style,
+    bias: &Bias,
     draw: f64,
 ) -> usize {
-    if *style == Style::NEUTRAL {
+    if *bias == Bias::NEUTRAL {
         return sample(probabilities, draw);
     }
-    sample_weighted(&styled(model, spot, probabilities, bucket, style), draw)
+    sample_weighted(&biased(model, spot, probabilities, bucket, bias), draw)
 }
 
 #[cfg(test)]
@@ -158,12 +158,12 @@ mod tests {
         weights.iter().map(|w| w / total).collect()
     }
 
-    fn style(aggression: f64, bluff: f64, tightness: f64) -> Style {
-        Style {
+    fn bias(aggression: f64, bluff: f64, tightness: f64) -> Bias {
+        Bias {
             aggression,
             bluff,
             tightness,
-            ..Style::NEUTRAL
+            ..Bias::NEUTRAL
         }
     }
 
@@ -184,32 +184,32 @@ mod tests {
     }
 
     #[test]
-    fn neutral_style_keeps_weights() {
+    fn neutral_bias_keeps_weights() {
         let w = reweight(
             &[100, 55, 100],
             &[Fold, Call, RaiseTo(60)],
-            &Style::NEUTRAL,
+            &Bias::NEUTRAL,
             &at(false, false),
         );
         assert_eq!(w, vec![100.0, 55.0, 100.0]);
-        assert_eq!(Style::default(), Style::NEUTRAL);
+        assert_eq!(Bias::default(), Bias::NEUTRAL);
     }
 
     #[test]
     fn aggression_moves_mass_to_raises() {
         let p = [50, 80, 70, 55];
         let kinds = [Fold, Call, RaiseTo(60), AllIn];
-        let neutral = shares(&reweight(&p, &kinds, &Style::NEUTRAL, &at(false, false)));
+        let neutral = shares(&reweight(&p, &kinds, &Bias::NEUTRAL, &at(false, false)));
         let hot = shares(&reweight(
             &p,
             &kinds,
-            &style(1.25, 1.0, 1.0),
+            &bias(1.25, 1.0, 1.0),
             &at(false, false),
         ));
         let cold = shares(&reweight(
             &p,
             &kinds,
-            &style(0.8, 1.0, 1.0),
+            &bias(0.8, 1.0, 1.0),
             &at(false, false),
         ));
         assert!(hot[2] > neutral[2] && hot[3] > neutral[3], "{hot:?}");
@@ -219,7 +219,7 @@ mod tests {
         let w = reweight(
             &[100, 100],
             &[Check, RaiseTo(30)],
-            &style(1.25, 1.0, 1.0),
+            &bias(1.25, 1.0, 1.0),
             &at(false, false),
         );
         assert_eq!(w, vec![80.0, 125.0]);
@@ -230,7 +230,7 @@ mod tests {
         let w = reweight(
             &[100, 55, 100],
             &[Fold, Call, RaiseTo(60)],
-            &style(1.0, 1.0, 1.2),
+            &bias(1.0, 1.0, 1.2),
             &at(false, false),
         );
         assert_eq!(w, vec![120.0, 55.0, 100.0]);
@@ -240,8 +240,8 @@ mod tests {
     fn bluff_only_low_buckets_late() {
         let p = [100, 100, 50];
         let kinds = [Check, RaiseTo(30), AllIn];
-        let bluffer = style(1.0, 1.3, 1.0);
-        let neutral = shares(&reweight(&p, &kinds, &Style::NEUTRAL, &at(true, true)));
+        let bluffer = bias(1.0, 1.3, 1.0);
+        let neutral = shares(&reweight(&p, &kinds, &Bias::NEUTRAL, &at(true, true)));
         for (low, late) in [(false, false), (true, false), (false, true)] {
             let w = shares(&reweight(&p, &kinds, &bluffer, &at(low, late)));
             assert_eq!(w, neutral, "{low} {late}");
@@ -256,10 +256,10 @@ mod tests {
         let p = [100, 60, 30, 10];
         let kinds = [Check, RaiseTo(100), RaiseTo(200), AllIn];
         let ratios = [0.0, 0.5, 1.0, 9.0];
-        let neutral = reweight(&p, &kinds, &Style::NEUTRAL, &postflop(&ratios));
-        let big = Style {
+        let neutral = reweight(&p, &kinds, &Bias::NEUTRAL, &postflop(&ratios));
+        let big = Bias {
             sizing: 1.3,
-            ..Style::NEUTRAL
+            ..Bias::NEUTRAL
         };
         let w = reweight(&p, &kinds, &big, &postflop(&ratios));
         assert_eq!(w[0], neutral[0]);
@@ -270,9 +270,9 @@ mod tests {
         let ratio_big = w[3] / w[2];
         assert!((ratio_small - 60.0 / 30.0 / 1.3).abs() < 1e-9, "{w:?}");
         assert!((ratio_big - 10.0 / 30.0 * 1.3).abs() < 1e-9, "{w:?}");
-        let small = Style {
+        let small = Bias {
             sizing: 0.7,
-            ..Style::NEUTRAL
+            ..Bias::NEUTRAL
         };
         let w = reweight(&p, &kinds, &small, &postflop(&ratios));
         assert!(w[1] > neutral[1] && w[3] < neutral[3], "{w:?}");
@@ -280,9 +280,9 @@ mod tests {
 
     #[test]
     fn sizing_does_not_change_a_single_raise() {
-        let big = Style {
+        let big = Bias {
             sizing: 1.5,
-            ..Style::NEUTRAL
+            ..Bias::NEUTRAL
         };
         let w = reweight(
             &[70, 30],
@@ -305,10 +305,10 @@ mod tests {
 
     #[test]
     fn stickiness_scales_folds_after_the_flop_and_tightness_before_it() {
-        let sticky = Style {
+        let sticky = Bias {
             tightness: 1.2,
             stickiness: 1.6,
-            ..Style::NEUTRAL
+            ..Bias::NEUTRAL
         };
         let p = [80, 60, 20];
         let kinds = [Fold, Call, RaiseTo(300)];

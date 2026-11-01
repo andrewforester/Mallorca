@@ -1,4 +1,4 @@
-import type { BotStyle, Decision } from '../../brains/index.ts';
+import type { BotBias, Decision } from '../../brains/index.ts';
 import type { CoachDecision } from '../../coach/index.ts';
 import type { EngineEvent, SeatIndex, TableMode } from '../../engine/index.ts';
 import { handRecord, MATH_BOT, recordDecision } from './record.ts';
@@ -19,7 +19,7 @@ export interface Seating {
 export interface HandRecorder {
   begin(): void;
   observe(events: EngineEvent[]): void;
-  decided(decision: Decision, events: EngineEvent[], style?: BotStyle): void;
+  decided(decision: Decision, events: EngineEvent[], style?: BotBias): void;
   coached(decision: CoachDecision, events: EngineEvent[]): void;
   save(mode: TableMode, bot?: RecordMeta['bot']): void;
 }

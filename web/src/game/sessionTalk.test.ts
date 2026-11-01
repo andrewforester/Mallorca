@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { BotStyle } from '../brains/index.ts';
+import type { BotBias } from '../brains/index.ts';
 import { CASH, TOURNAMENT } from '../engine/index.ts';
 import type { LegalActions } from '../engine/index.ts';
 import type { Level } from '../talk/index.ts';
@@ -57,7 +57,7 @@ function fakeClient(answers: Answers = {}): FakeClient {
 }
 
 interface StyledBot extends ScriptedBot {
-  styles: (BotStyle | undefined)[];
+  styles: (BotBias | undefined)[];
 }
 
 function cfrBot(inner: ScriptedBot): StyledBot {
@@ -65,7 +65,7 @@ function cfrBot(inner: ScriptedBot): StyledBot {
     ...inner,
     styles: [],
     select: (opponent) => Promise.resolve(opponent),
-    decide: (legal: LegalActions, style?: BotStyle) => {
+    decide: (legal: LegalActions, style?: BotBias) => {
       bot.styles.push(style);
       return inner.decide(legal);
     },

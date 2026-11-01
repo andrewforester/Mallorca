@@ -1,4 +1,4 @@
-use super::style::styled;
+use super::bias::biased;
 use super::*;
 use crate::measure::fixtures::{trained, trained_multi_open};
 use crate::pairs::{pair_cards, pair_index, PAIRS};
@@ -279,7 +279,7 @@ fn random_move(legal: &Legal, rng: &mut Rng) -> Move {
     options[rng.below(options.len() as u32) as usize]
 }
 
-fn play_random_hand(rng: &mut Rng, styles: &[Style]) {
+fn play_random_hand(rng: &mut Rng, biases: &[Bias]) {
     let bb = [20, 50, 100][rng.below(3) as usize];
     let hero = rng.below(2) as usize;
     let stacks = [bb * (5 + rng.below(200)), bb * (5 + rng.below(200))];
@@ -291,11 +291,11 @@ fn play_random_hand(rng: &mut Rng, styles: &[Style]) {
         [bb / 2, bb],
         [deck[0], deck[1]],
     );
-    let mut styled: Vec<Bot> = styles
+    let mut biased: Vec<Bot> = biases
         .iter()
-        .map(|&style| {
+        .map(|&bias| {
             let mut b = Bot::new();
-            b.set_style(style);
+            b.set_bias(bias);
             b.hand_started(
                 model(),
                 hero == 0,
@@ -320,7 +320,7 @@ fn play_random_hand(rng: &mut Rng, styles: &[Style]) {
         if board_len > 0 {
             sim.next_street();
             bot.street(model(), &deck[4..4 + board_len]);
-            for b in &mut styled {
+            for b in &mut biased {
                 b.street(model(), &deck[4..4 + board_len]);
             }
         }
@@ -330,10 +330,10 @@ fn play_random_hand(rng: &mut Rng, styles: &[Style]) {
                 let draw = rng.next_f64();
                 let mv = bot.decide(model(), &legal, draw);
                 assert!(is_legal(mv, &legal), "{mv:?} under {legal:?}");
-                for (b, style) in styled.iter_mut().zip(styles) {
+                for (b, bias) in biased.iter_mut().zip(biases) {
                     let other = b.decide(model(), &legal, draw);
                     assert!(is_legal(other, &legal), "{other:?} under {legal:?}");
-                    if *style == Style::NEUTRAL {
+                    if *bias == Bias::NEUTRAL {
                         assert_eq!(other, mv, "draw {draw} under {legal:?}");
                     }
                 }
@@ -343,7 +343,7 @@ fn play_random_hand(rng: &mut Rng, styles: &[Style]) {
             };
             let follow = rng.next_f64();
             bot.acted(model(), sim.to_act == hero, mv, follow);
-            for b in &mut styled {
+            for b in &mut biased {
                 b.acted(model(), sim.to_act == hero, mv, follow);
             }
             sim.apply(mv);
@@ -357,11 +357,11 @@ fn play_random_hand(rng: &mut Rng, styles: &[Style]) {
 #[test]
 fn random_hands_at_any_depth_and_blind_get_legal_moves() {
     let mut rng = Rng::new(2026);
-    let tilted = Style {
+    let tilted = Bias {
         aggression: 1.25,
         bluff: 1.3,
         tightness: 0.85,
-        ..Style::NEUTRAL
+        ..Bias::NEUTRAL
     };
     for _ in 0..400 {
         play_random_hand(&mut rng, &[tilted]);
@@ -369,14 +369,14 @@ fn random_hands_at_any_depth_and_blind_get_legal_moves() {
 }
 
 #[test]
-fn neutral_style_plays_the_blueprint() {
+fn neutral_bias_plays_the_blueprint() {
     let mut rng = Rng::new(23);
     for _ in 0..400 {
-        play_random_hand(&mut rng, &[Style::NEUTRAL]);
+        play_random_hand(&mut rng, &[Bias::NEUTRAL]);
     }
 }
 
-fn flop_raises(style: Option<Style>) -> usize {
+fn flop_raises(bias: Option<Bias>) -> usize {
     let mut rng = Rng::new(7);
     let legal = Legal {
         fold: false,
@@ -389,8 +389,8 @@ fn flop_raises(style: Option<Style>) -> usize {
         let mut deck: Vec<Card> = (0..52).collect();
         rng.shuffle(&mut deck);
         let mut bot = Bot::new();
-        if let Some(style) = style {
-            bot.set_style(style);
+        if let Some(bias) = bias {
+            bot.set_bias(bias);
         }
         bot.hand_started(model(), false, [400, 400], [10, 20]);
         bot.hole_cards([deck[0], deck[1]]);
@@ -408,13 +408,13 @@ fn flop_raises(style: Option<Style>) -> usize {
 }
 
 #[test]
-fn aggressive_style_raises_more() {
+fn aggressive_bias_raises_more() {
     let neutral = flop_raises(None);
-    let aggressive = flop_raises(Some(Style {
+    let aggressive = flop_raises(Some(Bias {
         aggression: 1.25,
         bluff: 1.0,
         tightness: 1.0,
-        ..Style::NEUTRAL
+        ..Bias::NEUTRAL
     }));
     assert!(
         aggressive > neutral,
@@ -422,7 +422,7 @@ fn aggressive_style_raises_more() {
     );
 }
 
-fn flop_bets(style: Style) -> Vec<u32> {
+fn flop_bets(bias: Bias) -> Vec<u32> {
     let mut rng = Rng::new(11);
     let legal = Legal {
         fold: false,
@@ -435,7 +435,7 @@ fn flop_bets(style: Style) -> Vec<u32> {
         let mut deck: Vec<Card> = (0..52).collect();
         rng.shuffle(&mut deck);
         let mut bot = Bot::new();
-        bot.set_style(style);
+        bot.set_bias(bias);
         bot.hand_started(model(), false, [400, 400], [10, 20]);
         bot.hole_cards([deck[0], deck[1]]);
         bot.acted(model(), false, Move::Call, 0.0);
@@ -451,10 +451,10 @@ fn flop_bets(style: Style) -> Vec<u32> {
 
 #[test]
 fn sizing_bets_bigger_as_often_on_an_open_flop() {
-    let neutral = flop_bets(Style::NEUTRAL);
-    let big = flop_bets(Style {
+    let neutral = flop_bets(Bias::NEUTRAL);
+    let big = flop_bets(Bias {
         sizing: 1.6,
-        ..Style::NEUTRAL
+        ..Bias::NEUTRAL
     });
     let count = |bets: &[u32]| bets.iter().filter(|&&b| b > 0).count();
     let mean = |bets: &[u32]| {
@@ -474,7 +474,7 @@ fn sizing_bets_bigger_as_often_on_an_open_flop() {
     );
 }
 
-fn flop_folds(style: Style) -> usize {
+fn flop_folds(bias: Bias) -> usize {
     let mut rng = Rng::new(13);
     let legal = Legal {
         fold: true,
@@ -487,7 +487,7 @@ fn flop_folds(style: Style) -> usize {
         let mut deck: Vec<Card> = (0..52).collect();
         rng.shuffle(&mut deck);
         let mut bot = Bot::new();
-        bot.set_style(style);
+        bot.set_bias(bias);
         bot.hand_started(model(), true, [400, 400], [10, 20]);
         bot.hole_cards([deck[0], deck[1]]);
         bot.acted(model(), true, Move::Call, 0.0);
@@ -503,33 +503,33 @@ fn flop_folds(style: Style) -> usize {
 
 #[test]
 fn stickiness_folds_less_to_a_flop_bet() {
-    let neutral = flop_folds(Style::NEUTRAL);
-    let sticky = flop_folds(Style {
+    let neutral = flop_folds(Bias::NEUTRAL);
+    let sticky = flop_folds(Bias {
         stickiness: 1.6,
-        ..Style::NEUTRAL
+        ..Bias::NEUTRAL
     });
-    let tight_preflop = flop_folds(Style {
+    let tight_preflop = flop_folds(Bias {
         tightness: 1.6,
-        ..Style::NEUTRAL
+        ..Bias::NEUTRAL
     });
     assert!(sticky < neutral, "{sticky} folds, {neutral} neutral");
     assert_eq!(tight_preflop, neutral);
 }
 
 #[test]
-fn a_style_is_kept_across_hands() {
+fn a_bias_is_kept_across_hands() {
     let mut bot = Bot::new();
-    let style = Style {
+    let bias = Bias {
         aggression: 0.9,
         bluff: 0.9,
         tightness: 1.2,
-        ..Style::NEUTRAL
+        ..Bias::NEUTRAL
     };
-    bot.set_style(style);
+    bot.set_bias(bias);
     bot.hand_started(model(), true, [400, 400], [10, 20]);
     bot.hand_started(model(), false, [400, 400], [10, 20]);
-    assert_eq!(bot.style(), style);
-    assert_eq!(Bot::new().style(), Style::NEUTRAL);
+    assert_eq!(bot.bias(), bias);
+    assert_eq!(Bot::new().bias(), Bias::NEUTRAL);
 }
 
 fn smallest_raise(id: NodeId) -> (f64, ActionKind, NodeId) {
@@ -953,7 +953,7 @@ fn impossible_step() -> Step {
         action: actions.len(),
         street: Street::Preflop,
         board: Vec::new(),
-        style: Style::NEUTRAL,
+        bias: Bias::NEUTRAL,
     }
 }
 
@@ -970,7 +970,7 @@ const HER: [Card; 2] = [0, 5];
 
 fn facing(mv: Move) -> Bot {
     let mut bot = started(false, [400, 400], [10, 20], HER);
-    bot.set_style(Style {
+    bot.set_bias(Bias {
         aggression: 2.0,
         bluff: 2.0,
         tightness: 0.5,
@@ -1219,17 +1219,17 @@ fn a_facing_resync_spots_the_facing_node() {
 }
 
 #[test]
-fn a_styled_range_follows_the_styled_strategy() {
-    let style = Style {
+fn a_biased_range_follows_the_biased_strategy() {
+    let bias = Bias {
         aggression: 1.25,
         bluff: 1.3,
         tightness: 0.85,
-        ..Style::NEUTRAL
+        ..Bias::NEUTRAL
     };
     let root = model().file.tree.root();
     let hole = [48, 49];
     let mut bot = started(true, [400, 400], [10, 20], hole);
-    bot.set_style(style);
+    bot.set_bias(bias);
     let mv = bot.decide(model(), &facing_blind(20, 400), 0.99);
     bot.acted(model(), true, mv, 0.0);
     let step = bot.history()[0].clone();
@@ -1238,12 +1238,12 @@ fn a_styled_range_follows_the_styled_strategy() {
         let bucket = model()
             .abstraction
             .bucket(Street::Preflop, pair_cards(i), &[]);
-        let weights = styled(
+        let weights = biased(
             model(),
             &model().spot(root).unwrap(),
             model().file.probabilities(root, bucket),
             bucket,
-            &style,
+            &bias,
         );
         let expected = weights[step.action] / weights.iter().sum::<f64>();
         assert!(
@@ -1289,41 +1289,41 @@ fn a_sampled_decision_is_explained() {
         view.moves
     );
     let shares = root_shares(hole);
-    for (k, (&b, &s)) in view.base.iter().zip(&view.styled).enumerate() {
+    for (k, (&b, &s)) in view.base.iter().zip(&view.biased).enumerate() {
         assert!((b - shares[k]).abs() < 1e-9, "{k}: {b} vs {}", shares[k]);
         assert!((b - s).abs() < 1e-9, "{k}: {b} vs {s}");
     }
 }
 
 #[test]
-fn a_styled_decision_shows_the_reweighted_shares() {
+fn a_biased_decision_shows_the_reweighted_shares() {
     let root = model().file.tree.root();
     let hole = [48, 49];
     let bucket = model().abstraction.bucket(Street::Preflop, hole, &[]);
-    let style = Style {
+    let bias = Bias {
         aggression: 1.6,
         tightness: 0.6,
-        ..Style::NEUTRAL
+        ..Bias::NEUTRAL
     };
     let mut bot = started(true, [400, 400], [10, 20], hole);
-    bot.set_style(style);
+    bot.set_bias(bias);
     bot.decide(model(), &facing_blind(20, 400), 0.5);
     let view = bot.last_decision().unwrap();
     let spot = model().spot(root).unwrap();
-    let weights = styled(
+    let weights = biased(
         model(),
         &spot,
         model().file.probabilities(root, bucket),
         bucket,
-        &style,
+        &bias,
     );
     let total: f64 = weights.iter().sum();
-    let total_styled: f64 = view.styled.iter().sum();
-    assert!((total_styled - 1.0).abs() < 1e-9);
-    for (k, &s) in view.styled.iter().enumerate() {
+    let total_biased: f64 = view.biased.iter().sum();
+    assert!((total_biased - 1.0).abs() < 1e-9);
+    for (k, &s) in view.biased.iter().enumerate() {
         assert!((s - weights[k] / total).abs() < 1e-9, "{k}");
     }
-    assert!(view.styled != view.base);
+    assert!(view.biased != view.base);
 }
 
 #[test]

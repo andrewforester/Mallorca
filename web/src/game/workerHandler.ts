@@ -26,7 +26,7 @@ type Coach = Extract<WorkerRequest, { kind: 'coach' }>;
 function answer(brain: Brain, request: Decide, post: (reply: WorkerReply) => void): void {
   try {
     if (request.style !== undefined) {
-      brain.setStyle?.(request.style);
+      brain.setBias?.(request.style);
     }
     const decision = brain.decide(request.legal);
     const breakdown = request.explain === true ? brain.explain?.() : undefined;

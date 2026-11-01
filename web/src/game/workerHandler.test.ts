@@ -113,7 +113,7 @@ describe('createWorkerHandler style', () => {
     const calls: string[] = [];
     const brain: Brain = {
       observe: () => undefined,
-      setStyle: (given) => {
+      setBias: (given) => {
         calls.push(`style ${JSON.stringify(given)}`);
       },
       decide: () => {
@@ -149,7 +149,7 @@ describe('createWorkerHandler explain', () => {
   const breakdown = {
     moves: [{ kind: 'fold' as const }, { kind: 'call' as const }],
     base: [0.25, 0.75],
-    styled: [0.2, 0.8],
+    biased: [0.2, 0.8],
     chosen: 1,
   };
   const explaining = (asked: string[]): Brain => ({

@@ -3,7 +3,7 @@ import { basename, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Action } from '../../src/engine/index.ts';
 import { checkOrCall } from '../../src/engine/index.ts';
-import type { BotStyle, Brain } from '../../src/brains/index.ts';
+import type { BotBias, Brain } from '../../src/brains/index.ts';
 import { createMathBrain } from '../../src/brains/index.ts';
 import type { Rng } from '../../src/cards/index.ts';
 import type { CfrModel, ShippedStrategyKey } from '../../src/cfr/index.ts';
@@ -64,21 +64,21 @@ const SHIPPED: ShippedStrategyKey = 'cfr';
 const cfrModels = new Map<string, CfrModel>();
 const read = (url: URL) => readFile(url);
 
-function cfrBot(key: string, style?: BotStyle): BotFactory {
+function cfrBot(key: string, style?: BotBias): BotFactory {
   return (rng) => {
     const model = cfrModels.get(key);
     if (model === undefined) {
       throw new Error('The cfr bot needs prepareBots before it plays');
     }
     const brain = createCfrBrain(model, rng);
-    if (style) brain.setStyle?.(style);
+    if (style) brain.setBias?.(style);
     return fromBrain(brain);
   };
 }
 
 const cfr = cfrBot(SHIPPED);
 
-const styled = (style: Omit<BotStyle, 'sizing' | 'stickiness'>): BotFactory =>
+const styled = (style: Omit<BotBias, 'sizing' | 'stickiness'>): BotFactory =>
   cfrBot(SHIPPED, { ...style, sizing: 1, stickiness: 1 / style.tightness });
 
 const talking =
@@ -126,7 +126,7 @@ export const BOTS: Record<
 
 export type BotName = keyof typeof BOTS;
 
-const NEUTRAL: BotStyle = { aggression: 1, bluff: 1, tightness: 1, sizing: 1, stickiness: 1 };
+const NEUTRAL: BotBias = { aggression: 1, bluff: 1, tightness: 1, sizing: 1, stickiness: 1 };
 const STYLE_MARK = '@';
 
 function cfrFile(name: string): string | null {
@@ -142,20 +142,20 @@ function splitStyle(name: string): { base: string; axes: string | null } {
     : { base: name.slice(0, at), axes: name.slice(at + 1) };
 }
 
-function parseAxes(axes: string): BotStyle | null {
-  const style: BotStyle = { ...NEUTRAL };
+function parseAxes(axes: string): BotBias | null {
+  const style: BotBias = { ...NEUTRAL };
   for (const part of axes.split(',')) {
     const [key, raw] = part.split('=');
     const value = Number(raw);
     if (key === undefined || !Object.hasOwn(NEUTRAL, key) || !(value > 0)) return null;
-    style[key as keyof BotStyle] = value;
+    style[key as keyof BotBias] = value;
   }
   return style;
 }
 
 const isCfr = (base: string): boolean => base === SHIPPED || cfrFile(base) !== null;
 
-export function styleOfName(name: string): BotStyle | null {
+export function styleOfName(name: string): BotBias | null {
   const { base, axes } = splitStyle(name);
   return axes === null || !isCfr(base) ? null : parseAxes(axes);
 }

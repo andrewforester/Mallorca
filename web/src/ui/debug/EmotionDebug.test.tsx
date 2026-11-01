@@ -21,7 +21,7 @@ function explainingBot(): BotClient {
       const moves = [{ kind: 'fold' as const }, decision.action];
       return {
         ...decision,
-        breakdown: { moves, base: [0.25, 0.75], styled: [0.1, 0.9], chosen: 1 },
+        breakdown: { moves, base: [0.25, 0.75], biased: [0.1, 0.9], chosen: 1 },
       };
     },
   };
