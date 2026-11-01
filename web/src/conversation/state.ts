@@ -1,9 +1,8 @@
-import { EMOTIONS, maskOf } from '../emotion/index.ts';
+import { EMOTIONS } from '../emotion/index.ts';
 import type { Emotion, LoadSource, Octant, Personality, Snapshot } from '../emotion/index.ts';
 import type { StrengthClass } from '../persona/index.ts';
 
 export const FEELING_VERSION = 1;
-export const ACTING_EFFORT = 0.6;
 
 const MAX_EMOTIONS = 3;
 const EMOTION_FLOOR = 0.1;
@@ -41,15 +40,18 @@ function strongest(s: Snapshot): FeltEmotion[] {
     .slice(0, MAX_EMOTIONS);
 }
 
-export function feelingState(s: Snapshot, acting: StrengthClass | null): FeelingState {
+export function feelingState(
+  s: Snapshot,
+  acting: StrengthClass | null,
+  mask: number,
+): FeelingState {
   const level = round(s.load.overload);
-  const effort = acting === null ? 0 : ACTING_EFFORT;
   return {
     version: FEELING_VERSION,
     emotions: strongest(s),
     mood: { octant: s.octant.octant, strength: s.octant.strength },
     overload: { level, source: level >= OVERLOAD_FLOOR ? s.load.dominant : null },
-    shows: { mask: round(maskOf(s.traits.mask, effort, s.load.overload)), acting },
+    shows: { mask: round(mask), acting },
   };
 }
 

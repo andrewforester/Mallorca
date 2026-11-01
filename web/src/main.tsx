@@ -11,7 +11,7 @@ import type { Session } from './game/index.ts';
 import { App } from './ui/App.tsx';
 import { createSynthPlayer } from './ui/sound/player.ts';
 import { t } from './ui/i18n.ts';
-import { readFace, readConversation, readTells } from './ui/preferences.ts';
+import { readFace, readConversation } from './ui/preferences.ts';
 import '@fontsource/cormorant-garamond/latin-500.css';
 import '@fontsource/cormorant-garamond/latin-600.css';
 import '@fontsource/inter/latin-400.css';
@@ -73,7 +73,6 @@ function mount(farewell = false): void {
     mode: TOURNAMENT,
     connectConversation,
     conversationOn: readConversation(),
-    tells: readTells(),
     faceOn: readFace(),
     debug: import.meta.env.DEV,
     records: {

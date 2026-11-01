@@ -71,8 +71,6 @@ describe('App table talk', () => {
     expect(session.getState().conversation.on).toBe(false);
     expect(localStorage.getItem('mallorca.talk')).toBe('off');
     expect(screen.queryByTestId('chat-open')).toBeNull();
-    fireEvent.change(screen.getByTestId('tells'), { target: { value: 'hidden' } });
-    expect(session.getState().conversation.level).toBe('hidden');
     fireEvent.click(screen.getByTestId('table-conversation'));
     expect(session.getState().conversation.on).toBe(true);
     expect(screen.getByTestId('chat-open')).not.toBeNull();

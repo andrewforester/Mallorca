@@ -1,4 +1,4 @@
-export type { Habit, Habits, Level, Situation } from './habits.ts';
+export type { Habit, Habits, Situation } from './habits.ts';
 export { BASE_HABITS, habitsAt } from './habits.ts';
 export type { Character, FeelingState, FeltEmotion } from './state.ts';
 export { characterOf, feelingState } from './state.ts';

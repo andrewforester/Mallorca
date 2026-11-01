@@ -48,7 +48,6 @@ export function viewModel(overrides: Partial<ViewModel['controls']> = {}): ViewM
     conversation: {
       available: false,
       on: true,
-      level: 'subtle',
       lines: [],
       herBubble: null,
       playerBubble: null,

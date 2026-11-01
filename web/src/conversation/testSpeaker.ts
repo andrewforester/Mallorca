@@ -6,14 +6,13 @@ import { createPersona } from '../persona/index.ts';
 import type { Bias, JournalEntry, Signal, Stance } from '../persona/index.ts';
 import { createConversation } from './conversation.ts';
 import type { HandFacts, LineIntent } from './conversation.ts';
-import type { Habits, Level } from './habits.ts';
+import type { Habits } from './habits.ts';
 import type { Character, FeelingState } from './state.ts';
 import type { SessionSummary } from './summary.ts';
 
 export interface SpeakerOptions {
   seat: SeatIndex;
   rng: Rng;
-  level: Level;
   habits?: Habits;
 }
 
@@ -35,7 +34,7 @@ export interface Speaker {
   journal(): (JournalEntry & { spoke: boolean })[];
   bias(): Bias;
   summary(): SessionSummary;
-  setLevel(level: Level): void;
+  mask(): number;
 }
 
 const SEED_RANGE = 0x100000000;
@@ -82,6 +81,6 @@ export function createSpeaker(options: SpeakerOptions): Speaker {
     journal: () => persona.journal().map((e) => ({ ...e, spoke: spoke.has(e.id) })),
     bias: () => view().bias,
     summary: () => conversation.summary(),
-    setLevel: (level) => conversation.setLevel(level),
+    mask: () => view().mask,
   };
 }

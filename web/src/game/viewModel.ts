@@ -2,7 +2,6 @@ import type { Card } from '../cards/index.ts';
 import { legalActionsOf, rulesOf, toAct } from '../engine/index.ts';
 import type { Hand, LegalActions, LogEntry, SeatIndex } from '../engine/index.ts';
 import type { HandCategory } from '../equity/index.ts';
-import type { Level } from '../conversation/index.ts';
 import type { FaceState } from './sessionFace.ts';
 import type { ChatLine, SessionState } from './session.ts';
 
@@ -27,7 +26,6 @@ export interface RaiseControl {
 export interface ConversationView {
   available: boolean;
   on: boolean;
-  level: Level;
   lines: ChatLine[];
   herBubble: ChatLine | null;
   playerBubble: ChatLine | null;
@@ -131,12 +129,11 @@ function conversationView(
   conversation: SessionState['conversation'],
   humanSeat: SeatIndex,
 ): ConversationView {
-  const { available, on, level, lines, bubbles } = conversation;
+  const { available, on, lines, bubbles } = conversation;
   const botSeat = humanSeat === 0 ? 1 : 0;
   return {
     available,
     on,
-    level,
     lines,
     herBubble: bubbles[botSeat],
     playerBubble: bubbles[humanSeat],
