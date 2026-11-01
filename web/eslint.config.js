@@ -105,7 +105,7 @@ const evaluatorGoldenLayer = {
       {
         patterns: [
           {
-            regex: '(^|/)src/(engine|brains|cfr|conversation|game|ui|main\\.tsx)(/|$)',
+            regex: '(^|/)src/(engine|brains|cfr|persona|conversation|game|ui|main\\.tsx)(/|$)',
             message: EVALUATOR_GOLDEN_MESSAGE,
           },
         ],
