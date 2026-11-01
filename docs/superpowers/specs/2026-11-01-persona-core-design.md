@@ -137,7 +137,9 @@ function createPersona(options: PersonaOptions): Persona;
 The persona is the only holder of her time. Every reader asks `view(now)`: the bias sent with `decide` and recorded
 with the decision, the face every 100 ms, the voice prosody when a line arrives, and the feeling sent with a line or a
 reply. Today the bias is read from the last `observe`, which the session always runs with `now()` just before a
-decision, so this changes no decision; it makes the rule explicit.
+decision, so this changes no decision; it makes the rule explicit. The feeling sent with a reply is the one
+intended change: it is read when the player's line goes out, not at her last event, so a reply typed long after a
+hand carries her calmer state.
 
 ### The journal is the impulse stream
 
