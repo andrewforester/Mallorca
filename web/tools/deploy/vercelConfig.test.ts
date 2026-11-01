@@ -1,5 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { allowConnect } from './vercelConfig.ts';
+import { allowConnect, type OutputConfig } from './vercelConfig.ts';
 
 const CSP = "default-src 'self'; connect-src 'self'; worker-src 'self'";
 
@@ -47,5 +48,16 @@ describe('allowConnect', () => {
     expect(() => allowConnect(config("default-src 'self'"), 'https://abc.supabase.co')).toThrow(
       /connect-src/,
     );
+  });
+});
+
+describe('the shipped policy', () => {
+  it('lets the model loader read her textures from blob urls', () => {
+    const shipped = JSON.parse(
+      readFileSync(new URL('../../vercel-output-config.json', import.meta.url), 'utf8'),
+    ) as OutputConfig;
+    const policy = shipped.routes[0]?.headers?.['Content-Security-Policy'] ?? '';
+    const connect = policy.split(';').find((part) => part.trim().startsWith('connect-src ')) ?? '';
+    expect(connect.trim().split(/\s+/)).toContain('blob:');
   });
 });
