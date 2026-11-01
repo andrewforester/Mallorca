@@ -185,4 +185,14 @@ describe('the range of a cfr brain', () => {
     asked.dispose();
     plain.dispose();
   });
+
+  it("narrows the player's range after he acts", () => {
+    const brain = createCfrBrain(model, mulberry32(9));
+    brain.observe({ ...start, heroOnButton: false });
+    brain.observe({ type: 'holeCards', cards: parseCards('Kc Qc') as [number, number] });
+    expect(brain.opponentRange()?.some((w) => w > 0 && w < 1)).toBe(false);
+    brain.observe({ type: 'acted', who: 'villain', action: { kind: 'raise', to: 60 }, amount: 50 });
+    expect(brain.opponentRange()?.some((w) => w > 0 && w < 1)).toBe(true);
+    brain.dispose();
+  });
 });

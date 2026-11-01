@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { parseCards } from '../cards/index.ts';
-import type { HandFacts, LineIntent } from '../talk/index.ts';
+import type { Character, FeelingState, HandFacts, LineIntent } from '../talk/index.ts';
 import {
   TALK_TIMEOUT_MS,
   silentTalkClient,
@@ -51,6 +51,22 @@ const intent: LineIntent = {
   handNumber: 3,
 };
 
+const feeling: FeelingState = {
+  version: 1,
+  emotions: [{ name: 'pride', intensity: 0.42 }],
+  mood: { octant: 'exuberant', strength: 'slightly' },
+  overload: { level: 0.02, source: null },
+  shows: { mask: 0.35, acting: null },
+};
+
+const character: Character = {
+  version: 1,
+  talkativeness: 0.66,
+  warmth: 0.75,
+  nerves: 0.55,
+  wit: 0.7,
+};
+
 const recent = [
   { speaker: 'mallorca' as const, text: 'Another cup of tea?' },
   { speaker: 'player' as const, text: 'Only if you stop winning.' },
@@ -63,6 +79,8 @@ const base = {
   facts,
   intent,
   mood: ['pleased', 'proud'],
+  feeling,
+  character,
   recent,
 };
 
@@ -371,5 +389,14 @@ describe('remoteTalkClient', () => {
 describe('mood words', () => {
   it('sends the words of her feeling as they are', () => {
     expect(toLinePayload(base).mood).toEqual(['pleased', 'proud']);
+  });
+});
+
+describe('feeling and character', () => {
+  it('sends her feeling and character sheet next to the mood words', () => {
+    const payload = toLinePayload(base);
+    expect(payload.feeling).toEqual(feeling);
+    expect(payload.character).toEqual(character);
+    expect(toReplyPayload({ ...base, text: 'hi' }).feeling).toEqual(feeling);
   });
 });

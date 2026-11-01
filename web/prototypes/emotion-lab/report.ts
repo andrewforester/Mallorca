@@ -3,8 +3,10 @@ import { LAB_MOOD } from './lab.ts';
 import { PROFILES } from './profiles.ts';
 import type { ProfileId } from './profiles.ts';
 import { writeFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { mulberry32 } from '../../src/cards/index.ts';
 import { LOAD_LABEL } from './ui/labels.ts';
+import { loadBlueprint } from './scenes/blueprint.ts';
 import { createRunner } from './scenes/runner.ts';
 import type { RunnerHooks } from './scenes/runner.ts';
 import { SCENES } from './scenes/scenes.ts';
@@ -80,6 +82,8 @@ const silentHooks = (log: string[], start: () => number): RunnerHooks => ({
   gesture: () => {},
 });
 
+const ranges = await loadBlueprint(async (url) => new Uint8Array(await readFile(url)));
+
 function sceneLog(sceneId: string, profileId: ProfileId): string[] {
   const scene = SCENES.find((s) => s.id === sceneId)!;
   const engine = createEngine(PROFILES[profileId].personality, LAB_MOOD);
@@ -89,6 +93,7 @@ function sceneLog(sceneId: string, profileId: ProfileId): string[] {
     engine,
     silentHooks(log, () => t),
     () => mulberry32(2),
+    ranges ?? undefined,
   );
   runner.start(scene);
   const step = 1 / 30;

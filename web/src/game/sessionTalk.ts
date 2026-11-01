@@ -38,6 +38,7 @@ export interface TalkSetup {
   locale: string;
   botSeat: SeatIndex;
   connect?: () => Promise<TalkClient>;
+  playerRange?: () => Promise<Float32Array | null>;
 }
 
 export interface SessionTalk {
@@ -82,6 +83,7 @@ class Wiring implements SessionTalk {
   private sent: SessionSummary = EMPTY_SUMMARY;
   private unsent = 0;
   private nextId = 0;
+  private rangeAsks = 0;
   private readonly setup: TalkSetup;
   private readonly host: TalkHost;
 
@@ -112,6 +114,9 @@ class Wiring implements SessionTalk {
     const intent = this.talk.observe(events, this.setup.now());
     if (intent !== null && this.speaking()) {
       this.requestLine(intent);
+    }
+    if (this.solver && this.playerActed(events)) {
+      this.askRange(this.talk);
     }
     if (ended) {
       this.sendSummary();
@@ -215,6 +220,34 @@ class Wiring implements SessionTalk {
     return ended;
   }
 
+  private playerActed(events: readonly EngineEvent[]): boolean {
+    const acted = events.some((e) => e.type === 'acted' && e.seat !== this.setup.botSeat);
+    return acted && !events.some((e) => e.type === 'handEnded');
+  }
+
+  private askRange(talk: Talk): void {
+    const { playerRange } = this.setup;
+    if (playerRange === undefined) {
+      return;
+    }
+    this.rangeAsks += 1;
+    const mine = this.rangeAsks;
+    const epoch = this.host.epoch();
+    const { handNumber } = this.host.table();
+    const current = () =>
+      mine === this.rangeAsks && epoch === this.host.epoch() && talk === this.talk;
+    setTimeout(() => {
+      if (!current()) {
+        return;
+      }
+      void attempt(playerRange).then((range) => {
+        if (range !== null && current()) {
+          talk.playerRange(range, handNumber);
+        }
+      });
+    }, 0);
+  }
+
   private quickSignals(id: QuickPhrase): Signal[] {
     if (id === 'niceHand') {
       return ['compliment'];
@@ -233,6 +266,8 @@ class Wiring implements SessionTalk {
       facts: talk.facts(),
       intent,
       mood: talk.moodWords(),
+      feeling: talk.feelingFor(intent),
+      character: talk.character(),
       recent,
     };
   }

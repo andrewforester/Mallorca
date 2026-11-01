@@ -37,13 +37,14 @@ import { handRecorder } from './records/recorder.ts';
 import type { HandRecorder } from './records/recorder.ts';
 import { botRecord } from './records/record.ts';
 import type { Opponent } from './opponent.ts';
-import { initialFace, sessionFace } from './sessionFace.ts';
+import { initialFace } from './sessionFace.ts';
 import type { SessionFace } from './sessionFace.ts';
-import { initialTalk, sessionTalk } from './sessionTalk.ts';
+import { initialTalk } from './sessionTalk.ts';
+import { wireFace, wireTalk } from './sessionWiring.ts';
+import type { WiringHost } from './sessionWiring.ts';
 import { createTimers } from './timers.ts';
 import type { Timers } from './timers.ts';
 import type { SessionTalk } from './sessionTalk.ts';
-import { silentTalkClient } from './talkClient.ts';
 import type { Style } from '../talk/index.ts';
 import { COACH_OFF, createCoach } from './coach.ts';
 import type { Coach } from './coach.ts';
@@ -337,27 +338,14 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
   };
 }
 
-function wireTalk(
-  runtime: () => Runtime,
-  options: SessionOptions,
-  botSeat: SeatIndex,
-): SessionTalk {
-  return sessionTalk(
-    {
-      client: options.talk ?? silentTalkClient,
-      now: options.now ?? Date.now,
-      locale: options.locale ?? 'en',
-      botSeat,
-      connect: options.connectTalk,
-    },
-    {
-      read: () => runtime().get().talk,
-      write: (talk) => runtime().set({ talk }),
-      table: () => runtime().get().table,
-      epoch: () => runtime().epoch,
-      sessionId: () => runtime().get().sessionId ?? `seed-${runtime().seed}`,
-    },
-  );
+function hostOf(runtime: () => Runtime): WiringHost {
+  return {
+    bot: () => runtime().bot,
+    get: () => runtime().get(),
+    set: (patch) => runtime().set(patch),
+    epoch: () => runtime().epoch,
+    seed: () => runtime().seed,
+  };
 }
 
 export function createSession(options: SessionOptions): Session {
@@ -371,6 +359,8 @@ export function createSession(options: SessionOptions): Session {
     const coach = createCoach(bot, humanSeat, options.coach ?? false, (state) =>
       set({ coach: state }),
     );
+    const host = hostOf(() => rt);
+    const talk = wireTalk(host, options, botSeat);
     const rt: Runtime = {
       set,
       get,
@@ -389,14 +379,8 @@ export function createSession(options: SessionOptions): Session {
       topUps: 0,
       seed,
       opponent: 'math',
-      talk: wireTalk(() => rt, options, botSeat),
-      face: sessionFace({
-        read: () => rt.get().face,
-        write: (face) => rt.set({ face }),
-        talk: () => rt.talk.active(),
-        now: options.now ?? Date.now,
-        botSeat,
-      }),
+      talk,
+      face: wireFace(host, talk, options, botSeat),
     };
     const initial = freshTable(options, rt.mode);
     return {

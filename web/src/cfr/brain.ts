@@ -20,7 +20,10 @@ function choiceOf(action: Action): Decision['solverChoice'] {
   }
 }
 
-export type CfrBrain = Required<Brain> & { range(): Float32Array | null };
+export type CfrBrain = Required<Brain> & {
+  range(): Float32Array | null;
+  opponentRange(): Float32Array | null;
+};
 
 export function createCfrBrain(model: CfrModel, rng: Rng): CfrBrain {
   const bot = model.newBot();
@@ -47,6 +50,9 @@ export function createCfrBrain(model: CfrModel, rng: Rng): CfrBrain {
     },
     range() {
       return bot.range();
+    },
+    opponentRange() {
+      return bot.opponentRange();
     },
     setStyle(style: BotStyle) {
       bot.setStyle(style);

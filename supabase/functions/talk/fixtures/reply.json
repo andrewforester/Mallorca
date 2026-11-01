@@ -4,10 +4,21 @@
   "locale": "ru",
   "facts": {
     "street": "turn",
-    "board": ["9h", "9c", "3d", "Js"],
+    "board": [
+      "9h",
+      "9c",
+      "3d",
+      "Js"
+    ],
     "pot": 16,
-    "stacks": [92, 92],
-    "her": ["7c", "6c"],
+    "stacks": [
+      92,
+      92
+    ],
+    "her": [
+      "7c",
+      "6c"
+    ],
     "actions": [
       "Player posts the small blind 1",
       "Mallorca posts the big blind 2",
@@ -19,11 +30,56 @@
     ],
     "bigBlind": 2
   },
-  "intent": { "situation": "playerBet", "hint": "strong", "honest": false, "street": "turn" },
-  "mood": ["annoyed"],
+  "intent": {
+    "situation": "playerBet",
+    "hint": "strong",
+    "honest": false,
+    "street": "turn"
+  },
+  "mood": [
+    "annoyed"
+  ],
+  "feeling": {
+    "version": 1,
+    "emotions": [
+      {
+        "name": "pride",
+        "intensity": 0.42
+      },
+      {
+        "name": "hope",
+        "intensity": 0.3
+      }
+    ],
+    "mood": {
+      "octant": "exuberant",
+      "strength": "slightly"
+    },
+    "overload": {
+      "level": 0.02,
+      "source": null
+    },
+    "shows": {
+      "mask": 0.35,
+      "acting": null
+    }
+  },
+  "character": {
+    "version": 1,
+    "talkativeness": 0.66,
+    "warmth": 0.75,
+    "nerves": 0.55,
+    "wit": 0.7
+  },
   "recent": [
-    { "speaker": "player", "text": "Опять ты со своими тузами?" },
-    { "speaker": "mallorca", "text": "Не дождёшься, что я скажу." }
+    {
+      "speaker": "player",
+      "text": "Опять ты со своими тузами?"
+    },
+    {
+      "speaker": "mallorca",
+      "text": "Не дождёшься, что я скажу."
+    }
   ],
   "text": "  Ты блефуешь, я вижу по глазам.  ",
   "quick": false

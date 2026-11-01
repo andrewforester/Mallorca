@@ -11,6 +11,7 @@ export interface BotClient {
   reset(): void;
   select?(opponent: Opponent, seed: number): Promise<Opponent>;
   coach?(observations: Observation[], legal: LegalActions, pot: number): Promise<CoachFacts>;
+  opponentRange?(): Promise<Float32Array | null>;
   dispose?(): void;
 }
 
@@ -88,6 +89,10 @@ function timedCoach(ask: Promise<CoachFacts> | undefined, ms: number): Promise<C
     : withTimeout(ask, ms);
 }
 
+function timedRange(ask: Promise<Float32Array | null> | undefined, ms: number) {
+  return ask === undefined ? Promise.resolve(null) : withTimeout(ask, ms).catch(() => null);
+}
+
 export function withFallback(primary: BotClient, timeoutMs = BOT_TIMEOUT_MS): BotClient {
   if (guarded.has(primary)) {
     return primary;
@@ -129,6 +134,7 @@ export function withFallback(primary: BotClient, timeoutMs = BOT_TIMEOUT_MS): Bo
       }
     },
     coach: (...args) => timedCoach(usedFallback ? undefined : active.coach?.(...args), timeoutMs),
+    opponentRange: () => timedRange(usedFallback ? undefined : active.opponentRange?.(), timeoutMs),
     select: (opponent, seed) =>
       selectOrFallBack(active.select?.(opponent, seed), () => {
         if (!usedFallback) {
@@ -225,6 +231,12 @@ function rawWorkerBot(): BotClient {
       return ask(
         (id) => ({ kind: 'coach', id, observations, legal, pot }),
         (r) => ('facts' in r ? r.facts : undefined),
+      );
+    },
+    opponentRange() {
+      return ask(
+        (id) => ({ kind: 'opponentRange', id }),
+        (r) => ('range' in r ? r.range : undefined),
       );
     },
     reset() {

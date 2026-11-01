@@ -6,6 +6,8 @@ import type { Action, Step } from '../engine/types.ts';
 import { BASE_HABITS, habitsAt } from './habits.ts';
 import type { Habits, Situation } from './habits.ts';
 import type { StrengthClass } from './strength.ts';
+import { MALLORCA } from '../emotion/index.ts';
+import { characterOf } from './state.ts';
 import { createTalk, drawLine, endsHand } from './talk.ts';
 import type { LineIntent, Talk } from './talk.ts';
 
@@ -335,6 +337,21 @@ describe('replyIntent and state', () => {
     expect(talk.style().bluff).toBeGreaterThan(1);
   });
 
+  it('gives the feeling for an intent, acting the hinted strength only when the hint is false', () => {
+    const talk = createTalk({ seat: 1, rng: mulberry32(2), level: 'obvious' });
+    talk.hear(['mockBluff', 'tease']);
+    const intent = talk.replyIntent();
+    const bluff = { ...intent, hint: 'strong' as const, honest: false };
+    expect(talk.feelingFor(bluff).shows.acting).toBe('strong');
+    expect(talk.feelingFor({ ...bluff, honest: true }).shows.acting).toBeNull();
+    expect(talk.feelingFor(bluff).emotions[0]?.name).toBe('anger');
+  });
+
+  it('gives her character sheet', () => {
+    const talk = createTalk({ seat: 1, rng: mulberry32(2), level: 'obvious' });
+    expect(talk.character()).toEqual(characterOf(MALLORCA));
+  });
+
   it('changes the habits with setLevel', () => {
     const talk = createTalk({ seat: 1, rng: mulberry32(2), level: 'obvious', habits: always() });
     talk.setLevel('hidden');
@@ -416,5 +433,43 @@ describe('what the face reads', () => {
     t.act(raiseTo(100));
     t.act(fold);
     expect(t.talk.stance()).toBeNull();
+  });
+});
+
+describe("the player's range", () => {
+  const strong = (): Float32Array => {
+    const weights = new Float32Array(1326);
+    for (const hand of ['8c 8h', '4c 4d', 'Kd 8c']) {
+      const [a, b] = parseCards(hand) as [number, number];
+      const [lo, hi] = a < b ? [a, b] : [b, a];
+      weights[(hi * (hi - 1)) / 2 + lo] = 1;
+    }
+    return weights;
+  };
+
+  const raised = (): Table => {
+    const t = chatty();
+    t.begin('Kh Qd', '7c 6c', 'Kc 8d 4s 2h 3c');
+    t.act(call, 1000);
+    t.act(check, 1500);
+    t.act(raiseTo(40), 2000);
+    t.act(raiseTo(120), 2500);
+    return t;
+  };
+
+  const equity = (t: Table): number => t.talk.feeling().prospect?.equity ?? Number.NaN;
+
+  it('narrows her equity for the hand it belongs to', () => {
+    const t = raised();
+    const before = equity(t);
+    t.talk.playerRange(strong(), 1);
+    expect(equity(t)).toBeLessThan(before - 0.4);
+  });
+
+  it('ignores a range of another hand', () => {
+    const t = raised();
+    const before = t.talk.feeling();
+    t.talk.playerRange(strong(), 2);
+    expect(t.talk.feeling()).toEqual(before);
   });
 });

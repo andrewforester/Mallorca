@@ -21,6 +21,7 @@ struct Seat {
     bot: Bot,
     to: u32,
     range: Vec<f32>,
+    opponent_range: Vec<f32>,
     spot: Option<SpotView>,
     head: Vec<f32>,
     grid: Vec<f32>,
@@ -131,6 +132,7 @@ pub extern "C" fn bot_new(model: i32) -> i32 {
         bot: Bot::new(),
         to: 0,
         range: Vec::new(),
+        opponent_range: Vec::new(),
         spot: None,
         head: Vec::new(),
         grid: Vec::new(),
@@ -241,6 +243,14 @@ pub extern "C" fn bot_range(bot: i32) -> *const f32 {
     with_seat(bot, std::ptr::null(), |s| {
         s.range = s.bot.range(&s.model);
         s.range.as_ptr()
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn bot_opponent_range(bot: i32) -> *const f32 {
+    with_seat(bot, std::ptr::null(), |s| {
+        s.opponent_range = s.bot.opponent_range(&s.model);
+        s.opponent_range.as_ptr()
     })
 }
 

@@ -232,3 +232,39 @@ describe('createWorkerHandler select', () => {
     expect(disposed).toBe(2);
   });
 });
+
+describe('createWorkerHandler opponentRange', () => {
+  it("replies with the playing brain's range of the player after the observations", () => {
+    const seen: number[] = [];
+    const brain = {
+      observe: () => {
+        seen.push(seen.length);
+      },
+      decide: () => decision,
+      opponentRange: () => new Float32Array([seen.length]),
+    };
+    const replies: WorkerReply[] = [];
+    const handle = createWorkerHandler(
+      () => brain,
+      (reply) => replies.push(reply),
+      noLoader,
+      noCoach,
+    );
+    handle({ kind: 'observe', observations: [observation, observation] });
+    handle({ kind: 'opponentRange', id: 3 });
+    expect(replies).toEqual([{ id: 3, range: new Float32Array([2]) }]);
+  });
+
+  it('replies null for a brain without a range', () => {
+    const { brain } = fakeBrain();
+    const replies: WorkerReply[] = [];
+    const handle = createWorkerHandler(
+      () => brain,
+      (reply) => replies.push(reply),
+      noLoader,
+      noCoach,
+    );
+    handle({ kind: 'opponentRange', id: 4 });
+    expect(replies).toEqual([{ id: 4, range: null }]);
+  });
+});

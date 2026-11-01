@@ -966,6 +966,115 @@ fn an_impossible_step_keeps_the_previous_range() {
     assert_eq!(range_of(model(), &steps, &[]), before);
 }
 
+const HER: [Card; 2] = [0, 5];
+
+fn facing(mv: Move) -> Bot {
+    let mut bot = started(false, [400, 400], [10, 20], HER);
+    bot.set_style(Style {
+        aggression: 2.0,
+        bluff: 2.0,
+        tightness: 0.5,
+        sizing: 2.0,
+        stickiness: 2.0,
+    });
+    bot.acted(model(), false, mv, 0.0);
+    bot
+}
+
+fn holds(c: [Card; 2], cards: &[Card]) -> bool {
+    cards.contains(&c[0]) || cards.contains(&c[1])
+}
+
+fn assert_follows(range: &[f32], kind: ActionKind) {
+    let root = model().file.tree.root();
+    for (i, &w) in range.iter().enumerate() {
+        let c = pair_cards(i);
+        if holds(c, &HER) {
+            assert_eq!(w, 0.0, "{c:?}");
+            continue;
+        }
+        let bucket = model().abstraction.bucket(Street::Preflop, c, &[]);
+        let p = p_of(root, bucket, kind);
+        assert!((w - p).abs() < 1e-6, "{c:?}: {w} vs {p}");
+    }
+}
+
+#[test]
+fn the_opponent_range_is_uniform_before_he_acts_without_her_cards() {
+    let mut bot = started(false, [400, 400], [10, 20], HER);
+    let range = bot.opponent_range(model());
+    assert_eq!(range.len(), PAIRS);
+    for (i, &w) in range.iter().enumerate() {
+        let c = pair_cards(i);
+        assert_eq!(w, if holds(c, &HER) { 0.0 } else { 1.0 }, "{c:?}");
+    }
+}
+
+#[test]
+fn an_opponent_raise_narrows_his_range_by_the_neutral_strategy() {
+    let mut bot = facing(Move::RaiseTo(50));
+    let range = bot.opponent_range(model());
+    assert_follows(&range, ActionKind::RaiseTo(50));
+    let aces = range[pair_index(48, 49)];
+    let trash = range[pair_index(1, 20)];
+    assert!(aces > trash, "aces {aces} vs seven deuce {trash}");
+    assert!(bot.history().is_empty());
+}
+
+#[test]
+fn an_opponent_call_narrows_differently_from_a_raise() {
+    let called = facing(Move::Call).opponent_range(model());
+    assert_follows(&called, ActionKind::Call);
+    assert_ne!(called, facing(Move::RaiseTo(50)).opponent_range(model()));
+}
+
+#[test]
+fn the_board_leaves_the_opponent_range() {
+    let mut bot = facing(Move::Call);
+    bot.acted(model(), true, Move::Check, 0.0);
+    let board = [10, 20, 30];
+    bot.street(model(), &board);
+    let range = bot.opponent_range(model());
+    for (i, &w) in range.iter().enumerate() {
+        if holds(pair_cards(i), &board) {
+            assert_eq!(w, 0.0, "{:?}", pair_cards(i));
+        }
+    }
+    assert!(range.iter().any(|&w| w > 0.0));
+}
+
+#[test]
+fn a_second_read_on_the_flop_gives_the_same_range() {
+    let flop = || {
+        let mut bot = facing(Move::Call);
+        bot.acted(model(), true, Move::Check, 0.0);
+        bot.street(model(), &[10, 20, 30]);
+        bot.acted(model(), true, Move::Check, 0.0);
+        bot
+    };
+    let mut read = flop();
+    let first = read.opponent_range(model());
+    read.acted(model(), false, Move::RaiseTo(20), 0.0);
+    assert_eq!(
+        read.opponent_range(model()),
+        flop_after_bet(flop()).opponent_range(model())
+    );
+    assert_ne!(read.opponent_range(model()), first);
+}
+
+fn flop_after_bet(mut bot: Bot) -> Bot {
+    bot.acted(model(), false, Move::RaiseTo(20), 0.0);
+    bot
+}
+
+#[test]
+fn an_opponent_action_with_no_node_keeps_his_range() {
+    let mut bot = facing(Move::RaiseTo(50));
+    let before = bot.opponent_range(model());
+    bot.acted(model(), false, Move::RaiseTo(150), 0.0);
+    assert_eq!(bot.opponent_range(model()), before);
+}
+
 fn on_the_flop(hole: [Card; 2]) -> (Bot, Legal) {
     let mut bot = started(false, [400, 400], [10, 20], hole);
     bot.acted(model(), false, Move::Call, 0.3);

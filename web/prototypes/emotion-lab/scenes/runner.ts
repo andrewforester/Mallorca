@@ -1,9 +1,11 @@
 import type { ChatSignal, Engine, Impulse, Pad, TableEvent } from '../../../src/emotion/index.ts';
 import { formatCard, parseCards } from '../../../src/cards/index.ts';
 import type { Card, Rng } from '../../../src/cards/index.ts';
-import { equityVsRange, pheEvaluator } from '../../../src/equity/index.ts';
+import { equityVsRange } from '../../../src/equity/index.ts';
 import type { WeightedHands } from '../../../src/equity/index.ts';
+import { liveRange } from '../../../src/talk/range.ts';
 import type { GazeTarget } from '../face/avatar.ts';
+import type { Ranges } from './blueprint.ts';
 import type { Beat, Hand, Scene } from './scenes.ts';
 
 export interface TableView {
@@ -59,21 +61,6 @@ const pct = (x: number): string => `${Math.round(x * 100)}%`;
 export const DEFAULT_STACK_BB = 100;
 const STREETS_LEFT: Readonly<Record<number, number>> = { 0: 3, 3: 2, 4: 1, 5: 0 };
 
-export function narrowed(
-  board: readonly Card[],
-  hero: readonly [Card, Card],
-  top: number,
-): WeightedHands {
-  if (top >= 1 || board.length < 3) {
-    return RANDOM_RANGE;
-  }
-  const dead = new Set<Card>([...board, ...hero]);
-  const ranked = RANDOM_RANGE.filter((h) => !dead.has(h.cards[0]) && !dead.has(h.cards[1]))
-    .map((h) => ({ h, rank: pheEvaluator.rank([h.cards[0], h.cards[1], ...board]) }))
-    .sort((a, b) => b.rank - a.rank);
-  return ranked.slice(0, Math.max(1, Math.round(ranked.length * top))).map((r) => r.h);
-}
-
 const cache = new Map<string, number>();
 
 export function boardOf(hand: Hand): Card[] {
@@ -83,10 +70,15 @@ export function boardOf(hand: Hand): Card[] {
 export interface Runner {
   start(scene: Scene): void;
   update(elapsed: number): void;
-  equityAt(hand: number, boardCount: number, revealed: boolean): number;
+  equityAt(hand: number, boardCount: number, revealed: boolean, after?: number): number;
 }
 
-export function createRunner(engine: Engine, hooks: RunnerHooks, makeRng: () => Rng): Runner {
+export function createRunner(
+  engine: Engine,
+  hooks: RunnerHooks,
+  makeRng: () => Rng,
+  ranges?: Ranges,
+): Runner {
   let scene: Scene | null = null;
   let next = 0;
   let handIndex = 0;
@@ -95,7 +87,7 @@ export function createRunner(engine: Engine, hooks: RunnerHooks, makeRng: () => 
   let potBb = 0;
   let investedBb = 0;
   let equity: number | null = null;
-  let narrowTop = 1;
+  let narrowAfter = 0;
 
   const moneyNow = () => {
     const stack = scene?.hands[handIndex]?.stackBb ?? DEFAULT_STACK_BB;
@@ -107,12 +99,17 @@ export function createRunner(engine: Engine, hooks: RunnerHooks, makeRng: () => 
     };
   };
 
-  const equityAt = (h: number, count: number, open: boolean, top = 1): number => {
+  const rangeOf = (hand: Hand, board: Card[], after: number): WeightedHands => {
+    const weights = after > 0 ? ranges?.(hand, after) : null;
+    return weights ? liveRange(weights, [...pair(hand.hero), ...board]) : RANDOM_RANGE;
+  };
+
+  const equityAt = (h: number, count: number, open: boolean, after = 0): number => {
     const hand = scene?.hands[h];
     if (!hand) {
       return 0.5;
     }
-    const key = `${scene?.id}:${h}:${count}:${open}:${top}`;
+    const key = `${scene?.id}:${h}:${count}:${open}:${after}:${ranges ? 'blueprint' : ''}`;
     const known = cache.get(key);
     if (known !== undefined) {
       return known;
@@ -121,7 +118,7 @@ export function createRunner(engine: Engine, hooks: RunnerHooks, makeRng: () => 
     const range: WeightedHands =
       open && hand.villain
         ? [{ cards: pair(hand.villain), weight: 1 }]
-        : narrowed(board, pair(hand.hero), top);
+        : rangeOf(hand, board, after);
     const value = equityVsRange(pair(hand.hero), range, board, {
       rng: makeRng(),
       samples: open ? 20000 : 4000,
@@ -148,7 +145,7 @@ export function createRunner(engine: Engine, hooks: RunnerHooks, makeRng: () => 
   };
 
   const refresh = (): void => {
-    equity = equityAt(handIndex, boardCount, revealed, narrowTop);
+    equity = equityAt(handIndex, boardCount, revealed, narrowAfter);
   };
 
   const money = (beat: Extract<Beat, { do: 'deal' | 'pot' }>): void => {
@@ -163,7 +160,7 @@ export function createRunner(engine: Engine, hooks: RunnerHooks, makeRng: () => 
         handIndex = beat.hand ?? 0;
         boardCount = 0;
         revealed = false;
-        narrowTop = 1;
+        narrowAfter = 0;
         money({ ...beat, potBb: beat.potBb ?? 3, investedBb: beat.investedBb ?? 1.5 });
         refresh();
         send(
@@ -221,9 +218,9 @@ export function createRunner(engine: Engine, hooks: RunnerHooks, makeRng: () => 
         });
         return true;
       case 'narrow':
-        narrowTop = beat.top;
+        narrowAfter = beat.after;
         refresh();
-        send(`Его диапазон сужается до верхних ${pct(beat.top)} рук: эквити ${pct(equity ?? 0)}`, {
+        send(`Его диапазон по блупринту после его действия: эквити ${pct(equity ?? 0)}`, {
           kind: 'street',
           equity: equity ?? 0.5,
           ...moneyNow(),

@@ -5,6 +5,7 @@ export { createEngine } from './engine.ts';
 export type { Engine, Snapshot } from './engine.ts';
 export { LOAD_SOURCES } from './load.ts';
 export type { LoadReading, LoadSource } from './load.ts';
+export { OVERLOAD_MASK_LOSS, maskOf } from './mask.ts';
 export { GAME_MOOD } from './mood.ts';
 export type { MoodConfig, Octant } from './mood.ts';
 export type { BigFive, Personality, Traits } from './personality.ts';

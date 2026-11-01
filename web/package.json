@@ -22,6 +22,7 @@
     "lab": "vite --open /prototypes/emotion-lab/",
     "lab:shots": "node prototypes/emotion-lab/capture.ts",
     "lab:report": "node prototypes/emotion-lab/report.ts",
+    "lab:talk-cases": "node prototypes/emotion-lab/talkCases.ts",
     "contact": "VITE_SUPABASE_URL=http://talk.test VITE_SUPABASE_ANON_KEY=contact-anon-key npm run build && node e2e/contact.ts",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write . && eslint . --fix"

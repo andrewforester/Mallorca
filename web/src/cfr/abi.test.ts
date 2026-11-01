@@ -203,10 +203,25 @@ describe('the coach exports of mallorca.wasm', () => {
     bot.free();
   });
 
+  it("narrows the player's range after his call and drops her cards", () => {
+    const bot = preflopBot();
+    const before = bot.opponentRange() ?? new Float32Array();
+    const open = bot.decide(OPEN, 0.5);
+    bot.acted(true, open, 0.5);
+    bot.acted(false, { kind: 'call' }, 0.5);
+    const after = bot.opponentRange() ?? new Float32Array();
+    expect(after.length).toBe(1326);
+    expect([before[pairIndex(48, 49)], after[pairIndex(48, 49)]]).toEqual([0, 0]);
+    expect(before.every((w) => w === 0 || w === 1)).toBe(true);
+    expect(after.some((w) => w > 0 && w < 1)).toBe(true);
+    bot.free();
+  });
+
   it('answers null for a freed bot', () => {
     const bot = preflopBot();
     bot.free();
     expect(bot.range()).toBeNull();
+    expect(bot.opponentRange()).toBeNull();
     expect(bot.spot(OPEN)).toBeNull();
   });
 });

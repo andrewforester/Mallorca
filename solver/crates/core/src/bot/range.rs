@@ -23,6 +23,22 @@ impl Bot {
         let board = self.hand.as_ref().map_or(&[][..], |h| &h.board);
         range_of(model, self.history(), board)
     }
+
+    pub fn opponent_range(&mut self, model: &Model) -> Vec<f32> {
+        let Some(hand) = self.hand.as_mut() else {
+            return range_of(model, &[], &[]);
+        };
+        let mut range = cached_range(model, &hand.opponent, &hand.board, &mut hand.buckets);
+        if let Some(hole) = hand.hole {
+            for (i, w) in range.iter_mut().enumerate() {
+                let c = pair_cards(i);
+                if hole.contains(&c[0]) || hole.contains(&c[1]) {
+                    *w = 0.0;
+                }
+            }
+        }
+        range
+    }
 }
 
 pub(crate) fn action_probability(model: &Model, node: NodeId, bucket: u16, action: usize) -> f32 {
@@ -57,7 +73,25 @@ fn styled_probability(
     }
 }
 
+pub(crate) type Buckets = Vec<(Street, Vec<Card>, Vec<u16>)>;
+
+fn buckets_of<'a>(model: &Model, cache: &'a mut Buckets, step: &Step) -> &'a [u16] {
+    let found = cache
+        .iter()
+        .position(|e| e.0 == step.street && e.1 == step.board);
+    let i = found.unwrap_or_else(|| {
+        let buckets = model.abstraction.buckets(step.street, &step.board);
+        cache.push((step.street, step.board.clone(), buckets));
+        cache.len() - 1
+    });
+    &cache[i].2
+}
+
 pub(crate) fn range_of(model: &Model, steps: &[Step], board: &[Card]) -> Vec<f32> {
+    cached_range(model, steps, board, &mut Vec::new())
+}
+
+fn cached_range(model: &Model, steps: &[Step], board: &[Card], cache: &mut Buckets) -> Vec<f32> {
     let mut range: Vec<f32> = (0..PAIRS)
         .map(|i| {
             let c = pair_cards(i);
@@ -69,11 +103,11 @@ pub(crate) fn range_of(model: &Model, steps: &[Step], board: &[Card]) -> Vec<f32
         })
         .collect();
     for step in steps {
-        let buckets = model.abstraction.buckets(step.street, &step.board);
+        let buckets = buckets_of(model, cache, step);
         let mut by_bucket: HashMap<u16, f32> = HashMap::new();
         let next: Vec<f32> = range
             .iter()
-            .zip(&buckets)
+            .zip(buckets)
             .map(|(&w, &bucket)| {
                 if w == 0.0 || bucket == u16::MAX {
                     return 0.0;

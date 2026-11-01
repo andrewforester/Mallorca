@@ -8,10 +8,12 @@ export type WorkerRequest =
   | { kind: 'observe'; observations: Observation[] }
   | { kind: 'decide'; id: number; legal: LegalActions; style?: BotStyle }
   | { kind: 'select'; id: number; opponent: Opponent; seed: number }
-  | { kind: 'coach'; id: number; observations: Observation[]; legal: LegalActions; pot: number };
+  | { kind: 'coach'; id: number; observations: Observation[]; legal: LegalActions; pot: number }
+  | { kind: 'opponentRange'; id: number };
 
 export type WorkerReply =
   | { id: number; decision: Decision }
   | { id: number; opponent: Opponent }
   | { id: number; facts: CoachFacts }
+  | { id: number; range: Float32Array | null }
   | { id: number; error: string };
