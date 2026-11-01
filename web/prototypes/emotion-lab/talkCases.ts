@@ -1,10 +1,10 @@
 import { writeFileSync } from 'node:fs';
 import { formatCard, mulberry32 } from '../../src/cards/index.ts';
 import type { Card } from '../../src/cards/index.ts';
-import { MALLORCA, createEngine } from '../../src/emotion/index.ts';
+import { MALLORCA, createEngine, maskOf } from '../../src/emotion/index.ts';
 import type { Personality, Snapshot } from '../../src/emotion/index.ts';
 import { characterOf, feelingState } from '../../src/conversation/index.ts';
-import { wordsOf } from '../../src/persona/index.ts';
+import { PRESENTING_EFFORT, wordsOf } from '../../src/persona/index.ts';
 import type { StrengthClass } from '../../src/persona/index.ts';
 import { LAB_MOOD } from './lab.ts';
 import { PROFILES } from './profiles.ts';
@@ -214,7 +214,15 @@ function caseOf(scene: Scene, si: number, person: (typeof PEOPLE)[number], pi: n
     facts,
     intent,
     mood: wordsOf(m.snapshot),
-    feeling: feelingState(m.snapshot, acting),
+    feeling: feelingState(
+      m.snapshot,
+      acting,
+      maskOf(
+        m.snapshot.traits.mask,
+        acting === null ? 0 : PRESENTING_EFFORT.bluff,
+        m.snapshot.load.overload,
+      ),
+    ),
     character: characterOf(person.personality),
     recent: m.lines.slice(-MAX_RECENT),
     ...(reply ? { text: russian ? spot.ru : spot.en, quick: false } : {}),

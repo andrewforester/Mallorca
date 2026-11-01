@@ -590,7 +590,6 @@ describe('session recording', () => {
     expect(session.getState().conversation).toEqual({
       available: false,
       on: true,
-      level: 'subtle',
       lines: [],
       bubbles: [null, null],
     });

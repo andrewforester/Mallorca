@@ -1,7 +1,7 @@
 import type { Rng } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex, Table } from '../engine/index.ts';
 import { EMPTY_SUMMARY, createConversation, endsHand, since } from '../conversation/index.ts';
-import type { Level, LineIntent, SessionSummary, Conversation } from '../conversation/index.ts';
+import type { LineIntent, SessionSummary, Conversation } from '../conversation/index.ts';
 import type { Moment, Persona, Signal } from '../persona/index.ts';
 import type { Opponent } from './opponent.ts';
 import {
@@ -30,7 +30,6 @@ export type QuickPhrase = 'niceHand' | 'bluffing' | 'notThisTime';
 export interface ConversationState {
   available: boolean;
   on: boolean;
-  level: Level;
   lines: ChatLine[];
   bubbles: [ChatLine | null, ChatLine | null];
 }
@@ -59,7 +58,6 @@ export interface SessionConversation {
   say(text: string): void;
   quick(id: QuickPhrase, text: string): void;
   setOn(on: boolean): void;
-  setLevel(level: Level): void;
   attach(client: ConversationClient): void;
   handDone(hands: number): void;
   leave(): void;
@@ -83,8 +81,8 @@ interface Talker {
   her: Persona;
 }
 
-export function initialConversation(on: boolean, level: Level): ConversationState {
-  return { available: false, on, level, lines: [], bubbles: [null, null] };
+export function initialConversation(on: boolean): ConversationState {
+  return { available: false, on, lines: [], bubbles: [null, null] };
 }
 
 class Wiring implements SessionConversation {
@@ -108,8 +106,7 @@ class Wiring implements SessionConversation {
 
   begin(opponent: Opponent, rng: Rng): void {
     this.sendSummary();
-    const { level } = this.host.read();
-    this.conversation = createConversation({ seat: this.setup.botSeat, rng, level });
+    this.conversation = createConversation({ seat: this.setup.botSeat, rng });
     this.solver = opponent !== 'math';
     this.herRaised = false;
     this.acted = false;
@@ -155,11 +152,6 @@ class Wiring implements SessionConversation {
   setOn(on: boolean): void {
     this.update({ on });
     this.connect();
-  }
-
-  setLevel(level: Level): void {
-    this.conversation?.setLevel(level);
-    this.update({ level });
   }
 
   attach(client: ConversationClient): void {

@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { MALLORCA, createEngine } from '../emotion/index.ts';
 import type { Personality } from '../emotion/index.ts';
-import { ACTING_EFFORT, FEELING_VERSION, characterOf, feelingState } from './state.ts';
+import type { Snapshot } from '../emotion/index.ts';
+import { FEELING_VERSION, characterOf, feelingState } from './state.ts';
+
+const plain = (s: Snapshot) => feelingState(s, null, s.traits.mask);
 
 function badBeat(personality: Personality = MALLORCA) {
   const engine = createEngine(personality);
@@ -15,11 +18,11 @@ function badBeat(personality: Personality = MALLORCA) {
 
 describe('the feeling sent to the table talk server', () => {
   it('names its version', () => {
-    expect(feelingState(createEngine(MALLORCA).snapshot(), null).version).toBe(FEELING_VERSION);
+    expect(plain(createEngine(MALLORCA).snapshot()).version).toBe(FEELING_VERSION);
   });
 
   it('is calm and empty before anything happens', () => {
-    const state = feelingState(createEngine(MALLORCA).snapshot(), null);
+    const state = plain(createEngine(MALLORCA).snapshot());
     expect(state.emotions).toEqual([]);
     expect(state.overload.level).toBeLessThan(0.1);
     expect(state.overload.source).toBeNull();
@@ -27,7 +30,7 @@ describe('the feeling sent to the table talk server', () => {
   });
 
   it('keeps the three strongest emotions, strongest first, rounded', () => {
-    const state = feelingState(badBeat(), null);
+    const state = plain(badBeat());
     expect(state.emotions.length).toBeGreaterThan(0);
     expect(state.emotions.length).toBeLessThanOrEqual(3);
     const values = state.emotions.map((e) => e.intensity);
@@ -40,28 +43,19 @@ describe('the feeling sent to the table talk server', () => {
   });
 
   it('reports overload with its dominant source', () => {
-    const state = feelingState(badBeat(), null);
+    const state = plain(badBeat());
     expect(state.overload.level).toBeGreaterThan(0.1);
     expect(state.overload.source).not.toBeNull();
   });
 
   it('gives the mood octant of the snapshot', () => {
     const s = badBeat();
-    expect(feelingState(s, null).mood).toEqual(s.octant);
+    expect(plain(s).mood).toEqual(s.octant);
   });
 
-  it('raises the mask while she acts a strength she does not have', () => {
+  it('sends the mask it is given, rounded, with the strength she acts', () => {
     const s = createEngine(MALLORCA).snapshot();
-    const acting = feelingState(s, 'strong').shows;
-    expect(acting.acting).toBe('strong');
-    const habit = MALLORCA.suppression;
-    expect(acting.mask).toBeCloseTo(habit + (1 - habit) * ACTING_EFFORT, 2);
-  });
-
-  it('loses the mask under overload', () => {
-    const calm = feelingState(createEngine(MALLORCA).snapshot(), 'strong').shows.mask;
-    const beaten = feelingState(badBeat(), 'strong').shows.mask;
-    expect(beaten).toBeLessThan(calm);
+    expect(feelingState(s, 'strong', 0.7412).shows).toEqual({ mask: 0.74, acting: 'strong' });
   });
 });
 

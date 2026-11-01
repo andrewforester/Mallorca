@@ -1,26 +1,15 @@
-import type { Level } from '../game/index.ts';
 import { t } from './i18n.ts';
 import { voiceAvailable } from './avatar/voice.ts';
 import type { Preferences } from './usePreferences.ts';
-
-const LEVELS: readonly Level[] = ['obvious', 'subtle', 'hidden'];
 
 export interface SettingsProps {
   preferences: Preferences;
   conversation?: boolean;
   conversationOn?: boolean;
-  tells?: Level;
   onConversation?: (on: boolean) => void;
-  onTells?: (level: Level) => void;
 }
 
-function ConversationSettings({
-  preferences,
-  conversationOn,
-  tells,
-  onConversation,
-  onTells,
-}: SettingsProps) {
+function ConversationSettings({ preferences, conversationOn, onConversation }: SettingsProps) {
   const on = conversationOn ?? preferences.conversation;
   return (
     <>
@@ -36,25 +25,6 @@ function ConversationSettings({
           }}
         />
         <span>{t('conversation.settings.conversation')}</span>
-      </label>
-      <label class="menu-toggle menu-select">
-        <span>{t('conversation.settings.tells')}</span>
-        <select
-          data-testid="tells"
-          value={tells ?? preferences.tells}
-          onChange={(event) => {
-            const value = (event.currentTarget as HTMLSelectElement).value;
-            const level = LEVELS.find((candidate) => candidate === value) ?? 'subtle';
-            preferences.setTells(level);
-            onTells?.(level);
-          }}
-        >
-          {LEVELS.map((level) => (
-            <option key={level} value={level}>
-              {t(`conversation.settings.levels.${level}`)}
-            </option>
-          ))}
-        </select>
       </label>
     </>
   );
