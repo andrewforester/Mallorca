@@ -3,6 +3,7 @@ import { mulberry32, parseCard } from '../cards/index.ts';
 import { applyAction } from '../engine/hand.ts';
 import { call, check, deckOf, raiseTo, startHand } from '../engine/testDeck.ts';
 import type { Action, Step } from '../engine/types.ts';
+import { maskOf } from '../emotion/index.ts';
 import { JOURNAL_SIZE } from './journal.ts';
 import { createPersona } from './persona.ts';
 import type { Moment, Persona } from './persona.ts';
@@ -148,5 +149,66 @@ describe('a persona at the table', () => {
     strong.act(call, 1000);
     strong.act(check, 1500);
     expect(strong.persona.view(1500).stance).toBe('hide');
+  });
+
+  it('takes her class from her equity against the range she reads', () => {
+    const played = deal('Kh Qd', '7c 6c', 'Kc 8d 4s 2h 3c');
+    [call, check, raiseTo(40), raiseTo(120)].forEach((action, k) =>
+      played.act(action, (k + 1) * 500),
+    );
+    expect(played.persona.strength()).toBe('strong');
+    expect(played.persona.view(2000).presenting?.stance).toBe('hide');
+    played.persona.narrow(SETS_AND_TWO_PAIR, 1);
+    expect(played.persona.strength()).toBe('weak');
+    expect(played.persona.view(2000).presenting).toBeNull();
+  });
+
+  it('presents strength after her weak bet, with the bluff effort', () => {
+    const weak = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
+    weak.act(call, 1000);
+    weak.act(raiseTo(60), 1500);
+    expect(weak.persona.view(1500).presenting).toEqual({
+      stance: 'bluff',
+      shows: 'strong',
+      effort: 0.6,
+    });
+  });
+
+  it('presents weakness on a strong hand, with the hide effort', () => {
+    const strong = deal('As Ah', 'Js Ts', 'Kc 9d 2s 3h Qh');
+    strong.act(call, 1000);
+    strong.act(check, 1500);
+    expect(strong.persona.view(1500).presenting).toEqual({
+      stance: 'hide',
+      shows: 'weak',
+      effort: 0.5,
+    });
+  });
+
+  it('hides the share of her feeling her mask and her effort give', () => {
+    const weak = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
+    weak.act(call, 1000);
+    const calm = weak.persona.view(1000);
+    expect(calm.presenting).toBeNull();
+    expect(calm.mask).toBeCloseTo(
+      maskOf(calm.snapshot.traits.mask, 0, calm.snapshot.load.overload),
+      12,
+    );
+    weak.act(raiseTo(60), 1500);
+    const acting = weak.persona.view(1500);
+    expect(acting.mask).toBeCloseTo(
+      maskOf(acting.snapshot.traits.mask, 0.6, acting.snapshot.load.overload),
+      12,
+    );
+    expect(acting.mask).toBeGreaterThan(calm.mask);
+  });
+
+  it('judges her hand at the end before his cards were shown', () => {
+    const played = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
+    [call, check, check, check, check, check, raiseTo(40)].forEach((action, k) =>
+      played.act(action, (k + 1) * 500),
+    );
+    const end = played.act(call, 5000);
+    expect(end.find((m) => m.event.type === 'handEnded')?.strength).toBe('weak');
   });
 });
