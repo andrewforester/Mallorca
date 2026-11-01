@@ -3,13 +3,13 @@ import { basename, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Action } from '../../src/engine/index.ts';
 import { checkOrCall } from '../../src/engine/index.ts';
-import type { BotStyle, Brain } from '../../src/brains/index.ts';
+import type { BotBias, Brain } from '../../src/brains/index.ts';
 import { createMathBrain } from '../../src/brains/index.ts';
 import type { Rng } from '../../src/cards/index.ts';
 import type { CfrModel, ShippedStrategyKey } from '../../src/cfr/index.ts';
 import { SHIPPED_STRATEGIES, createCfrBrain, loadCfrModel } from '../../src/cfr/index.ts';
-import { strengthOf } from '../../src/talk/index.ts';
-import type { Level } from '../../src/talk/index.ts';
+import { strengthOf } from '../../src/persona/index.ts';
+import type { Level } from '../../src/conversation/index.ts';
 import type { ArenaBot } from './arenaBot.ts';
 import { createExploiter } from './exploiter.ts';
 import { createReader } from './reader.ts';
@@ -64,22 +64,22 @@ const SHIPPED: ShippedStrategyKey = 'cfr';
 const cfrModels = new Map<string, CfrModel>();
 const read = (url: URL) => readFile(url);
 
-function cfrBot(key: string, style?: BotStyle): BotFactory {
+function cfrBot(key: string, bias?: BotBias): BotFactory {
   return (rng) => {
     const model = cfrModels.get(key);
     if (model === undefined) {
       throw new Error('The cfr bot needs prepareBots before it plays');
     }
     const brain = createCfrBrain(model, rng);
-    if (style) brain.setStyle?.(style);
+    if (bias) brain.setBias?.(bias);
     return fromBrain(brain);
   };
 }
 
 const cfr = cfrBot(SHIPPED);
 
-const styled = (style: Omit<BotStyle, 'sizing' | 'stickiness'>): BotFactory =>
-  cfrBot(SHIPPED, { ...style, sizing: 1, stickiness: 1 / style.tightness });
+const biased = (bias: Omit<BotBias, 'sizing' | 'stickiness'>): BotFactory =>
+  cfrBot(SHIPPED, { ...bias, sizing: 1, stickiness: 1 / bias.tightness });
 
 const talking =
   (level: Level): BotFactory =>
@@ -110,9 +110,9 @@ export const BOTS: Record<
 > = {
   math,
   cfr,
-  'cfr-tilted': styled({ aggression: 1.6, bluff: 1.8, tightness: 0.85 }),
-  'cfr-confident': styled({ aggression: 1.15, bluff: 1, tightness: 0.95 }),
-  'cfr-cautious': styled({ aggression: 0.9, bluff: 0.9, tightness: 1.2 }),
+  'cfr-tilted': biased({ aggression: 1.6, bluff: 1.8, tightness: 0.85 }),
+  'cfr-confident': biased({ aggression: 1.15, bluff: 1, tightness: 0.95 }),
+  'cfr-cautious': biased({ aggression: 0.9, bluff: 0.9, tightness: 1.2 }),
   'cfr-talk-obvious': talking('obvious'),
   'cfr-talk-subtle': talking('subtle'),
   'cfr-talk-hidden': talking('hidden'),
@@ -126,8 +126,8 @@ export const BOTS: Record<
 
 export type BotName = keyof typeof BOTS;
 
-const NEUTRAL: BotStyle = { aggression: 1, bluff: 1, tightness: 1, sizing: 1, stickiness: 1 };
-const STYLE_MARK = '@';
+const NEUTRAL: BotBias = { aggression: 1, bluff: 1, tightness: 1, sizing: 1, stickiness: 1 };
+const BIAS_MARK = '@';
 
 function cfrFile(name: string): string | null {
   return name.startsWith(CFR_FILE) && name.length > CFR_FILE.length
@@ -135,41 +135,41 @@ function cfrFile(name: string): string | null {
     : null;
 }
 
-function splitStyle(name: string): { base: string; axes: string | null } {
-  const at = name.lastIndexOf(STYLE_MARK);
+function splitBias(name: string): { base: string; axes: string | null } {
+  const at = name.lastIndexOf(BIAS_MARK);
   return at < 0
     ? { base: name, axes: null }
     : { base: name.slice(0, at), axes: name.slice(at + 1) };
 }
 
-function parseAxes(axes: string): BotStyle | null {
-  const style: BotStyle = { ...NEUTRAL };
+function parseAxes(axes: string): BotBias | null {
+  const bias: BotBias = { ...NEUTRAL };
   for (const part of axes.split(',')) {
     const [key, raw] = part.split('=');
     const value = Number(raw);
     if (key === undefined || !Object.hasOwn(NEUTRAL, key) || !(value > 0)) return null;
-    style[key as keyof BotStyle] = value;
+    bias[key as keyof BotBias] = value;
   }
-  return style;
+  return bias;
 }
 
 const isCfr = (base: string): boolean => base === SHIPPED || cfrFile(base) !== null;
 
-export function styleOfName(name: string): BotStyle | null {
-  const { base, axes } = splitStyle(name);
+export function biasOfName(name: string): BotBias | null {
+  const { base, axes } = splitBias(name);
   return axes === null || !isCfr(base) ? null : parseAxes(axes);
 }
 
 export function isBotName(name: string): boolean {
-  const { base, axes } = splitStyle(name);
-  if (axes !== null) return styleOfName(name) !== null;
+  const { base, axes } = splitBias(name);
+  if (axes !== null) return biasOfName(name) !== null;
   return Object.hasOwn(BOTS, base) || cfrFile(base) !== null;
 }
 
 export function botFactory(name: string): BotFactory {
-  const { base } = splitStyle(name);
-  const style = styleOfName(name);
-  if (style !== null) return cfrBot(base, style);
+  const { base } = splitBias(name);
+  const bias = biasOfName(name);
+  if (bias !== null) return cfrBot(base, bias);
   if (cfrFile(name) !== null) return cfrBot(name);
   if (!Object.hasOwn(BOTS, name)) {
     throw new Error(`unknown bot "${name}", choose from: ${Object.keys(BOTS).join(', ')}`);
@@ -187,7 +187,7 @@ function baseLabel(name: string): string {
 }
 
 export function botLabel(name: string): string {
-  const { base, axes } = splitStyle(name);
+  const { base, axes } = splitBias(name);
   if (axes === null) return baseLabel(name);
   const suffix = axes
     .split(',')
@@ -203,7 +203,7 @@ function strategyUrl(name: string): URL | null {
 }
 
 export async function prepareBots(names: readonly string[]): Promise<void> {
-  for (const name of names.map((n) => splitStyle(n).base)) {
+  for (const name of names.map((n) => splitBias(n).base)) {
     const key = cfrFile(name) === null && name.startsWith(SHIPPED) ? SHIPPED : name;
     const url = strategyUrl(key);
     if (url !== null && !cfrModels.has(key)) cfrModels.set(key, await loadCfrModel(url, read));

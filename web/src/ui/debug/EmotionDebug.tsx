@@ -6,7 +6,7 @@ import { DecisionSection } from './DecisionSection.tsx';
 import { JournalSection } from './JournalSection.tsx';
 import { PersonalitySection } from './PersonalitySection.tsx';
 import { StateSection } from './StateSection.tsx';
-import { StyleSection } from './StyleSection.tsx';
+import { BiasSection } from './BiasSection.tsx';
 import './debug.css';
 
 const KEY = 'mallorca.debugPanel';
@@ -68,7 +68,7 @@ export function EmotionDebug({ session }: { session: Session }) {
         >
           <PersonalitySection view={view} session={session} />
           <StateSection view={view} />
-          <StyleSection view={view} />
+          <BiasSection view={view} />
           <DecisionSection view={view} />
           <JournalSection view={view} />
         </aside>

@@ -232,7 +232,7 @@
     "quads": "Four of a kind",
     "straight-flush": "Straight flush"
   },
-  "talk": {
+  "conversation": {
     "tab": "Chat",
     "placeholder": "Say something to Mallorca",
     "send": "Send",
@@ -244,7 +244,7 @@
       "notThisTime": "Not this time"
     },
     "settings": {
-      "talk": "Table talk",
+      "conversation": "Table talk",
       "tells": "Tells",
       "levels": {
         "obvious": "Obvious",

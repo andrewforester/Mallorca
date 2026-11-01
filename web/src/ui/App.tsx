@@ -51,12 +51,12 @@ function useSessionState(session: Session) {
   return state;
 }
 
-function talkActions(session: Session, vm: ViewModel) {
+function conversationActions(session: Session, vm: ViewModel) {
   return {
-    talk: vm.talk.available,
-    talkOn: vm.talk.on,
-    tells: vm.talk.level,
-    onTalk: (on: boolean) => session.getState().setTalk(on),
+    conversation: vm.conversation.available,
+    conversationOn: vm.conversation.on,
+    tells: vm.conversation.level,
+    onConversation: (on: boolean) => session.getState().setConversation(on),
     onTells: (level: Level) => session.getState().setTells(level),
     onSay: (text: string) => session.getState().say(text),
     onQuick: (id: QuickPhrase, text: string) => session.getState().quick(id, text),
@@ -78,7 +78,7 @@ function faceSlot(session: Session, vm: ViewModel, preferences: Preferences) {
       session={session}
       cues={vm.face.cues}
       thinking={thinking}
-      line={vm.talk.herBubble}
+      line={vm.conversation.herBubble}
       voice={preferences.voice}
     />
   );
@@ -232,7 +232,7 @@ function Header({ app, vm, seed, drawer, preferences, coach }: HeaderProps) {
       coach={coach.toggle}
     >
       <HistoryMenu seed={seed} store={app.store} onNewGame={app.onNewGame} onOpen={drawer.dismiss}>
-        <Settings preferences={preferences} {...talkActions(app.session, vm)} />
+        <Settings preferences={preferences} {...conversationActions(app.session, vm)} />
       </HistoryMenu>
     </StatusBar>
   );

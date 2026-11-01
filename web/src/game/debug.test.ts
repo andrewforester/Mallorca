@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { BotStyle, Breakdown } from '../brains/index.ts';
+import type { BotBias, Breakdown } from '../brains/index.ts';
 import { CASH } from '../engine/index.ts';
 import type { LegalActions } from '../engine/index.ts';
-import { PERSONALITIES } from '../talk/index.ts';
+import { PERSONALITIES } from '../persona/index.ts';
 import { createSession } from './session.ts';
 import type { Session } from './session.ts';
 import type { SessionOptions } from './sessionTypes.ts';
@@ -11,13 +11,13 @@ import type { ScriptedBot } from './testBot.ts';
 
 interface ExplainingBot extends ScriptedBot {
   asked: (boolean | undefined)[];
-  styles: (BotStyle | undefined)[];
+  biases: (BotBias | undefined)[];
 }
 
 const breakdown: Breakdown = {
   moves: [{ kind: 'fold' }, { kind: 'call' }],
   base: [0.4, 0.6],
-  styled: [0.3, 0.7],
+  biased: [0.3, 0.7],
   chosen: 1,
 };
 
@@ -26,11 +26,11 @@ function explainingBot(): ExplainingBot {
   const bot: ExplainingBot = {
     ...inner,
     asked: [],
-    styles: [],
+    biases: [],
     select: (opponent) => Promise.resolve(opponent),
-    decide: async (legal: LegalActions, style?: BotStyle, explain?: boolean) => {
+    decide: async (legal: LegalActions, bias?: BotBias, explain?: boolean) => {
       bot.asked.push(explain);
-      bot.styles.push(style);
+      bot.biases.push(bias);
       const decision = await inner.decide(legal);
       return explain === true ? { ...decision, breakdown } : decision;
     },
@@ -85,9 +85,9 @@ describe('the emotion debug state', () => {
     expect(debug?.snapshot?.traits.composure).toBeGreaterThan(0);
     expect(debug?.journal.some((e) => e.event.kind === 'deal')).toBe(true);
     expect(bot.asked.every((a) => a === true)).toBe(true);
-    expect(debug?.sentStyle).toEqual(bot.styles.at(-1));
+    expect(debug?.sentBias).toEqual(bot.biases.at(-1));
     const table = session.getState().table;
-    expect(debug?.decision?.rows.map((r) => [r.move.label, r.base, r.styled, r.chosen])).toEqual([
+    expect(debug?.decision?.rows.map((r) => [r.move.label, r.base, r.biased, r.chosen])).toEqual([
       ['fold', 0.4, 0.3, false],
       ['call', 0.6, 0.7, true],
     ]);
@@ -119,13 +119,13 @@ describe('the emotion debug state', () => {
     expect(session.getState().debug?.snapshot?.sessionNetBb).toBe(0);
   });
 
-  it('follows her feeling but sends no style against the math bot', async () => {
+  it('follows her feeling but sends no bias against the math bot', async () => {
     const { session, bot } = open({ debug: true });
     await session.getState().start(CASH, 'math');
     await session.getState().act({ kind: 'passive' });
     const debug = session.getState().debug;
     expect(debug?.snapshot).not.toBeNull();
-    expect(debug?.sentStyle).toBeNull();
-    expect(bot.styles.every((style) => style === undefined)).toBe(true);
+    expect(debug?.sentBias).toBeNull();
+    expect(bot.biases.every((bias) => bias === undefined)).toBe(true);
   });
 });

@@ -1,4 +1,4 @@
-import type { BotStyle, Breakdown } from '../brains/index.ts';
+import type { BotBias, Breakdown } from '../brains/index.ts';
 import type { Card } from '../cards/index.ts';
 import type { Action, LegalActions } from '../engine/index.ts';
 
@@ -29,7 +29,7 @@ interface Exports {
     draw: number,
   ): number;
   decided_to(bot: number): number;
-  bot_style(
+  bot_bias(
     bot: number,
     aggression: number,
     bluff: number,
@@ -65,7 +65,7 @@ export interface CfrBot {
   street(board: readonly Card[]): void;
   acted(hero: boolean, action: Action, draw: number): void;
   decide(legal: LegalActions, draw: number): Action;
-  setStyle(style: BotStyle): void;
+  setBias(bias: BotBias): void;
   range(): Float32Array | null;
   opponentRange(): Float32Array | null;
   spot(legal: LegalActions): CfrSpot | null;
@@ -161,8 +161,8 @@ function readDecision(e: Exports, handle: number): Breakdown | null {
     toAction(all[2 + 2 * k] ?? -1, all[3 + 2 * k] ?? 0),
   );
   const base = Array.from(all.subarray(2 + 2 * count, 2 + 3 * count));
-  const styled = Array.from(all.subarray(2 + 3 * count, 2 + 4 * count));
-  return { moves, base, styled, chosen: all[1] ?? 0 };
+  const biased = Array.from(all.subarray(2 + 3 * count, 2 + 4 * count));
+  return { moves, base, biased, chosen: all[1] ?? 0 };
 }
 
 function bot(e: Exports, handle: number): CfrBot {
@@ -186,8 +186,8 @@ function bot(e: Exports, handle: number): CfrBot {
       const kind = e.decide(handle, ...legalArgs(legal), draw);
       return toAction(kind, e.decided_to(handle));
     },
-    setStyle({ aggression, bluff, tightness, sizing, stickiness }) {
-      e.bot_style(handle, aggression, bluff, tightness, sizing, stickiness);
+    setBias({ aggression, bluff, tightness, sizing, stickiness }) {
+      e.bot_bias(handle, aggression, bluff, tightness, sizing, stickiness);
     },
     range() {
       return floats(e, e.bot_range(handle), PAIRS);

@@ -13,7 +13,8 @@ const pure = [
   'src/cfr',
   'src/emotion',
   'src/face',
-  'src/talk',
+  'src/persona',
+  'src/conversation',
   'src/coach',
 ];
 
@@ -25,7 +26,8 @@ const LAYERS = [
   'cfr',
   'emotion',
   'face',
-  'talk',
+  'persona',
+  'conversation',
   'coach',
   'game',
   'ui',
@@ -54,7 +56,7 @@ const layer = (
 };
 
 const ARENA_MESSAGE =
-  'tools/arena may import from src only cards, engine, brains, cfr, talk and game/records';
+  'tools/arena may import from src only cards, engine, brains, cfr, persona, conversation and game/records';
 const VIEWER_MESSAGE = 'tools/arena/ui may import from src only game/records and types from engine';
 const GAME_OUTSIDE_RECORDS = '(^|/)src/game(/(?!records/)|$)';
 
@@ -103,7 +105,7 @@ const evaluatorGoldenLayer = {
       {
         patterns: [
           {
-            regex: '(^|/)src/(engine|brains|cfr|talk|game|ui|main\\.tsx)(/|$)',
+            regex: '(^|/)src/(engine|brains|cfr|persona|conversation|game|ui|main\\.tsx)(/|$)',
             message: EVALUATOR_GOLDEN_MESSAGE,
           },
         ],
@@ -152,11 +154,28 @@ export default tseslint.config(
   layer('cfr', ['cards', 'engine', 'brains'], [], ['src/cfr/**/*.test.ts']),
   layer('emotion', []),
   layer('face', ['emotion']),
-  layer('talk', ['cards', 'equity', 'emotion'], ['engine']),
-  layer('talk', ['cards', 'equity', 'emotion', 'engine'], [], ['src/talk/**/*.test.ts']),
+  layer('persona', ['cards', 'equity', 'emotion'], ['engine']),
+  layer('persona', ['cards', 'equity', 'emotion', 'engine'], [], ['src/persona/**/*.test.ts']),
+  layer('conversation', ['cards', 'emotion'], ['engine', 'persona']),
+  layer(
+    'conversation',
+    ['cards', 'equity', 'emotion', 'persona', 'engine'],
+    [],
+    ['src/conversation/**/*.test.ts', 'src/conversation/testSpeaker.ts'],
+  ),
   layer('coach', ['cards', 'equity', 'brains'], ['engine', 'cfr']),
   layer('coach', ['cards', 'equity', 'brains', 'engine', 'cfr'], [], ['src/coach/**/*.test.ts']),
-  layer('game', ['cards', 'equity', 'engine', 'brains', 'cfr', 'talk', 'coach', 'face']),
+  layer('game', [
+    'cards',
+    'equity',
+    'engine',
+    'brains',
+    'cfr',
+    'persona',
+    'conversation',
+    'coach',
+    'face',
+  ]),
   layer('ui', ['game']),
   layer('main', ['game', 'ui'], [], ['src/main.tsx']),
   arenaLayer,

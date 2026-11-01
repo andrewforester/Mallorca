@@ -3,7 +3,7 @@ import {
   createSession,
   onPageExit,
   openHandStore,
-  talkConnector,
+  conversationConnector,
   TOURNAMENT,
   workerBot,
 } from './game/index.ts';
@@ -11,7 +11,7 @@ import type { Session } from './game/index.ts';
 import { App } from './ui/App.tsx';
 import { createSynthPlayer } from './ui/sound/player.ts';
 import { t } from './ui/i18n.ts';
-import { readFace, readTalk, readTells } from './ui/preferences.ts';
+import { readFace, readConversation, readTells } from './ui/preferences.ts';
 import '@fontsource/cormorant-garamond/latin-500.css';
 import '@fontsource/cormorant-garamond/latin-600.css';
 import '@fontsource/inter/latin-400.css';
@@ -44,7 +44,7 @@ const player = createSynthPlayer();
 let nextSeed: number | null = numberParam('seed');
 let session: Session | null = null;
 const store = await openHandStore();
-const connectTalk = talkConnector({
+const connectConversation = conversationConnector({
   url: import.meta.env.VITE_SUPABASE_URL as string | undefined,
   anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
 });
@@ -71,8 +71,8 @@ function mount(farewell = false): void {
     humanSeat: HUMAN_SEAT,
     names: [t('seat.you'), t('seat.bot')],
     mode: TOURNAMENT,
-    connectTalk,
-    talkOn: readTalk(),
+    connectConversation,
+    conversationOn: readConversation(),
     tells: readTells(),
     faceOn: readFace(),
     debug: import.meta.env.DEV,

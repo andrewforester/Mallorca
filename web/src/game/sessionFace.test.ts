@@ -4,6 +4,9 @@ import { createSession } from './session.ts';
 import type { Session } from './session.ts';
 import { shovingBot } from './testBot.ts';
 import { toViewModel } from './viewModel.ts';
+import { initialFace, sessionFace } from './sessionFace.ts';
+import { createPersona } from '../persona/index.ts';
+import { mulberry32 } from '../cards/index.ts';
 
 interface Table {
   session: Session;
@@ -71,12 +74,57 @@ describe('her face in the session', () => {
     expect(table.session.getState().face.cues).toEqual([]);
   });
 
+  it('a face switched off and on mid-hand shows no old pulse', async () => {
+    const steady = open();
+    const toggled = open();
+    await steady.session.getState().start();
+    await toggled.session.getState().start();
+    await playHands(steady, 3);
+    await playHands(toggled, 3);
+    toggled.session.getState().setFace(false);
+    await playHands(steady, 6);
+    await playHands(toggled, 6);
+    toggled.session.getState().setFace(true);
+    const lastId = (t: Table) => t.session.getState().face.cues.at(-1)?.id ?? 0;
+    const since = [lastId(steady), lastId(toggled)] as const;
+    await playHands(steady, 1);
+    await playHands(toggled, 1);
+    const fresh = (t: Table, id: number) =>
+      t.session
+        .getState()
+        .face.cues.filter((c) => c.id > id)
+        .map(({ id: _id, ...cue }) => cue);
+    expect(fresh(toggled, since[1])).toEqual(fresh(steady, since[0]));
+  });
+
   it('puts the switch and the cues in the view model', async () => {
     const table = open();
     await table.session.getState().start();
     const vm = toViewModel(table.session.getState(), 1);
     expect(vm.face.on).toBe(true);
     expect(vm.face.cues).toBe(table.session.getState().face.cues);
+  });
+
+  it('reads a new persona from its first entry', () => {
+    const old = createPersona({ seat: 0, rng: mulberry32(1) });
+    for (let k = 0; k < 20; k += 1) old.hear(['friendly']);
+    const next = createPersona({ seat: 0, rng: mulberry32(2) });
+    let current = old;
+    let face = initialFace(true);
+    const watcher = sessionFace({
+      read: () => face,
+      write: (f) => {
+        face = f;
+      },
+      persona: () => current,
+      now: () => 0,
+      botSeat: 0,
+    });
+    watcher.observe([]);
+    current = next;
+    next.hear(['mockBluff', 'mockBluff']);
+    watcher.observe([]);
+    expect(face.cues.some((c) => c.kind === 'pulse')).toBe(true);
   });
 
   it('reads the face ahead in time without changing her feeling', async () => {

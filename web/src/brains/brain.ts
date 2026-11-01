@@ -11,7 +11,7 @@ import { VillainSpectrumTracker } from './villainModel.ts';
 export interface Breakdown {
   moves: Action[];
   base: number[];
-  styled: number[];
+  biased: number[];
   chosen: number;
 }
 
@@ -22,7 +22,7 @@ export interface Decision {
   breakdown?: Breakdown;
 }
 
-export interface BotStyle {
+export interface BotBias {
   aggression: number;
   bluff: number;
   tightness: number;
@@ -33,7 +33,7 @@ export interface BotStyle {
 export interface Brain {
   observe(o: Observation): void;
   decide(legal: LegalActions): Decision;
-  setStyle?(style: BotStyle): void;
+  setBias?(bias: BotBias): void;
   explain?(): Breakdown | null;
   dispose?(): void;
 }

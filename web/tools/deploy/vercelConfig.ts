@@ -17,7 +17,7 @@ const CSP = 'Content-Security-Policy';
 function originOf(url: string): string {
   const parsed = new URL(url);
   if (parsed.protocol !== 'https:') {
-    throw new Error(`the talk server must use https, got ${url}`);
+    throw new Error(`the conversation server must use https, got ${url}`);
   }
   return parsed.origin;
 }

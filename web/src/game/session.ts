@@ -39,13 +39,14 @@ import { botRecord } from './records/record.ts';
 import type { Opponent } from './opponent.ts';
 import { initialFace } from './sessionFace.ts';
 import type { SessionFace } from './sessionFace.ts';
-import { initialTalk } from './sessionTalk.ts';
-import { wireFace, wireTalk } from './sessionWiring.ts';
+import { initialConversation } from './sessionConversation.ts';
+import { beginHer, observeHer, wireHer } from './sessionWiring.ts';
 import type { WiringHost } from './sessionWiring.ts';
 import { createTimers } from './timers.ts';
 import type { Timers } from './timers.ts';
-import type { SessionTalk } from './sessionTalk.ts';
-import type { Style } from '../talk/index.ts';
+import type { SessionConversation } from './sessionConversation.ts';
+import type { Bias } from '../persona/index.ts';
+import type { SessionPersona } from './sessionPersona.ts';
 import { COACH_OFF, createCoach } from './coach.ts';
 import type { Coach } from './coach.ts';
 import type { CoachDecision } from '../coach/index.ts';
@@ -56,7 +57,7 @@ export { resolveIntent, toIntent } from './intent.ts';
 export type { Intent } from './intent.ts';
 export { potCollected, resultOf } from './outcome.ts';
 export type { HandResult } from './outcome.ts';
-export type { ChatLine, QuickPhrase, TalkState } from './sessionTalk.ts';
+export type { ChatLine, QuickPhrase, ConversationState } from './sessionConversation.ts';
 export type { CoachState, CoachStatus } from './coach.ts';
 
 export type {
@@ -96,7 +97,8 @@ interface Runtime {
   topUps: number;
   opponent: Opponent;
   seed: number;
-  talk: SessionTalk;
+  persona: SessionPersona;
+  conversation: SessionConversation;
   face: SessionFace;
   probe: DebugProbe | null;
 }
@@ -127,8 +129,7 @@ function record(rt: Runtime, events: EngineEvent[], opens = false): void {
   rt.recorder.observe(events);
   rt.coach.observe(events);
   rt.bot.observe(toObservations(events, rt.botSeat));
-  rt.talk.observe(events);
-  rt.face.observe(events);
+  observeHer(rt, events);
   for (const event of events) {
     if (event.type === 'toppedUp' && event.seat === rt.humanSeat) {
       rt.topUps += event.amount;
@@ -151,7 +152,7 @@ function conclude(rt: Runtime, step: Step): void {
   const { seats } = step.state;
   rt.hands += 1;
   rt.recorder.save(step.state.mode, botRecord(rt.opponent));
-  rt.talk.handDone(rt.hands);
+  rt.conversation.handDone(rt.hands);
   const paid = (seat: SeatIndex) =>
     rt.startStacks[seat] - seats[seat].stack + awardedTo(step.events, seat);
   rt.set({
@@ -166,17 +167,17 @@ function conclude(rt: Runtime, step: Step): void {
 
 interface Played {
   decision?: Decision | null;
-  style?: Style;
+  bias?: Bias;
   coached?: CoachDecision | null;
 }
 
 function play(rt: Runtime, action: Action, played: Played = {}): void {
-  const { decision = null, style, coached = null } = played;
+  const { decision = null, bias, coached = null } = played;
   const { hand } = rt.get().table;
   const opens = hand !== null && isOpeningBet(hand, action);
   const step = apply(rt.get().table, action);
   if (decision !== null) {
-    rt.recorder.decided(decision, step.events, style);
+    rt.recorder.decided(decision, step.events, bias);
   }
   if (coached !== null) {
     rt.recorder.coached(coached, step.events);
@@ -186,9 +187,9 @@ function play(rt: Runtime, action: Action, played: Played = {}): void {
   conclude(rt, step);
 }
 
-async function decide(rt: Runtime, legal: LegalActions, style?: Style): Promise<Decision | null> {
+async function decide(rt: Runtime, legal: LegalActions, bias?: Bias): Promise<Decision | null> {
   try {
-    return await rt.bot.decide(legal, style, rt.probe !== null);
+    return await rt.bot.decide(legal, bias, rt.probe !== null);
   } catch {
     return null;
   }
@@ -197,8 +198,8 @@ async function decide(rt: Runtime, legal: LegalActions, style?: Style): Promise<
 async function botTurn(rt: Runtime, myEpoch: number): Promise<boolean> {
   rt.set({ phase: 'botThinking' });
   const legal = legalActionsOf(rt.get().table);
-  const style = rt.talk.style();
-  const decision = await decide(rt, legal, style);
+  const bias = rt.persona.bias();
+  const decision = await decide(rt, legal, bias);
   if (myEpoch !== rt.epoch) {
     return false;
   }
@@ -214,8 +215,8 @@ async function botTurn(rt: Runtime, myEpoch: number): Promise<boolean> {
   }
   const intent: Intent = decision === null ? { kind: 'passive' } : toIntent(decision.action);
   const action = resolveIntent(intent, legal);
-  rt.probe?.decided({ decision, style, action, legal, table: rt.get().table, seat: rt.botSeat });
-  play(rt, action, { decision, style });
+  rt.probe?.decided({ decision, bias, action, legal, table: rt.get().table, seat: rt.botSeat });
+  play(rt, action, { decision, bias });
   return true;
 }
 
@@ -273,7 +274,7 @@ function restart(rt: Runtime, options: SessionOptions): Promise<void> {
     opponent: rt.opponent,
     session: tally(rt, table),
   });
-  rt.talk.begin(rt.opponent, rt.seed);
+  beginHer(rt);
   return beginHand(rt);
 }
 
@@ -304,11 +305,11 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
       const { phase, table } = rt.get();
       if (table.mode.kind === 'cash' && phase === 'handOver') {
         rt.set({ phase: 'sessionOver' });
-        rt.talk.leave();
+        rt.conversation.leave();
       }
     },
     dispose() {
-      rt.talk.leave();
+      rt.conversation.leave();
       rt.epoch += 1;
       rt.timers.cancel();
       rt.coach.acted();
@@ -331,12 +332,12 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
       play(rt, action, { coached });
       return drive(rt, rt.epoch);
     },
-    say: (text) => rt.talk.say(text),
-    quick: (id, text) => rt.talk.quick(id, text),
-    setTalk: (on) => rt.talk.setOn(on),
-    setTells: (level) => rt.talk.setLevel(level),
-    attachTalk: (client) => rt.talk.attach(client),
-    pageHidden: () => rt.talk.pageHidden(),
+    say: (text) => rt.conversation.say(text),
+    quick: (id, text) => rt.conversation.quick(id, text),
+    setConversation: (on) => rt.conversation.setOn(on),
+    setTells: (level) => rt.conversation.setLevel(level),
+    attachConversation: (client) => rt.conversation.attach(client),
+    pageHidden: () => rt.conversation.pageHidden(),
     setCoach: (on) => switchCoach(rt, on),
     setFace: (on) => rt.face.setOn(on),
     faceNow: () => rt.face.now(),
@@ -368,7 +369,6 @@ export function createSession(options: SessionOptions): Session {
       set({ coach: state }),
     );
     const host = hostOf(() => rt);
-    const talk = wireTalk(host, options, botSeat);
     const rt: Runtime = {
       set,
       get,
@@ -387,12 +387,11 @@ export function createSession(options: SessionOptions): Session {
       topUps: 0,
       seed,
       opponent: 'math',
-      talk,
-      face: wireFace(host, talk, options, botSeat),
+      ...wireHer(host, options, botSeat),
       probe: null,
     };
     if (import.meta.env.DEV && options.debug === true) {
-      rt.probe = createProbe(rt.talk, (debug) => set({ debug }));
+      rt.probe = createProbe(rt.persona, options.now ?? Date.now, (debug) => set({ debug }));
     }
     const initial = freshTable(options, rt.mode);
     return {
@@ -407,7 +406,7 @@ export function createSession(options: SessionOptions): Session {
       session: tally(rt, initial),
       sessionId: options.records?.sessionId ?? null,
       opponent: rt.opponent,
-      talk: initialTalk(options.talkOn ?? true, options.tells ?? 'subtle'),
+      conversation: initialConversation(options.conversationOn ?? true, options.tells ?? 'subtle'),
       coach: COACH_OFF,
       face: initialFace(options.faceOn ?? true),
       debug: rt.probe?.initial() ?? null,

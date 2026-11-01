@@ -108,8 +108,8 @@ async function captureView(browser: Browser, view: View): Promise<Shot[]> {
     `${label}: Lola after shoves, her session ${result >= 0 ? '+' : ''}${result} bb`,
     shots,
   );
-  await show(page, 'debug-style');
-  await snap(page, `${label}: Lola's style`, shots);
+  await show(page, 'debug-bias');
+  await snap(page, `${label}: Lola's bias`, shots);
   await untilNewDecision(page);
   await show(page, 'debug-decision');
   await snap(page, `${label}: Lola's decision`, shots);

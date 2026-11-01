@@ -1,5 +1,5 @@
 import { createMathBrain } from '../brains/index.ts';
-import type { BotStyle, Decision, Observation } from '../brains/index.ts';
+import type { BotBias, Decision, Observation } from '../brains/index.ts';
 import type { CoachFacts } from '../coach/index.ts';
 import type { LegalActions } from '../engine/index.ts';
 import type { Opponent } from './opponent.ts';
@@ -7,7 +7,7 @@ import type { WorkerReply, WorkerRequest } from './workerProtocol.ts';
 
 export interface BotClient {
   observe(o: Observation[]): void;
-  decide(legal: LegalActions, style?: BotStyle, explain?: boolean): Promise<Decision>;
+  decide(legal: LegalActions, bias?: BotBias, explain?: boolean): Promise<Decision>;
   reset(): void;
   select?(opponent: Opponent, seed: number): Promise<Opponent>;
   coach?(observations: Observation[], legal: LegalActions, pot: number): Promise<CoachFacts>;
@@ -30,11 +30,11 @@ export function inProcessBot(): BotClient {
         brain.observe(observation);
       }
     },
-    decide(legal, style) {
+    decide(legal, bias) {
       const current = brain;
       return Promise.resolve().then(() => {
-        if (style !== undefined) {
-          current.setStyle?.(style);
+        if (bias !== undefined) {
+          current.setBias?.(bias);
         }
         return current.decide(legal);
       });
@@ -119,18 +119,18 @@ export function withFallback(primary: BotClient, timeoutMs = BOT_TIMEOUT_MS): Bo
       seen = [];
       active.reset();
     },
-    async decide(legal, style, explain) {
+    async decide(legal, bias, explain) {
       const mine = generation;
       try {
         return await withTimeout(
-          Promise.resolve().then(() => active.decide(legal, style, explain)),
+          Promise.resolve().then(() => active.decide(legal, bias, explain)),
           timeoutMs,
         );
       } catch (error) {
         if (usedFallback || mine !== generation) {
           throw error;
         }
-        return fallBack().decide(legal, style);
+        return fallBack().decide(legal, bias);
       }
     },
     coach: (...args) => timedCoach(usedFallback ? undefined : active.coach?.(...args), timeoutMs),
@@ -215,13 +215,13 @@ function rawWorkerBot(): BotClient {
     observe(observations) {
       send({ kind: 'observe', observations });
     },
-    decide(legal, style, explain) {
+    decide(legal, bias, explain) {
       return ask(
         (id) => ({
           kind: 'decide',
           id,
           legal,
-          ...(style === undefined ? {} : { style }),
+          ...(bias === undefined ? {} : { bias }),
           ...(explain === true ? { explain } : {}),
         }),
         (r) => ('decision' in r ? r.decision : undefined),

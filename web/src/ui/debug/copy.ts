@@ -3,8 +3,8 @@ import type {
   Emotion,
   LoadSource,
   PersonalityKey,
-  Style,
-  StyleKey,
+  Bias,
+  BiasKey,
 } from '../../game/index.ts';
 
 type Octant =
@@ -18,7 +18,7 @@ export const COPY = {
   sections: {
     personality: 'Personality',
     state: 'State',
-    style: 'Play style',
+    bias: 'Play bias',
     decision: 'Last decision',
     journal: 'Journal',
   },
@@ -99,29 +99,29 @@ export const COPY = {
     mood: 'bad mood',
     desperation: 'session loss',
   } satisfies Record<LoadSource, string>,
-  style: {
+  bias: {
     aggression: 'Aggression',
     looseness: 'Looseness',
     bluff: 'Bluff',
     sizing: 'Bet size',
     stickiness: 'Stickiness',
-  } satisfies Record<StyleKey, string>,
+  } satisfies Record<BiasKey, string>,
   sentTitle: 'Sent to the bot',
-  notSent: 'No style sent yet',
+  notSent: 'No bias sent yet',
   sent: {
     aggression: 'aggression',
     bluff: 'bluff',
     tightness: 'tightness',
     sizing: 'sizing',
     stickiness: 'stickiness',
-  } satisfies Record<keyof Style, string>,
+  } satisfies Record<keyof Bias, string>,
   decision: {
     none: 'No decision with a breakdown yet',
     hand: 'Her hand',
     board: 'Board',
     move: 'Move',
     blueprint: 'Blueprint',
-    styled: 'Styled',
+    biased: 'Biased',
     played: 'Played',
   },
   move: {
