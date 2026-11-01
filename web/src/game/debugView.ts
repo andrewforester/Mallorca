@@ -1,4 +1,4 @@
-import { EMOTIONS, LOAD_SOURCES, BIAS_KEYS } from '../talk/index.ts';
+import { EMOTIONS, LOAD_SOURCES, BIAS_KEYS } from '../conversation/index.ts';
 import type {
   BigFive,
   Emotion,
@@ -8,7 +8,7 @@ import type {
   Snapshot,
   Bias,
   BiasKey,
-} from '../talk/index.ts';
+} from '../conversation/index.ts';
 import { personalityOf } from './debug.ts';
 import type { DebugDecision, DebugState, PersonalityChoice } from './debug.ts';
 

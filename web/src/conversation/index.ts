@@ -12,8 +12,16 @@ export type { Character, FeelingState, FeltEmotion } from './state.ts';
 export { characterOf, feelingState } from './state.ts';
 export type { SessionSummary } from './summary.ts';
 export { EMPTY_SUMMARY, since } from './summary.ts';
-export type { Draw, HandFacts, LineIntent, Spot, Stance, Talk, TalkOptions } from './talk.ts';
-export { createTalk, drawLine, endsHand } from './talk.ts';
+export type {
+  Draw,
+  HandFacts,
+  LineIntent,
+  Spot,
+  Stance,
+  Conversation,
+  ConversationOptions,
+} from './conversation.ts';
+export { createConversation, drawLine, endsHand } from './conversation.ts';
 export type { JournalEntry } from './journal.ts';
 export { JOURNAL_SIZE } from './journal.ts';
 export { EMOTIONS, LOAD_SOURCES, PERSONALITIES, BIAS_KEYS } from '../emotion/index.ts';

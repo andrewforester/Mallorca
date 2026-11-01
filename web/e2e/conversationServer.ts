@@ -1,6 +1,6 @@
 import type { BrowserContext, Page, Route } from '@playwright/test';
 
-export const TALK_URL = 'http://talk.test';
+export const CONVERSATION_URL = 'http://talk.test';
 
 const CORS = {
   'access-control-allow-origin': '*',
@@ -8,13 +8,16 @@ const CORS = {
   'access-control-allow-methods': 'GET, POST, OPTIONS',
 };
 
-export interface TalkRequest {
+export interface ConversationRequest {
   kind: 'line' | 'reply' | 'summary';
   text?: string;
   intent?: { situation: string };
 }
 
-export type TalkAnswer = (request: TalkRequest) => { status: number; body: unknown };
+export type ConversationAnswer = (request: ConversationRequest) => {
+  status: number;
+  body: unknown;
+};
 
 function json(route: Route, status: number, body: unknown): Promise<void> {
   if (route.request().method() === 'OPTIONS') {
@@ -50,18 +53,23 @@ function anonymousSession(): unknown {
 
 type Target = Page | BrowserContext;
 
-export async function refuseTalk(target: Target): Promise<void> {
-  await target.route(`${TALK_URL}/**`, (route) => json(route, 200, {}));
+export async function refuseConversation(target: Target): Promise<void> {
+  await target.route(`${CONVERSATION_URL}/**`, (route) => json(route, 200, {}));
 }
 
-export async function serveTalk(target: Target, answer: TalkAnswer): Promise<TalkRequest[]> {
-  const requests: TalkRequest[] = [];
-  await target.route(`${TALK_URL}/auth/v1/**`, (route) => json(route, 200, anonymousSession()));
-  await target.route(`${TALK_URL}/functions/v1/talk`, (route) => {
+export async function serveConversation(
+  target: Target,
+  answer: ConversationAnswer,
+): Promise<ConversationRequest[]> {
+  const requests: ConversationRequest[] = [];
+  await target.route(`${CONVERSATION_URL}/auth/v1/**`, (route) =>
+    json(route, 200, anonymousSession()),
+  );
+  await target.route(`${CONVERSATION_URL}/functions/v1/talk`, (route) => {
     if (route.request().method() === 'OPTIONS') {
       return json(route, 204, null);
     }
-    const request = route.request().postDataJSON() as TalkRequest;
+    const request = route.request().postDataJSON() as ConversationRequest;
     requests.push(request);
     const { status, body } = answer(request);
     return json(route, status, body);

@@ -1,15 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { parseCards } from '../cards/index.ts';
-import type { Character, FeelingState, HandFacts, LineIntent } from '../talk/index.ts';
+import type { Character, FeelingState, HandFacts, LineIntent } from '../conversation/index.ts';
 import {
-  TALK_TIMEOUT_MS,
-  silentTalkClient,
+  CONVERSATION_TIMEOUT_MS,
+  silentConversationClient,
   toLinePayload,
   toReplyPayload,
   toSummaryPayload,
-} from './talkClient.ts';
-import { remoteTalkClient } from './remoteTalk.ts';
+} from './conversationClient.ts';
+import { remoteConversationClient } from './remoteConversation.ts';
 
 const fixture = (name: string): unknown =>
   JSON.parse(
@@ -223,13 +223,16 @@ interface Call {
   init: RequestInit | undefined;
 }
 
-function fakeFetch(talk: (call: Call) => Promise<Response>, calls: Call[] = []): typeof fetch {
+function fakeFetch(
+  conversation: (call: Call) => Promise<Response>,
+  calls: Call[] = [],
+): typeof fetch {
   return ((input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
     const call = { url, init };
     calls.push(call);
     if (url.includes('/auth/v1/')) return Promise.resolve(authResponse());
-    return talk(call);
+    return conversation(call);
   }) as typeof fetch;
 }
 
@@ -242,13 +245,15 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('silentTalkClient', () => {
+describe('silentConversationClient', () => {
   it('is disabled and resolves null', async () => {
-    expect(silentTalkClient.enabled).toBe(false);
-    expect(await silentTalkClient.line(toLinePayload(base))).toBeNull();
-    expect(await silentTalkClient.reply(toReplyPayload({ ...base, text: 'hi' }))).toBeNull();
+    expect(silentConversationClient.enabled).toBe(false);
+    expect(await silentConversationClient.line(toLinePayload(base))).toBeNull();
+    expect(
+      await silentConversationClient.reply(toReplyPayload({ ...base, text: 'hi' })),
+    ).toBeNull();
     await expect(
-      silentTalkClient.summary(
+      silentConversationClient.summary(
         toSummaryPayload({
           sessionId: 's',
           locale: 'en',
@@ -259,26 +264,26 @@ describe('silentTalkClient', () => {
   });
 });
 
-describe('remoteTalkClient', () => {
+describe('remoteConversationClient', () => {
   it('signs in anonymously and posts with the bearer token', async () => {
     const calls: Call[] = [];
-    const client = await remoteTalkClient({
+    const client = await remoteConversationClient({
       url: URL_BASE,
       anonKey: 'anon',
       fetch: fakeFetch(() => json({ text: 'Nice hand.' }), calls),
     });
     expect(client.enabled).toBe(true);
     expect(await client.line(toLinePayload(base))).toBe('Nice hand.');
-    const talk = calls.find((c) => c.url === `${URL_BASE}/functions/v1/talk`);
-    const headers = new Headers(talk?.init?.headers);
-    expect(talk?.init?.method).toBe('POST');
+    const conversation = calls.find((c) => c.url === `${URL_BASE}/functions/v1/talk`);
+    const headers = new Headers(conversation?.init?.headers);
+    expect(conversation?.init?.method).toBe('POST');
     expect(headers.get('authorization')).toBe('Bearer tok-1');
     expect(headers.get('apikey')).toBe('anon');
-    expect(JSON.parse(String(talk?.init?.body)).kind).toBe('line');
+    expect(JSON.parse(String(conversation?.init?.body)).kind).toBe('line');
   });
 
   it('parses replies and filters unknown signals', async () => {
-    const client = await remoteTalkClient({
+    const client = await remoteConversationClient({
       url: URL_BASE,
       anonKey: 'anon',
       fetch: fakeFetch(() => json({ text: 'Hm.', signals: ['tease', 'bogus', 7] })),
@@ -298,7 +303,7 @@ describe('remoteTalkClient', () => {
       Promise.reject(new Error('net')),
     ];
     let i = 0;
-    const client = await remoteTalkClient({
+    const client = await remoteConversationClient({
       url: URL_BASE,
       anonKey: 'anon',
       fetch: fakeFetch(() => answers[i++] as Promise<Response>),
@@ -314,13 +319,13 @@ describe('remoteTalkClient', () => {
       new Promise((_, reject) => {
         call.init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
       });
-    const client = await remoteTalkClient({
+    const client = await remoteConversationClient({
       url: URL_BASE,
       anonKey: 'anon',
       fetch: fakeFetch(hang),
     });
     const pending = client.line(toLinePayload(base));
-    await vi.advanceTimersByTimeAsync(TALK_TIMEOUT_MS);
+    await vi.advanceTimersByTimeAsync(CONVERSATION_TIMEOUT_MS);
     expect(await pending).toBeNull();
   });
 
@@ -332,16 +337,20 @@ describe('remoteTalkClient', () => {
       if (url.includes('/auth/v1/') && hang) return new Promise<Response>(() => undefined);
       return Promise.resolve(authResponse());
     }) as typeof fetch;
-    const client = await remoteTalkClient({ url: URL_BASE, anonKey: 'anon', fetch: stalled });
+    const client = await remoteConversationClient({
+      url: URL_BASE,
+      anonKey: 'anon',
+      fetch: stalled,
+    });
     hang = true;
     vi.setSystemTime(Date.now() + 2 * 3600 * 1000);
     const pending = client.line(toLinePayload(base));
-    await vi.advanceTimersByTimeAsync(TALK_TIMEOUT_MS);
+    await vi.advanceTimersByTimeAsync(CONVERSATION_TIMEOUT_MS);
     expect(await pending).toBeNull();
   });
 
   it('summary swallows failures', async () => {
-    const client = await remoteTalkClient({
+    const client = await remoteConversationClient({
       url: URL_BASE,
       anonKey: 'anon',
       fetch: fakeFetch(() => json({}, 500)),
@@ -354,7 +363,7 @@ describe('remoteTalkClient', () => {
 
   it('sends a keepalive summary at once with the token it already has', async () => {
     const calls: Call[] = [];
-    const client = await remoteTalkClient({
+    const client = await remoteConversationClient({
       url: URL_BASE,
       anonKey: 'anon',
       fetch: fakeFetch(() => json({ facts: [] }), calls),
@@ -375,13 +384,21 @@ describe('remoteTalkClient', () => {
   it('returns the silent client when sign-in fails', async () => {
     const failing = (() =>
       Promise.resolve(new Response('{"msg":"no"}', { status: 500 }))) as typeof fetch;
-    const client = await remoteTalkClient({ url: URL_BASE, anonKey: 'anon', fetch: failing });
-    expect(client).toBe(silentTalkClient);
+    const client = await remoteConversationClient({
+      url: URL_BASE,
+      anonKey: 'anon',
+      fetch: failing,
+    });
+    expect(client).toBe(silentConversationClient);
   });
 
   it('returns the silent client when the network throws', async () => {
     const throwing = (() => Promise.reject(new Error('offline'))) as typeof fetch;
-    const client = await remoteTalkClient({ url: URL_BASE, anonKey: 'anon', fetch: throwing });
+    const client = await remoteConversationClient({
+      url: URL_BASE,
+      anonKey: 'anon',
+      fetch: throwing,
+    });
     expect(client.enabled).toBe(false);
   });
 });

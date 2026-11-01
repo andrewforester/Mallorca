@@ -3,7 +3,7 @@ import { formatCard, parseCards } from '../../../src/cards/index.ts';
 import type { Card, Rng } from '../../../src/cards/index.ts';
 import { equityVsRange } from '../../../src/equity/index.ts';
 import type { WeightedHands } from '../../../src/equity/index.ts';
-import { liveRange } from '../../../src/talk/range.ts';
+import { liveRange } from '../../../src/conversation/range.ts';
 import type { GazeTarget } from '../face/avatar.ts';
 import type { Ranges } from './blueprint.ts';
 import type { Beat, Hand, Scene } from './scenes.ts';

@@ -18,7 +18,7 @@ function config(csp: string) {
 }
 
 describe('allowConnect', () => {
-  it('adds the origin of the talk server to connect-src', () => {
+  it('adds the origin of the conversation server to connect-src', () => {
     const next = allowConnect(config(CSP), 'https://abc.supabase.co/');
     expect(next.routes[0]?.headers?.['Content-Security-Policy']).toBe(
       "default-src 'self'; connect-src 'self' https://abc.supabase.co; worker-src 'self'",

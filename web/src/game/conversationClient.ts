@@ -7,9 +7,9 @@ import type {
   LineIntent,
   SessionSummary,
   Signal,
-} from '../talk/index.ts';
+} from '../conversation/index.ts';
 
-export const TALK_TIMEOUT_MS = 5000;
+export const CONVERSATION_TIMEOUT_MS = 5000;
 
 const MAX_RECENT = 8;
 const MAX_ACTIONS = 30;
@@ -83,7 +83,7 @@ export interface HandInput {
   recent: ChatTurn[];
 }
 
-export interface TalkReply {
+export interface ConversationReply {
   text: string;
   signals: Signal[];
 }
@@ -92,14 +92,14 @@ export interface SendOptions {
   keepalive?: boolean;
 }
 
-export interface TalkClient {
+export interface ConversationClient {
   readonly enabled: boolean;
   line(request: LinePayload): Promise<string | null>;
-  reply(request: ReplyPayload): Promise<TalkReply | null>;
+  reply(request: ReplyPayload): Promise<ConversationReply | null>;
   summary(request: SummaryPayload, options?: SendOptions): Promise<void>;
 }
 
-export const silentTalkClient: TalkClient = {
+export const silentConversationClient: ConversationClient = {
   enabled: false,
   line: () => Promise.resolve(null),
   reply: () => Promise.resolve(null),

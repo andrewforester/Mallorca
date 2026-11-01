@@ -31,11 +31,15 @@ export interface TableProps {
 const ignore = () => undefined;
 
 function chatOf(props: TableProps): ChatProps | null {
-  const { talk } = props.vm;
-  if (!talk.available || !talk.on) {
+  const { conversation } = props.vm;
+  if (!conversation.available || !conversation.on) {
     return null;
   }
-  return { lines: talk.lines, onSay: props.onSay ?? ignore, onQuick: props.onQuick ?? ignore };
+  return {
+    lines: conversation.lines,
+    onSay: props.onSay ?? ignore,
+    onQuick: props.onQuick ?? ignore,
+  };
 }
 
 function resultText(vm: ViewModel, humanSeat: SeatIndex): string | null {
@@ -155,7 +159,7 @@ function Announcements({ text, her }: { text: string; her: string }) {
       <div class="visually-hidden" role="status" aria-live="polite" data-testid="live-region">
         {text}
       </div>
-      <div class="visually-hidden" aria-live="polite" data-testid="talk-region">
+      <div class="visually-hidden" aria-live="polite" data-testid="conversation-region">
         {her}
       </div>
     </>
@@ -163,14 +167,18 @@ function Announcements({ text, her }: { text: string; her: string }) {
 }
 
 function herLine(vm: ViewModel, chat: ChatProps | null): string {
-  return chat === null ? '' : (vm.talk.herBubble?.text ?? '');
+  return chat === null ? '' : (vm.conversation.herBubble?.text ?? '');
 }
 
 function TableSide({ chat, coach }: { chat: ChatProps | null; coach: ComponentChildren }) {
   return (
     <div class="table-side">
       {chat !== null && (
-        <section class="side-panel glass" data-testid="chat-panel" aria-label={t('talk.tab')}>
+        <section
+          class="side-panel glass"
+          data-testid="chat-panel"
+          aria-label={t('conversation.tab')}
+        >
           <Chat {...chat} />
         </section>
       )}
@@ -202,7 +210,7 @@ function Seats({ vm, humanSeat, held, thinking, chat }: SeatsProps) {
         winner={winner === botSeat}
         position="top"
       >
-        {chat !== null && <Bubble line={vm.talk.herBubble} />}
+        {chat !== null && <Bubble line={vm.conversation.herBubble} />}
         {chat !== null && <ChatSheet {...chat} />}
       </Seat>
       <Seat
@@ -213,7 +221,7 @@ function Seats({ vm, humanSeat, held, thinking, chat }: SeatsProps) {
         winner={winner === humanSeat}
         position="bottom"
       >
-        {chat !== null && <Bubble line={vm.talk.playerBubble} />}
+        {chat !== null && <Bubble line={vm.conversation.playerBubble} />}
       </Seat>
     </>
   );

@@ -1,27 +1,27 @@
 import { describe, expect, it, vi } from 'vitest';
 import { CASH } from '../engine/index.ts';
-import type * as TalkModule from '../talk/index.ts';
-import type { Talk, TalkOptions } from '../talk/index.ts';
+import type * as ConversationModule from '../conversation/index.ts';
+import type { Conversation, ConversationOptions } from '../conversation/index.ts';
 import { createSession } from './session.ts';
 import type { Session } from './session.ts';
-import { silentTalkClient } from './talkClient.ts';
+import { silentConversationClient } from './conversationClient.ts';
 import { callingBot } from './testBot.ts';
 import type { ScriptedBot } from './testBot.ts';
 
 const given: { weights: ArrayLike<number>; handNumber: number }[] = [];
 
-vi.mock('../talk/index.ts', async (importOriginal) => {
-  const original = await importOriginal<typeof TalkModule>();
+vi.mock('../conversation/index.ts', async (importOriginal) => {
+  const original = await importOriginal<typeof ConversationModule>();
   return {
     ...original,
-    createTalk: (options: TalkOptions): Talk => {
-      const talk = original.createTalk(options);
-      const playerRange = talk.playerRange.bind(talk);
-      talk.playerRange = (weights, handNumber) => {
+    createConversation: (options: ConversationOptions): Conversation => {
+      const conversation = original.createConversation(options);
+      const playerRange = conversation.playerRange.bind(conversation);
+      conversation.playerRange = (weights, handNumber) => {
         given.push({ weights, handNumber });
         playerRange(weights, handNumber);
       };
-      return talk;
+      return conversation;
     },
   };
 });
@@ -62,7 +62,7 @@ function open(): Table {
     humanSeat: 1,
     names: ['Mallorca', 'You'],
     mode: CASH,
-    talk: silentTalkClient,
+    conversation: silentConversationClient,
   });
   return { session, asked, calls };
 }
@@ -82,7 +82,7 @@ async function playerCalls(table: Table): Promise<void> {
 }
 
 describe("the player's range in the session", () => {
-  it('is asked after his action and given to her talk with the hand number', async () => {
+  it('is asked after his action and given to her conversation with the hand number', async () => {
     const table = open();
     await begin(table, 'cfr');
     expect(table.asked).toHaveLength(0);

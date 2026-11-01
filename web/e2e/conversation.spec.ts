@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { byId, expect, FAST_URL, test, waitForWaypoint } from './fixtures.ts';
-import { serveTalk, TALK_URL } from './talkServer.ts';
-import type { TalkRequest } from './talkServer.ts';
+import { serveConversation, CONVERSATION_URL } from './conversationServer.ts';
+import type { ConversationRequest } from './conversationServer.ts';
 
 const HER_BET = 'That bet is a question, darling.';
 const HER_ANSWER = 'Glad you came tonight.';
@@ -9,7 +9,7 @@ const SOLVER_TIMEOUT_MS = 180_000;
 const MAX_ACTIONS = 80;
 const HER_PACE_MS = 1600;
 
-function answers(request: TalkRequest) {
+function answers(request: ConversationRequest) {
   if (request.kind === 'line') {
     return { status: 200, body: request.intent?.situation === 'herBet' ? { text: HER_BET } : {} };
   }
@@ -66,11 +66,11 @@ async function expectApart(over: Locator, under: Locator, name: string): Promise
 test('the math opponent signs nobody in', async ({ page }) => {
   const auth: string[] = [];
   page.on('request', (request) => {
-    if (request.url().startsWith(`${TALK_URL}/auth/`)) {
+    if (request.url().startsWith(`${CONVERSATION_URL}/auth/`)) {
       auth.push(request.url());
     }
   });
-  const requests = await serveTalk(page, answers);
+  const requests = await serveConversation(page, answers);
   await page.goto(FAST_URL);
   await byId(page, 'start-cash').click();
   let hands = 0;
@@ -89,7 +89,7 @@ test.describe('desktop', () => {
 
   test('a bubble with her line appears after her bet', async ({ page }) => {
     test.setTimeout(SOLVER_TIMEOUT_MS);
-    const requests = await serveTalk(page, answers);
+    const requests = await serveConversation(page, answers);
     await sitWithSolver(page);
     const bubble = byId(page, 'seat-1').getByTestId('bubble-mallorca');
     const herBet = () => requests.some((request) => request.intent?.situation === 'herBet');
@@ -109,7 +109,7 @@ test.describe('desktop', () => {
 
   test('the chat panel sends a message and shows her answer without acting', async ({ page }) => {
     test.setTimeout(SOLVER_TIMEOUT_MS);
-    const requests = await serveTalk(page, answers);
+    const requests = await serveConversation(page, answers);
     await sitWithSolver(page);
     await myTurn(page);
     const panel = byId(page, 'chat-panel');
@@ -128,10 +128,10 @@ test.describe('desktop', () => {
     expect(reply?.text).toBe('Coffee first, cards later');
   });
 
-  test('switching talk off sends no requests to her', async ({ page }) => {
+  test('switching conversation off sends no requests to her', async ({ page }) => {
     test.setTimeout(SOLVER_TIMEOUT_MS);
     await page.addInitScript(() => localStorage.setItem('mallorca.talk', 'off'));
-    const requests = await serveTalk(page, answers);
+    const requests = await serveConversation(page, answers);
     await sitWithSolver(page);
     let hands = 0;
     await playUntil(page, async () => {
@@ -141,15 +141,18 @@ test.describe('desktop', () => {
       return hands >= 3;
     });
     await page.locator('summary.menu-summary').click();
-    await expect(byId(page, 'table-talk')).not.toBeChecked();
+    await expect(byId(page, 'table-conversation')).not.toBeChecked();
     await expect(byId(page, 'chat-panel')).toHaveCount(0);
     await expect(byId(page, 'chat-open')).toHaveCount(0);
     expect(requests).toEqual([]);
   });
 
-  test('a failing talk server keeps the hand going', async ({ page, problems }) => {
+  test('a failing conversation server keeps the hand going', async ({ page, problems }) => {
     test.setTimeout(SOLVER_TIMEOUT_MS);
-    const requests = await serveTalk(page, () => ({ status: 500, body: { error: 'down' } }));
+    const requests = await serveConversation(page, () => ({
+      status: 500,
+      body: { error: 'down' },
+    }));
     await sitWithSolver(page);
     await myTurn(page);
     const input = byId(page, 'chat-panel').getByTestId('chat-input');
@@ -178,7 +181,7 @@ test.describe('phone', () => {
 
   test('the chat sheet opens from her plaque and closes back to the table', async ({ page }) => {
     test.setTimeout(SOLVER_TIMEOUT_MS);
-    const requests = await serveTalk(page, answers);
+    const requests = await serveConversation(page, answers);
     await sitWithSolver(page);
     await myTurn(page);
     const open = byId(page, 'seat-1').getByTestId('chat-open');

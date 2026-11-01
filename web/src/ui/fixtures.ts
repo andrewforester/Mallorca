@@ -45,7 +45,7 @@ export function viewModel(overrides: Partial<ViewModel['controls']> = {}): ViewM
     result: null,
     tournamentWinner: null,
     face: { on: false, cues: [] },
-    talk: {
+    conversation: {
       available: false,
       on: true,
       level: 'subtle',

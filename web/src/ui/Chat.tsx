@@ -33,7 +33,7 @@ function Lines({ lines }: { lines: ChatLine[] }) {
           </span>
           <span class="chat-text">{line.text}</span>
           {line.undelivered === true && (
-            <span class="chat-undelivered">{t('talk.undelivered')}</span>
+            <span class="chat-undelivered">{t('conversation.undelivered')}</span>
           )}
         </li>
       ))}
@@ -61,9 +61,9 @@ export function Chat({ lines, onSay, onQuick }: ChatProps) {
             type="button"
             class="button button-small chat-chip"
             data-testid={`quick-${id}`}
-            onClick={() => onQuick(id, t(`talk.quick.${id}`))}
+            onClick={() => onQuick(id, t(`conversation.quick.${id}`))}
           >
-            {t(`talk.quick.${id}`)}
+            {t(`conversation.quick.${id}`)}
           </button>
         ))}
       </div>
@@ -72,15 +72,15 @@ export function Chat({ lines, onSay, onQuick }: ChatProps) {
           class="chat-input"
           type="text"
           data-testid="chat-input"
-          aria-label={t('talk.message')}
-          placeholder={t('talk.placeholder')}
+          aria-label={t('conversation.message')}
+          placeholder={t('conversation.placeholder')}
           maxLength={MAX_MESSAGE}
           autoComplete="off"
           value={draft}
           onInput={(event) => setDraft((event.currentTarget as HTMLInputElement).value)}
         />
         <button type="submit" class="button button-small" data-testid="chat-send">
-          {t('talk.send')}
+          {t('conversation.send')}
         </button>
       </form>
     </div>

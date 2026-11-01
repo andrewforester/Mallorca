@@ -6,7 +6,7 @@ import {
   readFace,
   readSound,
   readTableStyle,
-  readTalk,
+  readConversation,
   readTells,
   readVoice,
   writeAutoNext,
@@ -14,7 +14,7 @@ import {
   writeFace,
   writeSound,
   writeTableStyle,
-  writeTalk,
+  writeConversation,
   writeTells,
   writeVoice,
 } from './preferences.ts';
@@ -23,7 +23,7 @@ import type { TableStyle } from './preferences.ts';
 export interface Preferences {
   simple: boolean;
   autoNext: boolean;
-  talk: boolean;
+  conversation: boolean;
   tells: Level;
   sound: boolean;
   coach: boolean;
@@ -31,7 +31,7 @@ export interface Preferences {
   voice: boolean;
   toggleSimple: () => void;
   toggleAutoNext: () => void;
-  setTalk: (on: boolean) => void;
+  setConversation: (on: boolean) => void;
   setTells: (level: Level) => void;
   toggleSound: () => void;
   toggleCoach: () => void;
@@ -42,7 +42,7 @@ export interface Preferences {
 export function usePreferences(): Preferences {
   const [tableStyle, setTableStyle] = useState<TableStyle>(readTableStyle);
   const [autoNext, setAutoNext] = useState(readAutoNext);
-  const [talk, setTalk] = useState(readTalk);
+  const [conversation, setConversation] = useState(readConversation);
   const [tells, setTells] = useState<Level>(readTells);
   const [sound, setSound] = useState(readSound);
   const [coach, setCoach] = useState(readCoach);
@@ -52,7 +52,7 @@ export function usePreferences(): Preferences {
   return {
     simple,
     autoNext,
-    talk,
+    conversation,
     tells,
     sound,
     coach,
@@ -71,9 +71,9 @@ export function usePreferences(): Preferences {
       writeSound(!sound);
       setSound(!sound);
     },
-    setTalk: (on) => {
-      writeTalk(on);
-      setTalk(on);
+    setConversation: (on) => {
+      writeConversation(on);
+      setConversation(on);
     },
     setTells: (level) => {
       writeTells(level);

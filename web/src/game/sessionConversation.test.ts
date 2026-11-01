@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { BotBias } from '../brains/index.ts';
 import { CASH, TOURNAMENT } from '../engine/index.ts';
 import type { LegalActions } from '../engine/index.ts';
-import type { Level } from '../talk/index.ts';
+import type { Level } from '../conversation/index.ts';
 import { memoryStore } from './records/store.ts';
 import type { RecordsOptions } from './records/recorder.ts';
 import { createSession } from './session.ts';
@@ -11,15 +11,15 @@ import type {
   LinePayload,
   ReplyPayload,
   SummaryPayload,
-  TalkClient,
-  TalkReply,
-} from './talkClient.ts';
-import { silentTalkClient } from './talkClient.ts';
+  ConversationClient,
+  ConversationReply,
+} from './conversationClient.ts';
+import { silentConversationClient } from './conversationClient.ts';
 import { callingBot, scriptedBot, shovingBot } from './testBot.ts';
 import type { ScriptedBot } from './testBot.ts';
 import { toViewModel } from './viewModel.ts';
 
-interface FakeClient extends TalkClient {
+interface FakeClient extends ConversationClient {
   lines: LinePayload[];
   replies: ReplyPayload[];
   summaries: SummaryPayload[];
@@ -28,7 +28,7 @@ interface FakeClient extends TalkClient {
 
 interface Answers {
   line?: (request: LinePayload) => Promise<string | null>;
-  reply?: (request: ReplyPayload) => Promise<TalkReply | null>;
+  reply?: (request: ReplyPayload) => Promise<ConversationReply | null>;
   summary?: (request: SummaryPayload) => Promise<void>;
 }
 
@@ -81,13 +81,13 @@ interface Table {
 
 interface Extra {
   mode?: typeof CASH | typeof TOURNAMENT;
-  talkOn?: boolean;
+  conversationOn?: boolean;
   tells?: Level;
   records?: RecordsOptions;
-  connectTalk?: () => Promise<TalkClient>;
+  connectConversation?: () => Promise<ConversationClient>;
 }
 
-function open(client: TalkClient, extra: Extra = {}, base = shovingBot()): Table {
+function open(client: ConversationClient, extra: Extra = {}, base = shovingBot()): Table {
   let clock = 0;
   const bot = cfrBot(base);
   const session = createSession({
@@ -97,7 +97,7 @@ function open(client: TalkClient, extra: Extra = {}, base = shovingBot()): Table
     humanSeat: 1,
     names: ['Mallorca', 'You'],
     mode: CASH,
-    talk: client,
+    conversation: client,
     now: () => clock,
     ...extra,
   });
@@ -160,12 +160,12 @@ async function nextHandWithEndLine(table: Table, pending: Pending[]): Promise<Pe
   throw new Error('no hand-end line before a hand the player opens');
 }
 
-describe('session talk', () => {
+describe('session conversation', () => {
   it('requests a line on her bet', async () => {
     const client = fakeClient({ line: () => new Promise(() => undefined) });
     const table = open(client);
     await table.session.getState().start(CASH, 'cfr');
-    expect(table.session.getState().talk.available).toBe(true);
+    expect(table.session.getState().conversation.available).toBe(true);
     await untilHerBet(table, client);
     expect(table.session.getState().phase).toBe('humanToAct');
     const request = client.lines.find((p) => p.intent.situation === 'herBet');
@@ -180,15 +180,15 @@ describe('session talk', () => {
     await table.session.getState().start(CASH, 'cfr');
     await untilHerBet(table, client);
     await flush();
-    const { talk, table: state } = table.session.getState();
-    const last = talk.lines[talk.lines.length - 1];
+    const { conversation, table: state } = table.session.getState();
+    const last = conversation.lines[conversation.lines.length - 1];
     expect(last).toMatchObject({ speaker: 'mallorca', text: 'Your move' });
     expect(last?.handNumber).toBe(state.handNumber);
-    expect(talk.bubbles[0]).toEqual(last);
-    expect(talk.bubbles[1]).toBeNull();
+    expect(conversation.bubbles[0]).toEqual(last);
+    expect(conversation.bubbles[1]).toBeNull();
     const vm = toViewModel(table.session.getState(), 1);
-    expect(vm.talk.herBubble).toEqual(last);
-    expect(vm.talk.playerBubble).toBeNull();
+    expect(vm.conversation.herBubble).toEqual(last);
+    expect(vm.conversation.playerBubble).toBeNull();
   });
 
   it('drops a stale line', async () => {
@@ -207,8 +207,10 @@ describe('session talk', () => {
     await table.session.getState().act({ kind: 'fold' });
     bet?.answer.resolve('Too late');
     await flush();
-    expect(table.session.getState().talk.lines.map((l) => l.text)).not.toContain('Too late');
-    expect(table.session.getState().talk.bubbles[0]).toBeNull();
+    expect(table.session.getState().conversation.lines.map((l) => l.text)).not.toContain(
+      'Too late',
+    );
+    expect(table.session.getState().conversation.bubbles[0]).toBeNull();
   });
 
   it('keeps a hand-end line until the first action of the next hand', async () => {
@@ -218,7 +220,7 @@ describe('session talk', () => {
     const end = await nextHandWithEndLine(table, pending);
     end.answer.resolve('Well played');
     await flush();
-    expect(table.session.getState().talk.lines.at(-1)).toMatchObject({
+    expect(table.session.getState().conversation.lines.at(-1)).toMatchObject({
       speaker: 'mallorca',
       text: 'Well played',
     });
@@ -232,46 +234,48 @@ describe('session talk', () => {
     await table.session.getState().act({ kind: 'passive' });
     end.answer.resolve('Too late now');
     await flush();
-    expect(table.session.getState().talk.lines.map((l) => l.text)).not.toContain('Too late now');
+    expect(table.session.getState().conversation.lines.map((l) => l.text)).not.toContain(
+      'Too late now',
+    );
   });
 
-  it('signs in only when the Solver opponent starts with talk on, and once', async () => {
+  it('signs in only when the Solver opponent starts with conversation on, and once', async () => {
     const client = fakeClient();
-    const connectTalk = vi.fn(() => Promise.resolve<TalkClient>(client));
-    const table = open(silentTalkClient, { connectTalk });
+    const connectConversation = vi.fn(() => Promise.resolve<ConversationClient>(client));
+    const table = open(silentConversationClient, { connectConversation });
     await table.session.getState().start(CASH);
-    expect(connectTalk).not.toHaveBeenCalled();
-    expect(table.session.getState().talk.available).toBe(false);
+    expect(connectConversation).not.toHaveBeenCalled();
+    expect(table.session.getState().conversation.available).toBe(false);
     await table.session.getState().start(CASH, 'cfr');
-    expect(connectTalk).toHaveBeenCalledTimes(1);
+    expect(connectConversation).toHaveBeenCalledTimes(1);
     await flush();
-    expect(table.session.getState().talk.available).toBe(true);
+    expect(table.session.getState().conversation.available).toBe(true);
     table.session.getState().say('Hello');
     expect(client.replies).toHaveLength(1);
     await table.session.getState().start();
-    expect(connectTalk).toHaveBeenCalledTimes(1);
+    expect(connectConversation).toHaveBeenCalledTimes(1);
   });
 
-  it('with talk off, signs in only when talk is switched on', async () => {
+  it('with conversation off, signs in only when conversation is switched on', async () => {
     const client = fakeClient();
-    const connectTalk = vi.fn(() => Promise.resolve<TalkClient>(client));
-    const table = open(silentTalkClient, { connectTalk, talkOn: false });
+    const connectConversation = vi.fn(() => Promise.resolve<ConversationClient>(client));
+    const table = open(silentConversationClient, { connectConversation, conversationOn: false });
     await table.session.getState().start(CASH, 'cfr');
-    expect(connectTalk).not.toHaveBeenCalled();
-    expect(table.session.getState().talk).toMatchObject({ available: true, on: false });
-    table.session.getState().setTalk(true);
-    expect(connectTalk).toHaveBeenCalledTimes(1);
+    expect(connectConversation).not.toHaveBeenCalled();
+    expect(table.session.getState().conversation).toMatchObject({ available: true, on: false });
+    table.session.getState().setConversation(true);
+    expect(connectConversation).toHaveBeenCalledTimes(1);
     await flush();
     table.session.getState().say('Hello');
     expect(client.replies).toHaveLength(1);
   });
 
-  it('a failed sign-in hides the talk', async () => {
-    const connectTalk = vi.fn(() => Promise.resolve(silentTalkClient));
-    const table = open(silentTalkClient, { connectTalk });
+  it('a failed sign-in hides the conversation', async () => {
+    const connectConversation = vi.fn(() => Promise.resolve(silentConversationClient));
+    const table = open(silentConversationClient, { connectConversation });
     await table.session.getState().start(CASH, 'cfr');
     await flush();
-    expect(table.session.getState().talk.available).toBe(false);
+    expect(table.session.getState().conversation.available).toBe(false);
     expect(table.bot.biases.every((bias) => bias !== undefined)).toBe(true);
   });
 
@@ -284,7 +288,7 @@ describe('session talk', () => {
     await table.session.getState().start();
     answer.resolve('From before');
     await flush();
-    expect(table.session.getState().talk.lines).toEqual([]);
+    expect(table.session.getState().conversation.lines).toEqual([]);
   });
 
   it('say sends a reply and applies signals', async () => {
@@ -293,12 +297,12 @@ describe('session talk', () => {
     });
     const table = open(client);
     await table.session.getState().start(CASH, 'cfr');
-    const before = table.session.getState().talk.lines.map(({ speaker, text }) => ({
+    const before = table.session.getState().conversation.lines.map(({ speaker, text }) => ({
       speaker,
       text,
     }));
     table.session.getState().say('  Well played  ');
-    const said = table.session.getState().talk;
+    const said = table.session.getState().conversation;
     expect(said.lines[said.lines.length - 1]).toMatchObject({
       speaker: 'player',
       text: 'Well played',
@@ -309,7 +313,7 @@ describe('session talk', () => {
     expect(client.replies[0]?.text).toBe('Well played');
     expect(client.replies[0]?.recent).toEqual(before);
     await flush();
-    const answered = table.session.getState().talk;
+    const answered = table.session.getState().conversation;
     expect(answered.lines[answered.lines.length - 1]).toMatchObject({
       speaker: 'mallorca',
       text: 'Thank you',
@@ -328,13 +332,13 @@ describe('session talk', () => {
     const client = fakeClient();
     const table = open(client);
     await table.session.getState().start(CASH, 'cfr');
-    const count = table.session.getState().talk.lines.length;
+    const count = table.session.getState().conversation.lines.length;
     table.session.getState().say('   ');
     table.session.getState().say('');
     expect(client.replies).toHaveLength(0);
-    expect(table.session.getState().talk.lines).toHaveLength(count);
+    expect(table.session.getState().conversation.lines).toHaveLength(count);
     table.session.getState().say(`  ${'a'.repeat(300)}  `);
-    const { lines } = table.session.getState().talk;
+    const { lines } = table.session.getState().conversation;
     expect(lines[lines.length - 1]?.text).toBe('a'.repeat(200));
     expect(client.replies[0]?.text).toBe('a'.repeat(200));
   });
@@ -345,7 +349,7 @@ describe('session talk', () => {
     await table.session.getState().start(CASH, 'cfr');
     table.session.getState().say('Hello');
     await flush();
-    const { lines } = table.session.getState().talk;
+    const { lines } = table.session.getState().conversation;
     expect(lines[lines.length - 1]).toMatchObject({
       speaker: 'player',
       text: 'Hello',
@@ -360,19 +364,19 @@ describe('session talk', () => {
     const table = open(client);
     await table.session.getState().start(CASH, 'cfr');
     table.session.getState().quick('bluffing', "You're bluffing");
-    expect(table.session.getState().talk.lines.at(-1)).toMatchObject({
+    expect(table.session.getState().conversation.lines.at(-1)).toMatchObject({
       speaker: 'player',
       text: "You're bluffing",
     });
     expect(client.replies).toHaveLength(1);
     await flush();
-    expect(table.session.getState().talk.lines.at(-1)).toMatchObject({
+    expect(table.session.getState().conversation.lines.at(-1)).toMatchObject({
       speaker: 'mallorca',
       text: 'Maybe',
     });
     table.session.getState().quick('niceHand', 'Nice hand');
     table.session.getState().quick('notThisTime', 'Not this time');
-    expect(table.session.getState().talk.lines.at(-1)?.text).toBe('Not this time');
+    expect(table.session.getState().conversation.lines.at(-1)?.text).toBe('Not this time');
     await flush();
     await table.session.getState().act({ kind: 'fold' });
     table.session.getState().leave();
@@ -396,11 +400,11 @@ describe('session talk', () => {
     expect(client.summaries[0]?.summary.signals).toEqual({ tease: 1 });
   });
 
-  it('talk off sends nothing', async () => {
+  it('conversation off sends nothing', async () => {
     const client = fakeClient();
-    const table = open(client, { talkOn: false });
+    const table = open(client, { conversationOn: false });
     await table.session.getState().start(CASH, 'cfr');
-    expect(table.session.getState().talk).toMatchObject({ available: true, on: false });
+    expect(table.session.getState().conversation).toMatchObject({ available: true, on: false });
     for (let i = 0; i < 10; i += 1) {
       await foldHand(table);
     }
@@ -411,24 +415,24 @@ describe('session talk', () => {
     expect(client.lines).toEqual([]);
     expect(client.replies).toEqual([]);
     expect(client.summaries).toEqual([]);
-    expect(table.session.getState().talk.lines).toEqual([]);
+    expect(table.session.getState().conversation.lines).toEqual([]);
   });
 
-  it('switches talk and tells', async () => {
+  it('switches conversation and tells', async () => {
     const client = fakeClient();
     const table = open(client, { tells: 'hidden' });
     await table.session.getState().start(CASH, 'cfr');
-    expect(table.session.getState().talk).toMatchObject({ on: true, level: 'hidden' });
-    table.session.getState().setTalk(false);
+    expect(table.session.getState().conversation).toMatchObject({ on: true, level: 'hidden' });
+    table.session.getState().setConversation(false);
     table.session.getState().setTells('obvious');
-    expect(table.session.getState().talk).toMatchObject({ on: false, level: 'obvious' });
+    expect(table.session.getState().conversation).toMatchObject({ on: false, level: 'obvious' });
     table.session.getState().say('Hello');
     expect(client.replies).toEqual([]);
-    table.session.getState().setTalk(true);
+    table.session.getState().setConversation(true);
     table.session.getState().say('Hello');
     expect(client.replies).toHaveLength(1);
     const vm = toViewModel(table.session.getState(), 1);
-    expect(vm.talk).toMatchObject({ available: true, on: true, level: 'obvious' });
+    expect(vm.conversation).toMatchObject({ available: true, on: true, level: 'obvious' });
   });
 
   it('bias reaches decide and the records', async () => {
@@ -453,18 +457,18 @@ describe('session talk', () => {
     expect(records[0]?.decisions[0]?.style).toEqual(table.bot.biases[0]);
   });
 
-  it('talk off still passes the bias', async () => {
-    const table = open(fakeClient(), { talkOn: false });
+  it('conversation off still passes the bias', async () => {
+    const table = open(fakeClient(), { conversationOn: false });
     await table.session.getState().start(CASH, 'cfr');
-    expect(table.session.getState().talk).toMatchObject({ available: true, on: false });
+    expect(table.session.getState().conversation).toMatchObject({ available: true, on: false });
     expect(table.bot.biases[0]).toBeDefined();
   });
 
   it('without a client her feeling still sets the bias', async () => {
-    const table = open(silentTalkClient);
+    const table = open(silentConversationClient);
     await table.session.getState().start(CASH, 'cfr');
     await foldHand(table);
-    expect(table.session.getState().talk.available).toBe(false);
+    expect(table.session.getState().conversation.available).toBe(false);
     expect(table.bot.biases.length).toBeGreaterThan(0);
     expect(table.bot.biases.every((bias) => bias !== undefined)).toBe(true);
   });
@@ -540,7 +544,7 @@ describe('session talk', () => {
     expect(client.lines.length).toBeGreaterThan(0);
     table.session.getState().say('Hello');
     await flush();
-    expect(table.session.getState().talk.lines.at(-1)).toMatchObject({
+    expect(table.session.getState().conversation.lines.at(-1)).toMatchObject({
       text: 'Hello',
       undelivered: true,
     });
@@ -572,20 +576,20 @@ describe('session talk', () => {
     expect(client.summaries[1]?.summary.hands).toBe(1);
   });
 
-  it('the v2 solver opponent talks too', async () => {
+  it('the v2 solver opponent conversations too', async () => {
     const client = fakeClient({ line: () => new Promise(() => undefined) });
     const table = open(client);
     await table.session.getState().start(CASH, 'cfr-v2');
-    expect(table.session.getState().talk.available).toBe(true);
+    expect(table.session.getState().conversation.available).toBe(true);
     await untilHerBet(table, client);
     expect(client.lines.some((p) => p.intent.situation === 'herBet')).toBe(true);
   });
 
-  it('math opponent has no talk', async () => {
+  it('math opponent has no conversation', async () => {
     const client = fakeClient();
     const table = open(client);
     await table.session.getState().start(CASH);
-    expect(table.session.getState().talk.available).toBe(false);
+    expect(table.session.getState().conversation.available).toBe(false);
     for (let i = 0; i < 10; i += 1) {
       await foldHand(table);
     }
@@ -597,12 +601,12 @@ describe('session talk', () => {
   });
 
   it('attaches a client after the start', async () => {
-    const table = open(silentTalkClient);
+    const table = open(silentConversationClient);
     await table.session.getState().start(CASH, 'cfr');
-    expect(table.session.getState().talk.available).toBe(false);
+    expect(table.session.getState().conversation.available).toBe(false);
     const client = fakeClient();
-    table.session.getState().attachTalk(client);
-    expect(table.session.getState().talk.available).toBe(true);
+    table.session.getState().attachConversation(client);
+    expect(table.session.getState().conversation.available).toBe(true);
     table.session.getState().say('Hello');
     expect(client.replies).toHaveLength(1);
   });
@@ -614,7 +618,7 @@ describe('session talk', () => {
     for (let i = 0; i < 130; i += 1) {
       table.session.getState().say(`line ${i}`);
     }
-    const { lines } = table.session.getState().talk;
+    const { lines } = table.session.getState().conversation;
     expect(lines).toHaveLength(100);
     expect(lines.at(-1)?.text).toBe('line 129');
   });
@@ -624,7 +628,7 @@ describe('session talk', () => {
     const table = open(client);
     await table.session.getState().start(CASH, 'cfr');
     table.session.getState().quick('niceHand', '  Bien jugado  ');
-    expect(table.session.getState().talk.lines.at(-1)).toMatchObject({
+    expect(table.session.getState().conversation.lines.at(-1)).toMatchObject({
       speaker: 'player',
       text: 'Bien jugado',
     });
@@ -706,39 +710,41 @@ describe('session talk', () => {
     expect(client.summaries).toHaveLength(1);
   });
 
-  it('sends no final summary with talk off', async () => {
+  it('sends no final summary with conversation off', async () => {
     const client = fakeClient();
-    const table = open(client, { talkOn: false });
+    const table = open(client, { conversationOn: false });
     await table.session.getState().start(CASH, 'cfr');
     await table.session.getState().act({ kind: 'fold' });
     table.session.getState().dispose();
     expect(client.summaries).toEqual([]);
   });
 
-  it('drops a line that arrives after talk was switched off', async () => {
+  it('drops a line that arrives after conversation was switched off', async () => {
     const answer = deferred<string | null>();
     const client = fakeClient({ line: () => answer.promise });
     const table = open(client);
     await table.session.getState().start(CASH, 'cfr');
     await untilHerBet(table, client);
-    table.session.getState().setTalk(false);
+    table.session.getState().setConversation(false);
     answer.resolve('Still here');
     await flush();
-    expect(table.session.getState().talk.lines.map((l) => l.text)).not.toContain('Still here');
+    expect(table.session.getState().conversation.lines.map((l) => l.text)).not.toContain(
+      'Still here',
+    );
   });
 
-  it('drops a reply that arrives after talk was switched off', async () => {
-    const answer = deferred<TalkReply | null>();
+  it('drops a reply that arrives after conversation was switched off', async () => {
+    const answer = deferred<ConversationReply | null>();
     const client = fakeClient({ reply: () => answer.promise });
     const table = open(client);
     await table.session.getState().start(CASH, 'cfr');
     table.session.getState().say('Hello');
-    table.session.getState().setTalk(false);
+    table.session.getState().setConversation(false);
     answer.resolve({ text: 'Hi', signals: ['tease'] });
     await flush();
-    expect(table.session.getState().talk.lines.map((l) => l.text)).toEqual(['Hello']);
-    expect(table.session.getState().talk.lines[0]?.undelivered).toBeUndefined();
-    table.session.getState().setTalk(true);
+    expect(table.session.getState().conversation.lines.map((l) => l.text)).toEqual(['Hello']);
+    expect(table.session.getState().conversation.lines[0]?.undelivered).toBeUndefined();
+    table.session.getState().setConversation(true);
     await table.session.getState().act({ kind: 'fold' });
     table.session.getState().leave();
     expect(client.summaries[0]?.summary.signals).toEqual({});

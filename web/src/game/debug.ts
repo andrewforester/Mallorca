@@ -3,9 +3,15 @@ import { coachMove } from '../coach/index.ts';
 import type { CoachMove } from '../coach/index.ts';
 import type { Card } from '../cards/index.ts';
 import type { Action, LegalActions, SeatIndex, Table } from '../engine/index.ts';
-import { PERSONALITIES } from '../talk/index.ts';
-import type { JournalEntry, Personality, PersonalityKey, Snapshot, Bias } from '../talk/index.ts';
-import type { SessionTalk } from './sessionTalk.ts';
+import { PERSONALITIES } from '../conversation/index.ts';
+import type {
+  JournalEntry,
+  Personality,
+  PersonalityKey,
+  Snapshot,
+  Bias,
+} from '../conversation/index.ts';
+import type { SessionConversation } from './sessionConversation.ts';
 
 export type PersonalityChoice =
   { key: PersonalityKey } | { key: 'custom'; personality: Personality };
@@ -77,7 +83,10 @@ export function personalityOf(choice: PersonalityChoice): Personality {
   return choice.key === 'custom' ? choice.personality : PERSONALITIES[choice.key];
 }
 
-export function createProbe(talk: SessionTalk, write: (state: DebugState) => void): DebugProbe {
+export function createProbe(
+  conversation: SessionConversation,
+  write: (state: DebugState) => void,
+): DebugProbe {
   let state: DebugState = {
     personality: { key: 'mallorca' },
     snapshot: null,
@@ -86,7 +95,7 @@ export function createProbe(talk: SessionTalk, write: (state: DebugState) => voi
     journal: [],
   };
   const refresh = () => {
-    const felt = talk.feeling();
+    const felt = conversation.feeling();
     state = { ...state, snapshot: felt?.snapshot ?? null, journal: felt?.journal ?? [] };
     write(state);
   };
@@ -104,11 +113,11 @@ export function createProbe(talk: SessionTalk, write: (state: DebugState) => voi
     choose(choice) {
       const personality = choiceOf(choice);
       state = { ...state, personality };
-      talk.setPersonality(personalityOf(personality));
+      conversation.setPersonality(personalityOf(personality));
       refresh();
     },
     reset() {
-      talk.resetFeeling();
+      conversation.resetFeeling();
       refresh();
     },
   };

@@ -10,45 +10,54 @@ afterEach(() => {
 });
 
 function Harness({
-  talk,
-  onTalk,
+  conversation,
+  onConversation,
   onTells,
 }: {
-  talk: boolean;
-  onTalk: (on: boolean) => void;
+  conversation: boolean;
+  onConversation: (on: boolean) => void;
   onTells: (level: string) => void;
 }) {
   const preferences = usePreferences();
-  return <Settings preferences={preferences} talk={talk} onTalk={onTalk} onTells={onTells} />;
+  return (
+    <Settings
+      preferences={preferences}
+      conversation={conversation}
+      onConversation={onConversation}
+      onTells={onTells}
+    />
+  );
 }
 
-function settings(talk = true) {
-  const onTalk = vi.fn();
+function settings(conversation = true) {
+  const onConversation = vi.fn();
   const onTells = vi.fn();
-  render(<Harness talk={talk} onTalk={onTalk} onTells={onTells} />);
-  return { onTalk, onTells };
+  render(<Harness conversation={conversation} onConversation={onConversation} onTells={onTells} />);
+  return { onConversation, onTells };
 }
 
-describe('Settings talk', () => {
-  it('shows the session state of talk and tells, not the stored preference', () => {
+describe('Settings conversation', () => {
+  it('shows the session state of conversation and tells, not the stored preference', () => {
     function Bound() {
       const preferences = usePreferences();
-      return <Settings preferences={preferences} talk talkOn={false} tells="hidden" />;
+      return (
+        <Settings preferences={preferences} conversation conversationOn={false} tells="hidden" />
+      );
     }
     render(<Bound />);
-    expect((screen.getByTestId('table-talk') as HTMLInputElement).checked).toBe(false);
+    expect((screen.getByTestId('table-conversation') as HTMLInputElement).checked).toBe(false);
     expect((screen.getByTestId('tells') as HTMLSelectElement).value).toBe('hidden');
   });
 
   it('toggles table talk and keeps it', () => {
-    const { onTalk } = settings();
-    const toggle = screen.getByTestId('table-talk') as HTMLInputElement;
+    const { onConversation } = settings();
+    const toggle = screen.getByTestId('table-conversation') as HTMLInputElement;
     expect(toggle.checked).toBe(true);
     expect(toggle.closest('label')?.textContent).toContain('Table talk');
     fireEvent.click(toggle);
-    expect(onTalk).toHaveBeenCalledWith(false);
+    expect(onConversation).toHaveBeenCalledWith(false);
     expect(localStorage.getItem('mallorca.talk')).toBe('off');
-    expect((screen.getByTestId('table-talk') as HTMLInputElement).checked).toBe(false);
+    expect((screen.getByTestId('table-conversation') as HTMLInputElement).checked).toBe(false);
   });
 
   it('picks the tells level and keeps it', () => {
@@ -71,18 +80,18 @@ describe('Settings talk', () => {
       throw new Error('blocked');
     };
     vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked, clear: () => undefined });
-    const { onTalk, onTells } = settings();
-    fireEvent.click(screen.getByTestId('table-talk'));
+    const { onConversation, onTells } = settings();
+    fireEvent.click(screen.getByTestId('table-conversation'));
     fireEvent.change(screen.getByTestId('tells'), { target: { value: 'hidden' } });
-    expect(onTalk).toHaveBeenCalledWith(false);
+    expect(onConversation).toHaveBeenCalledWith(false);
     expect(onTells).toHaveBeenCalledWith('hidden');
-    expect((screen.getByTestId('table-talk') as HTMLInputElement).checked).toBe(false);
+    expect((screen.getByTestId('table-conversation') as HTMLInputElement).checked).toBe(false);
     expect((screen.getByTestId('tells') as HTMLSelectElement).value).toBe('hidden');
   });
 
-  it('hides talk settings when talk is not available', () => {
+  it('hides conversation settings when conversation is not available', () => {
     settings(false);
-    expect(screen.queryByTestId('table-talk')).toBeNull();
+    expect(screen.queryByTestId('table-conversation')).toBeNull();
     expect(screen.queryByTestId('tells')).toBeNull();
     expect(screen.getByTestId('simple-table')).not.toBeNull();
   });

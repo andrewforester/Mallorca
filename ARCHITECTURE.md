@@ -52,25 +52,25 @@ web/src/
   cfr/      the CFR bot: the WASM module, the strategy file and a Brain over them
   emotion/  the opponent's emotions: personality, appraisal, mood, overload and the play bias they give
   face/     her face and voice as numbers: expression, poker face, reactions, idle tells, visemes, prosody
-  talk/     table talk: hand-strength class, tells, mood and the bias it maps to
+  conversation/     table talk: hand-strength class, tells, mood and the bias it maps to
   coach/    the coach's facts: hint, strategy and range grids, equity, odds
   game/     session store, turn loop, bot worker client, view-model, hand records
   ui/       Preact components, layout, tokens, i18n
 ```
 
-| Layer     | May import from                                                       |
-| --------- | --------------------------------------------------------------------- |
-| `cards`   | nothing                                                               |
-| `equity`  | `cards`                                                               |
-| `engine`  | `cards`, `equity`                                                     |
-| `brains`  | `cards`, `equity`, `engine`                                           |
-| `cfr`     | `cards`, types from `engine`, `brains`                                |
-| `emotion` | nothing                                                               |
-| `face`    | `emotion`                                                             |
-| `talk`    | `cards`, `equity`, `emotion`, types from `engine`                     |
-| `coach`   | `cards`, `equity`, `brains`, types from `engine`, `cfr`               |
-| `game`    | `cards`, `equity`, `engine`, `brains`, `cfr`, `talk`, `coach`, `face` |
-| `ui`      | `game`                                                                |
+| Layer          | May import from                                                               |
+| -------------- | ----------------------------------------------------------------------------- |
+| `cards`        | nothing                                                                       |
+| `equity`       | `cards`                                                                       |
+| `engine`       | `cards`, `equity`                                                             |
+| `brains`       | `cards`, `equity`, `engine`                                                   |
+| `cfr`          | `cards`, types from `engine`, `brains`                                        |
+| `emotion`      | nothing                                                                       |
+| `face`         | `emotion`                                                                     |
+| `conversation` | `cards`, `equity`, `emotion`, types from `engine`                             |
+| `coach`        | `cards`, `equity`, `brains`, types from `engine`, `cfr`                       |
+| `game`         | `cards`, `equity`, `engine`, `brains`, `cfr`, `conversation`, `coach`, `face` |
+| `ui`           | `game`                                                                        |
 
 `brains` takes only types from `engine`: `Action`, `LegalActions`, the events it turns into observations and
 `BoardSize`, which pins its board sizes to the engine's.
@@ -89,14 +89,14 @@ the modes, `startingStack`, `BOARD_SIZE` and `handHistory`; `cfr/index.ts` `crea
 (with `createSession`, `toViewModel`, `groupHand`, `workerBot` and `inProcessBot`).
 
 ESLint enforces the table with a `@typescript-eslint/no-restricted-imports` rule per directory. For `brains` the
-rule sets `allowTypeImports` on `engine`; the tests in `brains` and `talk` (`*.test.ts`) may also import `engine` code to
+rule sets `allowTypeImports` on `engine`; the tests in `brains` and `conversation` (`*.test.ts`) may also import `engine` code to
 build events. `src/main.tsx` may import only `game` and `ui`. `tools/arena/**` may import from `src` only `cards`,
-`engine`, `brains`, `cfr`, `talk` and `game/records`; the viewer `tools/arena/ui/**` (tests aside) only `game/records` and
+`engine`, `brains`, `cfr`, `conversation` and `game/records`; the viewer `tools/arena/ui/**` (tests aside) only `game/records` and
 types from `engine`; `tools/evaluator-golden/**` only `cards` and `equity`. `import-x/no-cycle` forbids import cycles inside `src`.
 
 ### Purity
 
-`cards`, `equity`, `engine`, `brains`, `cfr`, `emotion`, `face`, `talk` and `coach` use no DOM (`document`, `window`, `self`, `navigator`), no
+`cards`, `equity`, `engine`, `brains`, `cfr`, `emotion`, `face`, `conversation` and `coach` use no DOM (`document`, `window`, `self`, `navigator`), no
 `Math.random` or `crypto`, no `Date` or `performance`, no timers (`setTimeout`, `setInterval`), no `fetch` and no
 storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-globals` and
 `no-restricted-properties`. Randomness enters as an `Rng` argument, bytes through a reader passed in; `cfr`'s
@@ -117,7 +117,7 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
 - `WeightedHands` (hole cards with a weight) is the type `brains` computes equity with; the computation itself
   lives in `brains` (`spectrumEquilator.ts`, `preflopEquilator.ts`).
 - `equityVsHand(hero, villain, board)` enumerates the rest of the board exactly; `equityVsRange(hero, range, board,
-{ rng, samples })` is exact on the turn and the river and samples before that. `talk` uses them for her strength
+{ rng, samples })` is exact on the turn and the river and samples before that. `conversation` uses them for her strength
   class and her luck.
 - `index.ts` exports `pheEvaluator`, `HandCategory`, `WeightedHands`, `EquityOptions`, `equityVsHand` and
   `equityVsRange`.
@@ -375,7 +375,9 @@ mask, acted)` blends the felt point toward the acted one (neutral when null).
   `visemesOf(text, lettersPerSecond)` the `VisemeCue`s (one of the 15 Oculus visemes, its time and character
   index) of a line, and `speechOf(text, prosody)` those of her line at her pace times `prosody.rate`.
 
-- `createTalk({ seat, rng, level, luckRng?, habits? })` returns a `Talk` for one session against the CFR bot.
+## conversation
+
+- `createConversation({ seat, rng, level, luckRng?, habits? })` returns a `Conversation` for one session against the CFR bot.
   `observe(events, nowMs)` follows the engine events of a hand (`handTracker.ts`) and returns a `LineIntent` or null:
   the situation (`herBet`, `herCall`, `playerBet`, `handWon`, `handLost`, `bluffCaught`; `endsHand` tells the last
   three), the hint (her hand-strength class `strong`, `medium` or `weak`, or null for a neutral line), whether the
@@ -402,7 +404,7 @@ mask, acted)` blends the felt point toward the acted one (neutral when null).
   `feelingAt(nowMs)` is the snapshot at `nowMs` (the engine's `ahead` from the last `observe`, never moving it), and
   `stance()` is what her face acts: `bluff` after her bet or raise with a weak hand until the street or the hand
   changes, `hide` while she holds a strong hand in a live hand, else null.
-- The player's range is every pair at weight 1 when a hand starts. `Talk.playerRange(weights, handNumber)` replaces
+- The player's range is every pair at weight 1 when a hand starts. `Conversation.playerRange(weights, handNumber)` replaces
   it with 1326 weights indexed as `cfr` indexes pairs (`b * (b - 1) / 2 + a`); the pairs that touch her cards or the
   board drop out. It is ignored for another hand than the one being followed, after the hand ended or the player
   showed, and when no live pair has weight. A new range is appraised at once as a `street` with her equity against
@@ -547,63 +549,63 @@ mask, acted)` blends the felt point toward the acted one (neutral when null).
   the index of the resulting `acted` event in the hand's events. The timeout fallback plays without a decision
   and records none. `bot` is `botRecord` of the session's opponent (`MATH_BOT` by default), `playedAt` is `now()`
   at completion.
-- Table talk (`sessionTalk.ts`): `SessionOptions` takes `talk` (a `TalkClient`, default `silentTalkClient`),
-  `connectTalk` (a loader for the client, called at most once), `now` (default `Date.now`), `locale` (default `en`),
-  `talkOn` (default true) and `tells` (default `subtle`). `SessionState.talk` is
+- Table talk (`sessionConversation.ts`): `SessionOptions` takes `conversation` (a `ConversationClient`, default `silentConversationClient`),
+  `connectConversation` (a loader for the client, called at most once), `now` (default `Date.now`), `locale` (default `en`),
+  `conversationOn` (default true) and `tells` (default `subtle`). `SessionState.conversation` is
   `{ available, on, level, lines, bubbles }`: with a Solver opponent (`cfr` or `cfr-v2`), `available` is
   `client.enabled`, or true while
-  a `connectTalk` has not answered yet; `lines` are the last 100 `ChatLine`s (`id`, `speaker`, `text`, `handNumber`,
-  optional `undelivered`) and `bubbles` the latest line per seat. `connectTalk` runs when a Solver session starts with
-  talk on, or when talk is switched on in one, and its client is attached; a silent client hides the talk. Each
-  `start` makes a `Talk` for the bot's seat with `mulberry32(seed ^ 0x7a1c)` for every opponent (her face needs her
-  feeling against the math bot too); only a Solver opponent makes talk available, connects a client, plays a bias
-  or asks for the player's range. The `Talk` lives across hands, and every step's events reach `Talk.observe` after
-  the bot, also with talk off. Against a Solver, after a step with an
+  a `connectConversation` has not answered yet; `lines` are the last 100 `ChatLine`s (`id`, `speaker`, `text`, `handNumber`,
+  optional `undelivered`) and `bubbles` the latest line per seat. `connectConversation` runs when a Solver session starts with
+  conversation on, or when conversation is switched on in one, and its client is attached; a silent client hides the conversation. Each
+  `start` makes a `Conversation` for the bot's seat with `mulberry32(seed ^ 0x7a1c)` for every opponent (her face needs her
+  feeling against the math bot too); only a Solver opponent makes conversation available, connects a client, plays a bias
+  or asks for the player's range. The `Conversation` lives across hands, and every step's events reach `Conversation.observe` after
+  the bot, also with conversation off. Against a Solver, after a step with an
   action of the player that does not end the hand, the session asks `bot.opponentRange()` once the current task is
-  done, so a decision the step leads to reaches the bot first, and passes the answer to `Talk.playerRange` with the
-  hand number of that step, if the epoch and the `Talk` are the same and no later request was made; null or an
+  done, so a decision the step leads to reaches the bot first, and passes the answer to `Conversation.playerRange` with the
+  hand number of that step, if the epoch and the `Conversation` are the same and no later request was made; null or an
   error keeps the range she has. A line intent calls
-  `client.line` without waiting. Its text is kept only if the epoch matches, talk is still available and on, and the
+  `client.line` without waiting. Its text is kept only if the epoch matches, conversation is still available and on, and the
   hand number and street still match; a hand-end line (`handWon`, `handLost`, `bluffCaught`) is kept until the next
   hand's first action. `say(text)` (trimmed, at most 200 characters) and `quick(niceHand | bluffing | notThisTime,
 text)` (the caller's localized label) append the player's line at once and call `client.reply`; `quick` sends
-  `quick: true`. `say` feeds the reply's signals to `Talk.hear`, `quick` its own (`compliment`, `mockBluff` after any
+  `quick: true`. `say` feeds the reply's signals to `Conversation.hear`, `quick` its own (`compliment`, `mockBluff` after any
   raise of hers in the hand, else `tease`, `claimStrength`). A reply that is null or fails marks the player's line
-  `undelivered`. `setTalk`, `setTells` and `attachTalk(client)` change the switch, the tells level and the client.
-  With a `Talk` (a Solver opponent), every `decide` and the recorded decision get `Talk.bias()`, whatever the
-  client and the talk switch: her feeling always reaches her play. The math bot gets no bias. A `summary` goes out on an effective `leave`,
-  on `dispose`, at the end of a tournament, before a new `start` replaces the `Talk`, every 50th hand and on
+  `undelivered`. `setConversation`, `setTells` and `attachConversation(client)` change the switch, the tells level and the client.
+  With a `Conversation` (a Solver opponent), every `decide` and the recorded decision get `Conversation.bias()`, whatever the
+  client and the conversation switch: her feeling always reaches her play. The math bot gets no bias. A `summary` goes out on an effective `leave`,
+  on `dispose`, at the end of a tournament, before a new `start` replaces the `Conversation`, every 50th hand and on
   `pageHidden()` (with `keepalive`), only when a hand completed since the last one, and it holds what changed since
-  the last summary. Nothing is sent when talk is off or unavailable, and every client error is ignored. `toViewModel`
-  adds `talk` with `herBubble` and `playerBubble`.
-- Face (`sessionFace.ts`, wired with talk in `sessionWiring.ts`): `SessionOptions.faceOn` (default true) and `setFace(on)` switch it;
-  `SessionState.face` is `{ on, cues }`. While it is on, every step's events, after `Talk.observe`, add `FaceCue`s
-  with increasing `id` (the last 24 are kept): a `pulse` for each `Pulse` of `pulsesOf(Talk.impulses(), mask)`, the
+  the last summary. Nothing is sent when conversation is off or unavailable, and every client error is ignored. `toViewModel`
+  adds `conversation` with `herBubble` and `playerBubble`.
+- Face (`sessionFace.ts`, wired with conversation in `sessionWiring.ts`): `SessionOptions.faceOn` (default true) and `setFace(on)` switch it;
+  `SessionState.face` is `{ on, cues }`. While it is on, every step's events, after `Conversation.observe`, add `FaceCue`s
+  with increasing `id` (the last 24 are kept): a `pulse` for each `Pulse` of `pulsesOf(Conversation.impulses(), mask)`, the
   mask of the frame at that moment, and a `gaze` from the events (`gazeOf` in `faceCues.ts`): her hole cards `cards`,
   a dealt street `board`, her bet, call or raise `chips` with `then: 'player'`, the player's action `player`, the
   hand end `player`. Impulses are drained also while it is off, so switching it on shows no old reaction.
-  `faceNow()` is `faceFrame(Talk.feelingAt(now()), Talk.stance(), MALLORCA_LOOK)`, or null while it is off or before
+  `faceNow()` is `faceFrame(Conversation.feelingAt(now()), Conversation.stance(), MALLORCA_LOOK)`, or null while it is off or before
   `start`; it never moves the engine, so the face changes no move and no seed. `toViewModel` adds `face` (`on`,
   `cues`). `game` re-exports `FaceFrame`, `FaceCue`, `GazeTarget`, `Pulse`, `Weights`, `VisemeCue` and `speechOf`.
-- The payload builders (`talkClient.ts`) send `facts.stacks` as `[hers, the player's]` from the bot seat, the intent
+- The payload builders (`conversationClient.ts`) send `facts.stacks` as `[hers, the player's]` from the bot seat, the intent
   street as `actionStreet`, `quick` on a reply, and the summary `netBb` as the player's net (the negated net of hers).
-  `loadTalkClient({ url, anonKey })` (`talkLoader.ts`) imports `remoteTalk.ts`, the only module that uses
-  supabase-js, on demand, and answers `silentTalkClient` when a value is missing or loading fails;
-  `talkConnector(config)` is undefined without both values and otherwise loads the client once. `main.tsx` passes it
-  to `createSession` as `connectTalk`, so the anonymous sign-in happens only for the Solver opponent with talk on, and
+  `loadConversationClient({ url, anonKey })` (`conversationLoader.ts`) imports `remoteConversation.ts`, the only module that uses
+  supabase-js, on demand, and answers `silentConversationClient` when a value is missing or loading fails;
+  `conversationConnector(config)` is undefined without both values and otherwise loads the client once. `main.tsx` passes it
+  to `createSession` as `connectConversation`, so the anonymous sign-in happens only for the Solver opponent with conversation on, and
   `onPageExit` (`pageExit.ts`, `pagehide` or the document becoming hidden) calls `pageHidden()`. The remote client
   keeps the latest access token, so a `keepalive` summary is sent at once with `fetch(..., { keepalive: true })`.
 - Emotion debug (`debug.ts`, development builds only): with `SessionOptions.debug` true and
   `import.meta.env.DEV`, `SessionState.debug` is a `DebugState`, otherwise null and the code that fills it is dead
   and left out of the production bundle. It holds the `personality` (a `PersonalityKey`, or `custom` with its
-  `Personality`), her `snapshot` (`Talk.feeling()`, which runs for every opponent since the face reads it), `sentBias`, the bias sent with
+  `Personality`), her `snapshot` (`Conversation.feeling()`, which runs for every opponent since the face reads it), `sentBias`, the bias sent with
   the last `decide` (null before one, or against the math bot), the last `DebugDecision` (her hole cards, the board,
   one `DecisionRow` per move of the `Breakdown`, its `coachMove` label and amount with its `base` and `biased`
   probability and whether it was `chosen`, and the action the session applied as a `coachMove`; null until a
-  decision with a breakdown) and `journal` (`Talk.journal()`). It is refreshed after every step's `Talk.observe`,
+  decision with a breakdown) and `journal` (`Conversation.journal()`). It is refreshed after every step's `Conversation.observe`,
   every `hear`, every `start`, every bot decision and each action below. With it, every `decide` request
   carries `explain: true`; without it none does, and the worker never calls `explain()`. The actions
-  `setPersonality(key | personality)` (applied to the running `Talk` and to every `Talk` a later `start` makes) and
+  `setPersonality(key | personality)` (applied to the running `Conversation` and to every `Conversation` a later `start` makes) and
   `resetFeeling()` do nothing without it. Opening or closing the panel calls nothing on the session.
 - `toDebugView(debug)` returns the `DebugView`, plain data for the panel: `personality` and the `bigFive`,
   `suppression`, `experience` and the derived `traits` (default mood, composure, discipline, the gain of each
@@ -668,12 +670,12 @@ text)` (the caller's localized label) append the player's line at once and call 
   (300 ms) when a street closes, so the bets slide into the pot; new bets or a new hand show at once.
   `useHeldActions(actions, closing, board)` keeps the closing action tags, and hides the thinking bubble, for
   `HOLD_MS` (900 ms) after the board grows; a new action or a new hand shows at once.
-- Table talk shows only while `talk.available` and `talk.on`: `Bubble` types a line at about 40 characters per
+- Table talk shows only while `conversation.available` and `conversation.on`: `Bubble` types a line at about 40 characters per
   second and removes it after 7 s (full text at once under `prefers-reduced-motion`), her bubble at her plaque and the
   player's at theirs. On wide screens the chat sits in the right column of the table; on phones and short screens a
   chat button at her plaque opens `ChatSheet`, a sheet portalled to `body`. The hand log stays in its drawer. The menu
   holds Table talk and Tells, kept in `localStorage` (`mallorca.talk`, `mallorca.tells`) and passed to
-  `createSession` as `talkOn` and `tells`. Keyboard shortcuts ignore keys typed in a text field.
+  `createSession` as `conversationOn` and `tells`. Keyboard shortcuts ignore keys typed in a text field.
 - The start screen offers a cash game (100 bb) and a tournament. In cash the status bar shows the blinds, the
   running result in bb and a leave button, enabled only between hands; the session-over dialog shows the result in
   bb, bb/100 and the hands, with play again and the export of the session. `signed` formats a bb value as sign
@@ -738,7 +740,7 @@ text)` (the caller's localized label) append the player's line at once and call 
   `sound`; off silences every cue.
 - Live face (`ui/avatar/`): `FaceSeat` seats her in the chair of the photo: its bottom edge is the far table rail
   (`railY` of the `PlateGeometry`, `--rail-y`), so her body goes on below the rail and her plaque and cards lie in
-  front of her. Nothing covers her face: her action bubble moves to the left of the plaque, the hand result below the board (over the idle action bar on phones), and on phones her talk bubble below her cards. With the face preference on (`mallorca.face`, on
+  front of her. Nothing covers her face: her action bubble moves to the left of the plaque, the hand result below the board (over the idle action bar on phones), and on phones her conversation bubble below her cards. With the face preference on (`mallorca.face`, on
   unless stored `off`, the menu checkbox `face`) it shows the still `portrait.webp` at once and, when `canRender()`
   finds hardware WebGL (a software renderer such as SwiftShader or llvmpipe counts as weak) on a device that is not
   weak (more than 2 cores and more than 2 GB when the browser tells), imports `ui/avatar/live.ts` on demand, so
@@ -764,8 +766,8 @@ text)` (the caller's localized label) append the player's line at once and call 
   `coach-strategy`, `coach-range`, `coach-numbers`, `coach-composition`, `coach-outs`, `coach-blockers`, `coach-tab-session`, `coach-review`, `coach-leaks`, `live-region`, `tournament-over`, `leave-tonight`,
   `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and `export-text` (the session
   dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu). Table talk adds
-  `bubble-mallorca`, `bubble-player`, `talk-region`, `chat-panel`, `chat-open`, `chat-sheet`, `chat-close`,
-  `chat-line`, `chat-input`, `chat-send`, `quick-<id>`, `table-talk` and `tells`. The face adds `face-seat` (with
+  `bubble-mallorca`, `bubble-player`, `conversation-region`, `chat-panel`, `chat-open`, `chat-sheet`, `chat-close`,
+  `chat-line`, `chat-input`, `chat-send`, `quick-<id>`, `table-conversation` and `tells`. The face adds `face-seat` (with
   `data-face` = `portrait` or `live`), `face` and `voice`. The emotion debug panel, in development builds only, adds
   `emotion-debug-toggle`, `emotion-debug`, `debug-personality-<key>`, `debug-reset`, `debug-emotions`, `debug-mood`,
   `debug-load`, `debug-bias`, `debug-decision` and `debug-journal`.
@@ -795,7 +797,7 @@ text)` (the caller's localized label) append the player's line at once and call 
   the fallback line is `calm` at 0), the signals `{ signals }` and the summary `{ facts }`. `requestFor` disables
   thinking on Haiku, sends `between_tools` thinking and `effort: low` on Sonnet 5.5 and only `effort: low` on
   Opus 5.5, both with the server-side `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`), and a
-  `refusal` stop reason is an error before the content is read. A `line` or `reply` carries `feeling` and `character` (version 1, see "talk") next to the older `mood` words,
+  `refusal` stop reason is an error before the content is read. A `line` or `reply` carries `feeling` and `character` (version 1, see "conversation") next to the older `mood` words,
   which stay until every deployed server reads `feeling`. Either may be missing, and one of another version is
   ignored rather than rejected, so a newer game never breaks an older server; a malformed version 1 is a 400.
   In a body, `facts.stacks` is `[hers, the player's]`, `intent.street` is the
@@ -805,8 +807,8 @@ text)` (the caller's localized label) append the player's line at once and call 
   text that names a card or her holding, also told in the past (`I had`, `folded`) or with `my`; the function asks once more with a stricter instruction and then falls back
   to a fixed neutral line. Over a limit it answers an error and she stays silent. It answers before it saves the
   lines or facts, which run through `EdgeRuntime.waitUntil` when there is one.
-- The browser reaches it through `remoteTalk.ts` (supabase-js, anonymous sign-in, a 5 s timeout, every error turned
-  into `null`). Without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` the build has no talk. The game reads only
+- The browser reaches it through `remoteConversation.ts` (supabase-js, anonymous sign-in, a 5 s timeout, every error turned
+  into `null`). Without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` the build has no conversation. The game reads only
   `text` and `signals` today; `delivery` waits for the voice (#64).
 - `talk/eval` measures the lines: 52 cases from the sandbox scenes and the emotion engine, a judge with structured
   output, programmatic checks, latency and cost per call and per user-day (`talk/eval/README.md`). It runs only on
@@ -815,25 +817,25 @@ text)` (the caller's localized label) append the player's line at once and call 
 ### Data flow
 
 ```
-bias     talk.observe -> Talk.bias() (Solver opponent, any client) -> session decide(legal, bias) -> worker
+bias     conversation.observe -> Conversation.bias() (Solver opponent, any client) -> session decide(legal, bias) -> worker
           -> CfrBot.setBias -> bot_bias (wasm)
 debug     (dev) decide(legal, bias, explain) -> worker -> CfrBot.explain() -> bot_decision (wasm)
           -> Decision.breakdown -> SessionState.debug -> toDebugView -> panel
-line      engine events -> Talk.observe -> LineIntent -> client.line(facts, intent, mood, feeling, character)
+line      engine events -> Conversation.observe -> LineIntent -> client.line(facts, intent, mood, feeling, character)
           -> function -> text
           -> session (kept if epoch, hand and street match, a hand-end line until the next hand's first action)
           -> bubble and chat
 reply     say(text) -> client.reply -> function (signals + answer) -> { text, signals }
-          -> Talk.hear(signals) moves the mood -> her line in the chat
+          -> Conversation.hear(signals) moves the mood -> her line in the chat
 range     player action -> bot.observe -> bot.opponentRange() (worker, after the observations)
-          -> Talk.playerRange(weights, handNumber) -> her equity against his range -> feeling
+          -> Conversation.playerRange(weights, handNumber) -> her equity against his range -> feeling
 ```
 
 The player's range reaches her feeling after the bot's next decision and a worker round trip, so that decision uses
 the bias from before it; nothing in the hand waits for it. The read buckets each street of the hand once: the first
 read on the turn costs about 30 ms on a desktop and 130 to 170 ms at a 4 to 6 times slower CPU (v1), every other
 read under 4 ms; her equity against the range costs up to 4 ms on a desktop and 17 ms at 6 times slower. The session never waits for the server: a line is requested without awaiting it, a late or missing answer is
-dropped, and an error leaves the game as it is. The bias path is the only way talk touches a move, and it is
+dropped, and an error leaves the game as it is. The bias path is the only way conversation touches a move, and it is
 bounded by the clamps above. The debug path only reads: `explain` reads the decision after it is sampled.
 
 ## e2e

@@ -1,6 +1,6 @@
 import { mulberry32 } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex, Table } from '../engine/index.ts';
-import { EMPTY_SUMMARY, createTalk, endsHand, since } from '../talk/index.ts';
+import { EMPTY_SUMMARY, createConversation, endsHand, since } from '../conversation/index.ts';
 import type {
   JournalEntry,
   Level,
@@ -10,11 +10,21 @@ import type {
   Signal,
   Snapshot,
   Bias,
-  Talk,
-} from '../talk/index.ts';
+  Conversation,
+} from '../conversation/index.ts';
 import type { Opponent } from './opponent.ts';
-import { silentTalkClient, toLinePayload, toReplyPayload, toSummaryPayload } from './talkClient.ts';
-import type { ChatTurn, HandInput, TalkClient, TalkReply } from './talkClient.ts';
+import {
+  silentConversationClient,
+  toLinePayload,
+  toReplyPayload,
+  toSummaryPayload,
+} from './conversationClient.ts';
+import type {
+  ChatTurn,
+  HandInput,
+  ConversationClient,
+  ConversationReply,
+} from './conversationClient.ts';
 
 export interface ChatLine {
   id: number;
@@ -26,7 +36,7 @@ export interface ChatLine {
 
 export type QuickPhrase = 'niceHand' | 'bluffing' | 'notThisTime';
 
-export interface TalkState {
+export interface ConversationState {
   available: boolean;
   on: boolean;
   level: Level;
@@ -34,9 +44,9 @@ export interface TalkState {
   bubbles: [ChatLine | null, ChatLine | null];
 }
 
-export interface TalkHost {
-  read(): TalkState;
-  write(talk: TalkState): void;
+export interface ConversationHost {
+  read(): ConversationState;
+  write(conversation: ConversationState): void;
   table(): Table;
   epoch(): number;
   sessionId(): string;
@@ -48,16 +58,16 @@ export interface FeelingView {
   journal: JournalEntry[];
 }
 
-export interface TalkSetup {
-  client: TalkClient;
+export interface ConversationSetup {
+  client: ConversationClient;
   now: () => number;
   locale: string;
   botSeat: SeatIndex;
-  connect?: () => Promise<TalkClient>;
+  connect?: () => Promise<ConversationClient>;
   playerRange?: () => Promise<Float32Array | null>;
 }
 
-export interface SessionTalk {
+export interface SessionConversation {
   begin(opponent: Opponent, seed: number): void;
   observe(events: readonly EngineEvent[]): void;
   bias(): Bias | undefined;
@@ -65,11 +75,11 @@ export interface SessionTalk {
   quick(id: QuickPhrase, text: string): void;
   setOn(on: boolean): void;
   setLevel(level: Level): void;
-  attach(client: TalkClient): void;
+  attach(client: ConversationClient): void;
   handDone(hands: number): void;
   leave(): void;
   pageHidden(): void;
-  active(): Talk | null;
+  active(): Conversation | null;
   setPersonality(p: Personality): void;
   resetFeeling(): void;
   feeling(): FeelingView | null;
@@ -78,7 +88,7 @@ export interface SessionTalk {
 const MAX_LINES = 100;
 const MAX_TEXT = 200;
 const SUMMARY_EVERY = 50;
-const TALK_SALT = 0x7a1c;
+const CONVERSATION_SALT = 0x7a1c;
 
 function attempt<T>(call: () => Promise<T>): Promise<T | null> {
   try {
@@ -88,13 +98,13 @@ function attempt<T>(call: () => Promise<T>): Promise<T | null> {
   }
 }
 
-export function initialTalk(on: boolean, level: Level): TalkState {
+export function initialConversation(on: boolean, level: Level): ConversationState {
   return { available: false, on, level, lines: [], bubbles: [null, null] };
 }
 
-class Wiring implements SessionTalk {
-  private client: TalkClient;
-  private talk: Talk | null = null;
+class Wiring implements SessionConversation {
+  private client: ConversationClient;
+  private conversation: Conversation | null = null;
   private solver = false;
   private herRaised = false;
   private acted = false;
@@ -104,10 +114,10 @@ class Wiring implements SessionTalk {
   private nextId = 0;
   private rangeAsks = 0;
   private personality: Personality | null = null;
-  private readonly setup: TalkSetup;
-  private readonly host: TalkHost;
+  private readonly setup: ConversationSetup;
+  private readonly host: ConversationHost;
 
-  constructor(setup: TalkSetup, host: TalkHost) {
+  constructor(setup: ConversationSetup, host: ConversationHost) {
     this.setup = setup;
     this.host = host;
     this.client = setup.client;
@@ -116,10 +126,14 @@ class Wiring implements SessionTalk {
   begin(opponent: Opponent, seed: number): void {
     this.sendSummary();
     const { level } = this.host.read();
-    this.talk = createTalk({ seat: this.setup.botSeat, rng: mulberry32(seed ^ TALK_SALT), level });
+    this.conversation = createConversation({
+      seat: this.setup.botSeat,
+      rng: mulberry32(seed ^ CONVERSATION_SALT),
+      level,
+    });
     this.solver = opponent !== 'math';
     if (this.personality !== null) {
-      this.talk.setPersonality(this.personality);
+      this.conversation.setPersonality(this.personality);
     }
     this.herRaised = false;
     this.acted = false;
@@ -131,17 +145,17 @@ class Wiring implements SessionTalk {
   }
 
   observe(events: readonly EngineEvent[]): void {
-    if (this.talk === null) {
+    if (this.conversation === null) {
       return;
     }
     const ended = this.track(events);
-    const intent = this.talk.observe(events, this.setup.now());
+    const intent = this.conversation.observe(events, this.setup.now());
     this.host.felt?.();
     if (intent !== null && this.speaking()) {
       this.requestLine(intent);
     }
     if (this.solver && this.playerActed(events)) {
-      this.askRange(this.talk);
+      this.askRange(this.conversation);
     }
     if (ended) {
       this.sendSummary();
@@ -149,7 +163,7 @@ class Wiring implements SessionTalk {
   }
 
   bias(): Bias | undefined {
-    return this.solver ? this.talk?.bias() : undefined;
+    return this.solver ? this.conversation?.bias() : undefined;
   }
 
   say(text: string): void {
@@ -165,23 +179,25 @@ class Wiring implements SessionTalk {
     if (trimmed === '' || !this.speaking()) {
       return;
     }
-    this.talk?.hear(this.quickSignals(id));
+    this.conversation?.hear(this.quickSignals(id));
     this.host.felt?.();
     this.send(trimmed, false);
   }
 
   setPersonality(p: Personality): void {
     this.personality = p;
-    this.talk?.setPersonality(p);
+    this.conversation?.setPersonality(p);
   }
 
   resetFeeling(): void {
-    this.talk?.resetFeeling();
+    this.conversation?.resetFeeling();
   }
 
   feeling(): FeelingView | null {
-    const talk = this.talk;
-    return talk === null ? null : { snapshot: talk.feeling(), journal: talk.journal() };
+    const conversation = this.conversation;
+    return conversation === null
+      ? null
+      : { snapshot: conversation.feeling(), journal: conversation.journal() };
   }
 
   setOn(on: boolean): void {
@@ -190,11 +206,11 @@ class Wiring implements SessionTalk {
   }
 
   setLevel(level: Level): void {
-    this.talk?.setLevel(level);
+    this.conversation?.setLevel(level);
     this.update({ level });
   }
 
-  attach(client: TalkClient): void {
+  attach(client: ConversationClient): void {
     this.client = client;
     this.link = 'done';
     this.update({ available: this.available() });
@@ -214,8 +230,8 @@ class Wiring implements SessionTalk {
     this.sendSummary(true);
   }
 
-  active(): Talk | null {
-    return this.talk;
+  active(): Conversation | null {
+    return this.conversation;
   }
 
   private connect(): void {
@@ -227,7 +243,7 @@ class Wiring implements SessionTalk {
       return;
     }
     this.link = 'pending';
-    void attempt(connect).then((client) => this.attach(client ?? silentTalkClient));
+    void attempt(connect).then((client) => this.attach(client ?? silentConversationClient));
   }
 
   private available(): boolean {
@@ -239,7 +255,7 @@ class Wiring implements SessionTalk {
     return this.client.enabled && this.solver && this.host.read().on;
   }
 
-  private update(patch: Partial<TalkState>): void {
+  private update(patch: Partial<ConversationState>): void {
     this.host.write({ ...this.host.read(), ...patch });
   }
 
@@ -265,7 +281,7 @@ class Wiring implements SessionTalk {
     return acted && !events.some((e) => e.type === 'handEnded');
   }
 
-  private askRange(talk: Talk): void {
+  private askRange(conversation: Conversation): void {
     const { playerRange } = this.setup;
     if (playerRange === undefined) {
       return;
@@ -275,14 +291,14 @@ class Wiring implements SessionTalk {
     const epoch = this.host.epoch();
     const { handNumber } = this.host.table();
     const current = () =>
-      mine === this.rangeAsks && epoch === this.host.epoch() && talk === this.talk;
+      mine === this.rangeAsks && epoch === this.host.epoch() && conversation === this.conversation;
     setTimeout(() => {
       if (!current()) {
         return;
       }
       void attempt(playerRange).then((range) => {
         if (range !== null && current()) {
-          talk.playerRange(range, handNumber);
+          conversation.playerRange(range, handNumber);
         }
       });
     }, 0);
@@ -298,16 +314,16 @@ class Wiring implements SessionTalk {
     return this.herRaised ? ['mockBluff'] : ['tease'];
   }
 
-  private input(talk: Talk, intent: LineIntent, recent: ChatTurn[]): HandInput {
+  private input(conversation: Conversation, intent: LineIntent, recent: ChatTurn[]): HandInput {
     return {
       sessionId: this.host.sessionId(),
       locale: this.setup.locale,
       seat: this.setup.botSeat,
-      facts: talk.facts(),
+      facts: conversation.facts(),
       intent,
-      mood: talk.moodWords(),
-      feeling: talk.feelingFor(intent),
-      character: talk.character(),
+      mood: conversation.moodWords(),
+      feeling: conversation.feelingFor(intent),
+      character: conversation.character(),
       recent,
     };
   }
@@ -317,12 +333,12 @@ class Wiring implements SessionTalk {
   }
 
   private requestLine(intent: LineIntent): void {
-    const { talk, client } = this;
-    if (talk === null) {
+    const { conversation, client } = this;
+    if (conversation === null) {
       return;
     }
     const epoch = this.host.epoch();
-    const payload = toLinePayload(this.input(talk, intent, this.recent()));
+    const payload = toLinePayload(this.input(conversation, intent, this.recent()));
     void attempt(() => client.line(payload)).then((text) => {
       if (text !== null && this.speaking() && this.current(epoch, intent)) {
         this.append('mallorca', text, intent.handNumber);
@@ -343,22 +359,27 @@ class Wiring implements SessionTalk {
   }
 
   private send(text: string, typed: boolean): void {
-    const { talk, client } = this;
-    if (talk === null) {
+    const { conversation, client } = this;
+    if (conversation === null) {
       return;
     }
     const recent = this.recent();
     const line = this.append('player', text, this.host.table().handNumber);
     const epoch = this.host.epoch();
-    const input = this.input(talk, talk.replyIntent(), recent);
+    const input = this.input(conversation, conversation.replyIntent(), recent);
     const payload = toReplyPayload({ ...input, text, quick: !typed });
     void attempt(() => client.reply(payload)).then((reply) => {
       this.answered(epoch, line.id, reply, typed);
     });
   }
 
-  private answered(epoch: number, lineId: number, reply: TalkReply | null, hear: boolean): void {
-    if (epoch !== this.host.epoch() || this.talk === null || !this.speaking()) {
+  private answered(
+    epoch: number,
+    lineId: number,
+    reply: ConversationReply | null,
+    hear: boolean,
+  ): void {
+    if (epoch !== this.host.epoch() || this.conversation === null || !this.speaking()) {
       return;
     }
     if (reply === null) {
@@ -366,7 +387,7 @@ class Wiring implements SessionTalk {
       return;
     }
     if (hear) {
-      this.talk.hear(reply.signals);
+      this.conversation.hear(reply.signals);
       this.host.felt?.();
     }
     this.append('mallorca', reply.text, this.host.table().handNumber);
@@ -391,12 +412,12 @@ class Wiring implements SessionTalk {
   }
 
   private sendSummary(keepalive = false): void {
-    const { talk, client } = this;
-    if (talk === null || !this.speaking() || this.unsent === 0) {
+    const { conversation, client } = this;
+    if (conversation === null || !this.speaking() || this.unsent === 0) {
       return;
     }
     this.unsent = 0;
-    const summary = talk.summary();
+    const summary = conversation.summary();
     const payload = toSummaryPayload({
       sessionId: this.host.sessionId(),
       locale: this.setup.locale,
@@ -407,6 +428,9 @@ class Wiring implements SessionTalk {
   }
 }
 
-export function sessionTalk(setup: TalkSetup, host: TalkHost): SessionTalk {
+export function sessionConversation(
+  setup: ConversationSetup,
+  host: ConversationHost,
+): SessionConversation {
   return new Wiring(setup, host);
 }

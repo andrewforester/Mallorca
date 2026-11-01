@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { BotBias, Breakdown } from '../brains/index.ts';
 import { CASH } from '../engine/index.ts';
 import type { LegalActions } from '../engine/index.ts';
-import { PERSONALITIES } from '../talk/index.ts';
+import { PERSONALITIES } from '../conversation/index.ts';
 import { createSession } from './session.ts';
 import type { Session } from './session.ts';
 import type { SessionOptions } from './sessionTypes.ts';

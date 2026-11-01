@@ -1,7 +1,7 @@
 import type { StoreApi } from 'zustand/vanilla';
 import type { Decision } from '../brains/index.ts';
 import type { LogEntry, SeatIndex, Table, TableMode } from '../engine/index.ts';
-import type { Level, Personality, PersonalityKey } from '../talk/index.ts';
+import type { Level, Personality, PersonalityKey } from '../conversation/index.ts';
 import type { BotClient } from './botClient.ts';
 import type { CoachState } from './coach.ts';
 import type { DebugState } from './debug.ts';
@@ -11,8 +11,8 @@ import type { HandResult, SeatActions } from './outcome.ts';
 import type { RecordsOptions } from './records/recorder.ts';
 import type { FaceFrame } from '../face/index.ts';
 import type { FaceState } from './sessionFace.ts';
-import type { QuickPhrase, TalkState } from './sessionTalk.ts';
-import type { TalkClient } from './talkClient.ts';
+import type { QuickPhrase, ConversationState } from './sessionConversation.ts';
+import type { ConversationClient } from './conversationClient.ts';
 
 export type Phase =
   | 'idle'
@@ -40,7 +40,7 @@ export interface SessionState {
   session: SessionResult;
   sessionId: string | null;
   opponent: Opponent;
-  talk: TalkState;
+  conversation: ConversationState;
   coach: CoachState;
   face: FaceState;
   debug: DebugState | null;
@@ -55,9 +55,9 @@ export interface SessionActions {
   dispose(): void;
   say(text: string): void;
   quick(id: QuickPhrase, text: string): void;
-  setTalk(on: boolean): void;
+  setConversation(on: boolean): void;
   setTells(level: Level): void;
-  attachTalk(client: TalkClient): void;
+  attachConversation(client: ConversationClient): void;
   pageHidden(): void;
   setFace(on: boolean): void;
   faceNow(): FaceFrame | null;
@@ -76,11 +76,11 @@ export interface SessionOptions {
   startingStacks?: [number, number];
   mode: TableMode;
   records?: RecordsOptions;
-  talk?: TalkClient;
-  connectTalk?: () => Promise<TalkClient>;
+  conversation?: ConversationClient;
+  connectConversation?: () => Promise<ConversationClient>;
   now?: () => number;
   locale?: string;
-  talkOn?: boolean;
+  conversationOn?: boolean;
   tells?: Level;
   coach?: boolean;
   faceOn?: boolean;

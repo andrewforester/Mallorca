@@ -1,7 +1,7 @@
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { MALLORCA_LOOK, faceFrame, pulsesOf } from '../face/index.ts';
 import type { FaceFrame, GazeTarget, Pulse } from '../face/index.ts';
-import type { Talk } from '../talk/index.ts';
+import type { Conversation } from '../conversation/index.ts';
 import { gazeOf } from './faceCues.ts';
 
 export type FaceCue =
@@ -16,7 +16,7 @@ export interface FaceState {
 export interface FaceHost {
   read(): FaceState;
   write(face: FaceState): void;
-  talk(): Talk | null;
+  conversation(): Conversation | null;
   now(): number;
   botSeat: SeatIndex;
 }
@@ -35,8 +35,8 @@ export const initialFace = (on: boolean): FaceState => ({ on, cues: [] });
 
 export function sessionFace(host: FaceHost): SessionFace {
   let nextId = 0;
-  const frameOf = (talk: Talk): FaceFrame =>
-    faceFrame(talk.feelingAt(host.now()), talk.stance(), MALLORCA_LOOK);
+  const frameOf = (conversation: Conversation): FaceFrame =>
+    faceFrame(conversation.feelingAt(host.now()), conversation.stance(), MALLORCA_LOOK);
   const add = (fresh: NewCue[]): void => {
     if (fresh.length === 0) return;
     const face = host.read();
@@ -45,11 +45,11 @@ export function sessionFace(host: FaceHost): SessionFace {
   };
   return {
     observe(events) {
-      const talk = host.talk();
-      if (talk === null) return;
-      const impulses = talk.impulses();
+      const conversation = host.conversation();
+      if (conversation === null) return;
+      const impulses = conversation.impulses();
       if (!host.read().on) return;
-      const pulses = pulsesOf(impulses, frameOf(talk).mask, MALLORCA_LOOK);
+      const pulses = pulsesOf(impulses, frameOf(conversation).mask, MALLORCA_LOOK);
       const gaze = gazeOf(events, host.botSeat);
       add([
         ...pulses.map((pulse): NewCue => ({ kind: 'pulse', pulse })),
@@ -57,12 +57,12 @@ export function sessionFace(host: FaceHost): SessionFace {
       ]);
     },
     setOn(on) {
-      host.talk()?.impulses();
+      host.conversation()?.impulses();
       host.write({ ...host.read(), on });
     },
     now() {
-      const talk = host.talk();
-      return talk === null || !host.read().on ? null : frameOf(talk);
+      const conversation = host.conversation();
+      return conversation === null || !host.read().on ? null : frameOf(conversation);
     },
   };
 }

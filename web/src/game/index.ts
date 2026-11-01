@@ -24,7 +24,7 @@ export { CASH, TOURNAMENT } from '../engine/index.ts';
 export type { HandCategory } from '../equity/index.ts';
 export type { StreetGroup } from './handLog.ts';
 export { groupHand } from './handLog.ts';
-export type { RaiseControl, SeatView, TalkView, ViewModel } from './viewModel.ts';
+export type { RaiseControl, SeatView, ConversationView, ViewModel } from './viewModel.ts';
 export { toViewModel } from './viewModel.ts';
 export type { HandRecord, HandStore } from './records/index.ts';
 export { memoryStore, openHandStore, toPokerStars } from './records/index.ts';
@@ -34,22 +34,27 @@ export type {
   LinePayload,
   ReplyPayload,
   SummaryPayload,
-  TalkClient,
-  TalkReply,
-} from './talkClient.ts';
-export { silentTalkClient, toLinePayload, toReplyPayload, toSummaryPayload } from './talkClient.ts';
-export type { RemoteOptions } from './remoteTalk.ts';
-export type { TalkConfig } from './talkLoader.ts';
-export { loadTalkClient, talkConnector } from './talkLoader.ts';
+  ConversationClient,
+  ConversationReply,
+} from './conversationClient.ts';
+export {
+  silentConversationClient,
+  toLinePayload,
+  toReplyPayload,
+  toSummaryPayload,
+} from './conversationClient.ts';
+export type { RemoteOptions } from './remoteConversation.ts';
+export type { ConversationConfig } from './conversationLoader.ts';
+export { loadConversationClient, conversationConnector } from './conversationLoader.ts';
 export { onPageExit } from './pageExit.ts';
-export type { Level } from '../talk/index.ts';
+export type { Level } from '../conversation/index.ts';
 export type { FaceCue, FaceState } from './sessionFace.ts';
 export type { FaceFrame, GazeTarget, Pulse, VisemeCue, Weights } from '../face/index.ts';
 export { speechOf } from '../face/index.ts';
 export type { DebugDecision, DebugState, DecisionRow, PersonalityChoice } from './debug.ts';
 export type { DebugLoad, DebugTraits, DebugView } from './debugView.ts';
 export { toDebugView } from './debugView.ts';
-export { EMOTIONS, LOAD_SOURCES, PERSONALITIES, BIAS_KEYS } from '../talk/index.ts';
+export { EMOTIONS, LOAD_SOURCES, PERSONALITIES, BIAS_KEYS } from '../conversation/index.ts';
 export type {
   BigFive,
   Emotion,
@@ -62,4 +67,4 @@ export type {
   Bias,
   BiasKey,
   TableEvent,
-} from '../talk/index.ts';
+} from '../conversation/index.ts';

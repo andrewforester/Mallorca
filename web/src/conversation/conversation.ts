@@ -40,7 +40,7 @@ export interface LineIntent {
   handNumber: number;
 }
 
-export interface Talk {
+export interface Conversation {
   observe(events: readonly EngineEvent[], nowMs: number): LineIntent | null;
   hear(signals: readonly Signal[]): void;
   playerRange(weights: ArrayLike<number>, handNumber: number): void;
@@ -63,7 +63,7 @@ export interface Talk {
 
 export type Stance = 'bluff' | 'hide';
 
-export interface TalkOptions {
+export interface ConversationOptions {
   seat: SeatIndex;
   rng: Rng;
   luckRng?: Rng;
@@ -142,7 +142,7 @@ function actedSituation(event: EngineEvent, seat: SeatIndex): Situation | null {
   return kind === 'fold' ? null : 'herCall';
 }
 
-class TableTalk implements Talk {
+class TableConversation implements Conversation {
   private readonly seat: SeatIndex;
   private readonly rng: Rng;
   private readonly luck: Rng;
@@ -159,7 +159,7 @@ class TableTalk implements Talk {
   private readonly felt = new Journal();
   private personality: Personality = MALLORCA;
 
-  constructor(options: TalkOptions) {
+  constructor(options: ConversationOptions) {
     this.seat = options.seat;
     this.rng = options.rng;
     this.luck = options.luckRng ?? mulberry32(Math.floor(options.rng.next() * SEED_RANGE));
@@ -385,6 +385,6 @@ class TableTalk implements Talk {
   }
 }
 
-export function createTalk(options: TalkOptions): Talk {
-  return new TableTalk(options);
+export function createConversation(options: ConversationOptions): Conversation {
+  return new TableConversation(options);
 }

@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
-import { SIGNALS } from '../talk/index.ts';
-import type { Signal } from '../talk/index.ts';
-import { TALK_TIMEOUT_MS, silentTalkClient } from './talkClient.ts';
-import type { TalkClient, TalkReply } from './talkClient.ts';
+import { SIGNALS } from '../conversation/index.ts';
+import type { Signal } from '../conversation/index.ts';
+import { CONVERSATION_TIMEOUT_MS, silentConversationClient } from './conversationClient.ts';
+import type { ConversationClient, ConversationReply } from './conversationClient.ts';
 
 export interface RemoteOptions {
   url: string;
@@ -26,7 +26,7 @@ function parseSignals(value: unknown): Signal[] {
   return value.filter((item): item is Signal => (SIGNALS as readonly unknown[]).includes(item));
 }
 
-function parseReply(body: unknown): TalkReply | null {
+function parseReply(body: unknown): ConversationReply | null {
   if (!isRecord(body) || typeof body.text !== 'string' || body.text.trim() === '') return null;
   return { text: body.text, signals: parseSignals(body.signals) };
 }
@@ -69,7 +69,7 @@ async function beacon(options: RemoteOptions, token: string | null, payload: unk
 
 async function post(options: RemoteOptions, tokens: Tokens, payload: unknown): Promise<unknown> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TALK_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), CONVERSATION_TIMEOUT_MS);
   try {
     const token = await Promise.race([tokens(), aborted(controller.signal)]);
     if (token === null) return null;
@@ -88,7 +88,7 @@ async function post(options: RemoteOptions, tokens: Tokens, payload: unknown): P
   }
 }
 
-function connected(options: RemoteOptions, tokens: TokenCache): TalkClient {
+function connected(options: RemoteOptions, tokens: TokenCache): ConversationClient {
   const { fresh } = tokens;
   return {
     enabled: true,
@@ -114,11 +114,15 @@ async function signIn(options: RemoteOptions): Promise<Tokens | null> {
   return async () => (await client.auth.getSession()).data.session?.access_token ?? null;
 }
 
-export async function remoteTalkClient(options: RemoteOptions): Promise<TalkClient> {
+export async function remoteConversationClient(
+  options: RemoteOptions,
+): Promise<ConversationClient> {
   try {
     const tokens = await signIn(options);
-    return tokens === null ? silentTalkClient : connected(options, cache(tokens, await tokens()));
+    return tokens === null
+      ? silentConversationClient
+      : connected(options, cache(tokens, await tokens()));
   } catch {
-    return silentTalkClient;
+    return silentConversationClient;
   }
 }

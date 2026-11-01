@@ -1,6 +1,6 @@
 import type { Card, Rng } from '../../src/cards/index.ts';
-import { BASE_HABITS, habitsAt, strengthOf } from '../../src/talk/index.ts';
-import type { Level } from '../../src/talk/index.ts';
+import { BASE_HABITS, habitsAt, strengthOf } from '../../src/conversation/index.ts';
+import type { Level } from '../../src/conversation/index.ts';
 import type { ArenaBot } from './arenaBot.ts';
 
 export function createTalkingBot(inner: ArenaBot, level: Level, rng: Rng): ArenaBot {

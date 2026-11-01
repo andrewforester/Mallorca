@@ -170,7 +170,7 @@ describe("her equity against the player's range", () => {
   });
 });
 
-describe('what the feeling gives the rest of talk', () => {
+describe('what the feeling gives the rest of conversation', () => {
   it('is calm at the start: no words, speaking factor one, neutral bias', () => {
     const feeling = createFeeling({ seat: HER, rng: mulberry32(1) });
     expect(feeling.words()).toEqual([]);
