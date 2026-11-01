@@ -6,8 +6,8 @@ import type { FaceLook } from './look.ts';
 import { clamp01 } from './math.ts';
 import { prosodyOf } from './prosody.ts';
 import type { Prosody } from './prosody.ts';
-import { poseOf } from './stance.ts';
-import type { Stance } from './stance.ts';
+import { STANCES } from './stance.ts';
+import type { Shown } from './stance.ts';
 
 export interface IdleState {
   nervous: number;
@@ -30,11 +30,10 @@ export const nervousOf = (s: Snapshot): number =>
 export const sadnessOf = (s: Snapshot): number =>
   clamp01(s.emotions.distress + s.emotions.disappointment);
 
-export function faceFrame(s: Snapshot, stance: Stance | null, look: FaceLook): FaceFrame {
-  const pose = poseOf(stance);
-  const mask = maskOf(s.traits.mask, pose.effort, s.load.overload);
+export function faceFrame(s: Snapshot, presenting: Shown | null, look: FaceLook): FaceFrame {
+  const mask = maskOf(s.traits.mask, presenting?.effort ?? 0, s.load.overload);
   const felt = feltPadOf(s);
-  const shown = shownPadOf(felt, mask, pose.acted);
+  const shown = shownPadOf(felt, mask, presenting === null ? null : STANCES[presenting.stance]);
   return {
     felt,
     shown,
