@@ -39,7 +39,7 @@ export function sessionFace(host: FaceHost): SessionFace {
   let cursor = 0;
   const frameOf = (persona: Persona): FaceFrame => {
     const view = persona.view(host.now());
-    return faceFrame(view.snapshot, view.stance, MALLORCA_LOOK);
+    return faceFrame(view.snapshot, view.presenting, MALLORCA_LOOK);
   };
   const fresh = (persona: Persona): Impulse[] => {
     const from = persona === seen ? cursor : 0;
