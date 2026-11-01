@@ -4,13 +4,9 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { Rng } from '../../../src/cards/index.ts';
-import type { Weights } from './anchors.ts';
-import type { VisemeCue } from './visemes.ts';
+import type { VisemeCue, Weights } from '../../../src/face/index.ts';
 
-export const MODEL_URLS = [
-  'avatar.glb',
-  'https://raw.githubusercontent.com/met4citizen/TalkingHead/main/avatars/brunette.glb',
-];
+export const MODEL_URLS = [`${import.meta.env.BASE_URL}avatar/mallorca.glb`];
 
 export type GazeTarget = 'player' | 'cards' | 'board' | 'chips' | 'away' | 'think' | 'down';
 
@@ -46,7 +42,18 @@ interface HeadMove {
   t0: number;
 }
 
-const BONES = ['Head', 'Neck', 'Spine2', 'LeftEye', 'RightEye', 'LeftShoulder', 'RightShoulder'];
+const BONES = [
+  'Head',
+  'Neck',
+  'Spine2',
+  'LeftEye',
+  'RightEye',
+  'LeftShoulder',
+  'RightShoulder',
+  'LeftArm',
+  'RightArm',
+];
+const BIPED = new Set(['Head', 'Neck', 'Spine2', 'LeftShoulder', 'RightShoulder']);
 
 export function envelope(t: number, a: number, h: number, r: number): number {
   if (t < 0) {
@@ -158,6 +165,8 @@ export class Avatar {
         this.base[n] = bone.quaternion.clone();
       }
     }
+    this.setBone('LeftArm', 0, 0.85, 0.25);
+    this.setBone('RightArm', 0, -0.85, 0.25);
     this.names.forEach((n) => (this.values[n] = 0));
     root.updateMatrixWorld(true);
     const head = new THREE.Vector3();
@@ -239,7 +248,11 @@ export class Avatar {
     if (!bone || !base) {
       return;
     }
-    this.euler.set(x, y, z, 'YXZ');
+    if (BIPED.has(name)) {
+      this.euler.set(y, z, x, 'YXZ');
+    } else {
+      this.euler.set(x, y, z, 'YXZ');
+    }
     this.quat.setFromEuler(this.euler);
     bone.quaternion.copy(base).multiply(this.quat);
   }
@@ -354,8 +367,8 @@ export class Avatar {
     this.gazeNow[1] = smooth(this.gazeNow[1], target[1] + this.gazeOffset[1], 18, dt);
     const yaw = clamp(this.gazeNow[0] * 0.75, -0.45, 0.45);
     const pitch = clamp(this.gazeNow[1] * 0.7, -0.3, 0.35);
-    this.setBone('LeftEye', -pitch, yaw, 0);
-    this.setBone('RightEye', -pitch, yaw, 0);
+    this.setBone('LeftEye', 0, yaw, pitch);
+    this.setBone('RightEye', 0, yaw, pitch);
     for (const side of ['Left', 'Right']) {
       final[`eyeLookDown${side}`] = (final[`eyeLookDown${side}`] ?? 0) + Math.max(0, pitch) * 1.4;
       final[`eyeLookUp${side}`] = (final[`eyeLookUp${side}`] ?? 0) + Math.max(0, -pitch) * 1.2;

@@ -1,4 +1,4 @@
-import type { Prosody } from './prosody.ts';
+import type { Prosody } from '../../../src/face/index.ts';
 
 const PREFERRED = [
   'Samantha',

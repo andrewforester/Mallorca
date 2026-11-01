@@ -25,6 +25,7 @@ export interface TableProps {
   coach?: ComponentChildren;
   onSay?: (text: string) => void;
   onQuick?: (id: QuickPhrase, text: string) => void;
+  face?: (thinking: boolean) => ComponentChildren;
 }
 
 const ignore = () => undefined;
@@ -241,6 +242,7 @@ export function Table(props: TableProps) {
           onNextHand={onNextHand}
         />
       )}
+      {props.face?.(thinking)}
       <Seats vm={vm} humanSeat={humanSeat} held={held} thinking={thinking} chat={chat} />
       <ActionBar key={barKey} controls={vm.controls} onAct={onAct} />
       <TableSide chat={chat} coach={props.coach} />

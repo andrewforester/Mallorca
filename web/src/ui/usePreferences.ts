@@ -3,16 +3,20 @@ import type { Level } from '../game/index.ts';
 import {
   readAutoNext,
   readCoach,
+  readFace,
   readSound,
   readTableStyle,
   readTalk,
   readTells,
+  readVoice,
   writeAutoNext,
   writeCoach,
+  writeFace,
   writeSound,
   writeTableStyle,
   writeTalk,
   writeTells,
+  writeVoice,
 } from './preferences.ts';
 import type { TableStyle } from './preferences.ts';
 
@@ -23,12 +27,16 @@ export interface Preferences {
   tells: Level;
   sound: boolean;
   coach: boolean;
+  face: boolean;
+  voice: boolean;
   toggleSimple: () => void;
   toggleAutoNext: () => void;
   setTalk: (on: boolean) => void;
   setTells: (level: Level) => void;
   toggleSound: () => void;
   toggleCoach: () => void;
+  toggleFace: () => void;
+  toggleVoice: () => void;
 }
 
 export function usePreferences(): Preferences {
@@ -38,6 +46,8 @@ export function usePreferences(): Preferences {
   const [tells, setTells] = useState<Level>(readTells);
   const [sound, setSound] = useState(readSound);
   const [coach, setCoach] = useState(readCoach);
+  const [face, setFace] = useState(readFace);
+  const [voice, setVoice] = useState(readVoice);
   const simple = tableStyle === 'simple';
   return {
     simple,
@@ -46,6 +56,8 @@ export function usePreferences(): Preferences {
     tells,
     sound,
     coach,
+    face,
+    voice,
     toggleSimple: () => {
       const next: TableStyle = simple ? 'room' : 'simple';
       writeTableStyle(next);
@@ -70,6 +82,14 @@ export function usePreferences(): Preferences {
     toggleCoach: () => {
       writeCoach(!coach);
       setCoach(!coach);
+    },
+    toggleFace: () => {
+      writeFace(!face);
+      setFace(!face);
+    },
+    toggleVoice: () => {
+      writeVoice(!voice);
+      setVoice(!voice);
     },
   };
 }

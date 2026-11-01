@@ -72,7 +72,7 @@ test('the showdown result leaves both shown hands and the board visible', async 
 test('the simple table is flat, skips the photo and is remembered', async ({ page }) => {
   const plates: string[] = [];
   page.on('request', (request) => {
-    if (request.url().endsWith('.webp')) {
+    if (/\/attic-[^/]*\.webp$/.test(request.url())) {
       plates.push(request.url());
     }
   });

@@ -26,7 +26,9 @@
     "leave": "Leave table",
     "simpleTable": "Simple table",
     "autoNext": "Auto next hand",
-    "sound": "Sound"
+    "sound": "Sound",
+    "face": "Her face",
+    "voice": "Her voice"
   },
   "seat": {
     "you": "You",

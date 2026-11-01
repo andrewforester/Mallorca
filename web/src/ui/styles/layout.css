@@ -947,6 +947,7 @@ button {
   --focus-y: var(--p-focus-y);
   --felt-tilt: var(--p-felt-tilt);
   --opponent-y: var(--p-opponent-y);
+  --rail-y: var(--p-rail-y);
   --board-y: var(--p-board-y);
   --hero-bottom: var(--p-hero-bottom);
   --card-scale: var(--p-card-scale);
@@ -998,6 +999,7 @@ button {
     --focus-y: var(--l-focus-y);
     --felt-tilt: var(--l-felt-tilt);
     --opponent-y: var(--l-opponent-y);
+    --rail-y: var(--l-rail-y);
     --board-y: var(--l-board-y);
     --hero-bottom: var(--l-hero-bottom);
     --card-scale: var(--l-card-scale);
@@ -1927,4 +1929,83 @@ button {
 .coach-leak {
   display: flex;
   flex-direction: column;
+}
+
+.face-seat {
+  position: absolute;
+  bottom: calc(100% - var(--rail-y));
+  left: 50%;
+  z-index: 1;
+  height: var(--face-height);
+  aspect-ratio: 7 / 6;
+  transform: translateX(-50%);
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, #000 96%, transparent);
+  --face-height: clamp(150px, 56vw, 340px);
+}
+
+@media (min-aspect-ratio: 1/1) {
+  .face-seat {
+    --face-height: clamp(150px, 41vh, 460px);
+  }
+}
+
+.face-portrait,
+.face-stage,
+.face-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.face-portrait {
+  object-fit: contain;
+  object-position: bottom;
+  transition: opacity 400ms ease;
+}
+
+.face-stage .face-canvas {
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
+.face-seat.face-mode-live .face-portrait {
+  opacity: 0;
+}
+
+.face-seat.face-mode-live .face-canvas {
+  opacity: 1;
+}
+
+.table-layout:has(.face-seat) .seat-top .seat-bubble {
+  bottom: auto;
+  top: 50%;
+  left: auto;
+  right: calc(100% + var(--space-2));
+  transform: translateY(-50%);
+}
+
+.table-layout:has(.face-seat) .result {
+  top: calc(var(--board-y) + var(--card-width) * 0.9 + var(--space-2));
+  transform: translateX(-50%);
+}
+
+@media not (min-aspect-ratio: 1/1) {
+  .table-layout:has(.face-seat) .result {
+    top: auto;
+    bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+    z-index: 6;
+  }
+
+  .table-layout:has(.face-seat) .talk-bubble-mallorca {
+    top: calc(100% + var(--card-width) * 1.3 + var(--space-3));
+    bottom: auto;
+  }
+
+  .table-layout:has(.face-seat) .talk-bubble-mallorca::after {
+    top: -6px;
+    bottom: auto;
+    rotate: 225deg;
+  }
 }

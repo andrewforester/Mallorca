@@ -1,20 +1,18 @@
-import type { Emotion, Pad } from '../../../src/emotion/index.ts';
-import type { FaceLook } from '../profiles.ts';
+import type { Emotion, Pad } from '../emotion/index.ts';
+import type { FaceLook } from './look.ts';
 
 export type Weights = Record<string, number>;
 
 export interface Anchor {
   id: string;
-  label: string;
   pad: Pad;
   face: Weights;
 }
 
 export const ANCHORS: readonly Anchor[] = [
-  { id: 'neutral', label: 'покой', pad: [0, 0, 0], face: {} },
+  { id: 'neutral', pad: [0, 0, 0], face: {} },
   {
     id: 'content',
-    label: 'тепло',
     pad: [0.5, -0.25, 0.1],
     face: {
       mouthSmileLeft: 0.35,
@@ -29,7 +27,6 @@ export const ANCHORS: readonly Anchor[] = [
   },
   {
     id: 'joy',
-    label: 'радость',
     pad: [0.85, 0.55, 0.3],
     face: {
       mouthSmileLeft: 0.9,
@@ -49,7 +46,6 @@ export const ANCHORS: readonly Anchor[] = [
   },
   {
     id: 'smug',
-    label: 'самодовольство',
     pad: [0.35, 0.1, 0.75],
     face: {
       mouthSmileLeft: 0.5,
@@ -63,7 +59,6 @@ export const ANCHORS: readonly Anchor[] = [
   },
   {
     id: 'calm',
-    label: 'расслабленность',
     pad: [0.25, -0.7, 0.05],
     face: {
       eyeBlinkLeft: 0.25,
@@ -75,7 +70,6 @@ export const ANCHORS: readonly Anchor[] = [
   },
   {
     id: 'sad',
-    label: 'грусть',
     pad: [-0.65, -0.45, -0.4],
     face: {
       browInnerUp: 0.8,
@@ -92,7 +86,6 @@ export const ANCHORS: readonly Anchor[] = [
   },
   {
     id: 'sulk',
-    label: 'обида',
     pad: [-0.5, -0.15, 0.2],
     face: {
       mouthPressLeft: 0.45,
@@ -109,7 +102,6 @@ export const ANCHORS: readonly Anchor[] = [
   },
   {
     id: 'irritated',
-    label: 'раздражение',
     pad: [-0.35, 0.35, 0.3],
     face: {
       browDownLeft: 0.5,
@@ -125,7 +117,6 @@ export const ANCHORS: readonly Anchor[] = [
   },
   {
     id: 'anger',
-    label: 'злость',
     pad: [-0.65, 0.8, 0.65],
     face: {
       browDownLeft: 1,
@@ -146,7 +137,6 @@ export const ANCHORS: readonly Anchor[] = [
   },
   {
     id: 'worry',
-    label: 'сомнение',
     pad: [-0.3, 0.25, -0.5],
     face: {
       browInnerUp: 0.55,
@@ -161,7 +151,6 @@ export const ANCHORS: readonly Anchor[] = [
   },
   {
     id: 'fear',
-    label: 'тревога',
     pad: [-0.55, 0.75, -0.7],
     face: {
       browInnerUp: 0.85,

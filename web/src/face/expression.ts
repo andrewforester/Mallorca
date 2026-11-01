@@ -1,8 +1,10 @@
-import { EMOTIONS, EMOTION_PAD } from '../../../src/emotion/index.ts';
-export { OVERLOAD_MASK_LOSS, maskOf } from '../../../src/emotion/index.ts';
-import type { Impulse, Pad, Snapshot } from '../../../src/emotion/index.ts';
-import { clamp, smoothstep } from '../lab.ts';
-import { EMOTION_PULSE } from './anchors.ts';
+import { EMOTIONS, EMOTION_PAD } from '../emotion/index.ts';
+export { OVERLOAD_MASK_LOSS, maskOf } from '../emotion/index.ts';
+import type { Impulse, Pad, Snapshot } from '../emotion/index.ts';
+import { clamp, smoothstep } from './math.ts';
+import { EMOTION_PULSE, PULSE_FACES, shaped } from './anchors.ts';
+import type { Weights } from './anchors.ts';
+import type { FaceLook } from './look.ts';
 
 export const EMOTION_DISPLAY_GAIN = 1;
 export const MOOD_DISPLAY_GAIN = 0.5;
@@ -76,4 +78,26 @@ export function pulsesFor(impulses: readonly Impulse[], mask: number, leak: numb
     });
   }
   return plans;
+}
+
+export interface Pulse {
+  weights: Weights;
+  amp: number;
+  attack: number;
+  hold: number;
+  release: number;
+  delay: number;
+  blinks: number;
+}
+
+export function pulsesOf(impulses: readonly Impulse[], mask: number, look: FaceLook): Pulse[] {
+  return pulsesFor(impulses, mask, look.leak).map((plan) => ({
+    weights: shaped(PULSE_FACES[plan.face] ?? {}, look, 1),
+    amp: plan.amp,
+    attack: plan.attack,
+    hold: plan.hold,
+    release: plan.release,
+    delay: plan.delay,
+    blinks: plan.face === 'control' ? 2 : 0,
+  }));
 }

@@ -12,5 +12,5 @@ export type { Character, FeelingState, FeltEmotion } from './state.ts';
 export { characterOf, feelingState } from './state.ts';
 export type { SessionSummary } from './summary.ts';
 export { EMPTY_SUMMARY, since } from './summary.ts';
-export type { Draw, HandFacts, LineIntent, Spot, Talk, TalkOptions } from './talk.ts';
+export type { Draw, HandFacts, LineIntent, Spot, Stance, Talk, TalkOptions } from './talk.ts';
 export { createTalk, drawLine, endsHand } from './talk.ts';

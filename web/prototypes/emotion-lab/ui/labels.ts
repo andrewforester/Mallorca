@@ -43,3 +43,17 @@ export const STYLE_LABEL: Readonly<Record<StyleKey, string>> = {
   sizing: 'Размер ставок',
   stickiness: 'Коллы до конца',
 };
+
+export const ANCHOR_LABEL: Readonly<Record<string, string>> = {
+  neutral: 'покой',
+  content: 'тепло',
+  joy: 'радость',
+  smug: 'самодовольство',
+  calm: 'расслабленность',
+  sad: 'грусть',
+  sulk: 'обида',
+  irritated: 'раздражение',
+  anger: 'злость',
+  worry: 'сомнение',
+  fear: 'тревога',
+};

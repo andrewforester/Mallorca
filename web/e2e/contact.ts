@@ -194,7 +194,9 @@ mkdirSync(OUT_DIR, { recursive: true });
 const server = spawn('npm', ['run', 'preview', '--', '--port', String(PORT), '--strictPort'], {
   stdio: 'ignore',
 });
-const browser = await chromium.launch();
+const browser = await chromium.launch({
+  args: process.platform === 'darwin' ? ['--use-angle=metal'] : [],
+});
 try {
   await waitForServer(server);
   for (const sheet of SHEETS) {

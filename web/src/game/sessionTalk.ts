@@ -53,6 +53,7 @@ export interface SessionTalk {
   handDone(hands: number): void;
   leave(): void;
   pageHidden(): void;
+  active(): Talk | null;
 }
 
 const MAX_LINES = 100;
@@ -75,6 +76,7 @@ export function initialTalk(on: boolean, level: Level): TalkState {
 class Wiring implements SessionTalk {
   private client: TalkClient;
   private talk: Talk | null = null;
+  private solver = false;
   private herRaised = false;
   private acted = false;
   private link: 'none' | 'pending' | 'done' = 'none';
@@ -94,10 +96,8 @@ class Wiring implements SessionTalk {
   begin(opponent: Opponent, seed: number): void {
     this.sendSummary();
     const { level } = this.host.read();
-    this.talk =
-      opponent !== 'math'
-        ? createTalk({ seat: this.setup.botSeat, rng: mulberry32(seed ^ TALK_SALT), level })
-        : null;
+    this.talk = createTalk({ seat: this.setup.botSeat, rng: mulberry32(seed ^ TALK_SALT), level });
+    this.solver = opponent !== 'math';
     this.herRaised = false;
     this.acted = false;
     this.sent = EMPTY_SUMMARY;
@@ -115,7 +115,7 @@ class Wiring implements SessionTalk {
     if (intent !== null && this.speaking()) {
       this.requestLine(intent);
     }
-    if (this.playerActed(events)) {
+    if (this.solver && this.playerActed(events)) {
       this.askRange(this.talk);
     }
     if (ended) {
@@ -124,7 +124,7 @@ class Wiring implements SessionTalk {
   }
 
   style(): Style | undefined {
-    return this.client.enabled ? this.talk?.style() : undefined;
+    return this.client.enabled && this.solver ? this.talk?.style() : undefined;
   }
 
   say(text: string): void {
@@ -174,9 +174,13 @@ class Wiring implements SessionTalk {
     this.sendSummary(true);
   }
 
+  active(): Talk | null {
+    return this.talk;
+  }
+
   private connect(): void {
     const { connect } = this.setup;
-    if (connect === undefined || this.link !== 'none' || this.talk === null) {
+    if (connect === undefined || this.link !== 'none' || !this.solver) {
       return;
     }
     if (!this.host.read().on) {
@@ -188,11 +192,11 @@ class Wiring implements SessionTalk {
 
   private available(): boolean {
     const connectable = this.setup.connect !== undefined && this.link !== 'done';
-    return this.talk !== null && (this.client.enabled || connectable);
+    return this.solver && (this.client.enabled || connectable);
   }
 
   private speaking(): boolean {
-    return this.client.enabled && this.talk !== null && this.host.read().on;
+    return this.client.enabled && this.solver && this.host.read().on;
   }
 
   private update(patch: Partial<TalkState>): void {

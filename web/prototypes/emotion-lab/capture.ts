@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { createServer } from 'vite';
-import { ANCHORS } from './face/anchors.ts';
+import { ANCHORS } from '../../src/face/index.ts';
 import { SCENES } from './scenes/scenes.ts';
 
 const OUT = new URL('../../../docs/emotion/img/', import.meta.url);

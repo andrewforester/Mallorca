@@ -3,6 +3,7 @@ import { legalActionsOf, rulesOf, toAct } from '../engine/index.ts';
 import type { Hand, LegalActions, LogEntry, SeatIndex } from '../engine/index.ts';
 import type { HandCategory } from '../equity/index.ts';
 import type { Level } from '../talk/index.ts';
+import type { FaceState } from './sessionFace.ts';
 import type { ChatLine, SessionState } from './session.ts';
 
 export interface SeatView {
@@ -49,6 +50,7 @@ export interface ViewModel {
   result: { winner: SeatIndex | null; category: HandCategory | null; amount: number } | null;
   tournamentWinner: SeatIndex | null;
   talk: TalkView;
+  face: FaceState;
 }
 
 function roundTenth(value: number): number {
@@ -163,5 +165,6 @@ export function toViewModel(state: SessionState, humanSeat: SeatIndex): ViewMode
     result: resultView(state.result),
     tournamentWinner: table.winner,
     talk: talkView(state.talk, humanSeat),
+    face: state.face,
   };
 }

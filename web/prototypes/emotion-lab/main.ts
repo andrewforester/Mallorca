@@ -5,18 +5,28 @@ import { PROFILES } from './profiles.ts';
 import type { Profile, ProfileId } from './profiles.ts';
 import { OCTANT_LABEL, STYLE_LABEL } from './ui/labels.ts';
 import { mulberry32 } from '../../src/cards/index.ts';
-import { LOAD_LABEL } from './ui/labels.ts';
-import { ANCHORS, PULSE_FACES, blendOf, faceOf, shaped } from './face/anchors.ts';
+import { ANCHOR_LABEL, LOAD_LABEL } from './ui/labels.ts';
+import {
+  ANCHORS,
+  PULSE_FACES,
+  blendOf,
+  faceOf,
+  feltPadOf,
+  leakOf,
+  maskOf,
+  prosodyOf,
+  pulsesFor,
+  shaped,
+  shownPadOf,
+  visemesOf,
+} from '../../src/face/index.ts';
+import type { Prosody } from '../../src/face/index.ts';
 import { Avatar } from './face/avatar.ts';
-import { feltPadOf, maskOf, pulsesFor, shownPadOf } from './face/expression.ts';
-import { visemesOf } from './face/visemes.ts';
 import { loadBlueprint } from './scenes/blueprint.ts';
 import { createRunner } from './scenes/runner.ts';
 import type { RunnerHooks } from './scenes/runner.ts';
 import { SCENES } from './scenes/scenes.ts';
 import type { Scene } from './scenes/scenes.ts';
-import { prosodyOf } from './voice/prosody.ts';
-import type { Prosody } from './voice/prosody.ts';
 import { createVoice } from './voice/voice.ts';
 import {
   EMOTION_LABEL,
@@ -93,7 +103,7 @@ const hooks: RunnerHooks = {
     logEntry($('log'), lab.time - lab.sceneStart, label, impulses);
   },
   impulses(impulses) {
-    const leak = 1 + 0.5 * lab.personality.bigFive.neuroticism;
+    const leak = leakOf(lab.personality.bigFive.neuroticism);
     for (const plan of pulsesFor(impulses, lab.mask, leak)) {
       avatar.pulse(
         shaped(PULSE_FACES[plan.face] ?? {}, lab.profile.face, 1),
@@ -219,7 +229,7 @@ function renderPanels(s: Snapshot, mix: number[]): void {
     .sort((x, y) => y.w - x.w)
     .slice(0, 3);
   $('mix').textContent =
-    `лицо: ${top.map(({ w, a }) => `${a.label} ${Math.round(w * 100)}%`).join(', ')}`;
+    `лицо: ${top.map(({ w, a }) => `${ANCHOR_LABEL[a.id] ?? a.id} ${Math.round(w * 100)}%`).join(', ')}`;
   ($('tiltBar') as HTMLElement).style.width = `${s.load.overload * 100}%`;
   const dominant =
     s.load.dominant && s.load.overload > 0.05 ? `, в основном ${LOAD_LABEL[s.load.dominant]}` : '';
@@ -341,8 +351,7 @@ avatar
     runLive();
   })
   .catch(() => {
-    $('loading').textContent =
-      'Модель не загрузилась. Проверьте сеть или положите avatar.glb рядом со страницей.';
+    $('loading').textContent = 'Модель не загрузилась: нет файла web/public/avatar/mallorca.glb.';
   });
 
 Object.assign(window, { lab, engine, avatar, startScene, selectProfile });

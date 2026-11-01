@@ -1,0 +1,92 @@
+import { describe, expect, it } from 'vitest';
+import { CASH } from '../engine/index.ts';
+import { createSession } from './session.ts';
+import type { Session } from './session.ts';
+import { shovingBot } from './testBot.ts';
+import { toViewModel } from './viewModel.ts';
+
+interface Table {
+  session: Session;
+  tick(ms?: number): void;
+}
+
+function open(faceOn?: boolean): Table {
+  let clock = 0;
+  const session = createSession({
+    bot: shovingBot(),
+    seed: 7,
+    botDelayMs: 0,
+    humanSeat: 1,
+    names: ['Mallorca', 'You'],
+    mode: CASH,
+    now: () => clock,
+    ...(faceOn === undefined ? {} : { faceOn }),
+  });
+  return { session, tick: (ms = 10_000) => (clock += ms) };
+}
+
+async function playHands(table: Table, hands: number): Promise<void> {
+  for (let i = 0; i < hands; i += 1) {
+    await table.session.getState().act({ kind: 'passive' });
+    table.tick();
+    if (table.session.getState().phase === 'handOver') {
+      await table.session.getState().nextHand();
+    }
+  }
+}
+
+describe('her face in the session', () => {
+  it('has no frame before the start and a frame against the math bot after it', async () => {
+    const table = open();
+    expect(table.session.getState().faceNow()).toBeNull();
+    await table.session.getState().start();
+    const frame = table.session.getState().faceNow();
+    expect(frame).not.toBeNull();
+    expect(frame?.idle.blinkRate).toBeGreaterThan(0);
+    expect(table.session.getState().face.on).toBe(true);
+  });
+
+  it('adds gaze cues and reactions with increasing ids, keeping the last 24', async () => {
+    const table = open();
+    await table.session.getState().start();
+    await playHands(table, 20);
+    const { cues } = table.session.getState().face;
+    expect(cues.length).toBeGreaterThan(0);
+    expect(cues.length).toBeLessThanOrEqual(24);
+    expect(cues.some((c) => c.kind === 'gaze')).toBe(true);
+    expect(cues.some((c) => c.kind === 'pulse')).toBe(true);
+    const ids = cues.map((c) => c.id);
+    expect(ids).toEqual([...ids].sort((a, b) => a - b));
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('shows nothing while off and replays no old reaction when switched on', async () => {
+    const table = open(false);
+    await table.session.getState().start();
+    await playHands(table, 6);
+    expect(table.session.getState().faceNow()).toBeNull();
+    expect(table.session.getState().face).toEqual({ on: false, cues: [] });
+    table.session.getState().setFace(true);
+    expect(table.session.getState().faceNow()).not.toBeNull();
+    expect(table.session.getState().face.cues).toEqual([]);
+  });
+
+  it('puts the switch and the cues in the view model', async () => {
+    const table = open();
+    await table.session.getState().start();
+    const vm = toViewModel(table.session.getState(), 1);
+    expect(vm.face.on).toBe(true);
+    expect(vm.face.cues).toBe(table.session.getState().face.cues);
+  });
+
+  it('reads the face ahead in time without changing her feeling', async () => {
+    const table = open();
+    await table.session.getState().start();
+    await playHands(table, 3);
+    const first = table.session.getState().faceNow();
+    table.tick(60_000);
+    table.session.getState().faceNow();
+    table.tick(-60_000);
+    expect(table.session.getState().faceNow()).toEqual(first);
+  });
+});

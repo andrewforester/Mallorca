@@ -1,5 +1,6 @@
 import type { Level } from '../game/index.ts';
 import { t } from './i18n.ts';
+import { voiceAvailable } from './avatar/voice.ts';
 import type { Preferences } from './usePreferences.ts';
 
 const LEVELS: readonly Level[] = ['obvious', 'subtle', 'hidden'];
@@ -53,6 +54,33 @@ function TalkSettings({ preferences, talkOn, tells, onTalk, onTells }: SettingsP
   );
 }
 
+function FaceSettings({ preferences }: { preferences: Preferences }) {
+  return (
+    <>
+      <label class="menu-toggle">
+        <input
+          type="checkbox"
+          data-testid="face"
+          checked={preferences.face}
+          onChange={preferences.toggleFace}
+        />
+        <span>{t('status.face')}</span>
+      </label>
+      {voiceAvailable() && (
+        <label class="menu-toggle">
+          <input
+            type="checkbox"
+            data-testid="voice"
+            checked={preferences.voice}
+            onChange={preferences.toggleVoice}
+          />
+          <span>{t('status.voice')}</span>
+        </label>
+      )}
+    </>
+  );
+}
+
 export function Settings(props: SettingsProps) {
   const { preferences } = props;
   return (
@@ -93,6 +121,7 @@ export function Settings(props: SettingsProps) {
         />
         <span>{t('coach.mode')}</span>
       </label>
+      <FaceSettings preferences={preferences} />
       {props.talk === true && <TalkSettings {...props} />}
     </>
   );
