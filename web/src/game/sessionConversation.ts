@@ -1,17 +1,8 @@
-import { mulberry32 } from '../cards/index.ts';
+import type { Rng } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex, Table } from '../engine/index.ts';
 import { EMPTY_SUMMARY, createConversation, endsHand, since } from '../conversation/index.ts';
-import type {
-  JournalEntry,
-  Level,
-  LineIntent,
-  Personality,
-  SessionSummary,
-  Signal,
-  Snapshot,
-  Bias,
-  Conversation,
-} from '../conversation/index.ts';
+import type { Level, LineIntent, SessionSummary, Conversation } from '../conversation/index.ts';
+import type { Moment, Persona, Signal } from '../persona/index.ts';
 import type { Opponent } from './opponent.ts';
 import {
   silentConversationClient,
@@ -50,12 +41,8 @@ export interface ConversationHost {
   table(): Table;
   epoch(): number;
   sessionId(): string;
-  felt?(): void;
-}
-
-export interface FeelingView {
-  snapshot: Snapshot;
-  journal: JournalEntry[];
+  her(): Persona | null;
+  hear(signals: readonly Signal[]): void;
 }
 
 export interface ConversationSetup {
@@ -64,13 +51,11 @@ export interface ConversationSetup {
   locale: string;
   botSeat: SeatIndex;
   connect?: () => Promise<ConversationClient>;
-  playerRange?: () => Promise<Float32Array | null>;
 }
 
 export interface SessionConversation {
-  begin(opponent: Opponent, seed: number): void;
-  observe(events: readonly EngineEvent[]): void;
-  bias(): Bias | undefined;
+  begin(opponent: Opponent, rng: Rng): void;
+  observe(events: readonly EngineEvent[], moments: readonly Moment[]): boolean;
   say(text: string): void;
   quick(id: QuickPhrase, text: string): void;
   setOn(on: boolean): void;
@@ -79,16 +64,11 @@ export interface SessionConversation {
   handDone(hands: number): void;
   leave(): void;
   pageHidden(): void;
-  active(): Conversation | null;
-  setPersonality(p: Personality): void;
-  resetFeeling(): void;
-  feeling(): FeelingView | null;
 }
 
 const MAX_LINES = 100;
 const MAX_TEXT = 200;
 const SUMMARY_EVERY = 50;
-const CONVERSATION_SALT = 0x7a1c;
 
 function attempt<T>(call: () => Promise<T>): Promise<T | null> {
   try {
@@ -96,6 +76,11 @@ function attempt<T>(call: () => Promise<T>): Promise<T | null> {
   } catch {
     return Promise.resolve(null);
   }
+}
+
+interface Talker {
+  conversation: Conversation;
+  her: Persona;
 }
 
 export function initialConversation(on: boolean, level: Level): ConversationState {
@@ -112,8 +97,6 @@ class Wiring implements SessionConversation {
   private sent: SessionSummary = EMPTY_SUMMARY;
   private unsent = 0;
   private nextId = 0;
-  private rangeAsks = 0;
-  private personality: Personality | null = null;
   private readonly setup: ConversationSetup;
   private readonly host: ConversationHost;
 
@@ -123,47 +106,33 @@ class Wiring implements SessionConversation {
     this.client = setup.client;
   }
 
-  begin(opponent: Opponent, seed: number): void {
+  begin(opponent: Opponent, rng: Rng): void {
     this.sendSummary();
     const { level } = this.host.read();
-    this.conversation = createConversation({
-      seat: this.setup.botSeat,
-      rng: mulberry32(seed ^ CONVERSATION_SALT),
-      level,
-    });
+    this.conversation = createConversation({ seat: this.setup.botSeat, rng, level });
     this.solver = opponent !== 'math';
-    if (this.personality !== null) {
-      this.conversation.setPersonality(this.personality);
-    }
     this.herRaised = false;
     this.acted = false;
     this.sent = EMPTY_SUMMARY;
     this.unsent = 0;
     this.update({ available: this.available(), lines: [], bubbles: [null, null] });
     this.connect();
-    this.host.felt?.();
   }
 
-  observe(events: readonly EngineEvent[]): void {
-    if (this.conversation === null) {
-      return;
+  observe(events: readonly EngineEvent[], moments: readonly Moment[]): boolean {
+    const her = this.host.her();
+    if (this.conversation === null || her === null) {
+      return false;
     }
     const ended = this.track(events);
-    const intent = this.conversation.observe(events, this.setup.now());
-    this.host.felt?.();
+    const intent = this.conversation.observe(moments, her, this.setup.now());
     if (intent !== null && this.speaking()) {
       this.requestLine(intent);
-    }
-    if (this.solver && this.playerActed(events)) {
-      this.askRange(this.conversation);
     }
     if (ended) {
       this.sendSummary();
     }
-  }
-
-  bias(): Bias | undefined {
-    return this.solver ? this.conversation?.bias() : undefined;
+    return intent !== null;
   }
 
   say(text: string): void {
@@ -179,25 +148,8 @@ class Wiring implements SessionConversation {
     if (trimmed === '' || !this.speaking()) {
       return;
     }
-    this.conversation?.hear(this.quickSignals(id));
-    this.host.felt?.();
+    this.hear(this.quickSignals(id));
     this.send(trimmed, false);
-  }
-
-  setPersonality(p: Personality): void {
-    this.personality = p;
-    this.conversation?.setPersonality(p);
-  }
-
-  resetFeeling(): void {
-    this.conversation?.resetFeeling();
-  }
-
-  feeling(): FeelingView | null {
-    const conversation = this.conversation;
-    return conversation === null
-      ? null
-      : { snapshot: conversation.feeling(), journal: conversation.journal() };
   }
 
   setOn(on: boolean): void {
@@ -230,8 +182,9 @@ class Wiring implements SessionConversation {
     this.sendSummary(true);
   }
 
-  active(): Conversation | null {
-    return this.conversation;
+  private hear(signals: readonly Signal[]): void {
+    this.host.hear(signals);
+    this.conversation?.heard(signals);
   }
 
   private connect(): void {
@@ -276,34 +229,6 @@ class Wiring implements SessionConversation {
     return ended;
   }
 
-  private playerActed(events: readonly EngineEvent[]): boolean {
-    const acted = events.some((e) => e.type === 'acted' && e.seat !== this.setup.botSeat);
-    return acted && !events.some((e) => e.type === 'handEnded');
-  }
-
-  private askRange(conversation: Conversation): void {
-    const { playerRange } = this.setup;
-    if (playerRange === undefined) {
-      return;
-    }
-    this.rangeAsks += 1;
-    const mine = this.rangeAsks;
-    const epoch = this.host.epoch();
-    const { handNumber } = this.host.table();
-    const current = () =>
-      mine === this.rangeAsks && epoch === this.host.epoch() && conversation === this.conversation;
-    setTimeout(() => {
-      if (!current()) {
-        return;
-      }
-      void attempt(playerRange).then((range) => {
-        if (range !== null && current()) {
-          conversation.playerRange(range, handNumber);
-        }
-      });
-    }, 0);
-  }
-
   private quickSignals(id: QuickPhrase): Signal[] {
     if (id === 'niceHand') {
       return ['compliment'];
@@ -314,18 +239,26 @@ class Wiring implements SessionConversation {
     return this.herRaised ? ['mockBluff'] : ['tease'];
   }
 
-  private input(conversation: Conversation, intent: LineIntent, recent: ChatTurn[]): HandInput {
+  private input(talker: Talker, intent: LineIntent, recent: ChatTurn[]): HandInput {
+    const { conversation, her } = talker;
+    const view = her.view(this.setup.now());
     return {
       sessionId: this.host.sessionId(),
       locale: this.setup.locale,
       seat: this.setup.botSeat,
-      facts: conversation.facts(),
+      facts: conversation.facts(view),
       intent,
-      mood: conversation.moodWords(),
-      feeling: conversation.feelingFor(intent),
-      character: conversation.character(),
+      mood: conversation.moodWords(view),
+      feeling: conversation.feelingFor(intent, view),
+      character: conversation.character(view),
       recent,
     };
+  }
+
+  private talker(): Talker | null {
+    const her = this.host.her();
+    const { conversation } = this;
+    return conversation === null || her === null ? null : { conversation, her };
   }
 
   private recent(): ChatTurn[] {
@@ -333,12 +266,13 @@ class Wiring implements SessionConversation {
   }
 
   private requestLine(intent: LineIntent): void {
-    const { conversation, client } = this;
-    if (conversation === null) {
+    const { client } = this;
+    const talker = this.talker();
+    if (talker === null) {
       return;
     }
     const epoch = this.host.epoch();
-    const payload = toLinePayload(this.input(conversation, intent, this.recent()));
+    const payload = toLinePayload(this.input(talker, intent, this.recent()));
     void attempt(() => client.line(payload)).then((text) => {
       if (text !== null && this.speaking() && this.current(epoch, intent)) {
         this.append('mallorca', text, intent.handNumber);
@@ -359,14 +293,16 @@ class Wiring implements SessionConversation {
   }
 
   private send(text: string, typed: boolean): void {
-    const { conversation, client } = this;
-    if (conversation === null) {
+    const { client } = this;
+    const talker = this.talker();
+    if (talker === null) {
       return;
     }
     const recent = this.recent();
     const line = this.append('player', text, this.host.table().handNumber);
     const epoch = this.host.epoch();
-    const input = this.input(conversation, conversation.replyIntent(), recent);
+    const intent = talker.conversation.replyIntent(talker.her, this.setup.now());
+    const input = this.input(talker, intent, recent);
     const payload = toReplyPayload({ ...input, text, quick: !typed });
     void attempt(() => client.reply(payload)).then((reply) => {
       this.answered(epoch, line.id, reply, typed);
@@ -387,8 +323,7 @@ class Wiring implements SessionConversation {
       return;
     }
     if (hear) {
-      this.conversation.hear(reply.signals);
-      this.host.felt?.();
+      this.hear(reply.signals);
     }
     this.append('mallorca', reply.text, this.host.table().handNumber);
   }

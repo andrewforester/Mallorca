@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import { SIGNALS } from '../conversation/index.ts';
-import type { Signal } from '../conversation/index.ts';
+import { SIGNALS } from '../persona/index.ts';
+import type { Signal } from '../persona/index.ts';
 import { CONVERSATION_TIMEOUT_MS, silentConversationClient } from './conversationClient.ts';
 import type { ConversationClient, ConversationReply } from './conversationClient.ts';
 

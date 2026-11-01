@@ -51,15 +51,20 @@ export type { Level } from '../conversation/index.ts';
 export type { FaceCue, FaceState } from './sessionFace.ts';
 export type { FaceFrame, GazeTarget, Pulse, VisemeCue, Weights } from '../face/index.ts';
 export { speechOf } from '../face/index.ts';
-export type { DebugDecision, DebugState, DecisionRow, PersonalityChoice } from './debug.ts';
+export type {
+  DebugDecision,
+  DebugEntry,
+  DebugState,
+  DecisionRow,
+  PersonalityChoice,
+} from './debug.ts';
 export type { DebugLoad, DebugTraits, DebugView } from './debugView.ts';
 export { toDebugView } from './debugView.ts';
-export { EMOTIONS, LOAD_SOURCES, PERSONALITIES, BIAS_KEYS } from '../conversation/index.ts';
+export { EMOTIONS, LOAD_SOURCES, PERSONALITIES, BIAS_KEYS } from '../persona/index.ts';
 export type {
   BigFive,
   Emotion,
   Impulse,
-  JournalEntry,
   LoadSource,
   Pad,
   Personality,
@@ -67,4 +72,4 @@ export type {
   Bias,
   BiasKey,
   TableEvent,
-} from '../conversation/index.ts';
+} from '../persona/index.ts';

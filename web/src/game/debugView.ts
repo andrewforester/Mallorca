@@ -1,16 +1,15 @@
-import { EMOTIONS, LOAD_SOURCES, BIAS_KEYS } from '../conversation/index.ts';
+import { EMOTIONS, LOAD_SOURCES, BIAS_KEYS } from '../persona/index.ts';
 import type {
   BigFive,
   Emotion,
-  JournalEntry,
   LoadSource,
   Pad,
   Snapshot,
   Bias,
   BiasKey,
-} from '../conversation/index.ts';
+} from '../persona/index.ts';
 import { personalityOf } from './debug.ts';
-import type { DebugDecision, DebugState, PersonalityChoice } from './debug.ts';
+import type { DebugDecision, DebugEntry, DebugState, PersonalityChoice } from './debug.ts';
 
 export interface DebugTraits {
   defaultMood: Pad;
@@ -43,7 +42,7 @@ export interface DebugView {
   engineBias: [BiasKey, number][];
   sentBias: Bias | null;
   decision: DebugDecision | null;
-  journal: JournalEntry[];
+  journal: DebugEntry[];
 }
 
 function traitsOf(s: Snapshot): DebugTraits {

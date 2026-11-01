@@ -8,8 +8,10 @@ import type { Habits, Situation } from './habits.ts';
 import type { StrengthClass } from '../persona/index.ts';
 import { MALLORCA } from '../emotion/index.ts';
 import { characterOf } from './state.ts';
-import { createConversation, drawLine, endsHand } from './conversation.ts';
-import type { LineIntent, Conversation } from './conversation.ts';
+import { drawLine, endsHand } from './conversation.ts';
+import { createSpeaker } from './testSpeaker.ts';
+import type { Speaker } from './testSpeaker.ts';
+import type { LineIntent } from './conversation.ts';
 
 const always = (): Habits => {
   const row = {
@@ -22,12 +24,12 @@ const always = (): Habits => {
 };
 
 interface Table {
-  conversation: Conversation;
+  conversation: Speaker;
   begin(her: string, player: string, board: string, nowMs?: number): LineIntent | null;
   act(action: Action, nowMs?: number): LineIntent | null;
 }
 
-function table(conversation: Conversation, stacks: [number, number] = [2000, 2000]): Table {
+function table(conversation: Speaker, stacks: [number, number] = [2000, 2000]): Table {
   let step: Step | null = null;
   return {
     conversation,
@@ -44,7 +46,7 @@ function table(conversation: Conversation, stacks: [number, number] = [2000, 200
 }
 
 const chatty = (): Table =>
-  table(createConversation({ seat: 1, rng: mulberry32(3), level: 'obvious', habits: always() }));
+  table(createSpeaker({ seat: 1, rng: mulberry32(3), level: 'obvious', habits: always() }));
 
 describe('observe', () => {
   it('yields herBet on her raise with the spot of the event', () => {
@@ -204,7 +206,7 @@ describe('outcomes', () => {
 
 describe('reproducibility', () => {
   const play = (habits?: Habits) => {
-    const conversation = createConversation({
+    const conversation = createSpeaker({
       seat: 1,
       rng: mulberry32(9),
       level: 'obvious',
@@ -297,7 +299,7 @@ describe('drawLine', () => {
 
 describe('replyIntent and state', () => {
   it('always answers for the current spot with the last situation', () => {
-    const conversation = createConversation({
+    const conversation = createSpeaker({
       seat: 1,
       rng: mulberry32(2),
       level: 'obvious',
@@ -320,7 +322,7 @@ describe('replyIntent and state', () => {
         habit.speak = 0;
       }
     }
-    const conversation = createConversation({
+    const conversation = createSpeaker({
       seat: 1,
       rng: mulberry32(2),
       level: 'obvious',
@@ -333,7 +335,7 @@ describe('replyIntent and state', () => {
   });
 
   it('exposes the hand facts for the prompt', () => {
-    const conversation = createConversation({ seat: 1, rng: mulberry32(2), level: 'obvious' });
+    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2), level: 'obvious' });
     const t = table(conversation);
     t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h');
     t.act(raiseTo(60), 0);
@@ -349,7 +351,7 @@ describe('replyIntent and state', () => {
   });
 
   it('moves her feeling and bias with the signals it hears', () => {
-    const conversation = createConversation({ seat: 1, rng: mulberry32(2), level: 'obvious' });
+    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2), level: 'obvious' });
     conversation.hear(['mockBluff', 'tease']);
     expect(conversation.feeling().emotions.anger).toBeGreaterThan(0.4);
     expect(conversation.moodWords()).toContain('annoyed');
@@ -357,7 +359,7 @@ describe('replyIntent and state', () => {
   });
 
   it('gives the feeling for an intent, acting the hinted strength only when the hint is false', () => {
-    const conversation = createConversation({ seat: 1, rng: mulberry32(2), level: 'obvious' });
+    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2), level: 'obvious' });
     conversation.hear(['mockBluff', 'tease']);
     const intent = conversation.replyIntent();
     const bluff = { ...intent, hint: 'strong' as const, honest: false };
@@ -367,12 +369,12 @@ describe('replyIntent and state', () => {
   });
 
   it('gives her character sheet', () => {
-    const conversation = createConversation({ seat: 1, rng: mulberry32(2), level: 'obvious' });
+    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2), level: 'obvious' });
     expect(conversation.character()).toEqual(characterOf(MALLORCA));
   });
 
   it('changes the habits with setLevel', () => {
-    const conversation = createConversation({
+    const conversation = createSpeaker({
       seat: 1,
       rng: mulberry32(2),
       level: 'obvious',
@@ -389,7 +391,7 @@ describe('replyIntent and state', () => {
 
 describe('summary', () => {
   it('counts hands, net, player bluffs, all-ins and signals heard', () => {
-    const conversation = createConversation({ seat: 1, rng: mulberry32(4), level: 'obvious' });
+    const conversation = createSpeaker({ seat: 1, rng: mulberry32(4), level: 'obvious' });
     const t = table(conversation);
     t.begin('7c 2d', 'As Ah', 'Kd 9h 5h 3c Jd');
     t.act(raiseTo(60), 0);

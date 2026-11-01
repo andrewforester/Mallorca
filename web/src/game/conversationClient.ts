@@ -6,8 +6,8 @@ import type {
   HandFacts,
   LineIntent,
   SessionSummary,
-  Signal,
 } from '../conversation/index.ts';
+import type { Signal } from '../persona/index.ts';
 
 export const CONVERSATION_TIMEOUT_MS = 5000;
 

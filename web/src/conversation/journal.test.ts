@@ -7,8 +7,9 @@ import type { Action, Step } from '../engine/types.ts';
 import { BASE_HABITS } from './habits.ts';
 import type { Habits, Situation } from './habits.ts';
 import { JOURNAL_SIZE } from '../persona/index.ts';
-import { createConversation } from './conversation.ts';
-import type { LineIntent, Conversation } from './conversation.ts';
+import { createSpeaker } from './testSpeaker.ts';
+import type { Speaker } from './testSpeaker.ts';
+import type { LineIntent } from './conversation.ts';
 
 const habits = (speak: number): Habits => {
   const row = {
@@ -20,11 +21,11 @@ const habits = (speak: number): Habits => {
   return Object.fromEntries(situations.map((s) => [s, row])) as Habits;
 };
 
-const newConversation = (speak = 0): Conversation =>
-  createConversation({ seat: 1, rng: mulberry32(3), level: 'obvious', habits: habits(speak) });
+const newConversation = (speak = 0): Speaker =>
+  createSpeaker({ seat: 1, rng: mulberry32(3), level: 'obvious', habits: habits(speak) });
 
 function play(
-  conversation: Conversation,
+  conversation: Speaker,
   actions: Action[],
   her = 'As Ah',
   player = 'Js Ts',

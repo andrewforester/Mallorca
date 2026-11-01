@@ -1,25 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { parseCards } from '../cards/index.ts';
 import {
+  BIAS_KEYS,
   EMOTIONS,
   LOAD_SOURCES,
   PERSONALITIES,
-  BIAS_KEYS,
-  createConversation,
-} from '../conversation/index.ts';
+  createPersona,
+} from '../persona/index.ts';
 import { mulberry32 } from '../cards/index.ts';
 import type { DebugState } from './debug.ts';
 import { toDebugView } from './debugView.ts';
 
 function state(extra: Partial<DebugState> = {}): DebugState {
-  const conversation = createConversation({ seat: 1, rng: mulberry32(1), level: 'subtle' });
-  conversation.hear(['mockBluff']);
+  const persona = createPersona({ seat: 1, rng: mulberry32(1) });
+  persona.hear(['mockBluff']);
   return {
     personality: { key: 'lola' },
-    snapshot: conversation.feeling(),
+    snapshot: persona.view(0).snapshot,
     sentBias: { aggression: 1.2, bluff: 1, tightness: 0.8, sizing: 1, stickiness: 1 },
     decision: null,
-    journal: conversation.journal(),
+    journal: persona.journal().map((e) => ({ ...e, spoke: false })),
     ...extra,
   };
 }

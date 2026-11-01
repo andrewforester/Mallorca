@@ -51,26 +51,28 @@ web/src/
   brains/   port of the Mallorca math bot
   cfr/      the CFR bot: the WASM module, the strategy file and a Brain over them
   emotion/  the opponent's emotions: personality, appraisal, mood, overload and the play bias they give
+  persona/  her at the table: her view of the hand, her emotions, her journal, what she acts and her bias
   face/     her face and voice as numbers: expression, poker face, reactions, idle tells, visemes, prosody
-  conversation/     table talk: hand-strength class, tells, mood and the bias it maps to
+  conversation/  her speech: when she speaks, the line intent, the server contract, the session summary
   coach/    the coach's facts: hint, strategy and range grids, equity, odds
   game/     session store, turn loop, bot worker client, view-model, hand records
   ui/       Preact components, layout, tokens, i18n
 ```
 
-| Layer          | May import from                                                               |
-| -------------- | ----------------------------------------------------------------------------- |
-| `cards`        | nothing                                                                       |
-| `equity`       | `cards`                                                                       |
-| `engine`       | `cards`, `equity`                                                             |
-| `brains`       | `cards`, `equity`, `engine`                                                   |
-| `cfr`          | `cards`, types from `engine`, `brains`                                        |
-| `emotion`      | nothing                                                                       |
-| `face`         | `emotion`                                                                     |
-| `conversation` | `cards`, `equity`, `emotion`, types from `engine`                             |
-| `coach`        | `cards`, `equity`, `brains`, types from `engine`, `cfr`                       |
-| `game`         | `cards`, `equity`, `engine`, `brains`, `cfr`, `conversation`, `coach`, `face` |
-| `ui`           | `game`                                                                        |
+| Layer          | May import from                                                                          |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| `cards`        | nothing                                                                                  |
+| `equity`       | `cards`                                                                                  |
+| `engine`       | `cards`, `equity`                                                                        |
+| `brains`       | `cards`, `equity`, `engine`                                                              |
+| `cfr`          | `cards`, types from `engine`, `brains`                                                   |
+| `emotion`      | nothing                                                                                  |
+| `persona`      | `cards`, `equity`, `emotion`, types from `engine`                                        |
+| `face`         | `emotion`                                                                                |
+| `conversation` | `cards`, `emotion`, types from `engine` and `persona`                                    |
+| `coach`        | `cards`, `equity`, `brains`, types from `engine`, `cfr`                                  |
+| `game`         | `cards`, `equity`, `engine`, `brains`, `cfr`, `persona`, `conversation`, `coach`, `face` |
+| `ui`           | `game`                                                                                   |
 
 `brains` takes only types from `engine`: `Action`, `LegalActions`, the events it turns into observations and
 `BoardSize`, which pins its board sizes to the engine's.
@@ -89,14 +91,15 @@ the modes, `startingStack`, `BOARD_SIZE` and `handHistory`; `cfr/index.ts` `crea
 (with `createSession`, `toViewModel`, `groupHand`, `workerBot` and `inProcessBot`).
 
 ESLint enforces the table with a `@typescript-eslint/no-restricted-imports` rule per directory. For `brains` the
-rule sets `allowTypeImports` on `engine`; the tests in `brains` and `conversation` (`*.test.ts`) may also import `engine` code to
-build events. `src/main.tsx` may import only `game` and `ui`. `tools/arena/**` may import from `src` only `cards`,
-`engine`, `brains`, `cfr`, `conversation` and `game/records`; the viewer `tools/arena/ui/**` (tests aside) only `game/records` and
+rule sets `allowTypeImports` on `engine`; the tests in `brains`, `persona` and `conversation` (`*.test.ts`) may also import `engine` code to
+build events. `conversation` takes only types from `persona`, so speech reads her and never changes her; its tests
+and their helper `conversation/testSpeaker.ts` may import `persona` code to build her. `src/main.tsx` may import only `game` and `ui`. `tools/arena/**` may import from `src` only `cards`,
+`engine`, `brains`, `cfr`, `persona`, `conversation` and `game/records`; the viewer `tools/arena/ui/**` (tests aside) only `game/records` and
 types from `engine`; `tools/evaluator-golden/**` only `cards` and `equity`. `import-x/no-cycle` forbids import cycles inside `src`.
 
 ### Purity
 
-`cards`, `equity`, `engine`, `brains`, `cfr`, `emotion`, `face`, `conversation` and `coach` use no DOM (`document`, `window`, `self`, `navigator`), no
+`cards`, `equity`, `engine`, `brains`, `cfr`, `emotion`, `persona`, `face`, `conversation` and `coach` use no DOM (`document`, `window`, `self`, `navigator`), no
 `Math.random` or `crypto`, no `Date` or `performance`, no timers (`setTimeout`, `setInterval`), no `fetch` and no
 storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-globals` and
 `no-restricted-properties`. Randomness enters as an `Rng` argument, bytes through a reader passed in; `cfr`'s
@@ -117,7 +120,7 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
 - `WeightedHands` (hole cards with a weight) is the type `brains` computes equity with; the computation itself
   lives in `brains` (`spectrumEquilator.ts`, `preflopEquilator.ts`).
 - `equityVsHand(hero, villain, board)` enumerates the rest of the board exactly; `equityVsRange(hero, range, board,
-{ rng, samples })` is exact on the turn and the river and samples before that. `conversation` uses them for her strength
+{ rng, samples })` is exact on the turn and the river and samples before that. `persona` uses them for her strength
   class and her luck.
 - `index.ts` exports `pheEvaluator`, `HandCategory`, `WeightedHands`, `EquityOptions`, `equityVsHand` and
   `equityVsRange`.
@@ -310,8 +313,8 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
 
 ## emotion
 
-The opponent's emotional state is the source of truth for how her play, and later her face, voice and lines, are
-coloured. The model and the origin of every formula and number are in `docs/emotion/README.md`, with
+The opponent's emotional state is the source of truth for how her play, her face, her voice and her lines are
+coloured. This layer is the model, with no session and no table; her live state at the table is a `persona`. The model and the origin of every formula and number are in `docs/emotion/README.md`, with
 screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contract.
 
 - `createEngine(personality, config = GAME_MOOD)` returns an `Engine`. `event(e)` appraises one `TableEvent` and
@@ -375,58 +378,72 @@ mask, acted)` blends the felt point toward the acted one (neutral when null).
   `visemesOf(text, lettersPerSecond)` the `VisemeCue`s (one of the 15 Oculus visemes, its time and character
   index) of a line, and `speechOf(text, prosody)` those of her line at her pace times `prosody.rate`.
 
+## persona
+
+Her at the table: one `Personality` of `emotion` alive for one session. The emotional state is the source of truth;
+speech, the face, the voice and the bias only read it through a `PersonaReader`.
+
+- `createPersona({ seat, rng, personality? })` returns a `Persona` (`MALLORCA` by default). `rng` draws every equity
+  sample and strength class, so a seed fixes her. `observe(events, nowMs)` advances the engine to `nowMs`, then for
+  each event tracks the hand (`hand.ts`), appraises it and returns one `Moment`: the `event`, the `HandState` `before`
+  and `after` it, her `strength` class where she sizes up her hand (her check, call or raise, a raise of the player,
+  `handEnded`; null elsewhere) and, on `handEnded`, `playerBluffShown` (the player bet the river and showed a weak
+  hand). The moments are how speech learns what she perceived, event by event.
+- `perception.ts` feeds the `emotion` engine: her cards as `deal`, every street, bet and showdown as `street` with
+  her perceived equity (against the player's range until he shows, then against his cards) and the money (pot,
+  invested, stack behind, streets left), a raise of the player as `opponentBet` (`raise` when it answers her own bet
+  or raise on that street), the hand end as `result` judged by her equity against his shown cards on the board when
+  the money went in (0.5 without a showdown), a weak late bet caught or through as `bluff`, and the signals of
+  `hear(signals)` as `chat`.
+- `view(nowMs)` reads her at `nowMs` without moving her (the engine's `ahead`; a time at or before the last
+  `observe` reads the current state): `personality`, `snapshot`, `hand`, `stance` (`bluff` after her bet or raise
+  with a weak hand until the street or the hand changes, `hide` while she holds a strong hand in a live hand, else
+  null), `bias` (the bot's `Bias`: aggression, bluff, sizing and stickiness of the engine's `PlayBias` and tightness
+  `1 / looseness`; all ones when calm), `words` (up to three mood words for the prompt: `on tilt` at overload 0.6
+  and more, then the emotions of 0.25 and more, strongest first) and `speakFactor`
+  (`1 + 0.25 clamp((arousal above her default + overload) / 2, -1, 1)`). Every reader asks `view` with its own
+  `now`, so there is one timeline.
+- `strength()` is her class on the current board, from equity against a random hand (`strengthOf`), computed once per
+  board and cached.
+- The player's range is every pair at weight 1 when a hand starts. `narrow(weights, handNumber)` replaces it with
+  1326 weights indexed as `cfr` indexes pairs (`b * (b - 1) / 2 + a`); the pairs that touch her cards or the board
+  drop out. It is ignored for another hand, after the hand ended or the player showed, and when no live pair has
+  weight. A new range is appraised at once as a `street` with her equity against it, so a raise that narrows him to
+  strength moves her equity down and the hope and fear targets follow; a single action usually moves it less than
+  the 20% swing, which gives light fear and no disappointment. The `opponentBet` of the action itself is appraised
+  against the range before it.
+- The journal is her impulse stream: one `JournalEntry` per `TableEvent` she appraised (`chat` included), with an
+  `id` that grows from 1 for the life of the persona, `handNumber`, the `event`, the `impulses` it returned and
+  `words`, the mood words after the call that made it; the newest 50 are kept (`JOURNAL_SIZE`). `journal()` lists
+  them newest first, `journalSince(id)` the entries after `id` oldest first, `lastJournalId()` the last id. Every
+  reader keeps its own cursor.
+- `setPersonality(p)` changes her traits from the next event; `reset()` starts her feeling over and empties the
+  journal.
+
 ## conversation
 
-- `createConversation({ seat, rng, level, luckRng?, habits? })` returns a `Conversation` for one session against the CFR bot.
-  `observe(events, nowMs)` follows the engine events of a hand (`handTracker.ts`) and returns a `LineIntent` or null:
-  the situation (`herBet`, `herCall`, `playerBet`, `handWon`, `handLost`, `bluffCaught`; `endsHand` tells the last
-  three), the hint (her hand-strength class `strong`, `medium` or `weak`, or null for a neutral line), whether the
-  hint is honest, the street and hand number the line belongs to, and `actionStreet`, the street the action happened
-  on. A call that closes a street belongs to the next street (its pace slot and staleness), but its cue names
-  `actionStreet`. `hear(signals)` gives what the player said to her feeling, `replyIntent()` is the intent for an
-  answer, `facts()` the hand as the server sees it (her cards included, stacks by seat) and `summary()` the session
+- `createConversation({ seat, rng, level, habits? })` returns a `Conversation` for one session against the CFR bot.
+  `observe(moments, persona, nowMs)` reads the moments of a step and returns a `LineIntent` or null: the situation
+  (`herBet`, `herCall`, `playerBet`, `handWon`, `handLost`, `bluffCaught`; `endsHand` tells the last three), the hint
+  (her hand-strength class `strong`, `medium` or `weak`, or null for a neutral line), whether the hint is honest, the
+  street and hand number the line belongs to, and `actionStreet`, the street the action happened on. A call that
+  closes a street belongs to the next street (its pace slot and staleness), but its cue names `actionStreet`.
+  `replyIntent(persona, nowMs)` is the intent for an answer, `facts(view)` the hand as the server sees it (her cards
+  included, stacks by seat), `heard(signals)` counts what the player said in the summary, and `summary()` the session
   summary from her side (`netBb` is her net); `since(current, earlier)` gives what changed between two summaries.
-- `strengthOf` classifies her hand from equity against a random hand, not from the blueprint. The habits
-  (`habits.ts`) give, for a situation and a class, the chance she speaks and the chance the hint is honest, and the
-  tells level (`obvious`, `subtle`, `hidden`) moves both toward the class-blind mean. Code draws every chance from
-  the `Rng` it was given; the model only words the line. Pace limits her to one unprompted line per street and
-  none in the 1.5 s after a line.
-- `feeling.ts` runs the `emotion` engine for her (`MALLORCA`) on the same events: her cards as `deal`, every
-  street, bet and showdown as `street` with her perceived equity (against the player's range until he shows, then
-  against his cards) and the money (pot, invested, stack behind, streets left), a raise of the player as
-  `opponentBet` (`raise` when it answers her own bet or raise on that street), the hand end as `result` judged by
-  her equity against his shown cards on the board when the money went in (0.5 without a showdown), a weak late bet
-  caught or through as `bluff`, and the signals as `chat`. `observe` advances the engine with `nowMs`.
-  `feeling()` is the engine's snapshot, `moodWords()` up to three words for the prompt (`on tilt` at overload 0.6
-  and more, then the emotions of 0.25 and more, strongest first), and the chance to speak is scaled by
-  `1 + 0.25 clamp((arousal above her default + overload) / 2, -1, 1)`.
-- For the face, `impulses()` returns the `Impulse`s the engine gave since the last call and forgets them,
-  `feelingAt(nowMs)` is the snapshot at `nowMs` (the engine's `ahead` from the last `observe`, never moving it), and
-  `stance()` is what her face acts: `bluff` after her bet or raise with a weak hand until the street or the hand
-  changes, `hide` while she holds a strong hand in a live hand, else null.
-- The player's range is every pair at weight 1 when a hand starts. `Conversation.playerRange(weights, handNumber)` replaces
-  it with 1326 weights indexed as `cfr` indexes pairs (`b * (b - 1) / 2 + a`); the pairs that touch her cards or the
-  board drop out. It is ignored for another hand than the one being followed, after the hand ended or the player
-  showed, and when no live pair has weight. A new range is appraised at once as a `street` with her equity against
-  it, so a raise that narrows him to strength moves her equity down and the hope and fear targets follow; a single
-  action usually moves it less than the 20% swing, which gives light fear and no disappointment. The `opponentBet` of
-  the action itself is appraised against the range before it.
-- `state.ts` turns the feeling into what the server gets (version 1). `feelingFor(intent)` is `feelingState`: the up
-  to three emotions of 0.1 and more with their intensity, strongest first, the mood octant and its strength,
+- The habits (`habits.ts`) give, for a situation and a class, the chance she speaks and the chance the hint is
+  honest, and the tells level (`obvious`, `subtle`, `hidden`) moves both toward the class-blind mean; the chance to
+  speak is scaled by her `speakFactor`. Code draws every chance from the `Rng` it was given; the model only words
+  the line. Pace limits her to one unprompted line per street and none in the 1.5 s after a line.
+- `state.ts` turns her view into what the server gets (version 1). `feelingFor(intent, view)` is `feelingState`: the
+  up to three emotions of 0.1 and more with their intensity, strongest first, the mood octant and its strength,
   overload with its dominant source (null below 0.1), and what she shows: `mask` from `maskOf` with an effort of 0.6
-  while she acts a strength she does not have (`acting`, the hint of a false intent) and 0 otherwise. `character()`
-  is `characterOf(MALLORCA)`, her character sheet in [0, 1]: `talkativeness` `0.5 + 0.4 E`, `warmth` from
-  agreeableness, `nerves` from neuroticism and `wit` from openness, each `(1 + x) / 2`. Every number is rounded to
-  two decimals.
-- `bias()` maps the engine's `PlayBias` to the bot: aggression, bluff, sizing and stickiness as they are and
-  tightness `1 / looseness`. A calm feeling gives the neutral bias, all ones. Her words never decide a move.
-- `setPersonality(p)` gives her feeling another `Personality` (the engine's `setPersonality`) from the next event;
-  `resetFeeling()` starts the feeling over (the engine's `reset`). Neither touches the habits, the summary or the
-  pace.
-- `journal()` returns her newest `JournalEntry`s first, at most 50 (`JOURNAL_SIZE`): one per `TableEvent` the
-  feeling gave the engine (`chat` included), with `handNumber`, the `event`, the `impulses` it returned (empty for an
-  ignored event), `words`, the mood words after the `observe` or `hear` call that made it, and `spoke`, true on the
-  entries of an `observe` call that returned a `LineIntent`. `resetFeeling()` empties it.
+  while she acts a strength she does not have (`acting`, the hint of a false intent) and 0 otherwise.
+  `character(view)` is `characterOf(view.personality)`, her character sheet in [0, 1]: `talkativeness`
+  `0.5 + 0.4 E`, `warmth` from agreeableness, `nerves` from neuroticism and `wit` from openness, each `(1 + x) / 2`.
+  `moodWords(view)` are the view's `words`. Every number is rounded to two decimals.
+- Her words never decide a move and never change her: the conversation holds no persona and takes only types from
+  `persona`.
 
 ## coach
 
@@ -556,35 +573,41 @@ mask, acted)` blends the felt point toward the acted one (neutral when null).
   `client.enabled`, or true while
   a `connectConversation` has not answered yet; `lines` are the last 100 `ChatLine`s (`id`, `speaker`, `text`, `handNumber`,
   optional `undelivered`) and `bubbles` the latest line per seat. `connectConversation` runs when a Solver session starts with
-  conversation on, or when conversation is switched on in one, and its client is attached; a silent client hides the conversation. Each
-  `start` makes a `Conversation` for the bot's seat with `mulberry32(seed ^ 0x7a1c)` for every opponent (her face needs her
-  feeling against the math bot too); only a Solver opponent makes conversation available, connects a client, plays a bias
-  or asks for the player's range. The `Conversation` lives across hands, and every step's events reach `Conversation.observe` after
-  the bot, also with conversation off. Against a Solver, after a step with an
-  action of the player that does not end the hand, the session asks `bot.opponentRange()` once the current task is
-  done, so a decision the step leads to reaches the bot first, and passes the answer to `Conversation.playerRange` with the
-  hand number of that step, if the epoch and the `Conversation` are the same and no later request was made; null or an
-  error keeps the range she has. A line intent calls
+  conversation on, or when conversation is switched on in one, and its client is attached; a silent client hides the conversation.
+  Only a Solver opponent makes conversation available and connects a client. The `Conversation` lives across hands,
+  and every step's moments reach `Conversation.observe` after the persona, also with conversation off. A line intent calls
   `client.line` without waiting. Its text is kept only if the epoch matches, conversation is still available and on, and the
   hand number and street still match; a hand-end line (`handWon`, `handLost`, `bluffCaught`) is kept until the next
   hand's first action. `say(text)` (trimmed, at most 200 characters) and `quick(niceHand | bluffing | notThisTime,
 text)` (the caller's localized label) append the player's line at once and call `client.reply`; `quick` sends
-  `quick: true`. `say` feeds the reply's signals to `Conversation.hear`, `quick` its own (`compliment`, `mockBluff` after any
+  `quick: true`. `say` feeds the reply's signals to her persona (`persona.hear`) and the summary
+  (`Conversation.heard`), `quick` its own (`compliment`, `mockBluff` after any
   raise of hers in the hand, else `tease`, `claimStrength`). A reply that is null or fails marks the player's line
   `undelivered`. `setConversation`, `setTells` and `attachConversation(client)` change the switch, the tells level and the client.
-  With a `Conversation` (a Solver opponent), every `decide` and the recorded decision get `Conversation.bias()`, whatever the
-  client and the conversation switch: her feeling always reaches her play. The math bot gets no bias. A `summary` goes out on an effective `leave`,
+  A `summary` goes out on an effective `leave`,
   on `dispose`, at the end of a tournament, before a new `start` replaces the `Conversation`, every 50th hand and on
   `pageHidden()` (with `keepalive`), only when a hand completed since the last one, and it holds what changed since
   the last summary. Nothing is sent when conversation is off or unavailable, and every client error is ignored. `toViewModel`
   adds `conversation` with `herBubble` and `playerBubble`.
-- Face (`sessionFace.ts`, wired with conversation in `sessionWiring.ts`): `SessionOptions.faceOn` (default true) and `setFace(on)` switch it;
+- Her persona (`sessionPersona.ts`, wired with speech and the face in `sessionWiring.ts`): each `start` makes
+  `speech = mulberry32(seed ^ 0x7a1c)`, then a `Persona` for the bot's seat seeded with
+  `mulberry32(floor(speech.next() * 2^32))` and the personality chosen in the debug panel, then a `Conversation` with
+  `speech`, for every opponent (her face needs her against the math bot too). Every step runs `bot.observe`, then
+  `persona.observe`, then `Conversation.observe` with its moments, then the face. Against a Solver, every `decide`
+  and the recorded decision get `persona.view(now()).bias`, whatever the client and the conversation switch: her
+  feeling always reaches her play; the math bot gets no bias. Against a Solver, after a step with an action of the
+  player that does not end the hand, the session asks `bot.opponentRange()` once the current task is done, so a
+  decision the step leads to reaches the bot first, and passes the answer to `persona.narrow` with the hand number of
+  that step, if the epoch and the persona are the same and no later request was made; null or an error keeps the
+  range she has.
+- Face (`sessionFace.ts`, wired in `sessionWiring.ts`): `SessionOptions.faceOn` (default true) and `setFace(on)` switch it;
   `SessionState.face` is `{ on, cues }`. While it is on, every step's events, after `Conversation.observe`, add `FaceCue`s
-  with increasing `id` (the last 24 are kept): a `pulse` for each `Pulse` of `pulsesOf(Conversation.impulses(), mask)`, the
+  with increasing `id` (the last 24 are kept): a `pulse` for each `Pulse` of `pulsesOf(impulses, mask)`, the impulses
+  of the journal entries after the face's own cursor (`persona.journalSince`, from 0 for a new persona), the
   mask of the frame at that moment, and a `gaze` from the events (`gazeOf` in `faceCues.ts`): her hole cards `cards`,
   a dealt street `board`, her bet, call or raise `chips` with `then: 'player'`, the player's action `player`, the
-  hand end `player`. Impulses are drained also while it is off, so switching it on shows no old reaction.
-  `faceNow()` is `faceFrame(Conversation.feelingAt(now()), Conversation.stance(), MALLORCA_LOOK)`, or null while it is off or before
+  hand end `player`. The cursor moves also while it is off and when it is switched, so switching it on shows no old
+  reaction. `faceNow()` is `faceFrame(view.snapshot, view.stance, MALLORCA_LOOK)` of `persona.view(now())`, or null while it is off or before
   `start`; it never moves the engine, so the face changes no move and no seed. `toViewModel` adds `face` (`on`,
   `cues`). `game` re-exports `FaceFrame`, `FaceCue`, `GazeTarget`, `Pulse`, `Weights`, `VisemeCue` and `speechOf`.
 - The payload builders (`conversationClient.ts`) send `facts.stacks` as `[hers, the player's]` from the bot seat, the intent
@@ -598,15 +621,16 @@ text)` (the caller's localized label) append the player's line at once and call 
 - Emotion debug (`debug.ts`, development builds only): with `SessionOptions.debug` true and
   `import.meta.env.DEV`, `SessionState.debug` is a `DebugState`, otherwise null and the code that fills it is dead
   and left out of the production bundle. It holds the `personality` (a `PersonalityKey`, or `custom` with its
-  `Personality`), her `snapshot` (`Conversation.feeling()`, which runs for every opponent since the face reads it), `sentBias`, the bias sent with
+  `Personality`), her `snapshot` (`persona.view(now()).snapshot`, there for every opponent since the face reads it), `sentBias`, the bias sent with
   the last `decide` (null before one, or against the math bot), the last `DebugDecision` (her hole cards, the board,
   one `DecisionRow` per move of the `Breakdown`, its `coachMove` label and amount with its `base` and `biased`
   probability and whether it was `chosen`, and the action the session applied as a `coachMove`; null until a
-  decision with a breakdown) and `journal` (`Conversation.journal()`). It is refreshed after every step's `Conversation.observe`,
+  decision with a breakdown) and `journal`, the persona's `journal()` as `DebugEntry`s with `spoke`, true on the
+  entries of a step whose `Conversation.observe` returned a `LineIntent`. It is refreshed after every step's `Conversation.observe`,
   every `hear`, every `start`, every bot decision and each action below. With it, every `decide` request
   carries `explain: true`; without it none does, and the worker never calls `explain()`. The actions
-  `setPersonality(key | personality)` (applied to the running `Conversation` and to every `Conversation` a later `start` makes) and
-  `resetFeeling()` do nothing without it. Opening or closing the panel calls nothing on the session.
+  `setPersonality(key | personality)` (applied to the running persona and to every persona a later `start` makes) and
+  `resetFeeling()` (the persona's `reset`) do nothing without it. Opening or closing the panel calls nothing on the session.
 - `toDebugView(debug)` returns the `DebugView`, plain data for the panel: `personality` and the `bigFive`,
   `suppression`, `experience` and the derived `traits` (default mood, composure, discipline, the gain of each
   emotion); `emotions` as `[emotion, value]` in `EMOTIONS` order; `mood`, `defaultMood` and `octant`; `load` with
@@ -817,26 +841,29 @@ text)` (the caller's localized label) append the player's line at once and call 
 ### Data flow
 
 ```
-bias     conversation.observe -> Conversation.bias() (Solver opponent, any client) -> session decide(legal, bias) -> worker
+feel      engine events -> persona.observe -> perception -> emotion engine -> journal (ids) and Moments
+bias      persona.view(now).bias (Solver opponent, any client) -> session decide(legal, bias) -> worker
           -> CfrBot.setBias -> bot_bias (wasm)
+face      persona.journalSince(cursor) -> pulses; persona.view(now) -> faceFrame -> face and voice prosody
 debug     (dev) decide(legal, bias, explain) -> worker -> CfrBot.explain() -> bot_decision (wasm)
           -> Decision.breakdown -> SessionState.debug -> toDebugView -> panel
-line      engine events -> Conversation.observe -> LineIntent -> client.line(facts, intent, mood, feeling, character)
+line      Moments -> Conversation.observe -> LineIntent
+          -> client.line(facts, intent, mood, feeling, character of persona.view(now))
           -> function -> text
           -> session (kept if epoch, hand and street match, a hand-end line until the next hand's first action)
           -> bubble and chat
 reply     say(text) -> client.reply -> function (signals + answer) -> { text, signals }
-          -> Conversation.hear(signals) moves the mood -> her line in the chat
+          -> persona.hear(signals) moves her feeling, Conversation.heard(signals) the summary -> her line in the chat
 range     player action -> bot.observe -> bot.opponentRange() (worker, after the observations)
-          -> Conversation.playerRange(weights, handNumber) -> her equity against his range -> feeling
+          -> persona.narrow(weights, handNumber) -> her equity against his range -> feeling
 ```
 
 The player's range reaches her feeling after the bot's next decision and a worker round trip, so that decision uses
 the bias from before it; nothing in the hand waits for it. The read buckets each street of the hand once: the first
 read on the turn costs about 30 ms on a desktop and 130 to 170 ms at a 4 to 6 times slower CPU (v1), every other
 read under 4 ms; her equity against the range costs up to 4 ms on a desktop and 17 ms at 6 times slower. The session never waits for the server: a line is requested without awaiting it, a late or missing answer is
-dropped, and an error leaves the game as it is. The bias path is the only way conversation touches a move, and it is
-bounded by the clamps above. The debug path only reads: `explain` reads the decision after it is sampled.
+dropped, and an error leaves the game as it is. Her feeling reaches a move only through the bias, bounded by the
+clamps above; her words reach her feeling only as the signals the player's reply gives. The debug path only reads: `explain` reads the decision after it is sampled.
 
 ## e2e
 

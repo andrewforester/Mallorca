@@ -3,15 +3,16 @@ import { coachMove } from '../coach/index.ts';
 import type { CoachMove } from '../coach/index.ts';
 import type { Card } from '../cards/index.ts';
 import type { Action, LegalActions, SeatIndex, Table } from '../engine/index.ts';
-import { PERSONALITIES } from '../conversation/index.ts';
+import { PERSONALITIES } from '../persona/index.ts';
 import type {
   JournalEntry,
+  Persona,
   Personality,
   PersonalityKey,
   Snapshot,
   Bias,
-} from '../conversation/index.ts';
-import type { SessionConversation } from './sessionConversation.ts';
+} from '../persona/index.ts';
+import type { SessionPersona } from './sessionPersona.ts';
 
 export type PersonalityChoice =
   { key: PersonalityKey } | { key: 'custom'; personality: Personality };
@@ -30,12 +31,16 @@ export interface DebugDecision {
   action: CoachMove;
 }
 
+export interface DebugEntry extends JournalEntry {
+  spoke: boolean;
+}
+
 export interface DebugState {
   personality: PersonalityChoice;
   snapshot: Snapshot | null;
   sentBias: Bias | null;
   decision: DebugDecision | null;
-  journal: JournalEntry[];
+  journal: DebugEntry[];
 }
 
 export interface Decided {
@@ -50,6 +55,7 @@ export interface Decided {
 export interface DebugProbe {
   initial(): DebugState;
   refresh(): void;
+  observed(from: number, spoke: boolean): void;
   decided(played: Decided): void;
   choose(choice: PersonalityKey | Personality): void;
   reset(): void;
@@ -84,7 +90,8 @@ export function personalityOf(choice: PersonalityChoice): Personality {
 }
 
 export function createProbe(
-  conversation: SessionConversation,
+  her: SessionPersona,
+  now: () => number,
   write: (state: DebugState) => void,
 ): DebugProbe {
   let state: DebugState = {
@@ -94,14 +101,31 @@ export function createProbe(
     decision: null,
     journal: [],
   };
+  let seen: Persona | null = null;
+  const spoken = new Set<number>();
   const refresh = () => {
-    const felt = conversation.feeling();
-    state = { ...state, snapshot: felt?.snapshot ?? null, journal: felt?.journal ?? [] };
+    const persona = her.current();
+    if (persona !== seen) {
+      seen = persona;
+      spoken.clear();
+    }
+    const snapshot = persona?.view(now()).snapshot ?? null;
+    const journal = (persona?.journal() ?? []).map((e) => ({ ...e, spoke: spoken.has(e.id) }));
+    state = { ...state, snapshot, journal };
     write(state);
   };
   return {
     initial: () => state,
     refresh,
+    observed(from, spoke) {
+      if (spoke) {
+        her
+          .current()
+          ?.journalSince(from)
+          .forEach((e) => spoken.add(e.id));
+      }
+      refresh();
+    },
     decided(played) {
       state = {
         ...state,
@@ -113,11 +137,12 @@ export function createProbe(
     choose(choice) {
       const personality = choiceOf(choice);
       state = { ...state, personality };
-      conversation.setPersonality(personalityOf(personality));
+      her.setPersonality(personalityOf(personality));
       refresh();
     },
     reset() {
-      conversation.resetFeeling();
+      her.reset();
+      spoken.clear();
       refresh();
     },
   };

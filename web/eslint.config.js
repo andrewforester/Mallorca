@@ -56,7 +56,7 @@ const layer = (
 };
 
 const ARENA_MESSAGE =
-  'tools/arena may import from src only cards, engine, brains, cfr, conversation and game/records';
+  'tools/arena may import from src only cards, engine, brains, cfr, persona, conversation and game/records';
 const VIEWER_MESSAGE = 'tools/arena/ui may import from src only game/records and types from engine';
 const GAME_OUTSIDE_RECORDS = '(^|/)src/game(/(?!records/)|$)';
 
@@ -156,16 +156,26 @@ export default tseslint.config(
   layer('face', ['emotion']),
   layer('persona', ['cards', 'equity', 'emotion'], ['engine']),
   layer('persona', ['cards', 'equity', 'emotion', 'engine'], [], ['src/persona/**/*.test.ts']),
-  layer('conversation', ['cards', 'equity', 'emotion', 'persona'], ['engine']),
+  layer('conversation', ['cards', 'emotion'], ['engine', 'persona']),
   layer(
     'conversation',
     ['cards', 'equity', 'emotion', 'persona', 'engine'],
     [],
-    ['src/conversation/**/*.test.ts'],
+    ['src/conversation/**/*.test.ts', 'src/conversation/testSpeaker.ts'],
   ),
   layer('coach', ['cards', 'equity', 'brains'], ['engine', 'cfr']),
   layer('coach', ['cards', 'equity', 'brains', 'engine', 'cfr'], [], ['src/coach/**/*.test.ts']),
-  layer('game', ['cards', 'equity', 'engine', 'brains', 'cfr', 'conversation', 'coach', 'face']),
+  layer('game', [
+    'cards',
+    'equity',
+    'engine',
+    'brains',
+    'cfr',
+    'persona',
+    'conversation',
+    'coach',
+    'face',
+  ]),
   layer('ui', ['game']),
   layer('main', ['game', 'ui'], [], ['src/main.tsx']),
   arenaLayer,

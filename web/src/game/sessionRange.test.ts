@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { CASH } from '../engine/index.ts';
-import type * as ConversationModule from '../conversation/index.ts';
-import type { Conversation, ConversationOptions } from '../conversation/index.ts';
+import type * as PersonaModule from '../persona/index.ts';
+import type { Persona, PersonaOptions } from '../persona/index.ts';
 import { createSession } from './session.ts';
 import type { Session } from './session.ts';
 import { silentConversationClient } from './conversationClient.ts';
@@ -10,18 +10,18 @@ import type { ScriptedBot } from './testBot.ts';
 
 const given: { weights: ArrayLike<number>; handNumber: number }[] = [];
 
-vi.mock('../conversation/index.ts', async (importOriginal) => {
-  const original = await importOriginal<typeof ConversationModule>();
+vi.mock('../persona/index.ts', async (importOriginal) => {
+  const original = await importOriginal<typeof PersonaModule>();
   return {
     ...original,
-    createConversation: (options: ConversationOptions): Conversation => {
-      const conversation = original.createConversation(options);
-      const playerRange = conversation.playerRange.bind(conversation);
-      conversation.playerRange = (weights, handNumber) => {
+    createPersona: (options: PersonaOptions): Persona => {
+      const persona = original.createPersona(options);
+      const narrow = persona.narrow.bind(persona);
+      persona.narrow = (weights, handNumber) => {
         given.push({ weights, handNumber });
-        playerRange(weights, handNumber);
+        narrow(weights, handNumber);
       };
-      return conversation;
+      return persona;
     },
   };
 });

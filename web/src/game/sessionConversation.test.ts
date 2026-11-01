@@ -85,6 +85,7 @@ interface Extra {
   tells?: Level;
   records?: RecordsOptions;
   connectConversation?: () => Promise<ConversationClient>;
+  debug?: boolean;
 }
 
 function open(client: ConversationClient, extra: Extra = {}, base = shovingBot()): Table {
@@ -326,6 +327,27 @@ describe('session conversation', () => {
     table.session.getState().leave();
     expect(client.summaries).toHaveLength(1);
     expect(client.summaries[0]?.summary.signals).toEqual({ compliment: 1 });
+  });
+
+  it("a reply's signals reach her through the session", async () => {
+    const client = fakeClient({
+      reply: () => Promise.resolve({ text: 'Thank you', signals: ['compliment'] }),
+    });
+    const table = open(client, { debug: true });
+    await table.session.getState().start(CASH, 'cfr');
+    table.session.getState().say('Nice hand');
+    await flush();
+    const entry = table.session.getState().debug?.journal[0];
+    expect(entry?.event).toEqual({ kind: 'chat', signal: 'compliment' });
+    expect(entry?.spoke).toBe(false);
+  });
+
+  it('marks the journal entries of a step where she spoke', async () => {
+    const client = fakeClient();
+    const table = open(client, { debug: true });
+    await table.session.getState().start(CASH, 'cfr');
+    await untilHerBet(table, client);
+    expect(table.session.getState().debug?.journal.some((e) => e.spoke)).toBe(true);
   });
 
   it('say ignores blank text and caps length', async () => {
@@ -736,12 +758,14 @@ describe('session conversation', () => {
   it('drops a reply that arrives after conversation was switched off', async () => {
     const answer = deferred<ConversationReply | null>();
     const client = fakeClient({ reply: () => answer.promise });
-    const table = open(client);
+    const table = open(client, { debug: true });
     await table.session.getState().start(CASH, 'cfr');
     table.session.getState().say('Hello');
     table.session.getState().setConversation(false);
     answer.resolve({ text: 'Hi', signals: ['tease'] });
     await flush();
+    const heard = table.session.getState().debug?.journal.filter((e) => e.event.kind === 'chat');
+    expect(heard).toEqual([]);
     expect(table.session.getState().conversation.lines.map((l) => l.text)).toEqual(['Hello']);
     expect(table.session.getState().conversation.lines[0]?.undelivered).toBeUndefined();
     table.session.getState().setConversation(true);

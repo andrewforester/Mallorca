@@ -1,5 +1,6 @@
 import type { Card, Rng } from '../../src/cards/index.ts';
-import { BASE_HABITS, habitsAt, strengthOf } from '../../src/conversation/index.ts';
+import { BASE_HABITS, habitsAt } from '../../src/conversation/index.ts';
+import { strengthOf } from '../../src/persona/index.ts';
 import type { Level } from '../../src/conversation/index.ts';
 import type { ArenaBot } from './arenaBot.ts';
 

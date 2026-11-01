@@ -8,7 +8,7 @@ import { createMathBrain } from '../../src/brains/index.ts';
 import type { Rng } from '../../src/cards/index.ts';
 import type { CfrModel, ShippedStrategyKey } from '../../src/cfr/index.ts';
 import { SHIPPED_STRATEGIES, createCfrBrain, loadCfrModel } from '../../src/cfr/index.ts';
-import { strengthOf } from '../../src/conversation/index.ts';
+import { strengthOf } from '../../src/persona/index.ts';
 import type { Level } from '../../src/conversation/index.ts';
 import type { ArenaBot } from './arenaBot.ts';
 import { createExploiter } from './exploiter.ts';

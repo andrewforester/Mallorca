@@ -40,12 +40,13 @@ import type { Opponent } from './opponent.ts';
 import { initialFace } from './sessionFace.ts';
 import type { SessionFace } from './sessionFace.ts';
 import { initialConversation } from './sessionConversation.ts';
-import { wireFace, wireConversation } from './sessionWiring.ts';
+import { beginHer, observeHer, wireHer } from './sessionWiring.ts';
 import type { WiringHost } from './sessionWiring.ts';
 import { createTimers } from './timers.ts';
 import type { Timers } from './timers.ts';
 import type { SessionConversation } from './sessionConversation.ts';
-import type { Bias } from '../conversation/index.ts';
+import type { Bias } from '../persona/index.ts';
+import type { SessionPersona } from './sessionPersona.ts';
 import { COACH_OFF, createCoach } from './coach.ts';
 import type { Coach } from './coach.ts';
 import type { CoachDecision } from '../coach/index.ts';
@@ -96,6 +97,7 @@ interface Runtime {
   topUps: number;
   opponent: Opponent;
   seed: number;
+  persona: SessionPersona;
   conversation: SessionConversation;
   face: SessionFace;
   probe: DebugProbe | null;
@@ -127,8 +129,7 @@ function record(rt: Runtime, events: EngineEvent[], opens = false): void {
   rt.recorder.observe(events);
   rt.coach.observe(events);
   rt.bot.observe(toObservations(events, rt.botSeat));
-  rt.conversation.observe(events);
-  rt.face.observe(events);
+  observeHer(rt, events);
   for (const event of events) {
     if (event.type === 'toppedUp' && event.seat === rt.humanSeat) {
       rt.topUps += event.amount;
@@ -197,7 +198,7 @@ async function decide(rt: Runtime, legal: LegalActions, bias?: Bias): Promise<De
 async function botTurn(rt: Runtime, myEpoch: number): Promise<boolean> {
   rt.set({ phase: 'botThinking' });
   const legal = legalActionsOf(rt.get().table);
-  const bias = rt.conversation.bias();
+  const bias = rt.persona.bias();
   const decision = await decide(rt, legal, bias);
   if (myEpoch !== rt.epoch) {
     return false;
@@ -273,7 +274,7 @@ function restart(rt: Runtime, options: SessionOptions): Promise<void> {
     opponent: rt.opponent,
     session: tally(rt, table),
   });
-  rt.conversation.begin(rt.opponent, rt.seed);
+  beginHer(rt);
   return beginHand(rt);
 }
 
@@ -368,7 +369,6 @@ export function createSession(options: SessionOptions): Session {
       set({ coach: state }),
     );
     const host = hostOf(() => rt);
-    const conversation = wireConversation(host, options, botSeat);
     const rt: Runtime = {
       set,
       get,
@@ -387,12 +387,11 @@ export function createSession(options: SessionOptions): Session {
       topUps: 0,
       seed,
       opponent: 'math',
-      conversation,
-      face: wireFace(host, conversation, options, botSeat),
+      ...wireHer(host, options, botSeat),
       probe: null,
     };
     if (import.meta.env.DEV && options.debug === true) {
-      rt.probe = createProbe(rt.conversation, (debug) => set({ debug }));
+      rt.probe = createProbe(rt.persona, options.now ?? Date.now, (debug) => set({ debug }));
     }
     const initial = freshTable(options, rt.mode);
     return {

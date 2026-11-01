@@ -1,28 +1,19 @@
-import { mulberry32 } from '../cards/index.ts';
 import type { Card, Rng } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { BASE_HABITS, habitsAt } from './habits.ts';
 import type { Habit, Habits, Level, Situation } from './habits.ts';
-import type { Impulse, Personality, Snapshot } from '../emotion/index.ts';
 import { characterOf, feelingState } from './state.ts';
 import type { Character, FeelingState } from './state.ts';
-import { createPersona, netOf } from '../persona/index.ts';
 import type {
-  Bias,
   HandState,
-  JournalEntry as PersonaEntry,
   Moment,
-  Persona,
+  PersonaReader,
+  PersonaView,
   Signal,
-  Stance,
   StrengthClass,
 } from '../persona/index.ts';
 import { EMPTY_SUMMARY, withHand, withSignals } from './summary.ts';
 import type { SessionSummary } from './summary.ts';
-
-export interface JournalEntry extends PersonaEntry {
-  spoke: boolean;
-}
 
 export interface HandFacts {
   street: string;
@@ -45,22 +36,13 @@ export interface LineIntent {
 }
 
 export interface Conversation {
-  observe(events: readonly EngineEvent[], nowMs: number): LineIntent | null;
-  hear(signals: readonly Signal[]): void;
-  playerRange(weights: ArrayLike<number>, handNumber: number): void;
-  replyIntent(): LineIntent;
-  facts(): HandFacts;
-  moodWords(): string[];
-  feeling(): Snapshot;
-  feelingAt(nowMs: number): Snapshot;
-  impulses(): Impulse[];
-  stance(): Stance | null;
-  feelingFor(intent: LineIntent): FeelingState;
-  character(): Character;
-  setPersonality(p: Personality): void;
-  resetFeeling(): void;
-  journal(): JournalEntry[];
-  bias(): Bias;
+  observe(moments: readonly Moment[], persona: PersonaReader, nowMs: number): LineIntent | null;
+  replyIntent(persona: PersonaReader, nowMs: number): LineIntent;
+  facts(view: PersonaView): HandFacts;
+  moodWords(view: PersonaView): string[];
+  feelingFor(intent: LineIntent, view: PersonaView): FeelingState;
+  character(view: PersonaView): Character;
+  heard(signals: readonly Signal[]): void;
   summary(): SessionSummary;
   setLevel(level: Level): void;
 }
@@ -68,7 +50,6 @@ export interface Conversation {
 export interface ConversationOptions {
   seat: SeatIndex;
   rng: Rng;
-  luckRng?: Rng;
   level: Level;
   habits?: Habits;
 }
@@ -94,7 +75,6 @@ interface Candidate {
 }
 
 const PACE_MS = 1500;
-const SEED_RANGE = 0x100000000;
 const BET_HINT_RATE = 0.7;
 const HAND_END: ReadonlySet<Situation> = new Set<Situation>(['handWon', 'handLost', 'bluffCaught']);
 
@@ -150,64 +130,41 @@ class TableConversation implements Conversation {
   private readonly rng: Rng;
   private readonly base: Habits;
   private habits: Habits;
-  private readonly persona: Persona;
   private session: SessionSummary = EMPTY_SUMMARY;
   private last: Situation | null = null;
   private lastLineAt = Number.NEGATIVE_INFINITY;
   private readonly usedStreets = new Set<string>();
-  private readonly spoke = new Set<number>();
-  private impulseCursor = 0;
-  private now = 0;
 
   constructor(options: ConversationOptions) {
     this.seat = options.seat;
     this.rng = options.rng;
-    const luck = options.luckRng ?? mulberry32(Math.floor(options.rng.next() * SEED_RANGE));
     this.base = options.habits ?? BASE_HABITS;
     this.habits = habitsAt(this.base, options.level);
-    this.persona = createPersona({ seat: this.seat, rng: luck });
   }
 
-  observe(events: readonly EngineEvent[], nowMs: number): LineIntent | null {
-    this.now = Math.max(this.now, nowMs);
-    const lastId = this.persona.lastJournalId();
+  observe(moments: readonly Moment[], persona: PersonaReader, nowMs: number): LineIntent | null {
     let candidate: Candidate | null = null;
-    for (const moment of this.persona.observe(events, nowMs)) {
-      candidate = this.step(moment) ?? candidate;
+    for (const moment of moments) {
+      candidate = this.step(moment, persona) ?? candidate;
     }
-    const intent = candidate === null ? null : this.unprompted(candidate, nowMs);
-    if (intent !== null) {
-      this.persona.journalSince(lastId).forEach((e) => this.spoke.add(e.id));
-    }
-    return intent;
+    return candidate === null ? null : this.unprompted(candidate, persona.view(nowMs), nowMs);
   }
 
-  hear(signals: readonly Signal[]): void {
-    this.persona.hear(signals);
-    this.session = withSignals(this.session, signals);
-  }
-
-  playerRange(weights: ArrayLike<number>, handNumber: number): void {
-    this.persona.narrow(weights, handNumber);
-  }
-
-  replyIntent(): LineIntent {
+  replyIntent(persona: PersonaReader, nowMs: number): LineIntent {
     const situation = this.last ?? 'herCall';
-    const strength = this.persona.strength();
+    const strength = persona.strength();
     const habit = this.habits[situation][strength];
     const { honest, hint } = drawHint(habit, situation, strength, this.rng);
+    const { hand } = persona.view(nowMs);
     return this.intent(
-      { situation, strength, key: '', street: this.hand().street },
-      {
-        speak: true,
-        honest,
-        hint,
-      },
+      { situation, strength, key: '', street: hand.street },
+      { speak: true, honest, hint },
+      hand,
     );
   }
 
-  facts(): HandFacts {
-    const { street, board, pot, stacks, her, actions, bigBlind } = this.hand();
+  facts(view: PersonaView): HandFacts {
+    const { street, board, pot, stacks, her, actions, bigBlind } = view.hand;
     return {
       street,
       board: [...board],
@@ -219,51 +176,20 @@ class TableConversation implements Conversation {
     };
   }
 
-  moodWords(): string[] {
-    return this.persona.view(this.now).words;
+  moodWords(view: PersonaView): string[] {
+    return view.words;
   }
 
-  feeling(): Snapshot {
-    return this.persona.view(this.now).snapshot;
+  feelingFor(intent: LineIntent, view: PersonaView): FeelingState {
+    return feelingState(view.snapshot, intent.honest ? null : intent.hint);
   }
 
-  feelingAt(nowMs: number): Snapshot {
-    return this.persona.view(nowMs).snapshot;
+  character(view: PersonaView): Character {
+    return characterOf(view.personality);
   }
 
-  impulses(): Impulse[] {
-    const fresh = this.persona.journalSince(this.impulseCursor);
-    this.impulseCursor = this.persona.lastJournalId();
-    return fresh.flatMap((e) => e.impulses);
-  }
-
-  stance(): Stance | null {
-    return this.persona.view(this.now).stance;
-  }
-
-  feelingFor(intent: LineIntent): FeelingState {
-    return feelingState(this.feeling(), intent.honest ? null : intent.hint);
-  }
-
-  character(): Character {
-    return characterOf(this.persona.view(this.now).personality);
-  }
-
-  setPersonality(p: Personality): void {
-    this.persona.setPersonality(p);
-  }
-
-  resetFeeling(): void {
-    this.persona.reset();
-    this.spoke.clear();
-  }
-
-  journal(): JournalEntry[] {
-    return this.persona.journal().map((e) => ({ ...e, spoke: this.spoke.has(e.id) }));
-  }
-
-  bias(): Bias {
-    return this.persona.view(this.now).bias;
+  heard(signals: readonly Signal[]): void {
+    this.session = withSignals(this.session, signals);
   }
 
   summary(): SessionSummary {
@@ -274,11 +200,7 @@ class TableConversation implements Conversation {
     this.habits = habitsAt(this.base, level);
   }
 
-  private hand(): HandState {
-    return this.persona.view(this.now).hand;
-  }
-
-  private step(moment: Moment): Candidate | null {
+  private step(moment: Moment, persona: PersonaReader): Candidate | null {
     const { event, before } = moment;
     if (event.type === 'handStarted') {
       this.usedStreets.clear();
@@ -290,17 +212,17 @@ class TableConversation implements Conversation {
       return null;
     }
     this.last = situation;
-    const strength = moment.strength ?? this.persona.strength();
+    const strength = moment.strength ?? persona.strength();
     return { situation, strength, key: streetKeyOf(before), street: before.street };
   }
 
   private endHand(moment: Moment): Situation {
     const hand = moment.after;
-    const strength = moment.strength ?? this.persona.strength();
     const won = hand.awarded[this.seat] > 0;
-    const bluffCaught = !won && hand.showdown !== null && strength === 'weak' && hand.herLateBet;
+    const weak = moment.strength === 'weak';
+    const bluffCaught = !won && hand.showdown !== null && weak && hand.herLateBet;
     this.session = withHand(this.session, {
-      netBb: netOf(hand, this.seat),
+      netBb: (hand.stacks[this.seat] - hand.startStack) / hand.bigBlind,
       playerBluffShown: moment.playerBluffShown,
       playerAllIn: hand.playerAllIn,
     });
@@ -310,42 +232,33 @@ class TableConversation implements Conversation {
     return won ? 'handWon' : 'handLost';
   }
 
-  private unprompted(candidate: Candidate, nowMs: number): LineIntent | null {
+  private unprompted(candidate: Candidate, view: PersonaView, nowMs: number): LineIntent | null {
     const { situation, strength, key } = candidate;
     const sameStreet = !HAND_END.has(situation) && this.usedStreets.has(key);
     if (nowMs - this.lastLineAt < PACE_MS || sameStreet) {
       return null;
     }
-    const draw = drawLine(
-      {
-        habits: this.habits,
-        situation,
-        strength,
-        speakFactor: this.persona.view(nowMs).speakFactor,
-      },
-      this.rng,
-    );
+    const spot = { habits: this.habits, situation, strength, speakFactor: view.speakFactor };
+    const draw = drawLine(spot, this.rng);
     if (!draw.speak) {
       return null;
     }
     this.lastLineAt = nowMs;
     this.usedStreets.add(key);
-    this.usedStreets.add(streetKeyOf(this.hand()));
-    return this.intent(candidate, draw);
+    this.usedStreets.add(streetKeyOf(view.hand));
+    return this.intent(candidate, draw, view.hand);
   }
 
-  private intent(candidate: Candidate, draw: Draw): LineIntent {
-    const { street, handNumber } = this.hand();
+  private intent(candidate: Candidate, draw: Draw, hand: HandState): LineIntent {
     const { situation, strength } = candidate;
-    const actionStreet = candidate.street;
     return {
       situation,
       hint: draw.hint,
       honest: draw.honest,
       strength,
-      street,
-      actionStreet,
-      handNumber,
+      street: hand.street,
+      actionStreet: candidate.street,
+      handNumber: hand.handNumber,
     };
   }
 }
