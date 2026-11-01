@@ -70,20 +70,24 @@ The play file of checkpoint 10 in the web arena (`cfr:<play file>`), 100 bb, bli
 `v2` checkpoint 10 (`cfr:solver/data/v2/v2-10-play.mlcs`) against [Slumbot](https://www.slumbot.com) over its API,
 with `npm run arena:external` (issue #15, `web/tools/arena/external/`). Slumbot plays 200 bb (blinds 50/100), twice
 the depth of the blueprint, so the bot plays the deeper half of every hand through off-tree translation. Not
-duplicated, so the interval is wide; all-in EV and the baseline that Slumbot returns cut it.
+duplicated, so the interval is wide; all-in EV cuts it.
 
 | date | strategy | stack | hands | raw bb/100 | all-in EV bb/100 | baseline bb/100 | commit |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2026-10-31 | v2 ckpt 10 | 200 bb | 2,058 | +32.5 ± 80.6 | -13.7 ± 72.2 | -9.3 ± 75.4 | 791ca85 |
+| 2026-11-01 | v2 ckpt 10 | 200 bb | 110,047 | -21.9 ± 11.0 | -22.6 ± 10.3 | -4.3 ± 9.7 | 33742fa |
 
-- An interim figure: every interval contains 0. The run continues to about 110,000 hands, where all-in EV reaches
-  about ±10 (standard deviation per hand 1671 bb/100, 107,000 hands projected). The final row replaces this one.
-- Standard deviation per hand: raw 1866, all-in EV 1671, baseline 1746. The Slumbot baseline (its own result in our
-  seat with our cards) correlates only about 0.5 with ours, so it removes less variance than all-in EV; its mean,
-  +41.8 ± 78.9, is consistent with 0, as the estimate needs.
-- No hand abandoned, no mismatch between the engine and Slumbot's `winnings` over the 2058 hands.
-- Reproduce from the log: the first 2058 lines of `web/arena-out/cfr-v2-10-play-slumbot-s1-20261031.jsonl` (main
-  checkout) through `npm run arena:external -- --report <file>` give the row above exactly.
+- The headline figure is all-in EV: **-22.6 ± 10.3 bb/100**. Slumbot beats the blueprint at 200 bb with the
+  interval well below zero. 110,058 hands from 2026-10-31 to 2026-11-01, 11 abandoned for network errors, no
+  mismatch between the engine and Slumbot's `winnings`, positions 55,024 and 55,023.
+- The Slumbot baseline is biased and not used: the mean of `baseline_winnings` is -17.7 ± 11.3 bb/100, while the
+  estimate needs 0. Its own figure (-4.3) is that much too kind.
+- Standard deviation per hand: raw 1869, all-in EV 1738, baseline 1639 bb/100.
+- Where the chips go (first pass, issue #14): all-in pots -32 bb/100, pots of 60-200 bb -19, the big blind -18.0
+  against -3.9 on the button, and more folds against small bets than Slumbot makes (41% against 31% on the flop).
+  The big pots are play deeper than the blueprint: input for lever 7.
+- The log and the report are in the pre-release
+  [data-slumbot-v2-10-20261101](https://github.com/andrewforester/Mallorca/releases/tag/data-slumbot-v2-10-20261101);
+  `npm run arena:external -- --report <log>` gives the row above exactly.
 
 ## Arena against the math bot (2026-10-24)
 
