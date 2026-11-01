@@ -49,7 +49,7 @@ export { speechOf } from '../face/index.ts';
 export type { DebugDecision, DebugState, DecisionRow, PersonalityChoice } from './debug.ts';
 export type { DebugLoad, DebugTraits, DebugView } from './debugView.ts';
 export { toDebugView } from './debugView.ts';
-export { EMOTIONS, LOAD_SOURCES, PERSONALITIES, STYLE_KEYS } from '../talk/index.ts';
+export { EMOTIONS, LOAD_SOURCES, PERSONALITIES, BIAS_KEYS } from '../talk/index.ts';
 export type {
   BigFive,
   Emotion,
@@ -59,7 +59,7 @@ export type {
   Pad,
   Personality,
   PersonalityKey,
-  Style,
-  StyleKey,
+  Bias,
+  BiasKey,
   TableEvent,
 } from '../talk/index.ts';

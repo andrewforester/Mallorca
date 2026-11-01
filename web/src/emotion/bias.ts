@@ -1,10 +1,11 @@
 import { clamp, clamp01 } from './emotions.ts';
 import type { Emotions, Pad } from './emotions.ts';
 import { desperationOf } from './load.ts';
+import { BIAS_KEYS, NEUTRAL_PLAY_BIAS } from './biasKeys.ts';
+import type { BiasKey, PlayBias } from './biasKeys.ts';
 
-export const STYLE_KEYS = ['aggression', 'looseness', 'bluff', 'sizing', 'stickiness'] as const;
-export type StyleKey = (typeof STYLE_KEYS)[number];
-export type PlayStyle = Readonly<Record<StyleKey, number>>;
+export { BIAS_KEYS, NEUTRAL_PLAY_BIAS } from './biasKeys.ts';
+export type { BiasKey, PlayBias } from './biasKeys.ts';
 
 export const DRIVERS = [
   'fear',
@@ -19,7 +20,7 @@ export const DRIVERS = [
 export type Driver = (typeof DRIVERS)[number];
 export type Drivers = Readonly<Record<Driver, number>>;
 
-export const COEFFICIENTS: Readonly<Record<StyleKey, Readonly<Record<Driver, number>>>> = {
+export const COEFFICIENTS: Readonly<Record<BiasKey, Readonly<Record<Driver, number>>>> = {
   aggression: {
     fear: -0.35,
     elation: 0.05,
@@ -72,7 +73,7 @@ export const COEFFICIENTS: Readonly<Record<StyleKey, Readonly<Record<Driver, num
   },
 };
 
-export const STYLE_RANGE: readonly [number, number] = [0.5, 2];
+export const BIAS_RANGE: readonly [number, number] = [0.5, 2];
 
 export function driversOf(e: Emotions, moodShift: Pad, sessionNetBb: number): Drivers {
   return {
@@ -87,21 +88,17 @@ export function driversOf(e: Emotions, moodShift: Pad, sessionNetBb: number): Dr
   };
 }
 
-export function styleOf(drivers: Drivers, leakage: number): PlayStyle {
-  const value = (key: StyleKey): number => {
+export function biasOf(
+  drivers: Drivers,
+  leakage: number,
+  baseline: PlayBias = NEUTRAL_PLAY_BIAS,
+): PlayBias {
+  const value = (key: BiasKey): number => {
     let sum = 0;
     for (const d of DRIVERS) {
       sum += COEFFICIENTS[key][d] * drivers[d];
     }
-    return clamp(1 + leakage * sum, STYLE_RANGE[0], STYLE_RANGE[1]);
+    return clamp(baseline[key] * (1 + leakage * sum), BIAS_RANGE[0], BIAS_RANGE[1]);
   };
-  return Object.fromEntries(STYLE_KEYS.map((k) => [k, value(k)])) as Record<StyleKey, number>;
-}
-
-export function cfrStyleOf(style: PlayStyle): {
-  aggression: number;
-  bluff: number;
-  tightness: number;
-} {
-  return { aggression: style.aggression, bluff: style.bluff, tightness: 1 / style.looseness };
+  return Object.fromEntries(BIAS_KEYS.map((k) => [k, value(k)])) as Record<BiasKey, number>;
 }

@@ -1,4 +1,4 @@
-export interface Style {
+export interface Bias {
   aggression: number;
   bluff: number;
   tightness: number;
@@ -6,7 +6,7 @@ export interface Style {
   stickiness: number;
 }
 
-export const NEUTRAL_STYLE: Style = {
+export const NEUTRAL_BIAS: Bias = {
   aggression: 1,
   bluff: 1,
   tightness: 1,

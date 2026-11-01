@@ -11,7 +11,7 @@ import type { ScriptedBot } from './testBot.ts';
 
 interface ExplainingBot extends ScriptedBot {
   asked: (boolean | undefined)[];
-  styles: (BotBias | undefined)[];
+  biases: (BotBias | undefined)[];
 }
 
 const breakdown: Breakdown = {
@@ -26,11 +26,11 @@ function explainingBot(): ExplainingBot {
   const bot: ExplainingBot = {
     ...inner,
     asked: [],
-    styles: [],
+    biases: [],
     select: (opponent) => Promise.resolve(opponent),
-    decide: async (legal: LegalActions, style?: BotBias, explain?: boolean) => {
+    decide: async (legal: LegalActions, bias?: BotBias, explain?: boolean) => {
       bot.asked.push(explain);
-      bot.styles.push(style);
+      bot.biases.push(bias);
       const decision = await inner.decide(legal);
       return explain === true ? { ...decision, breakdown } : decision;
     },
@@ -85,9 +85,9 @@ describe('the emotion debug state', () => {
     expect(debug?.snapshot?.traits.composure).toBeGreaterThan(0);
     expect(debug?.journal.some((e) => e.event.kind === 'deal')).toBe(true);
     expect(bot.asked.every((a) => a === true)).toBe(true);
-    expect(debug?.sentStyle).toEqual(bot.styles.at(-1));
+    expect(debug?.sentBias).toEqual(bot.biases.at(-1));
     const table = session.getState().table;
-    expect(debug?.decision?.rows.map((r) => [r.move.label, r.base, r.styled, r.chosen])).toEqual([
+    expect(debug?.decision?.rows.map((r) => [r.move.label, r.base, r.biased, r.chosen])).toEqual([
       ['fold', 0.4, 0.3, false],
       ['call', 0.6, 0.7, true],
     ]);
@@ -119,13 +119,13 @@ describe('the emotion debug state', () => {
     expect(session.getState().debug?.snapshot?.sessionNetBb).toBe(0);
   });
 
-  it('follows her feeling but sends no style against the math bot', async () => {
+  it('follows her feeling but sends no bias against the math bot', async () => {
     const { session, bot } = open({ debug: true });
     await session.getState().start(CASH, 'math');
     await session.getState().act({ kind: 'passive' });
     const debug = session.getState().debug;
     expect(debug?.snapshot).not.toBeNull();
-    expect(debug?.sentStyle).toBeNull();
-    expect(bot.styles.every((style) => style === undefined)).toBe(true);
+    expect(debug?.sentBias).toBeNull();
+    expect(bot.biases.every((bias) => bias === undefined)).toBe(true);
   });
 });

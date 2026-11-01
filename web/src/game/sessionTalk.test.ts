@@ -56,17 +56,17 @@ function fakeClient(answers: Answers = {}): FakeClient {
   return client;
 }
 
-interface StyledBot extends ScriptedBot {
-  styles: (BotBias | undefined)[];
+interface BiasedBot extends ScriptedBot {
+  biases: (BotBias | undefined)[];
 }
 
-function cfrBot(inner: ScriptedBot): StyledBot {
-  const bot: StyledBot = {
+function cfrBot(inner: ScriptedBot): BiasedBot {
+  const bot: BiasedBot = {
     ...inner,
-    styles: [],
+    biases: [],
     select: (opponent) => Promise.resolve(opponent),
-    decide: (legal: LegalActions, style?: BotBias) => {
-      bot.styles.push(style);
+    decide: (legal: LegalActions, bias?: BotBias) => {
+      bot.biases.push(bias);
       return inner.decide(legal);
     },
   };
@@ -75,7 +75,7 @@ function cfrBot(inner: ScriptedBot): StyledBot {
 
 interface Table {
   session: Session;
-  bot: StyledBot;
+  bot: BiasedBot;
   tick(ms?: number): void;
 }
 
@@ -272,7 +272,7 @@ describe('session talk', () => {
     await table.session.getState().start(CASH, 'cfr');
     await flush();
     expect(table.session.getState().talk.available).toBe(false);
-    expect(table.bot.styles.every((style) => style !== undefined)).toBe(true);
+    expect(table.bot.biases.every((bias) => bias !== undefined)).toBe(true);
   });
 
   it('drops a line after the session restarts', async () => {
@@ -431,7 +431,7 @@ describe('session talk', () => {
     expect(vm.talk).toMatchObject({ available: true, on: true, level: 'obvious' });
   });
 
-  it('style reaches decide and the records', async () => {
+  it('bias reaches decide and the records', async () => {
     const client = fakeClient();
     const store = memoryStore();
     const table = open(client, {
@@ -439,9 +439,9 @@ describe('session talk', () => {
     });
     await table.session.getState().start(CASH, 'cfr');
     await foldHand(table);
-    expect(table.bot.styles.length).toBeGreaterThan(0);
-    for (const style of table.bot.styles) {
-      expect(style).toEqual({
+    expect(table.bot.biases.length).toBeGreaterThan(0);
+    for (const bias of table.bot.biases) {
+      expect(bias).toEqual({
         aggression: expect.any(Number) as number,
         bluff: expect.any(Number) as number,
         tightness: expect.any(Number) as number,
@@ -450,23 +450,23 @@ describe('session talk', () => {
       });
     }
     const records = await store.list();
-    expect(records[0]?.decisions[0]?.style).toEqual(table.bot.styles[0]);
+    expect(records[0]?.decisions[0]?.style).toEqual(table.bot.biases[0]);
   });
 
-  it('talk off still passes the style', async () => {
+  it('talk off still passes the bias', async () => {
     const table = open(fakeClient(), { talkOn: false });
     await table.session.getState().start(CASH, 'cfr');
     expect(table.session.getState().talk).toMatchObject({ available: true, on: false });
-    expect(table.bot.styles[0]).toBeDefined();
+    expect(table.bot.biases[0]).toBeDefined();
   });
 
-  it('without a client her feeling still sets the style', async () => {
+  it('without a client her feeling still sets the bias', async () => {
     const table = open(silentTalkClient);
     await table.session.getState().start(CASH, 'cfr');
     await foldHand(table);
     expect(table.session.getState().talk.available).toBe(false);
-    expect(table.bot.styles.length).toBeGreaterThan(0);
-    expect(table.bot.styles.every((style) => style !== undefined)).toBe(true);
+    expect(table.bot.biases.length).toBeGreaterThan(0);
+    expect(table.bot.biases.every((bias) => bias !== undefined)).toBe(true);
   });
 
   it('quick phrases are marked quick and typed words are not', async () => {
@@ -593,7 +593,7 @@ describe('session talk', () => {
     table.session.getState().quick('niceHand', 'Nice hand');
     expect(client.lines).toEqual([]);
     expect(client.replies).toEqual([]);
-    expect(table.bot.styles.every((style) => style === undefined)).toBe(true);
+    expect(table.bot.biases.every((bias) => bias === undefined)).toBe(true);
   });
 
   it('attaches a client after the start', async () => {

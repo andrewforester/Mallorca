@@ -215,10 +215,10 @@ describe('reproducibility', () => {
       step = applyAction(step.hand, step.seats, call);
       talk.observe(step.events, (now += 3000));
     }
-    return { feeling: talk.feeling(), words: talk.moodWords(), style: talk.style() };
+    return { feeling: talk.feeling(), words: talk.moodWords(), bias: talk.bias() };
   };
 
-  it('keeps the same feeling and style for a seed and a clock whatever lines she speaks', () => {
+  it('keeps the same feeling and bias for a seed and a clock whatever lines she speaks', () => {
     expect(play(always())).toEqual(play());
   });
 });
@@ -329,12 +329,12 @@ describe('replyIntent and state', () => {
     });
   });
 
-  it('moves her feeling and style with the signals it hears', () => {
+  it('moves her feeling and bias with the signals it hears', () => {
     const talk = createTalk({ seat: 1, rng: mulberry32(2), level: 'obvious' });
     talk.hear(['mockBluff', 'tease']);
     expect(talk.feeling().emotions.anger).toBeGreaterThan(0.4);
     expect(talk.moodWords()).toContain('annoyed');
-    expect(talk.style().bluff).toBeGreaterThan(1);
+    expect(talk.bias().bluff).toBeGreaterThan(1);
   });
 
   it('gives the feeling for an intent, acting the hinted strength only when the hint is false', () => {

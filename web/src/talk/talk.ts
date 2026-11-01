@@ -16,7 +16,7 @@ import type { JournalEntry } from './journal.ts';
 import type { Signal } from './signals.ts';
 import { strengthOf } from './strength.ts';
 import type { StrengthClass } from './strength.ts';
-import type { Style } from './style.ts';
+import type { Bias } from './bias.ts';
 import { EMPTY_SUMMARY, withHand, withSignals } from './summary.ts';
 import type { SessionSummary } from './summary.ts';
 
@@ -56,7 +56,7 @@ export interface Talk {
   setPersonality(p: Personality): void;
   resetFeeling(): void;
   journal(): JournalEntry[];
-  style(): Style;
+  bias(): Bias;
   summary(): SessionSummary;
   setLevel(level: Level): void;
 }
@@ -268,8 +268,8 @@ class TableTalk implements Talk {
     return this.felt.list();
   }
 
-  style(): Style {
-    return this.heart.style();
+  bias(): Bias {
+    return this.heart.bias();
   }
 
   summary(): SessionSummary {

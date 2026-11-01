@@ -28,7 +28,7 @@ export function DecisionSection({ view }: { view: DebugView }) {
               <tr>
                 <th>{COPY.decision.move}</th>
                 <th>{COPY.decision.blueprint}</th>
-                <th>{COPY.decision.styled}</th>
+                <th>{COPY.decision.biased}</th>
               </tr>
             </thead>
             <tbody>
@@ -36,7 +36,7 @@ export function DecisionSection({ view }: { view: DebugView }) {
                 <tr key={k} aria-current={row.chosen} class={row.chosen ? 'debug-chosen' : ''}>
                   <td>{moveText(row.move)}</td>
                   <td>{pct(row.base)}</td>
-                  <td>{pct(row.styled)}</td>
+                  <td>{pct(row.biased)}</td>
                 </tr>
               ))}
             </tbody>

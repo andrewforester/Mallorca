@@ -106,15 +106,15 @@ describe('createWorkerHandler', () => {
 
 const settle = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-describe('createWorkerHandler style', () => {
-  const style = { aggression: 1.2, bluff: 0.8, tightness: 1, sizing: 1, stickiness: 1 };
+describe('createWorkerHandler bias', () => {
+  const bias = { aggression: 1.2, bluff: 0.8, tightness: 1, sizing: 1, stickiness: 1 };
 
-  it('passes the style before decide', () => {
+  it('passes the bias before decide', () => {
     const calls: string[] = [];
     const brain: Brain = {
       observe: () => undefined,
       setBias: (given) => {
-        calls.push(`style ${JSON.stringify(given)}`);
+        calls.push(`bias ${JSON.stringify(given)}`);
       },
       decide: () => {
         calls.push('decide');
@@ -127,11 +127,11 @@ describe('createWorkerHandler style', () => {
       noLoader,
       noCoach,
     );
-    handle({ kind: 'decide', id: 1, legal, style });
-    expect(calls).toEqual([`style ${JSON.stringify(style)}`, 'decide']);
+    handle({ kind: 'decide', id: 1, legal, bias });
+    expect(calls).toEqual([`bias ${JSON.stringify(bias)}`, 'decide']);
   });
 
-  it('math brain ignores style', () => {
+  it('math brain ignores bias', () => {
     const { brain } = fakeBrain();
     const replies: WorkerReply[] = [];
     const handle = createWorkerHandler(
@@ -140,7 +140,7 @@ describe('createWorkerHandler style', () => {
       noLoader,
       noCoach,
     );
-    handle({ kind: 'decide', id: 2, legal, style });
+    handle({ kind: 'decide', id: 2, legal, bias });
     expect(replies).toEqual([{ id: 2, decision }]);
   });
 });

@@ -4,7 +4,7 @@ import type { CoachMove } from '../coach/index.ts';
 import type { Card } from '../cards/index.ts';
 import type { Action, LegalActions, SeatIndex, Table } from '../engine/index.ts';
 import { PERSONALITIES } from '../talk/index.ts';
-import type { JournalEntry, Personality, PersonalityKey, Snapshot, Style } from '../talk/index.ts';
+import type { JournalEntry, Personality, PersonalityKey, Snapshot, Bias } from '../talk/index.ts';
 import type { SessionTalk } from './sessionTalk.ts';
 
 export type PersonalityChoice =
@@ -13,7 +13,7 @@ export type PersonalityChoice =
 export interface DecisionRow {
   move: CoachMove;
   base: number;
-  styled: number;
+  biased: number;
   chosen: boolean;
 }
 
@@ -27,14 +27,14 @@ export interface DebugDecision {
 export interface DebugState {
   personality: PersonalityChoice;
   snapshot: Snapshot | null;
-  sentStyle: Style | null;
+  sentBias: Bias | null;
   decision: DebugDecision | null;
   journal: JournalEntry[];
 }
 
 export interface Decided {
   decision: Decision | null;
-  style: Style | undefined;
+  bias: Bias | undefined;
   action: Action;
   legal: LegalActions;
   table: Table;
@@ -62,7 +62,7 @@ function shownOf({ decision, action, legal, table, seat }: Decided): DebugDecisi
   const rows = breakdown.moves.map((move, k) => ({
     move: coachMove(move, legal, hand.pot),
     base: breakdown.base[k] ?? 0,
-    styled: breakdown.biased[k] ?? 0,
+    biased: breakdown.biased[k] ?? 0,
     chosen: k === breakdown.chosen,
   }));
   return {
@@ -81,7 +81,7 @@ export function createProbe(talk: SessionTalk, write: (state: DebugState) => voi
   let state: DebugState = {
     personality: { key: 'mallorca' },
     snapshot: null,
-    sentStyle: null,
+    sentBias: null,
     decision: null,
     journal: [],
   };
@@ -96,7 +96,7 @@ export function createProbe(talk: SessionTalk, write: (state: DebugState) => voi
     decided(played) {
       state = {
         ...state,
-        sentStyle: played.style ?? null,
+        sentBias: played.bias ?? null,
         decision: shownOf(played) ?? state.decision,
       };
       refresh();

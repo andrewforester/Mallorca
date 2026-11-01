@@ -45,7 +45,7 @@ import type { WiringHost } from './sessionWiring.ts';
 import { createTimers } from './timers.ts';
 import type { Timers } from './timers.ts';
 import type { SessionTalk } from './sessionTalk.ts';
-import type { Style } from '../talk/index.ts';
+import type { Bias } from '../talk/index.ts';
 import { COACH_OFF, createCoach } from './coach.ts';
 import type { Coach } from './coach.ts';
 import type { CoachDecision } from '../coach/index.ts';
@@ -166,17 +166,17 @@ function conclude(rt: Runtime, step: Step): void {
 
 interface Played {
   decision?: Decision | null;
-  style?: Style;
+  bias?: Bias;
   coached?: CoachDecision | null;
 }
 
 function play(rt: Runtime, action: Action, played: Played = {}): void {
-  const { decision = null, style, coached = null } = played;
+  const { decision = null, bias, coached = null } = played;
   const { hand } = rt.get().table;
   const opens = hand !== null && isOpeningBet(hand, action);
   const step = apply(rt.get().table, action);
   if (decision !== null) {
-    rt.recorder.decided(decision, step.events, style);
+    rt.recorder.decided(decision, step.events, bias);
   }
   if (coached !== null) {
     rt.recorder.coached(coached, step.events);
@@ -186,9 +186,9 @@ function play(rt: Runtime, action: Action, played: Played = {}): void {
   conclude(rt, step);
 }
 
-async function decide(rt: Runtime, legal: LegalActions, style?: Style): Promise<Decision | null> {
+async function decide(rt: Runtime, legal: LegalActions, bias?: Bias): Promise<Decision | null> {
   try {
-    return await rt.bot.decide(legal, style, rt.probe !== null);
+    return await rt.bot.decide(legal, bias, rt.probe !== null);
   } catch {
     return null;
   }
@@ -197,8 +197,8 @@ async function decide(rt: Runtime, legal: LegalActions, style?: Style): Promise<
 async function botTurn(rt: Runtime, myEpoch: number): Promise<boolean> {
   rt.set({ phase: 'botThinking' });
   const legal = legalActionsOf(rt.get().table);
-  const style = rt.talk.style();
-  const decision = await decide(rt, legal, style);
+  const bias = rt.talk.bias();
+  const decision = await decide(rt, legal, bias);
   if (myEpoch !== rt.epoch) {
     return false;
   }
@@ -214,8 +214,8 @@ async function botTurn(rt: Runtime, myEpoch: number): Promise<boolean> {
   }
   const intent: Intent = decision === null ? { kind: 'passive' } : toIntent(decision.action);
   const action = resolveIntent(intent, legal);
-  rt.probe?.decided({ decision, style, action, legal, table: rt.get().table, seat: rt.botSeat });
-  play(rt, action, { decision, style });
+  rt.probe?.decided({ decision, bias, action, legal, table: rt.get().table, seat: rt.botSeat });
+  play(rt, action, { decision, bias });
   return true;
 }
 

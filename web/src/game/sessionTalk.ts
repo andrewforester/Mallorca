@@ -9,7 +9,7 @@ import type {
   SessionSummary,
   Signal,
   Snapshot,
-  Style,
+  Bias,
   Talk,
 } from '../talk/index.ts';
 import type { Opponent } from './opponent.ts';
@@ -60,7 +60,7 @@ export interface TalkSetup {
 export interface SessionTalk {
   begin(opponent: Opponent, seed: number): void;
   observe(events: readonly EngineEvent[]): void;
-  style(): Style | undefined;
+  bias(): Bias | undefined;
   say(text: string): void;
   quick(id: QuickPhrase, text: string): void;
   setOn(on: boolean): void;
@@ -148,8 +148,8 @@ class Wiring implements SessionTalk {
     }
   }
 
-  style(): Style | undefined {
-    return this.solver ? this.talk?.style() : undefined;
+  bias(): Bias | undefined {
+    return this.solver ? this.talk?.bias() : undefined;
   }
 
   say(text: string): void {

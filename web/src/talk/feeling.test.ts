@@ -171,11 +171,11 @@ describe("her equity against the player's range", () => {
 });
 
 describe('what the feeling gives the rest of talk', () => {
-  it('is calm at the start: no words, speaking factor one, neutral style', () => {
+  it('is calm at the start: no words, speaking factor one, neutral bias', () => {
     const feeling = createFeeling({ seat: HER, rng: mulberry32(1) });
     expect(feeling.words()).toEqual([]);
     expect(feeling.speakFactor()).toBeCloseTo(1, 1);
-    expect(feeling.style()).toEqual({
+    expect(feeling.bias()).toEqual({
       aggression: 1,
       bluff: 1,
       tightness: 1,
@@ -196,15 +196,15 @@ describe('what the feeling gives the rest of talk', () => {
     expect(words).toContain('feeling robbed');
   });
 
-  it('plays the overload into the style through the tightness of the bot', () => {
+  it('plays the overload into the bias through the tightness of the bot', () => {
     const hand = deal('As Ah', 'Js Ts', 'Kc 9d 2s 3h Qh');
     hand.act(raiseTo(60), 1000);
     hand.act(raiseTo(2000), 2000);
     hand.act(call, 3000);
     hand.feeling.advance(8000);
-    const style = hand.feeling.style();
-    expect(style.tightness).toBeLessThan(1);
-    expect(style.stickiness).toBeGreaterThan(1);
-    expect(style.tightness * hand.feeling.snapshot().style.looseness).toBeCloseTo(1, 12);
+    const bias = hand.feeling.bias();
+    expect(bias.tightness).toBeLessThan(1);
+    expect(bias.stickiness).toBeGreaterThan(1);
+    expect(bias.tightness * hand.feeling.snapshot().bias.looseness).toBeCloseTo(1, 12);
   });
 });

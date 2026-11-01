@@ -1,4 +1,4 @@
-import { EMOTIONS, LOAD_SOURCES, STYLE_KEYS } from '../talk/index.ts';
+import { EMOTIONS, LOAD_SOURCES, BIAS_KEYS } from '../talk/index.ts';
 import type {
   BigFive,
   Emotion,
@@ -6,8 +6,8 @@ import type {
   LoadSource,
   Pad,
   Snapshot,
-  Style,
-  StyleKey,
+  Bias,
+  BiasKey,
 } from '../talk/index.ts';
 import { personalityOf } from './debug.ts';
 import type { DebugDecision, DebugState, PersonalityChoice } from './debug.ts';
@@ -40,8 +40,8 @@ export interface DebugView {
   load: DebugLoad | null;
   sessionNetBb: number;
   pressure: number;
-  engineStyle: [StyleKey, number][];
-  sentStyle: Style | null;
+  engineBias: [BiasKey, number][];
+  sentBias: Bias | null;
   decision: DebugDecision | null;
   journal: JournalEntry[];
 }
@@ -72,7 +72,7 @@ type FeelingPart = Pick<
   | 'load'
   | 'sessionNetBb'
   | 'pressure'
-  | 'engineStyle'
+  | 'engineBias'
 >;
 
 const CALM: FeelingPart = {
@@ -84,7 +84,7 @@ const CALM: FeelingPart = {
   load: null,
   sessionNetBb: 0,
   pressure: 0,
-  engineStyle: STYLE_KEYS.map((k) => [k, 1]),
+  engineBias: BIAS_KEYS.map((k) => [k, 1]),
 };
 
 function feelingOf(s: Snapshot): FeelingPart {
@@ -97,7 +97,7 @@ function feelingOf(s: Snapshot): FeelingPart {
     load: loadOf(s),
     sessionNetBb: s.sessionNetBb,
     pressure: s.pressure,
-    engineStyle: STYLE_KEYS.map((k) => [k, s.style[k]]),
+    engineBias: BIAS_KEYS.map((k) => [k, s.bias[k]]),
   };
 }
 
@@ -110,7 +110,7 @@ export function toDebugView(debug: DebugState): DebugView {
     suppression,
     experience,
     ...(snapshot === null ? CALM : feelingOf(snapshot)),
-    sentStyle: debug.sentStyle,
+    sentBias: debug.sentBias,
     decision: debug.decision,
     journal: debug.journal,
   };

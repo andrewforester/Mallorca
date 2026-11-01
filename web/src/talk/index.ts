@@ -6,8 +6,8 @@ export type { Signal } from './signals.ts';
 export { SIGNALS } from './signals.ts';
 export type { StrengthClass } from './strength.ts';
 export { strengthOf } from './strength.ts';
-export type { Style } from './style.ts';
-export { NEUTRAL_STYLE } from './style.ts';
+export type { Bias } from './bias.ts';
+export { NEUTRAL_BIAS } from './bias.ts';
 export type { Character, FeelingState, FeltEmotion } from './state.ts';
 export { characterOf, feelingState } from './state.ts';
 export type { SessionSummary } from './summary.ts';
@@ -16,7 +16,7 @@ export type { Draw, HandFacts, LineIntent, Spot, Stance, Talk, TalkOptions } fro
 export { createTalk, drawLine, endsHand } from './talk.ts';
 export type { JournalEntry } from './journal.ts';
 export { JOURNAL_SIZE } from './journal.ts';
-export { EMOTIONS, LOAD_SOURCES, PERSONALITIES, STYLE_KEYS } from '../emotion/index.ts';
+export { EMOTIONS, LOAD_SOURCES, PERSONALITIES, BIAS_KEYS } from '../emotion/index.ts';
 export type {
   BigFive,
   Emotion,
@@ -26,9 +26,9 @@ export type {
   Pad,
   Personality,
   PersonalityKey,
-  PlayStyle,
+  PlayBias,
   Snapshot,
-  StyleKey,
+  BiasKey,
   TableEvent,
   Traits,
 } from '../emotion/index.ts';

@@ -1,4 +1,4 @@
-import type { Emotion, LoadSource, Octant, StyleKey } from '../../../src/emotion/index.ts';
+import type { Emotion, LoadSource, Octant, BiasKey } from '../../../src/emotion/index.ts';
 
 export const EMOTION_LABEL: Readonly<Record<Emotion, string>> = {
   hope: 'надежда',
@@ -36,7 +36,7 @@ export const OCTANT_LABEL: Readonly<Record<Octant, string>> = {
   hostile: 'враждебность',
 };
 
-export const STYLE_LABEL: Readonly<Record<StyleKey, string>> = {
+export const BIAS_LABEL: Readonly<Record<BiasKey, string>> = {
   aggression: 'Агрессия',
   looseness: 'Широта диапазона',
   bluff: 'Блеф',

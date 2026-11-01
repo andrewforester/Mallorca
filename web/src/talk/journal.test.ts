@@ -84,7 +84,7 @@ describe('the personality of her feeling', () => {
     lola.setPersonality(PERSONALITIES.lola);
     play(calm, badBeat);
     play(lola, badBeat);
-    expect(lola.style().tightness).toBeLessThan(calm.style().tightness);
+    expect(lola.bias().tightness).toBeLessThan(calm.bias().tightness);
     expect(lola.feeling().traits).not.toEqual(calm.feeling().traits);
     expect(lola.character().talkativeness).toBeGreaterThan(calm.character().talkativeness);
   });
@@ -96,7 +96,7 @@ describe('the personality of her feeling', () => {
     talk.resetFeeling();
     expect(talk.feeling().sessionNetBb).toBe(0);
     expect(talk.journal()).toEqual([]);
-    expect(talk.style()).toEqual({
+    expect(talk.bias()).toEqual({
       aggression: 1,
       bluff: 1,
       tightness: 1,

@@ -6,7 +6,7 @@ Duplicate matches between two bots, reported in bb/100 with a 95% confidence int
 npm run arena -- --a math --b always-call --pairs 2000
 ```
 
-Flags: `--a`, `--b` (`math`, `cfr`, `cfr:<play file>`, a cfr bot with a style after `@` such as `cfr:src/cfr/v2.mlcs.gz@sizing=1.5,stickiness=1.4` (axes `aggression`, `bluff`, `tightness`, `sizing`, `stickiness`, the rest 1; labelled `cfr-v2-sizing1.5-stickiness1.4`), `cfr-tilted`, `cfr-confident`, `cfr-cautious`, `cfr-talk-obvious`, `cfr-talk-subtle`, `cfr-talk-hidden`, `reader`, `tilt-exploiter`, `always-call`, `always-raise`, `min-bettor`, `random`), `--pairs` (1000), `--seed` (1), `--workers` (available cores), `--dir <path>` (results directory), `--out <file>` (JSON report), `--save-hands <file>` (JSONL hand records), `--no-hands`, `--stats` (adds `styleStats` of bot A to the report and prints it).
+Flags: `--a`, `--b` (`math`, `cfr`, `cfr:<play file>`, a cfr bot with a bias after `@` such as `cfr:src/cfr/v2.mlcs.gz@sizing=1.5,stickiness=1.4` (axes `aggression`, `bluff`, `tightness`, `sizing`, `stickiness`, the rest 1; labelled `cfr-v2-sizing1.5-stickiness1.4`), `cfr-tilted`, `cfr-confident`, `cfr-cautious`, `cfr-talk-obvious`, `cfr-talk-subtle`, `cfr-talk-hidden`, `reader`, `tilt-exploiter`, `always-call`, `always-raise`, `min-bettor`, `random`), `--pairs` (1000), `--seed` (1), `--workers` (available cores), `--dir <path>` (results directory), `--out <file>` (JSON report), `--save-hands <file>` (JSONL hand records), `--no-hands`, `--stats` (adds `styleStats` of bot A to the report and prints it).
 
 Every run is saved. The report goes to `<dir>/<a>-<b>-<pairs>-s<seed>-<YYYYMMDD-HHMMSS>.json` and the hands next to
 it as `.jsonl`, unless `--out` or `--save-hands` name other paths; `--no-hands` skips the hands. The default
@@ -73,13 +73,13 @@ into 200, 1200 hands a row:
 | 150         | 0.75         | 57%         | 48%        | 43%            |
 | 200         | 1.0          | 50%         | 50%        | 50%            |
 
-## Styled and talking bots (issue #23)
+## Biased and talking bots (issue #23)
 
 | Bot                                                      | What it is                                                                                                                                                                                                                                                         |
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `cfr-tilted`                                             | `cfr` with the style aggression 1.6, bluff 1.8, tightness 0.85 (1.25, 1.3, 0.85 at the first clamps)                                                                                                                                                               |
-| `cfr-confident`                                          | `cfr` with the style 1.15, 1, 0.95                                                                                                                                                                                                                                 |
-| `cfr-cautious`                                           | `cfr` with the style 0.9, 0.9, 1.2                                                                                                                                                                                                                                 |
+| `cfr-tilted`                                             | `cfr` with the bias aggression 1.6, bluff 1.8, tightness 0.85 (1.25, 1.3, 0.85 at the first clamps)                                                                                                                                                                |
+| `cfr-confident`                                          | `cfr` with the bias 1.15, 1, 0.95                                                                                                                                                                                                                                  |
+| `cfr-cautious`                                           | `cfr` with the bias 0.9, 0.9, 1.2                                                                                                                                                                                                                                  |
 | `cfr-talk-obvious`, `cfr-talk-subtle`, `cfr-talk-hidden` | plain `cfr` that, after deciding a raise, speaks with the chance of the base habit `herBet` for its hand strength class at that level                                                                                                                              |
 | `reader`                                                 | the `math` bot that uses the talk: facing a bet after the opponent spoke, a math fold becomes a call when the call is at most half the pot; facing a bet after the opponent was silent, a math call becomes a fold                                                 |
 | `tilt-exploiter`                                         | the `math` bot that punishes tilt without knowing it: facing a bet or raise, a math fold becomes a call when the call is at most half the pot (the pot including the bet being called), and a math bet or raise with a weak strength class becomes a call or check |
@@ -88,14 +88,14 @@ A bot may implement `spoke()` (did it speak on its last decision) and `heard(spo
 `other.heard(actor.spoke())` after every raise by an actor that has `spoke`, before the next decision, and `heard`
 holds only for the next decision.
 
-Cost of a style: `cfr-tilted vs cfr` should lose at most 5 bb/100. Readability of the habits: `reader` should win
+Cost of a bias: `cfr-tilted vs cfr` should lose at most 5 bb/100. Readability of the habits: `reader` should win
 against `cfr-talk-obvious` by more than the interval above what it wins against `cfr-talk-hidden`.
 
 ### Table talk results
 
 Measured at commit `74659d2`. Commit `6c2d9d4` came after these runs and changed only `src/talk/talk.ts`, which no
 arena bot uses, so it did not change any arena bot. Results are the first bot's bb/100 with a 95% interval. A
-negative number is a loss. Seeds: 2 for the style runs, 1 and 3 for readability, 4 for the exploiter runs; each
+negative number is a loss. Seeds: 2 for the bias runs, 1 and 3 for readability, 4 for the exploiter runs; each
 pair of runs that is compared uses the same seed, so both play the same decks.
 
 | Run                            | Seed | Pairs  | Hands  | bb/100       |
@@ -114,7 +114,7 @@ pair of runs that is compared uses the same seed, so both play the same decks.
 
 The `cfr-tilted` row is the first corner, aggression 1.25 and bluff 1.3.
 
-Cost of a style: the goal holds against `cfr`. The most tilted style of the first clamps loses -0.2 ± 2.6 bb/100 to
+Cost of a bias: the goal holds against `cfr`. The most tilted bias of the first clamps loses -0.2 ± 2.6 bb/100 to
 `cfr`, inside the 5 bb/100 allowance. `cfr` is a fixed blueprint that does not adapt, so this bounds the cost only
 against such an opponent: shifted mixed frequencies cost little near equilibrium, and the interval still allows a
 loss of about 2.8 bb/100 at the tilted corner. What tilt costs against an opponent that exploits it is measured below.
@@ -186,7 +186,7 @@ gain. Bets after the flop rise by 4.9 points (30.3% against 25.4%, each known to
 `cfr` stays inside the 5 bb/100 allowance (+0.4 ± 2.7), and the exploited cost of 17.4 bb/100 is under the 25 bb/100
 stop. The clamps are not widened further.
 
-The style runs also print bb/100; `cfr` vs `cfr` at 20000 pairs gives -6.2 ± 7.7, which is noise: the bot plays itself, so its
+The bias runs also print bb/100; `cfr` vs `cfr` at 20000 pairs gives -6.2 ± 7.7, which is noise: the bot plays itself, so its
 true value is zero; the 200000 pair runs above are the measure of cost.
 
 ## Managing runs

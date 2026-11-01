@@ -79,14 +79,14 @@ describe('handRecord', () => {
     expect(record.handNumber).toBe(1);
   });
 
-  it('saves the style with a decision and leaves the key out without one', () => {
+  it('saves the bias under the style key and leaves the key out without one', () => {
     const decision: Decision = {
       action: { kind: 'call' },
       solverChoice: 'passive',
       evByAction: { fold: 0, passive: 0, aggressive: 0 },
     };
-    const style = { aggression: 1.2, bluff: 0.9, tightness: 1, sizing: 1, stickiness: 1 };
-    expect(recordDecision(decision, 3, style).style).toEqual(style);
+    const bias = { aggression: 1.2, bluff: 0.9, tightness: 1, sizing: 1, stickiness: 1 };
+    expect(recordDecision(decision, 3, bias).style).toEqual(bias);
     expect('style' in recordDecision(decision, 3)).toBe(false);
   });
 

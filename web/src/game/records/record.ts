@@ -54,7 +54,7 @@ function finiteOrNull(value: number): number | null {
 export function recordDecision(
   decision: Decision,
   eventIndex: number,
-  style?: BotBias,
+  bias?: BotBias,
 ): RecordedDecision {
   const { fold, passive, aggressive } = decision.evByAction;
   return {
@@ -65,7 +65,7 @@ export function recordDecision(
       passive: finiteOrNull(passive),
       aggressive: finiteOrNull(aggressive),
     },
-    ...(style === undefined ? {} : { style }),
+    ...(bias === undefined ? {} : { style: bias }),
   };
 }
 

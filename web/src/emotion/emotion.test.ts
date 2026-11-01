@@ -8,7 +8,7 @@ import { emotionCenter, octantOf, stepMood } from './mood.ts';
 import { defaultMoodOf, traitsOf } from './personality.ts';
 import type { Personality } from './personality.ts';
 import { MALLORCA } from './profiles.ts';
-import { driversOf, styleOf } from './style.ts';
+import { BIAS_KEYS, BIAS_RANGE, biasOf, driversOf } from './bias.ts';
 import { LEAK_FLOOR, loadOf } from './load.ts';
 
 const average: Personality = {
@@ -271,15 +271,15 @@ describe('load', () => {
   });
 });
 
-describe('style', () => {
+describe('bias', () => {
   it('is neutral when calm', () => {
-    const style = styleOf(driversOf(noEmotions(), [0, 0, 0], 0), 0.3);
-    expect(Object.values(style).every((v) => Math.abs(v - 1) < 1e-9)).toBe(true);
+    const bias = biasOf(driversOf(noEmotions(), [0, 0, 0], 0), 0.3);
+    expect(Object.values(bias).every((v) => Math.abs(v - 1) < 1e-9)).toBe(true);
   });
 
   it('plays fear tighter and anger more aggressively, with more bluffs', () => {
-    const fear = styleOf(driversOf(withEmotions({ fear: 0.8 }), [0, 0, 0], 0), 0.8);
-    const anger = styleOf(driversOf(withEmotions({ anger: 0.8 }), [0, 0, 0], 0), 0.8);
+    const fear = biasOf(driversOf(withEmotions({ fear: 0.8 }), [0, 0, 0], 0), 0.8);
+    const anger = biasOf(driversOf(withEmotions({ anger: 0.8 }), [0, 0, 0], 0), 0.8);
     expect(fear.aggression).toBeLessThan(1);
     expect(fear.looseness).toBeLessThan(1);
     expect(anger.aggression).toBeGreaterThan(1.3);
@@ -287,14 +287,36 @@ describe('style', () => {
   });
 
   it('plays a big session loss loose and sticky', () => {
-    const style = styleOf(driversOf(noEmotions(), [0, 0, 0], -300), 0.8);
-    expect(style.looseness).toBeGreaterThan(1.2);
-    expect(style.stickiness).toBeGreaterThan(1.2);
+    const bias = biasOf(driversOf(noEmotions(), [0, 0, 0], -300), 0.8);
+    expect(bias.looseness).toBeGreaterThan(1.2);
+    expect(bias.stickiness).toBeGreaterThan(1.2);
   });
 
-  it('holds the style near neutral with little leakage', () => {
+  it('multiplies her baseline', () => {
+    const calm = driversOf(noEmotions(), [0, 0, 0], 0);
+    const ones = Object.fromEntries(BIAS_KEYS.map((k) => [k, 1])) as Record<
+      (typeof BIAS_KEYS)[number],
+      number
+    >;
+    expect(biasOf(calm, 0.3, { ...ones, aggression: 1.2 }).aggression).toBeCloseTo(1.2, 9);
+  });
+
+  it('clamps the baseline times the emotional part', () => {
+    const angry = driversOf(withEmotions({ anger: 0.8 }), [0, 0, 0], 0);
+    const ones = Object.fromEntries(BIAS_KEYS.map((k) => [k, 1])) as Record<
+      (typeof BIAS_KEYS)[number],
+      number
+    >;
+    expect(biasOf(angry, 0.8, { ...ones, aggression: 1.8 }).aggression).toBe(BIAS_RANGE[1]);
+  });
+
+  it('starts every personality from a neutral baseline', () => {
+    expect(Object.values(traitsOf(MALLORCA).baseline)).toEqual(BIAS_KEYS.map(() => 1));
+  });
+
+  it('holds the bias near neutral with little leakage', () => {
     const drivers = driversOf(withEmotions({ fear: 0.8 }), [0, 0, 0], 0);
-    expect(Math.abs(styleOf(drivers, 0.05).aggression - 1)).toBeLessThan(0.03);
+    expect(Math.abs(biasOf(drivers, 0.05).aggression - 1)).toBeLessThan(0.03);
   });
 });
 
@@ -320,7 +342,7 @@ describe('engine', () => {
     expect(lola.emotions.injustice).toBeGreaterThan(ingrid.emotions.injustice);
     expect(lola.load.overload).toBeGreaterThan(0.9);
     expect(ingrid.load.overload).toBeLessThan(lola.load.overload);
-    expect(lola.style.looseness).toBeGreaterThan(ingrid.style.looseness);
+    expect(lola.bias.looseness).toBeGreaterThan(ingrid.bias.looseness);
   });
 
   it('remembers raises against her and angers more with each one', () => {
@@ -372,8 +394,8 @@ describe('engine', () => {
 
   it('plays the blueprint while calm, whatever her default mood', () => {
     for (const personality of [MALLORCA, hot, cold]) {
-      const style = createEngine(personality).snapshot().style;
-      expect(Object.values(style).every((v) => Math.abs(v - 1) < 1e-12)).toBe(true);
+      const bias = createEngine(personality).snapshot().bias;
+      expect(Object.values(bias).every((v) => Math.abs(v - 1) < 1e-12)).toBe(true);
     }
   });
 
