@@ -24,14 +24,14 @@
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herBet", "hint": null, "honest": false, "street": "turn" },
+      "intent": { "situation": "herBet", "hint": null, "honest": true, "street": "turn" },
       "mood": [],
       "feeling": {
         "version": 1,
         "emotions": [],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.01, "source": null },
-        "shows": { "mask": 0.35, "acting": null }
+        "shows": { "mask": 0.74, "acting": null }
       },
       "character": {
         "version": 1,
@@ -49,8 +49,8 @@
       "facts": {
         "street": "flop",
         "board": ["As", "3h", "Td"],
-        "pot": 80,
-        "stacks": [1960, 2080],
+        "pot": 200,
+        "stacks": [1960, 1960],
         "her": ["3s", "8d"],
         "actions": [
           "player posts 10",
@@ -59,22 +59,23 @@
           "Mallorca raises to 40",
           "player calls 20",
           "flop As 3h Td",
-          "Mallorca checks"
+          "Mallorca checks",
+          "player raises to 120"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herCall", "hint": "weak", "honest": false, "street": "flop" },
+      "intent": { "situation": "playerBet", "hint": null, "honest": true, "street": "flop" },
       "mood": ["embarrassed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "shame", "intensity": 0.45 },
+          { "name": "shame", "intensity": 0.44 },
           { "name": "distress", "intensity": 0.24 },
-          { "name": "fear", "intensity": 0.17 }
+          { "name": "fear", "intensity": 0.21 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.33, "source": "shame" },
-        "shows": { "mask": 0.59, "acting": "weak" }
+        "shows": { "mask": 0.28, "acting": null }
       },
       "character": {
         "version": 1,
@@ -90,44 +91,32 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "complete",
-        "board": ["As", "3h", "Td", "Jc", "7s"],
-        "pot": 360,
-        "stacks": [2180, 1940],
-        "her": ["3s", "8d"],
+        "street": "flop",
+        "board": ["3d", "5c", "Jc"],
+        "pot": 120,
+        "stacks": [2160, 1900],
+        "her": ["5s", "2s"],
         "actions": [
-          "player posts 10",
-          "Mallorca posts 20",
-          "player calls 10",
-          "Mallorca raises to 40",
-          "player calls 20",
-          "flop As 3h Td",
-          "Mallorca checks",
-          "player raises to 120",
-          "Mallorca calls 120",
-          "turn Jc",
-          "Mallorca raises to 20",
-          "player calls 20",
-          "river 7s",
-          "Mallorca checks",
+          "Mallorca posts 10",
+          "player posts 20",
+          "Mallorca calls 10",
           "player checks",
-          "Mallorca shows 3s 8d",
-          "player shows Ks 6d",
-          "Mallorca wins 360"
+          "flop 3d 5c Jc",
+          "player raises to 80"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "handWon", "hint": null, "honest": false, "street": "showdown" },
-      "mood": ["surprised", "pleased", "embarrassed"],
+      "intent": { "situation": "playerBet", "hint": "medium", "honest": true, "street": "flop" },
+      "mood": ["pleased", "embarrassed", "relieved"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "surprise", "intensity": 0.78 },
-          { "name": "joy", "intensity": 0.61 },
-          { "name": "shame", "intensity": 0.44 }
+          { "name": "joy", "intensity": 0.62 },
+          { "name": "shame", "intensity": 0.41 },
+          { "name": "relief", "intensity": 0.36 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.18, "source": "shame" },
+        "overload": { "level": 0.17, "source": "shame" },
         "shows": { "mask": 0.31, "acting": null }
       },
       "character": {
@@ -147,25 +136,43 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "preflop",
-        "board": [],
-        "pot": 40,
-        "stacks": [2160, 1980],
+        "street": "complete",
+        "board": ["3d", "5c", "Jc", "3s", "8d"],
+        "pot": 360,
+        "stacks": [2360, 1820],
         "her": ["5s", "2s"],
-        "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
+        "actions": [
+          "Mallorca posts 10",
+          "player posts 20",
+          "Mallorca calls 10",
+          "player checks",
+          "flop 3d 5c Jc",
+          "player raises to 80",
+          "Mallorca raises to 160",
+          "player calls 80",
+          "turn 3s",
+          "player checks",
+          "Mallorca checks",
+          "river 8d",
+          "player checks",
+          "Mallorca checks",
+          "Mallorca shows 5s 2s",
+          "player shows 6h Qh",
+          "Mallorca wins 360"
+        ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herCall", "hint": "weak", "honest": true, "street": "preflop" },
-      "mood": ["pleased", "embarrassed", "relieved"],
+      "intent": { "situation": "handWon", "hint": null, "honest": true, "street": "showdown" },
+      "mood": ["pleased", "surprised", "relieved"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.55 },
-          { "name": "shame", "intensity": 0.41 },
-          { "name": "relief", "intensity": 0.35 }
+          { "name": "joy", "intensity": 0.82 },
+          { "name": "surprise", "intensity": 0.61 },
+          { "name": "relief", "intensity": 0.56 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.16, "source": "shame" },
+        "overload": { "level": 0.13, "source": "shame" },
         "shows": { "mask": 0.32, "acting": null }
       },
       "character": {
@@ -194,13 +201,13 @@
         "actions": ["player posts 10", "Mallorca posts 20", "player raises to 70"],
         "bigBlind": 20
       },
-      "intent": { "situation": "playerBet", "hint": null, "honest": true, "street": "preflop" },
+      "intent": { "situation": "playerBet", "hint": "medium", "honest": true, "street": "preflop" },
       "mood": ["pleased", "relieved", "embarrassed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.71 },
-          { "name": "relief", "intensity": 0.43 },
+          { "name": "joy", "intensity": 0.73 },
+          { "name": "relief", "intensity": 0.44 },
           { "name": "shame", "intensity": 0.37 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
@@ -226,10 +233,10 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "complete",
+        "street": "river",
         "board": ["6h", "3s", "3d", "5c", "9s"],
-        "pot": 840,
-        "stacks": [2780, 1580],
+        "pot": 260,
+        "stacks": [2220, 1880],
         "her": ["Td", "9c"],
         "actions": [
           "player posts 10",
@@ -244,27 +251,22 @@
           "Mallorca checks",
           "player checks",
           "river 9s",
-          "Mallorca raises to 20",
-          "player raises to 300",
-          "Mallorca calls 280",
-          "Mallorca shows Td 9c",
-          "player shows Kd 7s",
-          "Mallorca wins 840"
+          "Mallorca raises to 20"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "handWon", "hint": null, "honest": false, "street": "showdown" },
-      "mood": ["pleased", "relieved", "surprised"],
+      "intent": { "situation": "herBet", "hint": "strong", "honest": true, "street": "river" },
+      "mood": ["pleased", "surprised", "relieved"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.95 },
-          { "name": "relief", "intensity": 0.74 },
-          { "name": "surprise", "intensity": 0.62 }
+          { "name": "joy", "intensity": 0.79 },
+          { "name": "surprise", "intensity": 0.78 },
+          { "name": "relief", "intensity": 0.56 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.22, "source": "shame" },
-        "shows": { "mask": 0.3, "acting": null }
+        "overload": { "level": 0.17, "source": "shame" },
+        "shows": { "mask": 0.61, "acting": null }
       },
       "character": {
         "version": 1,
@@ -287,107 +289,9 @@
       "locale": "en",
       "facts": {
         "street": "flop",
-        "board": ["Qd", "Ah", "4c"],
-        "pot": 60,
-        "stacks": [2740, 1980],
-        "her": ["7c", "5c"],
-        "actions": [
-          "Mallorca posts 10",
-          "player posts 20",
-          "Mallorca calls 10",
-          "player checks",
-          "flop Qd Ah 4c",
-          "player checks",
-          "Mallorca raises to 20"
-        ],
-        "bigBlind": 20
-      },
-      "intent": { "situation": "herBet", "hint": "weak", "honest": true, "street": "flop" },
-      "mood": ["pleased", "relieved", "embarrassed"],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          { "name": "joy", "intensity": 0.83 },
-          { "name": "relief", "intensity": 0.57 },
-          { "name": "shame", "intensity": 0.34 }
-        ],
-        "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.2, "source": "shame" },
-        "shows": { "mask": 0.31, "acting": null }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
-      },
-      "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" }
-      ]
-    },
-    {
-      "kind": "line",
-      "sessionId": "seed-11",
-      "locale": "en",
-      "facts": {
-        "street": "preflop",
-        "board": [],
-        "pot": 60,
-        "stacks": [2580, 2140],
-        "her": ["Jc", "Qh"],
-        "actions": [
-          "player posts 10",
-          "Mallorca posts 20",
-          "player calls 10",
-          "Mallorca raises to 40"
-        ],
-        "bigBlind": 20
-      },
-      "intent": { "situation": "herBet", "hint": "weak", "honest": false, "street": "preflop" },
-      "mood": ["relieved", "upset", "embarrassed"],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          { "name": "relief", "intensity": 0.41 },
-          { "name": "distress", "intensity": 0.31 },
-          { "name": "shame", "intensity": 0.31 }
-        ],
-        "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.32, "source": "shame" },
-        "shows": { "mask": 0.6, "acting": "weak" }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
-      },
-      "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" }
-      ]
-    },
-    {
-      "kind": "line",
-      "sessionId": "seed-11",
-      "locale": "en",
-      "facts": {
-        "street": "river",
-        "board": ["Ah", "5d", "9d", "As", "8s"],
-        "pot": 360,
-        "stacks": [2440, 1980],
+        "board": ["Ah", "5d", "9d"],
+        "pot": 200,
+        "stacks": [2580, 2000],
         "her": ["Jc", "Qh"],
         "actions": [
           "player posts 10",
@@ -397,28 +301,22 @@
           "player calls 20",
           "flop Ah 5d 9d",
           "Mallorca checks",
-          "player raises to 120",
-          "Mallorca calls 120",
-          "turn As",
-          "Mallorca raises to 20",
-          "player calls 20",
-          "river 8s",
-          "Mallorca checks"
+          "player raises to 120"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herCall", "hint": "strong", "honest": false, "street": "river" },
-      "mood": ["relieved", "nervous", "hopeful"],
+      "intent": { "situation": "playerBet", "hint": "weak", "honest": true, "street": "flop" },
+      "mood": ["relieved", "upset", "embarrassed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "relief", "intensity": 0.37 },
-          { "name": "fear", "intensity": 0.36 },
-          { "name": "hope", "intensity": 0.32 }
+          { "name": "relief", "intensity": 0.39 },
+          { "name": "distress", "intensity": 0.31 },
+          { "name": "shame", "intensity": 0.31 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.39, "source": "shame" },
-        "shows": { "mask": 0.57, "acting": "strong" }
+        "overload": { "level": 0.36, "source": "shame" },
+        "shows": { "mask": 0.27, "acting": null }
       },
       "character": {
         "version": 1,
@@ -428,8 +326,6 @@
         "wit": 0.7
       },
       "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -451,14 +347,14 @@
         "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
         "bigBlind": 20
       },
-      "intent": { "situation": "herCall", "hint": "medium", "honest": true, "street": "preflop" },
+      "intent": { "situation": "herCall", "hint": null, "honest": true, "street": "preflop" },
       "mood": ["on tilt", "embarrassed", "upset"],
       "feeling": {
         "version": 1,
         "emotions": [
           { "name": "shame", "intensity": 0.7 },
           { "name": "distress", "intensity": 0.52 },
-          { "name": "relief", "intensity": 0.29 }
+          { "name": "relief", "intensity": 0.3 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.89, "source": "shame" },
@@ -478,7 +374,6 @@
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" }
       ]
     },
@@ -487,91 +382,31 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "river",
-        "board": ["5c", "Jd", "As", "8s", "Qh"],
-        "pot": 360,
-        "stacks": [2260, 2160],
-        "her": ["8d", "Js"],
-        "actions": [
-          "Mallorca posts 10",
-          "player posts 20",
-          "Mallorca calls 10",
-          "player checks",
-          "flop 5c Jd As",
-          "player raises to 80",
-          "Mallorca raises to 160",
-          "player calls 80",
-          "turn 8s",
-          "player checks",
-          "Mallorca checks",
-          "river Qh"
-        ],
-        "bigBlind": 20
-      },
-      "intent": { "situation": "herCall", "hint": "weak", "honest": false, "street": "turn" },
-      "mood": ["on tilt", "embarrassed", "hopeful"],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          { "name": "shame", "intensity": 0.68 },
-          { "name": "hope", "intensity": 0.57 },
-          { "name": "distress", "intensity": 0.49 }
-        ],
-        "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.89, "source": "shame" },
-        "shows": { "mask": 0.35, "acting": "weak" }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
-      },
-      "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" }
-      ]
-    },
-    {
-      "kind": "line",
-      "sessionId": "seed-11",
-      "locale": "en",
-      "facts": {
-        "street": "flop",
-        "board": ["Jd", "7d", "4c"],
-        "pot": 240,
-        "stacks": [2500, 2040],
+        "street": "preflop",
+        "board": [],
+        "pot": 190,
+        "stacks": [2500, 2090],
         "her": ["9c", "2h"],
         "actions": [
           "player posts 10",
           "Mallorca posts 20",
           "player raises to 70",
-          "Mallorca raises to 120",
-          "player calls 50",
-          "flop Jd 7d 4c",
-          "Mallorca checks"
+          "Mallorca raises to 120"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herCall", "hint": "strong", "honest": false, "street": "flop" },
+      "intent": { "situation": "herBet", "hint": "weak", "honest": true, "street": "preflop" },
       "mood": ["on tilt", "embarrassed", "pleased"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "shame", "intensity": 0.63 },
-          { "name": "fear", "intensity": 0.42 },
-          { "name": "joy", "intensity": 0.42 }
+          { "name": "shame", "intensity": 0.64 },
+          { "name": "joy", "intensity": 0.38 },
+          { "name": "anger", "intensity": 0.32 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.86, "source": "shame" },
-        "shows": { "mask": 0.36, "acting": "strong" }
+        "overload": { "level": 0.82, "source": "shame" },
+        "shows": { "mask": 0.38, "acting": null }
       },
       "character": {
         "version": 1,
@@ -619,7 +454,7 @@
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "playerBet", "hint": null, "honest": false, "street": "river" },
+      "intent": { "situation": "playerBet", "hint": "strong", "honest": false, "street": "river" },
       "mood": ["on tilt", "embarrassed", "nervous"],
       "feeling": {
         "version": 1,
@@ -630,7 +465,7 @@
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.94, "source": "shame" },
-        "shows": { "mask": 0.15, "acting": null }
+        "shows": { "mask": 0.32, "acting": "strong" }
       },
       "character": {
         "version": 1,
@@ -647,58 +482,6 @@
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" }
-      ]
-    },
-    {
-      "kind": "line",
-      "sessionId": "seed-11",
-      "locale": "en",
-      "facts": {
-        "street": "flop",
-        "board": ["8h", "Th", "Jc"],
-        "pot": 60,
-        "stacks": [2160, 2560],
-        "her": ["Td", "9c"],
-        "actions": [
-          "Mallorca posts 10",
-          "player posts 20",
-          "Mallorca calls 10",
-          "player checks",
-          "flop 8h Th Jc",
-          "player checks",
-          "Mallorca raises to 20"
-        ],
-        "bigBlind": 20
-      },
-      "intent": { "situation": "herBet", "hint": "medium", "honest": true, "street": "flop" },
-      "mood": ["on tilt", "embarrassed", "upset"],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          { "name": "shame", "intensity": 0.91 },
-          { "name": "distress", "intensity": 0.64 },
-          { "name": "anger", "intensity": 0.41 }
-        ],
-        "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.99, "source": "shame" },
-        "shows": { "mask": 0.14, "acting": null }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
-      },
-      "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "player", "text": "Nice hand" },
-        { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" }
       ]
     },
@@ -733,13 +516,13 @@
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "handWon", "hint": null, "honest": false, "street": "showdown" },
+      "intent": { "situation": "handWon", "hint": null, "honest": true, "street": "showdown" },
       "mood": ["on tilt", "embarrassed", "pleased"],
       "feeling": {
         "version": 1,
         "emotions": [
           { "name": "shame", "intensity": 0.89 },
-          { "name": "joy", "intensity": 0.57 },
+          { "name": "joy", "intensity": 0.55 },
           { "name": "anger", "intensity": 0.4 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
@@ -757,9 +540,9 @@
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" }
       ]
@@ -782,18 +565,18 @@
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herBet", "hint": "weak", "honest": false, "street": "preflop" },
+      "intent": { "situation": "herBet", "hint": "medium", "honest": true, "street": "preflop" },
       "mood": ["on tilt", "embarrassed", "pleased"],
       "feeling": {
         "version": 1,
         "emotions": [
           { "name": "shame", "intensity": 0.83 },
-          { "name": "joy", "intensity": 0.5 },
+          { "name": "joy", "intensity": 0.49 },
           { "name": "anger", "intensity": 0.38 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.95, "source": "shame" },
-        "shows": { "mask": 0.32, "acting": "weak" }
+        "shows": { "mask": 0.15, "acting": null }
       },
       "character": {
         "version": 1,
@@ -805,9 +588,9 @@
       "recent": [
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" }
@@ -845,7 +628,7 @@
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "bluffCaught", "hint": null, "honest": false, "street": "showdown" },
+      "intent": { "situation": "bluffCaught", "hint": null, "honest": true, "street": "showdown" },
       "mood": ["on tilt", "embarrassed", "upset"],
       "feeling": {
         "version": 1,
@@ -867,9 +650,9 @@
       },
       "recent": [
         { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -896,18 +679,18 @@
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "playerBet", "hint": null, "honest": false, "street": "flop" },
+      "intent": { "situation": "playerBet", "hint": "strong", "honest": true, "street": "flop" },
       "mood": ["on tilt", "embarrassed", "surprised"],
       "feeling": {
         "version": 1,
         "emotions": [
           { "name": "shame", "intensity": 0.87 },
-          { "name": "surprise", "intensity": 0.44 },
-          { "name": "distress", "intensity": 0.43 }
+          { "name": "distress", "intensity": 0.43 },
+          { "name": "surprise", "intensity": 0.43 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.98, "source": "shame" },
-        "shows": { "mask": 0.14, "acting": null }
+        "shows": { "mask": 0.28, "acting": null }
       },
       "character": {
         "version": 1,
@@ -917,71 +700,9 @@
         "wit": 0.7
       },
       "recent": [
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" }
-      ]
-    },
-    {
-      "kind": "line",
-      "sessionId": "seed-11",
-      "locale": "en",
-      "facts": {
-        "street": "complete",
-        "board": ["Ts", "8c", "Tc", "Qd", "3s"],
-        "pot": 360,
-        "stacks": [2360, 2420],
-        "her": ["Td", "6c"],
-        "actions": [
-          "Mallorca posts 10",
-          "player posts 20",
-          "Mallorca calls 10",
-          "player checks",
-          "flop Ts 8c Tc",
-          "player raises to 80",
-          "Mallorca raises to 160",
-          "player calls 80",
-          "turn Qd",
-          "player checks",
-          "Mallorca checks",
-          "river 3s",
-          "player checks",
-          "Mallorca checks",
-          "Mallorca shows Td 6c",
-          "player shows 4h 4s",
-          "Mallorca wins 360"
-        ],
-        "bigBlind": 20
-      },
-      "intent": { "situation": "handWon", "hint": null, "honest": false, "street": "showdown" },
-      "mood": ["on tilt", "embarrassed", "pleased"],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          { "name": "shame", "intensity": 0.85 },
-          { "name": "joy", "intensity": 0.59 },
-          { "name": "anger", "intensity": 0.33 }
-        ],
-        "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.93, "source": "shame" },
-        "shows": { "mask": 0.15, "acting": null }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
-      },
-      "recent": [
-        { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -996,13 +717,18 @@
       "facts": {
         "street": "preflop",
         "board": [],
-        "pot": 90,
-        "stacks": [2340, 2350],
+        "pot": 190,
+        "stacks": [2240, 2350],
         "her": ["Js", "Jc"],
-        "actions": ["player posts 10", "Mallorca posts 20", "player raises to 70"],
+        "actions": [
+          "player posts 10",
+          "Mallorca posts 20",
+          "player raises to 70",
+          "Mallorca raises to 120"
+        ],
         "bigBlind": 20
       },
-      "intent": { "situation": "playerBet", "hint": "weak", "honest": false, "street": "preflop" },
+      "intent": { "situation": "herBet", "hint": "strong", "honest": true, "street": "preflop" },
       "mood": ["on tilt", "embarrassed", "pleased"],
       "feeling": {
         "version": 1,
@@ -1013,7 +739,7 @@
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.97, "source": "shame" },
-        "shows": { "mask": 0.31, "acting": "weak" }
+        "shows": { "mask": 0.28, "acting": null }
       },
       "character": {
         "version": 1,
@@ -1039,31 +765,32 @@
       "locale": "en",
       "facts": {
         "street": "flop",
-        "board": ["Jd", "6s", "7c"],
-        "pot": 120,
-        "stacks": [3100, 1900],
-        "her": ["Td", "Ah"],
+        "board": ["4h", "5c", "6c"],
+        "pot": 60,
+        "stacks": [2740, 1980],
+        "her": ["Kc", "4s"],
         "actions": [
           "Mallorca posts 10",
           "player posts 20",
           "Mallorca calls 10",
           "player checks",
-          "flop Jd 6s 7c",
-          "player raises to 80"
+          "flop 4h 5c 6c",
+          "player checks",
+          "Mallorca raises to 20"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "playerBet", "hint": null, "honest": true, "street": "flop" },
+      "intent": { "situation": "herBet", "hint": "medium", "honest": true, "street": "flop" },
       "mood": ["on tilt", "pleased", "embarrassed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.8 },
-          { "name": "shame", "intensity": 0.61 },
+          { "name": "joy", "intensity": 0.81 },
+          { "name": "shame", "intensity": 0.73 },
           { "name": "anger", "intensity": 0.56 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.93, "source": "anger" },
+        "overload": { "level": 0.96, "source": "shame" },
         "shows": { "mask": 0.15, "acting": null }
       },
       "character": {
@@ -1077,11 +804,11 @@
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Bluffing?" },
         { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "player", "text": "Nice hand" },
-        { "speaker": "mallorca", "text": "Sure" }
+        { "speaker": "mallorca", "text": "Here we go" }
       ]
     },
     {
@@ -1090,86 +817,42 @@
       "locale": "en",
       "facts": {
         "street": "complete",
-        "board": ["Jd", "6s", "7c", "5h", "Jc"],
-        "pot": 360,
-        "stacks": [2940, 2180],
-        "her": ["Td", "Ah"],
+        "board": ["4h", "5c", "6c", "9h", "6d"],
+        "pot": 320,
+        "stacks": [2940, 1840],
+        "her": ["Kc", "4s"],
         "actions": [
           "Mallorca posts 10",
           "player posts 20",
           "Mallorca calls 10",
           "player checks",
-          "flop Jd 6s 7c",
-          "player raises to 80",
-          "Mallorca raises to 160",
-          "player calls 80",
-          "turn 5h",
+          "flop 4h 5c 6c",
+          "player checks",
+          "Mallorca raises to 20",
+          "player calls 20",
+          "turn 9h",
+          "player raises to 120",
+          "Mallorca calls 120",
+          "river 6d",
           "player checks",
           "Mallorca checks",
-          "river Jc",
-          "player checks",
-          "Mallorca checks",
-          "Mallorca shows Td Ah",
-          "player shows 5s 8c",
-          "player wins 360"
+          "Mallorca shows Kc 4s",
+          "player shows Ad Ts",
+          "Mallorca wins 320"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "handLost", "hint": null, "honest": true, "street": "showdown" },
-      "mood": ["on tilt", "surprised", "embarrassed"],
+      "intent": { "situation": "handWon", "hint": null, "honest": true, "street": "showdown" },
+      "mood": ["on tilt", "pleased", "embarrassed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "surprise", "intensity": 0.63 },
-          { "name": "shame", "intensity": 0.59 },
-          { "name": "anger", "intensity": 0.55 }
+          { "name": "joy", "intensity": 0.89 },
+          { "name": "shame", "intensity": 0.71 },
+          { "name": "surprise", "intensity": 0.61 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.98, "source": "anger" },
-        "shows": { "mask": 0.14, "acting": null }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
-      },
-      "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "player", "text": "Bluffing?" },
-        { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "player", "text": "Nice hand" },
-        { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" }
-      ]
-    },
-    {
-      "kind": "line",
-      "sessionId": "seed-11",
-      "locale": "en",
-      "facts": {
-        "street": "preflop",
-        "board": [],
-        "pot": 90,
-        "stacks": [2920, 2110],
-        "her": ["5d", "Td"],
-        "actions": ["player posts 10", "Mallorca posts 20", "player raises to 70"],
-        "bigBlind": 20
-      },
-      "intent": { "situation": "playerBet", "hint": "medium", "honest": true, "street": "preflop" },
-      "mood": ["on tilt", "embarrassed", "annoyed"],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          { "name": "shame", "intensity": 0.56 },
-          { "name": "anger", "intensity": 0.52 },
-          { "name": "distress", "intensity": 0.34 }
-        ],
-        "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.97, "source": "anger" },
+        "overload": { "level": 0.95, "source": "shame" },
         "shows": { "mask": 0.15, "acting": null }
       },
       "character": {
@@ -1181,10 +864,10 @@
       },
       "recent": [
         { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "player", "text": "Bluffing?" },
-        { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "player", "text": "Nice hand" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "player", "text": "Bluffing?" },
         { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" }
@@ -1195,40 +878,99 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "river",
-        "board": ["9c", "6c", "Ah", "5c", "Ac"],
-        "pot": 260,
-        "stacks": [2800, 2060],
-        "her": ["5d", "Td"],
+        "street": "turn",
+        "board": ["2c", "2d", "5s", "Ad"],
+        "pot": 320,
+        "stacks": [2780, 1840],
+        "her": ["3s", "4h"],
         "actions": [
           "player posts 10",
           "Mallorca posts 20",
-          "player raises to 70",
-          "Mallorca raises to 120",
-          "player calls 50",
-          "flop 9c 6c Ah",
+          "player calls 10",
+          "Mallorca raises to 40",
+          "player calls 20",
+          "flop 2c 2d 5s",
           "Mallorca checks",
-          "player checks",
-          "turn 5c",
-          "Mallorca checks",
-          "player checks",
-          "river Ac",
-          "Mallorca raises to 20"
+          "player raises to 120",
+          "Mallorca calls 120",
+          "turn Ad"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herBet", "hint": null, "honest": false, "street": "river" },
-      "mood": ["on tilt", "embarrassed", "annoyed"],
+      "intent": { "situation": "herCall", "hint": "weak", "honest": false, "street": "flop" },
+      "mood": ["on tilt", "pleased", "surprised"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "shame", "intensity": 0.54 },
-          { "name": "anger", "intensity": 0.51 },
-          { "name": "fear", "intensity": 0.38 }
+          { "name": "joy", "intensity": 0.87 },
+          { "name": "surprise", "intensity": 0.69 },
+          { "name": "shame", "intensity": 0.66 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.98, "source": "anger" },
-        "shows": { "mask": 0.14, "acting": null }
+        "overload": { "level": 0.94, "source": "shame" },
+        "shows": { "mask": 0.3, "acting": "weak" }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "player", "text": "Bluffing?" },
+        { "speaker": "mallorca", "text": "Sure" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" }
+      ]
+    },
+    {
+      "kind": "line",
+      "sessionId": "seed-11",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": ["Td", "Qh", "Kc", "4d", "Jd"],
+        "pot": 320,
+        "stacks": [3200, 2160],
+        "her": ["7c", "2s"],
+        "actions": [
+          "Mallorca posts 10",
+          "player posts 20",
+          "Mallorca calls 10",
+          "player checks",
+          "flop Td Qh Kc",
+          "player checks",
+          "Mallorca raises to 20",
+          "player calls 20",
+          "turn 4d",
+          "player raises to 120",
+          "Mallorca calls 120",
+          "river Jd",
+          "player checks",
+          "Mallorca checks",
+          "Mallorca shows 7c 2s",
+          "player shows 6s 8d",
+          "player wins 320"
+        ],
+        "bigBlind": 20
+      },
+      "intent": { "situation": "handLost", "hint": null, "honest": true, "street": "showdown" },
+      "mood": ["on tilt", "annoyed", "relieved"],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          { "name": "anger", "intensity": 0.57 },
+          { "name": "relief", "intensity": 0.55 },
+          { "name": "shame", "intensity": 0.49 }
+        ],
+        "mood": { "octant": "exuberant", "strength": "slightly" },
+        "overload": { "level": 0.96, "source": "anger" },
+        "shows": { "mask": 0.15, "acting": null }
       },
       "character": {
         "version": 1,
@@ -1241,11 +983,11 @@
         { "speaker": "player", "text": "Bluffing?" },
         { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
-        { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" }
+        { "speaker": "mallorca", "text": "Sure" }
       ]
     },
     {
@@ -1255,24 +997,29 @@
       "facts": {
         "street": "preflop",
         "board": [],
-        "pot": 40,
-        "stacks": [3340, 1980],
-        "her": ["7c", "2s"],
-        "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
+        "pot": 60,
+        "stacks": [3160, 2140],
+        "her": ["Js", "3c"],
+        "actions": [
+          "player posts 10",
+          "Mallorca posts 20",
+          "player calls 10",
+          "Mallorca raises to 40"
+        ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herCall", "hint": "strong", "honest": false, "street": "preflop" },
-      "mood": ["on tilt", "pleased", "relieved"],
+      "intent": { "situation": "herBet", "hint": null, "honest": true, "street": "preflop" },
+      "mood": ["on tilt", "annoyed", "embarrassed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.82 },
-          { "name": "relief", "intensity": 0.65 },
-          { "name": "anger", "intensity": 0.6 }
+          { "name": "anger", "intensity": 0.54 },
+          { "name": "shame", "intensity": 0.46 },
+          { "name": "relief", "intensity": 0.43 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.93, "source": "anger" },
-        "shows": { "mask": 0.33, "acting": "strong" }
+        "overload": { "level": 0.94, "source": "anger" },
+        "shows": { "mask": 0.32, "acting": null }
       },
       "character": {
         "version": 1,
@@ -1284,11 +1031,11 @@
       "recent": [
         { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" }
       ]
     },
@@ -1297,10 +1044,10 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "flop",
-        "board": ["2h", "3s", "Tc"],
-        "pot": 200,
-        "stacks": [3160, 2000],
+        "street": "complete",
+        "board": ["2h", "3s", "Tc", "Jc", "Qs"],
+        "pot": 360,
+        "stacks": [3380, 1980],
         "her": ["Js", "3c"],
         "actions": [
           "player posts 10",
@@ -1310,22 +1057,32 @@
           "player calls 20",
           "flop 2h 3s Tc",
           "Mallorca checks",
-          "player raises to 120"
+          "player raises to 120",
+          "Mallorca calls 120",
+          "turn Jc",
+          "Mallorca raises to 20",
+          "player calls 20",
+          "river Qs",
+          "Mallorca checks",
+          "player checks",
+          "Mallorca shows Js 3c",
+          "player shows 4d Ac",
+          "Mallorca wins 360"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "playerBet", "hint": null, "honest": false, "street": "flop" },
-      "mood": ["on tilt", "annoyed", "embarrassed"],
+      "intent": { "situation": "handWon", "hint": null, "honest": true, "street": "showdown" },
+      "mood": ["on tilt", "pleased", "annoyed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "anger", "intensity": 0.53 },
-          { "name": "shame", "intensity": 0.45 },
-          { "name": "relief", "intensity": 0.42 }
+          { "name": "joy", "intensity": 0.63 },
+          { "name": "anger", "intensity": 0.52 },
+          { "name": "relief", "intensity": 0.47 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.94, "source": "anger" },
-        "shows": { "mask": 0.15, "acting": null }
+        "overload": { "level": 0.84, "source": "anger" },
+        "shows": { "mask": 0.17, "acting": null }
       },
       "character": {
         "version": 1,
@@ -1336,11 +1093,11 @@
       },
       "recent": [
         { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" }
       ]
@@ -1352,8 +1109,8 @@
       "facts": {
         "street": "flop",
         "board": ["4s", "9d", "3h"],
-        "pot": 280,
-        "stacks": [3200, 1900],
+        "pot": 120,
+        "stacks": [3360, 1900],
         "her": ["2c", "2d"],
         "actions": [
           "Mallorca posts 10",
@@ -1361,17 +1118,16 @@
           "Mallorca calls 10",
           "player checks",
           "flop 4s 9d 3h",
-          "player raises to 80",
-          "Mallorca raises to 160"
+          "player raises to 80"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herBet", "hint": "weak", "honest": true, "street": "flop" },
+      "intent": { "situation": "playerBet", "hint": null, "honest": true, "street": "flop" },
       "mood": ["on tilt", "pleased", "annoyed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.56 },
+          { "name": "joy", "intensity": 0.55 },
           { "name": "anger", "intensity": 0.49 },
           { "name": "shame", "intensity": 0.42 }
         ],
@@ -1387,11 +1143,11 @@
         "wit": 0.7
       },
       "recent": [
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" }
@@ -1449,10 +1205,10 @@
         "wit": 0.7
       },
       "recent": [
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -1472,7 +1228,7 @@
         "actions": ["player posts 10", "Mallorca posts 20", "player raises to 70"],
         "bigBlind": 20
       },
-      "intent": { "situation": "playerBet", "hint": null, "honest": false, "street": "preflop" },
+      "intent": { "situation": "playerBet", "hint": null, "honest": true, "street": "preflop" },
       "mood": ["on tilt", "annoyed", "upset"],
       "feeling": {
         "version": 1,
@@ -1494,8 +1250,8 @@
       },
       "recent": [
         { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "player", "text": "Nice hand" },
+        { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -1509,39 +1265,38 @@
       "locale": "en",
       "facts": {
         "street": "river",
-        "board": ["5s", "Td", "Tc", "9h", "Ad"],
-        "pot": 260,
-        "stacks": [3060, 2060],
-        "her": ["Ac", "3d"],
+        "board": ["2d", "8c", "4c", "4s", "2s"],
+        "pot": 320,
+        "stacks": [3460, 1840],
+        "her": ["Jc", "6d"],
         "actions": [
-          "player posts 10",
-          "Mallorca posts 20",
-          "player raises to 70",
-          "Mallorca raises to 120",
-          "player calls 50",
-          "flop 5s Td Tc",
-          "Mallorca checks",
+          "Mallorca posts 10",
+          "player posts 20",
+          "Mallorca calls 10",
           "player checks",
-          "turn 9h",
-          "Mallorca checks",
+          "flop 2d 8c 4c",
           "player checks",
-          "river Ad",
-          "Mallorca raises to 20"
+          "Mallorca raises to 20",
+          "player calls 20",
+          "turn 4s",
+          "player raises to 120",
+          "Mallorca calls 120",
+          "river 2s"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herBet", "hint": null, "honest": false, "street": "river" },
-      "mood": ["on tilt", "surprised", "annoyed"],
+      "intent": { "situation": "herCall", "hint": null, "honest": true, "street": "turn" },
+      "mood": ["on tilt", "pleased", "annoyed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "surprise", "intensity": 0.48 },
-          { "name": "anger", "intensity": 0.44 },
-          { "name": "hope", "intensity": 0.4 }
+          { "name": "joy", "intensity": 0.68 },
+          { "name": "anger", "intensity": 0.53 },
+          { "name": "relief", "intensity": 0.38 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.91, "source": "anger" },
-        "shows": { "mask": 0.16, "acting": null }
+        "overload": { "level": 0.82, "source": "anger" },
+        "shows": { "mask": 0.18, "acting": null }
       },
       "character": {
         "version": 1,
@@ -1551,8 +1306,8 @@
         "wit": 0.7
       },
       "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "player", "text": "Nice hand" },
+        { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -1583,7 +1338,7 @@
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "playerBet", "hint": "strong", "honest": false, "street": "flop" },
+      "intent": { "situation": "playerBet", "hint": null, "honest": true, "street": "flop" },
       "mood": ["on tilt", "pleased", "annoyed"],
       "feeling": {
         "version": 1,
@@ -1594,7 +1349,7 @@
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.81, "source": "anger" },
-        "shows": { "mask": 0.38, "acting": "strong" }
+        "shows": { "mask": 0.18, "acting": null }
       },
       "character": {
         "version": 1,
@@ -1621,8 +1376,8 @@
       "facts": {
         "street": "flop",
         "board": ["4s", "6c", "3h"],
-        "pot": 120,
-        "stacks": [3580, 2080],
+        "pot": 280,
+        "stacks": [3420, 2080],
         "her": ["Kc", "Kd"],
         "actions": [
           "Mallorca posts 10",
@@ -1630,22 +1385,23 @@
           "Mallorca calls 10",
           "player checks",
           "flop 4s 6c 3h",
-          "player raises to 80"
+          "player raises to 80",
+          "Mallorca raises to 160"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "playerBet", "hint": "medium", "honest": true, "street": "flop" },
+      "intent": { "situation": "herBet", "hint": null, "honest": true, "street": "flop" },
       "mood": ["on tilt", "embarrassed", "pleased"],
       "feeling": {
         "version": 1,
         "emotions": [
           { "name": "shame", "intensity": 0.71 },
-          { "name": "joy", "intensity": 0.67 },
+          { "name": "joy", "intensity": 0.68 },
           { "name": "anger", "intensity": 0.65 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.99, "source": "anger" },
-        "shows": { "mask": 0.14, "acting": null }
+        "shows": { "mask": 0.27, "acting": null }
       },
       "character": {
         "version": 1,
@@ -1672,29 +1428,24 @@
       "facts": {
         "street": "preflop",
         "board": [],
-        "pot": 190,
-        "stacks": [3660, 1930],
+        "pot": 90,
+        "stacks": [3760, 1930],
         "her": ["As", "Js"],
-        "actions": [
-          "player posts 10",
-          "Mallorca posts 20",
-          "player raises to 70",
-          "Mallorca raises to 120"
-        ],
+        "actions": ["player posts 10", "Mallorca posts 20", "player raises to 70"],
         "bigBlind": 20
       },
-      "intent": { "situation": "herBet", "hint": "strong", "honest": true, "street": "preflop" },
+      "intent": { "situation": "playerBet", "hint": null, "honest": true, "street": "preflop" },
       "mood": ["on tilt", "pleased", "embarrassed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.77 },
+          { "name": "joy", "intensity": 0.74 },
           { "name": "shame", "intensity": 0.66 },
           { "name": "anger", "intensity": 0.6 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.97, "source": "anger" },
-        "shows": { "mask": 0.15, "acting": null }
+        "shows": { "mask": 0.28, "acting": null }
       },
       "character": {
         "version": 1,
@@ -1719,10 +1470,10 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "river",
+        "street": "complete",
         "board": ["9d", "4d", "9c", "8d", "Th"],
-        "pot": 260,
-        "stacks": [3640, 1880],
+        "pot": 840,
+        "stacks": [3360, 2420],
         "her": ["As", "Js"],
         "actions": [
           "player posts 10",
@@ -1737,117 +1488,23 @@
           "Mallorca checks",
           "player checks",
           "river Th",
-          "Mallorca raises to 20"
-        ],
-        "bigBlind": 20
-      },
-      "intent": { "situation": "herBet", "hint": "strong", "honest": false, "street": "river" },
-      "mood": ["on tilt", "pleased", "embarrassed"],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          { "name": "joy", "intensity": 0.73 },
-          { "name": "shame", "intensity": 0.64 },
-          { "name": "anger", "intensity": 0.58 }
-        ],
-        "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.97, "source": "anger" },
-        "shows": { "mask": 0.31, "acting": "strong" }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
-      },
-      "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "player", "text": "Nice hand" },
-        { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "player", "text": "Bluffing?" },
-        { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" }
-      ]
-    },
-    {
-      "kind": "line",
-      "sessionId": "seed-11",
-      "locale": "en",
-      "facts": {
-        "street": "preflop",
-        "board": [],
-        "pot": 40,
-        "stacks": [3340, 2400],
-        "her": ["Kc", "9s"],
-        "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
-        "bigBlind": 20
-      },
-      "intent": { "situation": "herCall", "hint": "medium", "honest": true, "street": "preflop" },
-      "mood": ["on tilt", "embarrassed", "annoyed"],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          { "name": "shame", "intensity": 0.92 },
-          { "name": "distress", "intensity": 0.65 },
-          { "name": "anger", "intensity": 0.65 }
-        ],
-        "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 1, "source": "shame" },
-        "shows": { "mask": 0.14, "acting": null }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
-      },
-      "recent": [
-        { "speaker": "player", "text": "Nice hand" },
-        { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "player", "text": "Bluffing?" },
-        { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" }
-      ]
-    },
-    {
-      "kind": "line",
-      "sessionId": "seed-11",
-      "locale": "en",
-      "facts": {
-        "street": "turn",
-        "board": ["5d", "2s", "6s", "4s"],
-        "pot": 200,
-        "stacks": [3320, 2260],
-        "her": ["Kc", "9s"],
-        "actions": [
-          "Mallorca posts 10",
-          "player posts 20",
-          "Mallorca calls 10",
-          "player checks",
-          "flop 5d 2s 6s",
-          "player checks",
           "Mallorca raises to 20",
-          "player calls 20",
-          "turn 4s",
-          "player raises to 120"
+          "player raises to 300",
+          "Mallorca calls 280",
+          "Mallorca shows As Js",
+          "player shows Ts Kh",
+          "player wins 840"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "playerBet", "hint": null, "honest": false, "street": "turn" },
-      "mood": ["on tilt", "embarrassed", "annoyed"],
+      "intent": { "situation": "bluffCaught", "hint": null, "honest": true, "street": "showdown" },
+      "mood": ["on tilt", "embarrassed", "upset"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "shame", "intensity": 0.9 },
-          { "name": "anger", "intensity": 0.63 },
-          { "name": "distress", "intensity": 0.62 }
+          { "name": "shame", "intensity": 0.98 },
+          { "name": "distress", "intensity": 0.7 },
+          { "name": "anger", "intensity": 0.68 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 1, "source": "shame" },
@@ -1861,12 +1518,12 @@
         "wit": 0.7
       },
       "recent": [
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Bluffing?" },
         { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" }
       ]
@@ -1876,27 +1533,30 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "preflop",
-        "board": [],
-        "pot": 60,
-        "stacks": [3160, 2560],
+        "street": "flop",
+        "board": ["Td", "2d", "5c"],
+        "pot": 80,
+        "stacks": [3160, 2540],
         "her": ["9s", "2h"],
         "actions": [
           "player posts 10",
           "Mallorca posts 20",
           "player calls 10",
-          "Mallorca raises to 40"
+          "Mallorca raises to 40",
+          "player calls 20",
+          "flop Td 2d 5c",
+          "Mallorca checks"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herBet", "hint": "weak", "honest": true, "street": "preflop" },
+      "intent": { "situation": "herCall", "hint": null, "honest": true, "street": "flop" },
       "mood": ["on tilt", "embarrassed", "upset"],
       "feeling": {
         "version": 1,
         "emotions": [
           { "name": "shame", "intensity": 0.83 },
-          { "name": "distress", "intensity": 0.68 },
-          { "name": "anger", "intensity": 0.59 }
+          { "name": "distress", "intensity": 0.67 },
+          { "name": "anger", "intensity": 0.58 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 1, "source": "shame" },
@@ -1910,10 +1570,61 @@
         "wit": 0.7
       },
       "recent": [
+        { "speaker": "player", "text": "Nice hand" },
+        { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Bluffing?" },
         { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" }
+      ]
+    },
+    {
+      "kind": "line",
+      "sessionId": "seed-11",
+      "locale": "en",
+      "facts": {
+        "street": "flop",
+        "board": ["7h", "3c", "4s"],
+        "pot": 120,
+        "stacks": [3360, 2300],
+        "her": ["Kc", "Ah"],
+        "actions": [
+          "Mallorca posts 10",
+          "player posts 20",
+          "Mallorca calls 10",
+          "player checks",
+          "flop 7h 3c 4s",
+          "player raises to 80"
+        ],
+        "bigBlind": 20
+      },
+      "intent": { "situation": "playerBet", "hint": "medium", "honest": true, "street": "flop" },
+      "mood": ["on tilt", "embarrassed", "pleased"],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          { "name": "shame", "intensity": 0.75 },
+          { "name": "joy", "intensity": 0.56 },
+          { "name": "anger", "intensity": 0.53 }
+        ],
+        "mood": { "octant": "exuberant", "strength": "slightly" },
+        "overload": { "level": 0.98, "source": "shame" },
+        "shows": { "mask": 0.14, "acting": null }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        { "speaker": "mallorca", "text": "Sure" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "player", "text": "Bluffing?" },
+        { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -1926,44 +1637,43 @@
       "locale": "en",
       "facts": {
         "street": "complete",
-        "board": ["Td", "2d", "5c", "Ts", "3h"],
+        "board": ["7h", "3c", "4s", "8h", "As"],
         "pot": 360,
-        "stacks": [3380, 2400],
-        "her": ["9s", "2h"],
+        "stacks": [3560, 2220],
+        "her": ["Kc", "Ah"],
         "actions": [
-          "player posts 10",
-          "Mallorca posts 20",
-          "player calls 10",
-          "Mallorca raises to 40",
-          "player calls 20",
-          "flop Td 2d 5c",
-          "Mallorca checks",
-          "player raises to 120",
-          "Mallorca calls 120",
-          "turn Ts",
-          "Mallorca raises to 20",
-          "player calls 20",
-          "river 3h",
-          "Mallorca checks",
+          "Mallorca posts 10",
+          "player posts 20",
+          "Mallorca calls 10",
           "player checks",
-          "Mallorca shows 9s 2h",
-          "player shows Jc 9h",
+          "flop 7h 3c 4s",
+          "player raises to 80",
+          "Mallorca raises to 160",
+          "player calls 80",
+          "turn 8h",
+          "player checks",
+          "Mallorca checks",
+          "river As",
+          "player checks",
+          "Mallorca checks",
+          "Mallorca shows Kc Ah",
+          "player shows Jh 7c",
           "Mallorca wins 360"
         ],
         "bigBlind": 20
       },
       "intent": { "situation": "handWon", "hint": null, "honest": true, "street": "showdown" },
-      "mood": ["on tilt", "embarrassed", "surprised"],
+      "mood": ["on tilt", "pleased", "embarrassed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "shame", "intensity": 0.81 },
-          { "name": "surprise", "intensity": 0.64 },
-          { "name": "joy", "intensity": 0.6 }
+          { "name": "joy", "intensity": 0.79 },
+          { "name": "shame", "intensity": 0.74 },
+          { "name": "relief", "intensity": 0.6 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.99, "source": "shame" },
-        "shows": { "mask": 0.14, "acting": null }
+        "overload": { "level": 0.96, "source": "shame" },
+        "shows": { "mask": 0.15, "acting": null }
       },
       "character": {
         "version": 1,
@@ -1973,9 +1683,9 @@
         "wit": 0.7
       },
       "recent": [
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Bluffing?" },
         { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -1989,77 +1699,33 @@
       "locale": "en",
       "facts": {
         "street": "flop",
-        "board": ["7h", "3c", "4s"],
-        "pot": 280,
-        "stacks": [3200, 2300],
-        "her": ["Kc", "Ah"],
-        "actions": [
-          "Mallorca posts 10",
-          "player posts 20",
-          "Mallorca calls 10",
-          "player checks",
-          "flop 7h 3c 4s",
-          "player raises to 80",
-          "Mallorca raises to 160"
-        ],
-        "bigBlind": 20
-      },
-      "intent": { "situation": "herBet", "hint": "strong", "honest": false, "street": "flop" },
-      "mood": ["on tilt", "embarrassed", "pleased"],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          { "name": "shame", "intensity": 0.75 },
-          { "name": "joy", "intensity": 0.54 },
-          { "name": "anger", "intensity": 0.53 }
-        ],
-        "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.98, "source": "shame" },
-        "shows": { "mask": 0.3, "acting": "strong" }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
-      },
-      "recent": [
-        { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" }
-      ]
-    },
-    {
-      "kind": "line",
-      "sessionId": "seed-11",
-      "locale": "en",
-      "facts": {
-        "street": "preflop",
-        "board": [],
-        "pot": 90,
-        "stacks": [3540, 2150],
+        "board": ["Ad", "Jc", "7h"],
+        "pot": 240,
+        "stacks": [3440, 2100],
         "her": ["3d", "Ac"],
-        "actions": ["player posts 10", "Mallorca posts 20", "player raises to 70"],
+        "actions": [
+          "player posts 10",
+          "Mallorca posts 20",
+          "player raises to 70",
+          "Mallorca raises to 120",
+          "player calls 50",
+          "flop Ad Jc 7h",
+          "Mallorca checks"
+        ],
         "bigBlind": 20
       },
-      "intent": { "situation": "playerBet", "hint": null, "honest": true, "street": "preflop" },
+      "intent": { "situation": "herCall", "hint": "strong", "honest": true, "street": "flop" },
       "mood": ["on tilt", "pleased", "embarrassed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.7 },
+          { "name": "joy", "intensity": 0.77 },
           { "name": "shame", "intensity": 0.69 },
-          { "name": "anger", "intensity": 0.49 }
+          { "name": "relief", "intensity": 0.51 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.94, "source": "shame" },
-        "shows": { "mask": 0.15, "acting": null }
+        "overload": { "level": 0.96, "source": "shame" },
+        "shows": { "mask": 0.29, "acting": null }
       },
       "character": {
         "version": 1,
@@ -2069,8 +1735,8 @@
         "wit": 0.7
       },
       "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "player", "text": "Bluffing?" },
+        { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -2086,8 +1752,8 @@
       "facts": {
         "street": "river",
         "board": ["Ad", "Jc", "7h", "Js", "5s"],
-        "pot": 260,
-        "stacks": [3420, 2100],
+        "pot": 560,
+        "stacks": [3420, 1800],
         "her": ["3d", "Ac"],
         "actions": [
           "player posts 10",
@@ -2102,22 +1768,23 @@
           "Mallorca checks",
           "player checks",
           "river 5s",
-          "Mallorca raises to 20"
+          "Mallorca raises to 20",
+          "player raises to 300"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herBet", "hint": null, "honest": false, "street": "river" },
+      "intent": { "situation": "playerBet", "hint": null, "honest": true, "street": "river" },
       "mood": ["on tilt", "pleased", "embarrassed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.75 },
-          { "name": "shame", "intensity": 0.68 },
-          { "name": "hope", "intensity": 0.53 }
+          { "name": "joy", "intensity": 0.73 },
+          { "name": "shame", "intensity": 0.67 },
+          { "name": "anger", "intensity": 0.61 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.94, "source": "shame" },
-        "shows": { "mask": 0.15, "acting": null }
+        "overload": { "level": 0.98, "source": "anger" },
+        "shows": { "mask": 0.28, "acting": null }
       },
       "character": {
         "version": 1,
@@ -2127,7 +1794,7 @@
         "wit": 0.7
       },
       "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -2150,7 +1817,7 @@
         "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
         "bigBlind": 20
       },
-      "intent": { "situation": "herCall", "hint": null, "honest": false, "street": "preflop" },
+      "intent": { "situation": "herCall", "hint": null, "honest": true, "street": "preflop" },
       "mood": ["on tilt", "pleased", "annoyed"],
       "feeling": {
         "version": 1,
@@ -2186,10 +1853,10 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "complete",
-        "board": ["3d", "5s", "Ts", "Kd", "4c"],
-        "pot": 320,
-        "stacks": [4140, 1840],
+        "street": "turn",
+        "board": ["3d", "5s", "Ts", "Kd"],
+        "pot": 200,
+        "stacks": [3940, 1840],
         "her": ["3h", "Td"],
         "actions": [
           "Mallorca posts 10",
@@ -2201,28 +1868,74 @@
           "Mallorca raises to 20",
           "player calls 20",
           "turn Kd",
-          "player raises to 120",
-          "Mallorca calls 120",
-          "river 4c",
-          "player checks",
-          "Mallorca checks",
-          "Mallorca shows 3h Td",
-          "player shows Ks Qc",
-          "Mallorca wins 320"
+          "player raises to 120"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "handWon", "hint": null, "honest": false, "street": "showdown" },
+      "intent": { "situation": "playerBet", "hint": null, "honest": true, "street": "turn" },
       "mood": ["on tilt", "pleased", "annoyed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.88 },
+          { "name": "joy", "intensity": 0.82 },
           { "name": "anger", "intensity": 0.63 },
-          { "name": "shame", "intensity": 0.61 }
+          { "name": "shame", "intensity": 0.62 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.96, "source": "anger" },
+        "shows": { "mask": 0.29, "acting": null }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "player", "text": "Nice hand" },
+        { "speaker": "mallorca", "text": "Sure" },
+        { "speaker": "mallorca", "text": "Here we go" }
+      ]
+    },
+    {
+      "kind": "line",
+      "sessionId": "seed-11",
+      "locale": "en",
+      "facts": {
+        "street": "flop",
+        "board": ["9c", "9s", "6c"],
+        "pot": 200,
+        "stacks": [4100, 1840],
+        "her": ["5d", "Ah"],
+        "actions": [
+          "player posts 10",
+          "Mallorca posts 20",
+          "player calls 10",
+          "Mallorca raises to 40",
+          "player calls 20",
+          "flop 9c 9s 6c",
+          "Mallorca checks",
+          "player raises to 120"
+        ],
+        "bigBlind": 20
+      },
+      "intent": { "situation": "playerBet", "hint": "medium", "honest": true, "street": "flop" },
+      "mood": ["on tilt", "pleased", "annoyed"],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          { "name": "joy", "intensity": 0.76 },
+          { "name": "anger", "intensity": 0.58 },
+          { "name": "shame", "intensity": 0.57 }
+        ],
+        "mood": { "octant": "exuberant", "strength": "slightly" },
+        "overload": { "level": 0.94, "source": "anger" },
         "shows": { "mask": 0.15, "acting": null }
       },
       "character": {
@@ -2237,69 +1950,6 @@
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "player", "text": "Nice hand" },
-        { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" }
-      ]
-    },
-    {
-      "kind": "line",
-      "sessionId": "seed-11",
-      "locale": "en",
-      "facts": {
-        "street": "complete",
-        "board": ["9c", "9s", "6c", "Kc", "Qd"],
-        "pot": 360,
-        "stacks": [3960, 2180],
-        "her": ["5d", "Ah"],
-        "actions": [
-          "player posts 10",
-          "Mallorca posts 20",
-          "player calls 10",
-          "Mallorca raises to 40",
-          "player calls 20",
-          "flop 9c 9s 6c",
-          "Mallorca checks",
-          "player raises to 120",
-          "Mallorca calls 120",
-          "turn Kc",
-          "Mallorca raises to 20",
-          "player calls 20",
-          "river Qd",
-          "Mallorca checks",
-          "player checks",
-          "Mallorca shows 5d Ah",
-          "player shows Kd 3d",
-          "player wins 360"
-        ],
-        "bigBlind": 20
-      },
-      "intent": { "situation": "bluffCaught", "hint": null, "honest": false, "street": "showdown" },
-      "mood": ["on tilt", "embarrassed", "surprised"],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          { "name": "shame", "intensity": 0.84 },
-          { "name": "surprise", "intensity": 0.61 },
-          { "name": "anger", "intensity": 0.57 }
-        ],
-        "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 1, "source": "shame" },
-        "shows": { "mask": 0.14, "acting": null }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
-      },
-      "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -2311,30 +1961,22 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "flop",
-        "board": ["Ac", "6c", "Ah"],
-        "pot": 280,
-        "stacks": [3780, 2080],
+        "street": "preflop",
+        "board": [],
+        "pot": 40,
+        "stacks": [3940, 2160],
         "her": ["4d", "Ts"],
-        "actions": [
-          "Mallorca posts 10",
-          "player posts 20",
-          "Mallorca calls 10",
-          "player checks",
-          "flop Ac 6c Ah",
-          "player raises to 80",
-          "Mallorca raises to 160"
-        ],
+        "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
         "bigBlind": 20
       },
-      "intent": { "situation": "herBet", "hint": "weak", "honest": true, "street": "flop" },
+      "intent": { "situation": "herCall", "hint": "weak", "honest": true, "street": "preflop" },
       "mood": ["on tilt", "embarrassed", "annoyed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "shame", "intensity": 0.78 },
-          { "name": "anger", "intensity": 0.53 },
-          { "name": "distress", "intensity": 0.34 }
+          { "name": "shame", "intensity": 0.79 },
+          { "name": "anger", "intensity": 0.54 },
+          { "name": "distress", "intensity": 0.35 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.99, "source": "shame" },
@@ -2363,68 +2005,6 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "complete",
-        "board": ["Ac", "6c", "Ah", "Qc", "Jh"],
-        "pot": 360,
-        "stacks": [3780, 2360],
-        "her": ["4d", "Ts"],
-        "actions": [
-          "Mallorca posts 10",
-          "player posts 20",
-          "Mallorca calls 10",
-          "player checks",
-          "flop Ac 6c Ah",
-          "player raises to 80",
-          "Mallorca raises to 160",
-          "player calls 80",
-          "turn Qc",
-          "player checks",
-          "Mallorca checks",
-          "river Jh",
-          "player checks",
-          "Mallorca checks",
-          "Mallorca shows 4d Ts",
-          "player shows Td Js",
-          "player wins 360"
-        ],
-        "bigBlind": 20
-      },
-      "intent": { "situation": "handLost", "hint": null, "honest": true, "street": "showdown" },
-      "mood": ["on tilt", "embarrassed", "upset"],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          { "name": "shame", "intensity": 0.76 },
-          { "name": "distress", "intensity": 0.58 },
-          { "name": "anger", "intensity": 0.52 }
-        ],
-        "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 1, "source": "shame" },
-        "shows": { "mask": 0.14, "acting": null }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
-      },
-      "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "player", "text": "Nice hand" },
-        { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" }
-      ]
-    },
-    {
-      "kind": "line",
-      "sessionId": "seed-11",
-      "locale": "en",
-      "facts": {
         "street": "preflop",
         "board": [],
         "pot": 90,
@@ -2433,7 +2013,7 @@
         "actions": ["player posts 10", "Mallorca posts 20", "player raises to 70"],
         "bigBlind": 20
       },
-      "intent": { "situation": "playerBet", "hint": "medium", "honest": true, "street": "preflop" },
+      "intent": { "situation": "playerBet", "hint": null, "honest": true, "street": "preflop" },
       "mood": ["on tilt", "embarrassed", "upset"],
       "feeling": {
         "version": 1,
@@ -2455,9 +2035,9 @@
       },
       "recent": [
         { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -2471,8 +2051,8 @@
       "facts": {
         "street": "river",
         "board": ["5h", "Js", "6c", "Th", "4c"],
-        "pot": 560,
-        "stacks": [3640, 1940],
+        "pot": 260,
+        "stacks": [3640, 2240],
         "her": ["9d", "Jc"],
         "actions": [
           "player posts 10",
@@ -2487,23 +2067,74 @@
           "Mallorca checks",
           "player checks",
           "river 4c",
-          "Mallorca raises to 20",
-          "player raises to 300"
+          "Mallorca raises to 20"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "playerBet", "hint": null, "honest": true, "street": "river" },
-      "mood": ["on tilt", "embarrassed", "annoyed"],
+      "intent": { "situation": "herBet", "hint": "strong", "honest": true, "street": "river" },
+      "mood": ["on tilt", "embarrassed", "hopeful"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "shame", "intensity": 0.69 },
-          { "name": "anger", "intensity": 0.61 },
-          { "name": "distress", "intensity": 0.5 }
+          { "name": "shame", "intensity": 0.7 },
+          { "name": "hope", "intensity": 0.52 },
+          { "name": "distress", "intensity": 0.51 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 1, "source": "anger" },
-        "shows": { "mask": 0.14, "acting": null }
+        "overload": { "level": 0.99, "source": "shame" },
+        "shows": { "mask": 0.27, "acting": null }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "player", "text": "Nice hand" },
+        { "speaker": "mallorca", "text": "Sure" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" }
+      ]
+    },
+    {
+      "kind": "line",
+      "sessionId": "seed-11",
+      "locale": "en",
+      "facts": {
+        "street": "flop",
+        "board": ["5c", "9c", "9s"],
+        "pot": 60,
+        "stacks": [4160, 1980],
+        "her": ["9d", "Jc"],
+        "actions": [
+          "Mallorca posts 10",
+          "player posts 20",
+          "Mallorca calls 10",
+          "player checks",
+          "flop 5c 9c 9s",
+          "player checks",
+          "Mallorca raises to 20"
+        ],
+        "bigBlind": 20
+      },
+      "intent": { "situation": "herBet", "hint": null, "honest": true, "street": "flop" },
+      "mood": ["on tilt", "pleased", "embarrassed"],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          { "name": "joy", "intensity": 0.76 },
+          { "name": "shame", "intensity": 0.65 },
+          { "name": "anger", "intensity": 0.57 }
+        ],
+        "mood": { "octant": "exuberant", "strength": "slightly" },
+        "overload": { "level": 0.97, "source": "anger" },
+        "shows": { "mask": 0.28, "acting": null }
       },
       "character": {
         "version": 1,
@@ -2590,31 +2221,35 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "preflop",
-        "board": [],
-        "pot": 60,
-        "stacks": [4320, 1980],
+        "street": "flop",
+        "board": ["5d", "Qd", "6h"],
+        "pot": 200,
+        "stacks": [4320, 1840],
         "her": ["Kd", "Ac"],
         "actions": [
           "player posts 10",
           "Mallorca posts 20",
           "player calls 10",
-          "Mallorca raises to 40"
+          "Mallorca raises to 40",
+          "player calls 20",
+          "flop 5d Qd 6h",
+          "Mallorca checks",
+          "player raises to 120"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herBet", "hint": "weak", "honest": false, "street": "preflop" },
+      "intent": { "situation": "playerBet", "hint": "medium", "honest": true, "street": "flop" },
       "mood": ["on tilt", "pleased", "annoyed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.74 },
-          { "name": "anger", "intensity": 0.64 },
-          { "name": "shame", "intensity": 0.62 }
+          { "name": "joy", "intensity": 0.73 },
+          { "name": "anger", "intensity": 0.63 },
+          { "name": "shame", "intensity": 0.61 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.97, "source": "anger" },
-        "shows": { "mask": 0.31, "acting": "weak" }
+        "shows": { "mask": 0.15, "acting": null }
       },
       "character": {
         "version": 1,
@@ -2639,44 +2274,25 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "complete",
-        "board": ["5d", "Qd", "6h", "7d", "Th"],
-        "pot": 360,
-        "stacks": [4540, 1820],
-        "her": ["Kd", "Ac"],
-        "actions": [
-          "player posts 10",
-          "Mallorca posts 20",
-          "player calls 10",
-          "Mallorca raises to 40",
-          "player calls 20",
-          "flop 5d Qd 6h",
-          "Mallorca checks",
-          "player raises to 120",
-          "Mallorca calls 120",
-          "turn 7d",
-          "Mallorca raises to 20",
-          "player calls 20",
-          "river Th",
-          "Mallorca checks",
-          "player checks",
-          "Mallorca shows Kd Ac",
-          "player shows Jd 3c",
-          "Mallorca wins 360"
-        ],
+        "street": "preflop",
+        "board": [],
+        "pot": 90,
+        "stacks": [4700, 1930],
+        "her": ["3s", "Qh"],
+        "actions": ["player posts 10", "Mallorca posts 20", "player raises to 70"],
         "bigBlind": 20
       },
-      "intent": { "situation": "handWon", "hint": null, "honest": true, "street": "showdown" },
-      "mood": ["on tilt", "pleased", "surprised"],
+      "intent": { "situation": "playerBet", "hint": null, "honest": true, "street": "preflop" },
+      "mood": ["on tilt", "pleased", "annoyed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.89 },
-          { "name": "surprise", "intensity": 0.86 },
-          { "name": "anger", "intensity": 0.62 }
+          { "name": "joy", "intensity": 0.79 },
+          { "name": "anger", "intensity": 0.62 },
+          { "name": "shame", "intensity": 0.52 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.96, "source": "anger" },
+        "overload": { "level": 0.94, "source": "anger" },
         "shows": { "mask": 0.15, "acting": null }
       },
       "character": {
@@ -2690,73 +2306,11 @@
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "player", "text": "Bluffing?" },
-        { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" }
-      ]
-    },
-    {
-      "kind": "line",
-      "sessionId": "seed-11",
-      "locale": "en",
-      "facts": {
-        "street": "complete",
-        "board": ["Qh", "Tc", "Kc", "9h", "2c"],
-        "pot": 360,
-        "stacks": [4720, 1820],
-        "her": ["3c", "Js"],
-        "actions": [
-          "Mallorca posts 10",
-          "player posts 20",
-          "Mallorca calls 10",
-          "player checks",
-          "flop Qh Tc Kc",
-          "player raises to 80",
-          "Mallorca raises to 160",
-          "player calls 80",
-          "turn 9h",
-          "player checks",
-          "Mallorca checks",
-          "river 2c",
-          "player checks",
-          "Mallorca checks",
-          "Mallorca shows 3c Js",
-          "player shows 4h 8s",
-          "Mallorca wins 360"
-        ],
-        "bigBlind": 20
-      },
-      "intent": { "situation": "handWon", "hint": null, "honest": true, "street": "showdown" },
-      "mood": ["on tilt", "pleased", "relieved"],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          { "name": "joy", "intensity": 0.89 },
-          { "name": "relief", "intensity": 0.58 },
-          { "name": "anger", "intensity": 0.57 }
-        ],
-        "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.92, "source": "anger" },
-        "shows": { "mask": 0.16, "acting": null }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
-      },
-      "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Bluffing?" },
         { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" }
+        { "speaker": "player", "text": "Nice hand" },
+        { "speaker": "mallorca", "text": "Sure" }
       ]
     },
     {
@@ -2796,9 +2350,9 @@
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.95 },
+          { "name": "joy", "intensity": 0.96 },
           { "name": "anger", "intensity": 0.7 },
-          { "name": "relief", "intensity": 0.66 }
+          { "name": "relief", "intensity": 0.68 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.95, "source": "anger" },
@@ -2813,13 +2367,13 @@
       },
       "recent": [
         { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Bluffing?" },
         { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
-        { "speaker": "mallorca", "text": "Sure" }
+        { "speaker": "mallorca", "text": "Sure" },
+        { "speaker": "mallorca", "text": "Here we go" }
       ]
     },
     {
@@ -2827,26 +2381,96 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "preflop",
-        "board": [],
-        "pot": 40,
-        "stacks": [5120, 1980],
+        "street": "flop",
+        "board": ["7d", "8h", "Qh"],
+        "pot": 60,
+        "stacks": [5100, 1980],
         "her": ["2c", "Th"],
-        "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
+        "actions": [
+          "Mallorca posts 10",
+          "player posts 20",
+          "Mallorca calls 10",
+          "player checks",
+          "flop 7d 8h Qh",
+          "player checks",
+          "Mallorca raises to 20"
+        ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herCall", "hint": "strong", "honest": false, "street": "preflop" },
+      "intent": { "situation": "herBet", "hint": "weak", "honest": true, "street": "flop" },
       "mood": ["on tilt", "pleased", "annoyed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.86 },
-          { "name": "anger", "intensity": 0.66 },
-          { "name": "relief", "intensity": 0.54 }
+          { "name": "joy", "intensity": 0.84 },
+          { "name": "anger", "intensity": 0.65 },
+          { "name": "relief", "intensity": 0.52 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.93, "source": "anger" },
-        "shows": { "mask": 0.33, "acting": "strong" }
+        "overload": { "level": 0.94, "source": "anger" },
+        "shows": { "mask": 0.32, "acting": null }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "player", "text": "Bluffing?" },
+        { "speaker": "mallorca", "text": "Sure" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "player", "text": "Nice hand" },
+        { "speaker": "mallorca", "text": "Sure" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" }
+      ]
+    },
+    {
+      "kind": "line",
+      "sessionId": "seed-11",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": ["7d", "8h", "Qh", "4h", "3c"],
+        "pot": 320,
+        "stacks": [4980, 2160],
+        "her": ["2c", "Th"],
+        "actions": [
+          "Mallorca posts 10",
+          "player posts 20",
+          "Mallorca calls 10",
+          "player checks",
+          "flop 7d 8h Qh",
+          "player checks",
+          "Mallorca raises to 20",
+          "player calls 20",
+          "turn 4h",
+          "player raises to 120",
+          "Mallorca calls 120",
+          "river 3c",
+          "player checks",
+          "Mallorca checks",
+          "Mallorca shows 2c Th",
+          "player shows 9h 4c",
+          "player wins 320"
+        ],
+        "bigBlind": 20
+      },
+      "intent": { "situation": "handLost", "hint": null, "honest": true, "street": "showdown" },
+      "mood": ["on tilt", "annoyed", "relieved"],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          { "name": "anger", "intensity": 0.64 },
+          { "name": "relief", "intensity": 0.47 },
+          { "name": "shame", "intensity": 0.46 }
+        ],
+        "mood": { "octant": "exuberant", "strength": "slightly" },
+        "overload": { "level": 0.97, "source": "anger" },
+        "shows": { "mask": 0.15, "acting": null }
       },
       "character": {
         "version": 1,
@@ -2859,10 +2483,10 @@
         { "speaker": "player", "text": "Bluffing?" },
         { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" }
       ]
     },
@@ -2871,10 +2495,59 @@
       "sessionId": "seed-11",
       "locale": "en",
       "facts": {
-        "street": "river",
+        "street": "preflop",
+        "board": [],
+        "pot": 60,
+        "stacks": [4940, 2140],
+        "her": ["9s", "Jh"],
+        "actions": [
+          "player posts 10",
+          "Mallorca posts 20",
+          "player calls 10",
+          "Mallorca raises to 40"
+        ],
+        "bigBlind": 20
+      },
+      "intent": { "situation": "herBet", "hint": "medium", "honest": true, "street": "preflop" },
+      "mood": ["on tilt", "annoyed", "embarrassed"],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          { "name": "anger", "intensity": 0.6 },
+          { "name": "shame", "intensity": 0.43 },
+          { "name": "relief", "intensity": 0.37 }
+        ],
+        "mood": { "octant": "exuberant", "strength": "slightly" },
+        "overload": { "level": 0.95, "source": "anger" },
+        "shows": { "mask": 0.15, "acting": null }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        { "speaker": "mallorca", "text": "Sure" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "player", "text": "Nice hand" },
+        { "speaker": "mallorca", "text": "Sure" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" }
+      ]
+    },
+    {
+      "kind": "line",
+      "sessionId": "seed-11",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
         "board": ["5h", "9h", "8s", "8h", "8c"],
         "pot": 360,
-        "stacks": [4800, 1980],
+        "stacks": [5160, 1980],
         "her": ["9s", "Jh"],
         "actions": [
           "player posts 10",
@@ -2890,22 +2563,26 @@
           "Mallorca raises to 20",
           "player calls 20",
           "river 8c",
-          "Mallorca checks"
+          "Mallorca checks",
+          "player checks",
+          "Mallorca shows 9s Jh",
+          "player shows Ts Qh",
+          "Mallorca wins 360"
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herCall", "hint": null, "honest": false, "street": "river" },
-      "mood": ["on tilt", "annoyed", "hopeful"],
+      "intent": { "situation": "handWon", "hint": null, "honest": true, "street": "showdown" },
+      "mood": ["on tilt", "pleased", "annoyed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "anger", "intensity": 0.59 },
-          { "name": "hope", "intensity": 0.43 },
-          { "name": "shame", "intensity": 0.42 }
+          { "name": "joy", "intensity": 0.58 },
+          { "name": "anger", "intensity": 0.58 },
+          { "name": "relief", "intensity": 0.44 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.95, "source": "anger" },
-        "shows": { "mask": 0.15, "acting": null }
+        "overload": { "level": 0.89, "source": "anger" },
+        "shows": { "mask": 0.16, "acting": null }
       },
       "character": {
         "version": 1,
@@ -2915,12 +2592,12 @@
         "wit": 0.7
       },
       "recent": [
-        { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" }
       ]
@@ -2946,7 +2623,7 @@
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "herBet", "hint": "strong", "honest": false, "street": "flop" },
+      "intent": { "situation": "herBet", "hint": "weak", "honest": true, "street": "flop" },
       "mood": ["on tilt", "annoyed", "pleased"],
       "feeling": {
         "version": 1,
@@ -2957,7 +2634,7 @@
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.86, "source": "anger" },
-        "shows": { "mask": 0.36, "acting": "strong" }
+        "shows": { "mask": 0.36, "acting": null }
       },
       "character": {
         "version": 1,
@@ -2967,59 +2644,10 @@
         "wit": 0.7
       },
       "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" }
-      ]
-    },
-    {
-      "kind": "line",
-      "sessionId": "seed-11",
-      "locale": "en",
-      "facts": {
-        "street": "preflop",
-        "board": [],
-        "pot": 190,
-        "stacks": [4860, 2110],
-        "her": ["9d", "Ad"],
-        "actions": [
-          "player posts 10",
-          "Mallorca posts 20",
-          "player raises to 70",
-          "Mallorca raises to 120"
-        ],
-        "bigBlind": 20
-      },
-      "intent": { "situation": "herBet", "hint": "strong", "honest": true, "street": "preflop" },
-      "mood": ["on tilt", "annoyed", "upset"],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          { "name": "anger", "intensity": 0.5 },
-          { "name": "distress", "intensity": 0.39 },
-          { "name": "shame", "intensity": 0.36 }
-        ],
-        "mood": { "octant": "exuberant", "strength": "slightly" },
-        "overload": { "level": 0.92, "source": "anger" },
-        "shows": { "mask": 0.16, "acting": null }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
-      },
-      "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "player", "text": "Nice hand" },
-        { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -3064,7 +2692,7 @@
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.92, "source": "anger" },
-        "shows": { "mask": 0.16, "acting": null }
+        "shows": { "mask": 0.33, "acting": null }
       },
       "character": {
         "version": 1,
@@ -3074,9 +2702,9 @@
         "wit": 0.7
       },
       "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "player", "text": "Nice hand" },
         { "speaker": "mallorca", "text": "Sure" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -3123,8 +2751,8 @@
         "version": 1,
         "emotions": [
           { "name": "shame", "intensity": 0.68 },
-          { "name": "joy", "intensity": 0.48 },
-          { "name": "relief", "intensity": 0.35 }
+          { "name": "joy", "intensity": 0.43 },
+          { "name": "relief", "intensity": 0.34 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.64, "source": "shame" },
@@ -3181,13 +2809,13 @@
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "handWon", "hint": null, "honest": false, "street": "complete" },
+      "intent": { "situation": "handWon", "hint": null, "honest": true, "street": "complete" },
       "mood": ["on tilt", "embarrassed", "pleased"],
       "feeling": {
         "version": 1,
         "emotions": [
           { "name": "shame", "intensity": 0.86 },
-          { "name": "joy", "intensity": 0.59 },
+          { "name": "joy", "intensity": 0.58 },
           { "name": "anger", "intensity": 0.53 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
@@ -3202,8 +2830,8 @@
         "wit": 0.7
       },
       "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "player", "text": "Nice hand" },
+        { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -3246,12 +2874,12 @@
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "handWon", "hint": null, "honest": false, "street": "complete" },
+      "intent": { "situation": "handWon", "hint": null, "honest": true, "street": "complete" },
       "mood": ["on tilt", "pleased", "embarrassed"],
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.91 },
+          { "name": "joy", "intensity": 0.9 },
           { "name": "shame", "intensity": 0.65 },
           { "name": "anger", "intensity": 0.5 }
         ],
@@ -3269,11 +2897,11 @@
       "recent": [
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Bluffing?" },
         { "speaker": "mallorca", "text": "Sure" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" }
       ],
       "text": "Nice hand",
@@ -3310,14 +2938,14 @@
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "handWon", "hint": null, "honest": false, "street": "complete" },
+      "intent": { "situation": "handWon", "hint": null, "honest": true, "street": "complete" },
       "mood": ["on tilt", "surprised", "pleased"],
       "feeling": {
         "version": 1,
         "emotions": [
           { "name": "surprise", "intensity": 0.9 },
           { "name": "joy", "intensity": 0.88 },
-          { "name": "relief", "intensity": 0.65 }
+          { "name": "relief", "intensity": 0.64 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
         "overload": { "level": 0.71, "source": "anger" },
@@ -3331,7 +2959,7 @@
         "wit": 0.7
       },
       "recent": [
-        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Sure" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
@@ -3375,7 +3003,7 @@
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "bluffCaught", "hint": null, "honest": false, "street": "complete" },
+      "intent": { "situation": "bluffCaught", "hint": null, "honest": true, "street": "complete" },
       "mood": ["on tilt", "embarrassed", "annoyed"],
       "feeling": {
         "version": 1,
@@ -3445,7 +3073,7 @@
       "feeling": {
         "version": 1,
         "emotions": [
-          { "name": "joy", "intensity": 0.93 },
+          { "name": "joy", "intensity": 0.92 },
           { "name": "shame", "intensity": 0.67 },
           { "name": "anger", "intensity": 0.61 }
         ],
@@ -3504,7 +3132,7 @@
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "handWon", "hint": null, "honest": false, "street": "complete" },
+      "intent": { "situation": "handWon", "hint": null, "honest": true, "street": "complete" },
       "mood": ["on tilt", "pleased", "annoyed"],
       "feeling": {
         "version": 1,
@@ -3568,13 +3196,13 @@
         ],
         "bigBlind": 20
       },
-      "intent": { "situation": "handWon", "hint": null, "honest": false, "street": "complete" },
+      "intent": { "situation": "handWon", "hint": null, "honest": true, "street": "complete" },
       "mood": ["on tilt", "pleased", "relieved"],
       "feeling": {
         "version": 1,
         "emotions": [
           { "name": "joy", "intensity": 0.89 },
-          { "name": "relief", "intensity": 0.58 },
+          { "name": "relief", "intensity": 0.59 },
           { "name": "anger", "intensity": 0.57 }
         ],
         "mood": { "octant": "exuberant", "strength": "slightly" },
@@ -3592,10 +3220,10 @@
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
+        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "player", "text": "Bluffing?" },
         { "speaker": "mallorca", "text": "Sure" },
-        { "speaker": "mallorca", "text": "Here we go" },
-        { "speaker": "mallorca", "text": "Here we go" },
         { "speaker": "mallorca", "text": "Here we go" }
       ],
       "text": "Nice hand",
@@ -3619,1271 +3247,1271 @@
   "biases": [
     { "aggression": 1, "bluff": 1, "tightness": 1, "sizing": 1, "stickiness": 1 },
     {
-      "aggression": 0.995544843,
-      "bluff": 0.994909445,
-      "tightness": 1.003191162,
-      "sizing": 0.997453717,
-      "stickiness": 0.995546183
+      "aggression": 0.995657585,
+      "bluff": 0.995038296,
+      "tightness": 1.00311012,
+      "sizing": 0.99751814,
+      "stickiness": 0.995658929
     },
     {
-      "aggression": 0.996310489,
-      "bluff": 0.995784972,
-      "tightness": 1.00264048,
-      "sizing": 0.997891001,
-      "stickiness": 0.996312469
+      "aggression": 0.996367351,
+      "bluff": 0.995849953,
+      "tightness": 1.002599656,
+      "sizing": 0.997923496,
+      "stickiness": 0.996369326
     },
     {
-      "aggression": 0.994983684,
-      "bluff": 0.995654185,
-      "tightness": 1.003941998,
-      "sizing": 0.997824864,
-      "stickiness": 0.991351601
+      "aggression": 0.994990075,
+      "bluff": 0.995661466,
+      "tightness": 1.003937399,
+      "sizing": 0.99782851,
+      "stickiness": 0.991358028
     },
     {
-      "aggression": 0.996265428,
-      "bluff": 0.997105615,
-      "tightness": 1.003015552,
-      "sizing": 0.998549814,
-      "stickiness": 0.992671696
+      "aggression": 0.996268645,
+      "bluff": 0.997109278,
+      "tightness": 1.003013245,
+      "sizing": 0.998551651,
+      "stickiness": 0.992674927
     },
     {
-      "aggression": 0.970996832,
-      "bluff": 0.96510399,
-      "tightness": 1.015454796,
-      "sizing": 0.983833133,
-      "stickiness": 0.984757359
+      "aggression": 0.970703426,
+      "bluff": 0.964766242,
+      "tightness": 1.015661613,
+      "sizing": 0.983666215,
+      "stickiness": 0.98448575
     },
     {
-      "aggression": 0.964264883,
-      "bluff": 0.957376937,
-      "tightness": 1.02039145,
-      "sizing": 0.979984279,
-      "stickiness": 0.978174783
+      "aggression": 0.965296337,
+      "bluff": 0.959948943,
+      "tightness": 1.0157464,
+      "sizing": 0.979642906,
+      "stickiness": 0.98087825
     },
     {
-      "aggression": 0.961887645,
-      "bluff": 0.95466393,
-      "tightness": 1.02223713,
-      "sizing": 0.97861525,
-      "stickiness": 0.975656857
+      "aggression": 0.963620593,
+      "bluff": 0.958021897,
+      "tightness": 1.017135896,
+      "sizing": 0.978687844,
+      "stickiness": 0.978989307
     },
     {
-      "aggression": 0.961887645,
-      "bluff": 0.95466393,
-      "tightness": 1.02223713,
-      "sizing": 0.97861525,
-      "stickiness": 0.975656857
+      "aggression": 0.963620593,
+      "bluff": 0.958021897,
+      "tightness": 1.017135896,
+      "sizing": 0.978687844,
+      "stickiness": 0.978989307
     },
     {
-      "aggression": 0.950557923,
-      "bluff": 0.941649495,
-      "tightness": 1.030609314,
-      "sizing": 0.972145529,
-      "stickiness": 0.96473302
+      "aggression": 0.952230935,
+      "bluff": 0.944975926,
+      "tightness": 1.025359945,
+      "sizing": 0.972158757,
+      "stickiness": 0.96805588
     },
     {
-      "aggression": 0.992718841,
-      "bluff": 0.994607222,
-      "tightness": 0.995499,
-      "sizing": 0.991980001,
-      "stickiness": 0.996067795
+      "aggression": 0.993167867,
+      "bluff": 0.995489977,
+      "tightness": 0.994200671,
+      "sizing": 0.991989968,
+      "stickiness": 0.99694797
     },
     {
-      "aggression": 0.98644371,
-      "bluff": 0.987766511,
-      "tightness": 0.999084041,
-      "sizing": 0.988150181,
-      "stickiness": 0.990139129
+      "aggression": 0.986629274,
+      "bluff": 0.988300368,
+      "tightness": 0.998088204,
+      "sizing": 0.988039375,
+      "stickiness": 0.990699938
     },
     {
-      "aggression": 0.974702641,
-      "bluff": 0.9743638,
-      "tightness": 1.00744156,
-      "sizing": 0.981356422,
-      "stickiness": 0.978372734
+      "aggression": 0.9747271,
+      "bluff": 0.97472191,
+      "tightness": 1.006521092,
+      "sizing": 0.981146234,
+      "stickiness": 0.978782046
     },
     {
-      "aggression": 0.979474169,
-      "bluff": 0.979648314,
-      "tightness": 1.004533398,
-      "sizing": 0.984267057,
-      "stickiness": 0.982934021
+      "aggression": 0.979676995,
+      "bluff": 0.980191793,
+      "tightness": 1.003541846,
+      "sizing": 0.984173173,
+      "stickiness": 0.983500284
     },
     {
-      "aggression": 0.991265428,
-      "bluff": 0.994087559,
-      "tightness": 0.995121198,
-      "sizing": 0.990334504,
-      "stickiness": 0.993121496
+      "aggression": 0.991570265,
+      "bluff": 0.994552733,
+      "tightness": 0.994590768,
+      "sizing": 0.990431289,
+      "stickiness": 0.993564287
     },
     {
-      "aggression": 0.976727,
-      "bluff": 0.977665775,
-      "tightness": 1.004978157,
-      "sizing": 0.981774858,
-      "stickiness": 0.978622965
+      "aggression": 0.977366792,
+      "bluff": 0.978512408,
+      "tightness": 1.004199392,
+      "sizing": 0.982067371,
+      "stickiness": 0.979404288
     },
     {
-      "aggression": 0.97132732,
-      "bluff": 0.971498584,
-      "tightness": 1.008882002,
-      "sizing": 0.978655823,
-      "stickiness": 0.973177138
+      "aggression": 0.971750477,
+      "bluff": 0.972102934,
+      "tightness": 1.00823962,
+      "sizing": 0.978818739,
+      "stickiness": 0.97374468
     },
     {
-      "aggression": 0.975135425,
-      "bluff": 0.976490099,
-      "tightness": 1.004413255,
-      "sizing": 0.980460369,
-      "stickiness": 0.977807424
+      "aggression": 0.975272967,
+      "bluff": 0.976639233,
+      "tightness": 1.004328442,
+      "sizing": 0.980544559,
+      "stickiness": 0.977937017
     },
     {
-      "aggression": 0.988437615,
-      "bluff": 0.996002017,
-      "tightness": 0.992344703,
-      "sizing": 0.988273408,
-      "stickiness": 0.983767643
+      "aggression": 0.988515758,
+      "bluff": 0.996081979,
+      "tightness": 0.992302207,
+      "sizing": 0.988322628,
+      "stickiness": 0.983839413
     },
     {
-      "aggression": 1.010828621,
-      "bluff": 1.019911514,
-      "tightness": 0.979681381,
-      "sizing": 1.001868415,
-      "stickiness": 1.006720449
+      "aggression": 1.010842237,
+      "bluff": 1.019921726,
+      "tightness": 0.979678101,
+      "sizing": 1.00187863,
+      "stickiness": 1.006727279
     },
     {
-      "aggression": 1.005094691,
-      "bluff": 1.013514031,
-      "tightness": 0.98326976,
-      "sizing": 0.998491911,
-      "stickiness": 1.001078016
+      "aggression": 1.00448448,
+      "bluff": 1.01294052,
+      "tightness": 0.982935683,
+      "sizing": 0.998194499,
+      "stickiness": 1.00157584
     },
     {
-      "aggression": 0.99853453,
-      "bluff": 1.006209647,
-      "tightness": 0.987393591,
-      "sizing": 0.994621593,
-      "stickiness": 0.994597712
+      "aggression": 0.997890281,
+      "bluff": 1.005598295,
+      "tightness": 0.987080566,
+      "sizing": 0.994303527,
+      "stickiness": 0.995058349
     },
     {
-      "aggression": 0.991445415,
-      "bluff": 0.998637146,
-      "tightness": 0.989956524,
-      "sizing": 0.990580308,
-      "stickiness": 0.990408094
+      "aggression": 0.991028215,
+      "bluff": 0.998262898,
+      "tightness": 0.989583829,
+      "sizing": 0.990390808,
+      "stickiness": 0.99097313
     },
     {
-      "aggression": 0.992184653,
-      "bluff": 0.996798164,
-      "tightness": 0.983910137,
-      "sizing": 0.996106991,
-      "stickiness": 1.015439781
+      "aggression": 0.9920387,
+      "bluff": 0.996707981,
+      "tightness": 0.983394064,
+      "sizing": 0.996091557,
+      "stickiness": 1.016301031
     },
     {
-      "aggression": 0.987724054,
-      "bluff": 0.991685567,
-      "tightness": 0.987065778,
-      "sizing": 0.993582194,
-      "stickiness": 1.010936385
+      "aggression": 0.987737719,
+      "bluff": 0.991771759,
+      "tightness": 0.986458368,
+      "sizing": 0.993657449,
+      "stickiness": 1.011931892
     },
     {
-      "aggression": 0.979645095,
-      "bluff": 0.982538426,
-      "tightness": 0.992404025,
-      "sizing": 0.989000391,
-      "stickiness": 1.003221943
+      "aggression": 0.97904735,
+      "bluff": 0.98194316,
+      "tightness": 0.992147844,
+      "sizing": 0.988729518,
+      "stickiness": 1.003690356
     },
     {
-      "aggression": 0.979645095,
-      "bluff": 0.982538426,
-      "tightness": 0.992404025,
-      "sizing": 0.989000391,
-      "stickiness": 1.003221943
+      "aggression": 0.97904735,
+      "bluff": 0.98194316,
+      "tightness": 0.992147844,
+      "sizing": 0.988729518,
+      "stickiness": 1.003690356
     },
     {
-      "aggression": 0.969145717,
-      "bluff": 0.970678653,
-      "tightness": 0.99932269,
-      "sizing": 0.983041831,
-      "stickiness": 0.993301957
+      "aggression": 0.968661736,
+      "bluff": 0.970209518,
+      "tightness": 0.998987867,
+      "sizing": 0.98283729,
+      "stickiness": 0.993886231
     },
     {
-      "aggression": 0.924144533,
-      "bluff": 0.914990884,
-      "tightness": 0.998771987,
-      "sizing": 0.960650809,
-      "stickiness": 1.020370029
+      "aggression": 0.923779432,
+      "bluff": 0.914624484,
+      "tightness": 0.998403651,
+      "sizing": 0.96052047,
+      "stickiness": 1.021077301
     },
     {
-      "aggression": 0.917343865,
-      "bluff": 0.908579674,
-      "tightness": 1.001385325,
-      "sizing": 0.955640998,
-      "stickiness": 1.012481221
+      "aggression": 0.914960157,
+      "bluff": 0.904368244,
+      "tightness": 1.006610492,
+      "sizing": 0.955379464,
+      "stickiness": 1.009353729
     },
     {
-      "aggression": 0.909825429,
-      "bluff": 0.8997743,
-      "tightness": 1.00877988,
-      "sizing": 0.951274927,
-      "stickiness": 1.002055701
+      "aggression": 0.906927972,
+      "bluff": 0.895024013,
+      "tightness": 1.01432395,
+      "sizing": 0.950686113,
+      "stickiness": 0.998475561
     },
     {
-      "aggression": 0.918329983,
-      "bluff": 0.909364584,
-      "tightness": 1.004138054,
-      "sizing": 0.956072182,
-      "stickiness": 1.008239718
+      "aggression": 0.915888065,
+      "bluff": 0.905172094,
+      "tightness": 1.009220249,
+      "sizing": 0.955715326,
+      "stickiness": 1.005117528
     },
     {
-      "aggression": 0.984297706,
-      "bluff": 0.99162584,
-      "tightness": 0.993903938,
-      "sizing": 0.987959229,
-      "stickiness": 0.981444571
+      "aggression": 0.983122819,
+      "bluff": 0.989558494,
+      "tightness": 0.996542402,
+      "sizing": 0.987796496,
+      "stickiness": 0.979630088
     },
     {
-      "aggression": 0.949339045,
-      "bluff": 0.951855718,
-      "tightness": 1.019012835,
-      "sizing": 0.967938369,
-      "stickiness": 0.946162569
+      "aggression": 0.947695818,
+      "bluff": 0.949240767,
+      "tightness": 1.022170094,
+      "sizing": 0.967517645,
+      "stickiness": 0.943865388
     },
     {
-      "aggression": 0.939106585,
-      "bluff": 0.940057683,
-      "tightness": 1.027016005,
-      "sizing": 0.962138151,
-      "stickiness": 0.935696347
+      "aggression": 0.937493477,
+      "bluff": 0.937483383,
+      "tightness": 1.0301828,
+      "sizing": 0.961729917,
+      "stickiness": 0.933435399
     },
     {
-      "aggression": 0.947371504,
-      "bluff": 0.949233311,
-      "tightness": 1.021483057,
-      "sizing": 0.966960087,
-      "stickiness": 0.943794104
+      "aggression": 0.946128121,
+      "bluff": 0.947098861,
+      "tightness": 1.024290689,
+      "sizing": 0.96674997,
+      "stickiness": 0.94192101
     },
     {
-      "aggression": 0.952036187,
-      "bluff": 0.960533575,
-      "tightness": 1.018709131,
-      "sizing": 0.972225877,
-      "stickiness": 0.933606224
+      "aggression": 0.950983395,
+      "bluff": 0.958575759,
+      "tightness": 1.021465743,
+      "sizing": 0.972152632,
+      "stickiness": 0.931890282
     },
     {
-      "aggression": 0.950959203,
-      "bluff": 0.951796105,
-      "tightness": 0.98737617,
-      "sizing": 0.978757816,
-      "stickiness": 1.01819796
+      "aggression": 0.950651456,
+      "bluff": 0.951211305,
+      "tightness": 0.988103165,
+      "sizing": 0.978755785,
+      "stickiness": 1.017791192
     },
     {
-      "aggression": 0.94618428,
-      "bluff": 0.948098763,
-      "tightness": 0.98703274,
-      "sizing": 0.974551778,
-      "stickiness": 1.013546505
+      "aggression": 0.945875752,
+      "bluff": 0.947056592,
+      "tightness": 0.988951369,
+      "sizing": 0.974852578,
+      "stickiness": 1.012599482
     },
     {
-      "aggression": 0.940057545,
-      "bluff": 0.940796917,
-      "tightness": 0.992992605,
-      "sizing": 0.970953239,
-      "stickiness": 1.005192021
+      "aggression": 0.93923495,
+      "bluff": 0.939189735,
+      "tightness": 0.995240533,
+      "sizing": 0.970945027,
+      "stickiness": 1.003753557
     },
     {
-      "aggression": 0.948166916,
-      "bluff": 0.951871597,
-      "tightness": 0.983081093,
-      "sizing": 0.974230778,
-      "stickiness": 1.014461843
+      "aggression": 0.947465641,
+      "bluff": 0.950499648,
+      "tightness": 0.984951261,
+      "sizing": 0.97422716,
+      "stickiness": 1.013254735
     },
     {
-      "aggression": 0.983225204,
-      "bluff": 0.990623454,
-      "tightness": 0.997907131,
-      "sizing": 0.985576692,
-      "stickiness": 0.970304022
+      "aggression": 0.982691061,
+      "bluff": 0.989682795,
+      "tightness": 0.999130811,
+      "sizing": 0.98549426,
+      "stickiness": 0.969423966
     },
     {
-      "aggression": 0.974937817,
-      "bluff": 0.98100021,
-      "tightness": 1.00423989,
-      "sizing": 0.980918158,
-      "stickiness": 0.961875633
+      "aggression": 0.974238472,
+      "bluff": 0.979876264,
+      "tightness": 1.005584488,
+      "sizing": 0.980737661,
+      "stickiness": 0.96083476
     },
     {
-      "aggression": 0.967493514,
-      "bluff": 0.972340555,
-      "tightness": 1.010034436,
-      "sizing": 0.976741202,
-      "stickiness": 0.954299142
+      "aggression": 0.965837309,
+      "bluff": 0.970131064,
+      "tightness": 1.012076602,
+      "sizing": 0.976009047,
+      "stickiness": 0.952302087
     },
     {
-      "aggression": 0.967493514,
-      "bluff": 0.972340555,
-      "tightness": 1.010034436,
-      "sizing": 0.976741202,
-      "stickiness": 0.954299142
+      "aggression": 0.965837309,
+      "bluff": 0.970131064,
+      "tightness": 1.012076602,
+      "sizing": 0.976009047,
+      "stickiness": 0.952302087
     },
     {
-      "aggression": 0.942903483,
-      "bluff": 0.944691693,
-      "tightness": 1.021921978,
-      "sizing": 0.963607137,
-      "stickiness": 0.940554788
+      "aggression": 0.942421379,
+      "bluff": 0.943817046,
+      "tightness": 1.023199929,
+      "sizing": 0.963537314,
+      "stickiness": 0.939628141
     },
     {
-      "aggression": 0.943738914,
-      "bluff": 0.940981607,
-      "tightness": 0.997247786,
-      "sizing": 0.972503678,
-      "stickiness": 1.007487432
+      "aggression": 0.943686168,
+      "bluff": 0.940797119,
+      "tightness": 0.997653438,
+      "sizing": 0.972539981,
+      "stickiness": 1.007170389
     },
     {
-      "aggression": 0.941340429,
-      "bluff": 0.941507999,
-      "tightness": 0.991332098,
-      "sizing": 0.968697789,
-      "stickiness": 1.006871861
+      "aggression": 0.941110719,
+      "bluff": 0.941012582,
+      "tightness": 0.99214053,
+      "sizing": 0.968705877,
+      "stickiness": 1.006254978
     },
     {
-      "aggression": 0.939201845,
-      "bluff": 0.93875859,
-      "tightness": 0.994633842,
-      "sizing": 0.967425555,
-      "stickiness": 1.002376327
+      "aggression": 0.938920501,
+      "bluff": 0.938212201,
+      "tightness": 0.995460984,
+      "sizing": 0.96739923,
+      "stickiness": 1.00172112
     },
     {
-      "aggression": 0.943451589,
-      "bluff": 0.943459499,
-      "tightness": 0.992555021,
-      "sizing": 0.969827159,
-      "stickiness": 1.005420999
+      "aggression": 0.943228699,
+      "bluff": 0.942983904,
+      "tightness": 0.993326397,
+      "sizing": 0.969831704,
+      "stickiness": 1.004830165
     },
     {
-      "aggression": 1.016855898,
-      "bluff": 1.037677204,
-      "tightness": 0.969263521,
-      "sizing": 1.005305032,
-      "stickiness": 0.991045334
+      "aggression": 1.017159604,
+      "bluff": 1.038096056,
+      "tightness": 0.968874306,
+      "sizing": 1.005424369,
+      "stickiness": 0.991406723
     },
     {
-      "aggression": 0.996739032,
-      "bluff": 1.014492573,
-      "tightness": 0.983390888,
-      "sizing": 0.99388508,
-      "stickiness": 0.970802691
+      "aggression": 0.997424996,
+      "bluff": 1.015346624,
+      "tightness": 0.982728926,
+      "sizing": 0.994223539,
+      "stickiness": 0.971547533
     },
     {
-      "aggression": 0.994989215,
-      "bluff": 1.012239525,
-      "tightness": 0.985094966,
-      "sizing": 0.99297347,
-      "stickiness": 0.969022457
+      "aggression": 0.997929969,
+      "bluff": 1.015661775,
+      "tightness": 0.982882328,
+      "sizing": 0.994602842,
+      "stickiness": 0.972032843
     },
     {
-      "aggression": 0.999772283,
-      "bluff": 1.017432797,
-      "tightness": 0.982295203,
-      "sizing": 0.995798593,
-      "stickiness": 0.97381468
+      "aggression": 1.001319716,
+      "bluff": 1.019265981,
+      "tightness": 0.981049964,
+      "sizing": 0.996631477,
+      "stickiness": 0.975425136
     },
     {
-      "aggression": 1.01446361,
-      "bluff": 1.039300461,
-      "tightness": 0.973730055,
-      "sizing": 1.006778716,
-      "stickiness": 0.974761673
+      "aggression": 1.01520197,
+      "bluff": 1.040213386,
+      "tightness": 0.973048268,
+      "sizing": 1.007147955,
+      "stickiness": 0.975557252
     },
     {
-      "aggression": 1.05798907,
-      "bluff": 1.091374045,
-      "tightness": 0.944213637,
-      "sizing": 1.027148178,
-      "stickiness": 1.008410328
+      "aggression": 1.058018185,
+      "bluff": 1.091394463,
+      "tightness": 0.944211634,
+      "sizing": 1.027169669,
+      "stickiness": 1.008419505
     },
     {
-      "aggression": 1.047418098,
-      "bluff": 1.078866195,
-      "tightness": 0.951385768,
-      "sizing": 1.021220031,
-      "stickiness": 0.998515958
+      "aggression": 1.047539471,
+      "bluff": 1.078971444,
+      "tightness": 0.951372395,
+      "sizing": 1.02130768,
+      "stickiness": 0.998595996
     },
     {
-      "aggression": 1.032580916,
-      "bluff": 1.061283644,
-      "tightness": 0.962026788,
-      "sizing": 1.013001348,
-      "stickiness": 0.984021574
+      "aggression": 1.032683273,
+      "bluff": 1.061369137,
+      "tightness": 0.962021109,
+      "sizing": 1.013076929,
+      "stickiness": 0.984084454
     },
     {
-      "aggression": 1.033869462,
-      "bluff": 1.062396249,
-      "tightness": 0.961668153,
-      "sizing": 1.013875896,
-      "stickiness": 0.985598395
+      "aggression": 1.033926064,
+      "bluff": 1.062430558,
+      "tightness": 0.961690335,
+      "sizing": 1.013924701,
+      "stickiness": 0.985616288
     },
     {
-      "aggression": 1.042711307,
-      "bluff": 1.072038572,
-      "tightness": 0.95535949,
-      "sizing": 1.017901117,
-      "stickiness": 0.995850031
+      "aggression": 1.042347042,
+      "bluff": 1.071598549,
+      "tightness": 0.955645773,
+      "sizing": 1.017707336,
+      "stickiness": 0.995446762
     },
     {
-      "aggression": 1.030765564,
-      "bluff": 1.058148752,
-      "tightness": 0.963631537,
-      "sizing": 1.011194961,
-      "stickiness": 0.983950152
+      "aggression": 1.030050551,
+      "bluff": 1.057312048,
+      "tightness": 0.964152053,
+      "sizing": 1.010799405,
+      "stickiness": 0.983189147
     },
     {
-      "aggression": 1.022012913,
-      "bluff": 1.047873732,
-      "tightness": 0.969913427,
-      "sizing": 1.006321644,
-      "stickiness": 0.975325136
+      "aggression": 1.022171528,
+      "bluff": 1.048026416,
+      "tightness": 0.969858212,
+      "sizing": 1.006427601,
+      "stickiness": 0.975457988
     },
     {
-      "aggression": 1.022943708,
-      "bluff": 1.049735322,
-      "tightness": 0.967293636,
-      "sizing": 1.006321644,
-      "stickiness": 0.977186726
+      "aggression": 1.023119122,
+      "bluff": 1.049921604,
+      "tightness": 0.967191571,
+      "sizing": 1.006427601,
+      "stickiness": 0.977353177
     },
     {
-      "aggression": 1.033391742,
-      "bluff": 1.061442158,
-      "tightness": 0.960311425,
-      "sizing": 1.012311913,
-      "stickiness": 0.988492621
+      "aggression": 1.033490927,
+      "bluff": 1.061541766,
+      "tightness": 0.960260725,
+      "sizing": 1.012374187,
+      "stickiness": 0.988582062
     },
     {
-      "aggression": 1.072524206,
-      "bluff": 1.109754298,
-      "tightness": 0.935387744,
-      "sizing": 1.036376785,
-      "stickiness": 1.019605789
+      "aggression": 1.072544443,
+      "bluff": 1.109765107,
+      "tightness": 0.935387031,
+      "sizing": 1.036393333,
+      "stickiness": 1.019616855
     },
     {
-      "aggression": 1.056615719,
-      "bluff": 1.091170287,
-      "tightness": 0.945811004,
-      "sizing": 1.027395413,
-      "stickiness": 1.004301772
+      "aggression": 1.055765497,
+      "bluff": 1.090060208,
+      "tightness": 0.946685997,
+      "sizing": 1.027003364,
+      "stickiness": 1.003264017
     },
     {
-      "aggression": 1.015989282,
-      "bluff": 1.044420212,
-      "tightness": 0.973233932,
-      "sizing": 1.004369437,
-      "stickiness": 0.96349697
+      "aggression": 1.015609482,
+      "bluff": 1.043843793,
+      "tightness": 0.973838224,
+      "sizing": 1.004245522,
+      "stickiness": 0.962946502
     },
     {
-      "aggression": 1.02888606,
-      "bluff": 1.058635193,
-      "tightness": 0.965144672,
-      "sizing": 1.011897738,
-      "stickiness": 0.977049308
+      "aggression": 1.028634896,
+      "bluff": 1.058207927,
+      "tightness": 0.965645588,
+      "sizing": 1.011845299,
+      "stickiness": 0.976634027
     },
     {
-      "aggression": 1.008214339,
-      "bluff": 1.030434755,
-      "tightness": 0.947163994,
-      "sizing": 1.013859314,
-      "stickiness": 1.049286256
+      "aggression": 1.007984785,
+      "bluff": 1.030105042,
+      "tightness": 0.947512142,
+      "sizing": 1.013755338,
+      "stickiness": 1.048848541
     },
     {
-      "aggression": 0.970607195,
-      "bluff": 0.987735819,
-      "tightness": 0.968090755,
-      "sizing": 0.992989195,
-      "stickiness": 1.019015695
+      "aggression": 0.972671084,
+      "bluff": 0.989618619,
+      "tightness": 0.971271881,
+      "sizing": 0.993548328,
+      "stickiness": 1.012823127
     },
     {
-      "aggression": 0.960663885,
-      "bluff": 0.978979297,
-      "tightness": 0.968486332,
-      "sizing": 0.985342071,
-      "stickiness": 1.01137877
+      "aggression": 0.961087219,
+      "bluff": 0.976159451,
+      "tightness": 0.979915354,
+      "sizing": 0.986858935,
+      "stickiness": 1.000355628
     },
     {
-      "aggression": 0.975106955,
-      "bluff": 0.995118354,
-      "tightness": 0.960040342,
-      "sizing": 0.993518092,
-      "stickiness": 1.024579089
+      "aggression": 0.975028215,
+      "bluff": 0.991788368,
+      "tightness": 0.971383687,
+      "sizing": 0.99471714,
+      "stickiness": 1.013265305
     },
     {
-      "aggression": 0.986349741,
-      "bluff": 1.0132871,
-      "tightness": 0.954301811,
-      "sizing": 1.002653447,
-      "stickiness": 1.021160806
+      "aggression": 0.985917556,
+      "bluff": 1.009596249,
+      "tightness": 0.965617085,
+      "sizing": 1.003646885,
+      "stickiness": 1.009612423
     },
     {
-      "aggression": 1.079158815,
-      "bluff": 1.121707099,
-      "tightness": 0.915543967,
-      "sizing": 1.043767451,
-      "stickiness": 1.052778522
+      "aggression": 1.079744361,
+      "bluff": 1.122230206,
+      "tightness": 0.916203499,
+      "sizing": 1.043948808,
+      "stickiness": 1.05138187
     },
     {
-      "aggression": 1.063753926,
-      "bluff": 1.103921718,
-      "tightness": 0.924866423,
-      "sizing": 1.034799258,
-      "stickiness": 1.037701294
+      "aggression": 1.065095563,
+      "bluff": 1.105302434,
+      "tightness": 0.925058383,
+      "sizing": 1.035417734,
+      "stickiness": 1.037126398
     },
     {
-      "aggression": 1.042554025,
-      "bluff": 1.079616871,
-      "tightness": 0.937901272,
-      "sizing": 1.022511197,
-      "stickiness": 1.016776516
+      "aggression": 1.043474044,
+      "bluff": 1.080530654,
+      "tightness": 0.938326713,
+      "sizing": 1.022892255,
+      "stickiness": 1.015817589
     },
     {
-      "aggression": 1.038983796,
-      "bluff": 1.075394758,
-      "tightness": 0.940203861,
-      "sizing": 1.020390807,
-      "stickiness": 1.013434088
+      "aggression": 1.039627459,
+      "bluff": 1.075998077,
+      "tightness": 0.94078676,
+      "sizing": 1.020616265,
+      "stickiness": 1.012225744
     },
     {
-      "aggression": 1.036846899,
-      "bluff": 1.065795014,
-      "tightness": 0.93628882,
-      "sizing": 1.028544775,
-      "stickiness": 1.054393392
+      "aggression": 1.037272494,
+      "bluff": 1.066014055,
+      "tightness": 0.937222173,
+      "sizing": 1.028771884,
+      "stickiness": 1.053054911
     },
     {
-      "aggression": 1.026245531,
-      "bluff": 1.053442618,
-      "tightness": 0.943579272,
-      "sizing": 1.022473885,
-      "stickiness": 1.043245244
+      "aggression": 1.026784795,
+      "bluff": 1.053796455,
+      "tightness": 0.944434969,
+      "sizing": 1.022765278,
+      "stickiness": 1.042045852
     },
     {
-      "aggression": 1.022652005,
-      "bluff": 1.049036105,
-      "tightness": 0.946572115,
-      "sizing": 1.020384728,
-      "stickiness": 1.039067216
+      "aggression": 1.02323908,
+      "bluff": 1.049449265,
+      "tightness": 0.947380878,
+      "sizing": 1.020702583,
+      "stickiness": 1.037945069
     },
     {
-      "aggression": 1.0267427,
-      "bluff": 1.057217496,
-      "tightness": 0.935702606,
-      "sizing": 1.020384728,
-      "stickiness": 1.047248607
+      "aggression": 1.027278334,
+      "bluff": 1.057527772,
+      "tightness": 0.936628259,
+      "sizing": 1.020702583,
+      "stickiness": 1.046023576
     },
     {
-      "aggression": 1.033646418,
-      "bluff": 1.064630829,
-      "tightness": 0.932407179,
-      "sizing": 1.024307089,
-      "stickiness": 1.053419499
+      "aggression": 1.03403736,
+      "bluff": 1.06478186,
+      "tightness": 0.933389153,
+      "sizing": 1.024540913,
+      "stickiness": 1.052087311
     },
     {
-      "aggression": 1.05857834,
-      "bluff": 1.08945471,
-      "tightness": 0.939179611,
-      "sizing": 1.032624811,
-      "stickiness": 1.035197701
+      "aggression": 1.058479354,
+      "bluff": 1.089246341,
+      "tightness": 0.939642412,
+      "sizing": 1.032598789,
+      "stickiness": 1.034666572
     },
     {
-      "aggression": 1.042778564,
-      "bluff": 1.071108133,
-      "tightness": 0.949910062,
-      "sizing": 1.023725403,
-      "stickiness": 1.019086366
+      "aggression": 1.042823444,
+      "bluff": 1.071064189,
+      "tightness": 0.950281801,
+      "sizing": 1.023779574,
+      "stickiness": 1.018715356
     },
     {
-      "aggression": 1.010262323,
-      "bluff": 1.034127141,
-      "tightness": 0.971592072,
-      "sizing": 1.005254399,
-      "stickiness": 0.985774908
+      "aggression": 1.010185275,
+      "bluff": 1.033951407,
+      "tightness": 0.972053986,
+      "sizing": 1.005237231,
+      "stickiness": 0.98527896
     },
     {
-      "aggression": 1.019611141,
-      "bluff": 1.044158115,
-      "tightness": 0.966126301,
-      "sizing": 1.010670084,
-      "stickiness": 0.995545732
+      "aggression": 1.019527808,
+      "bluff": 1.043979548,
+      "tightness": 0.966571411,
+      "sizing": 1.010647705,
+      "stickiness": 0.995058316
     },
     {
-      "aggression": 1.010114,
-      "bluff": 1.031496157,
-      "tightness": 0.943075578,
-      "sizing": 1.015598973,
-      "stickiness": 1.062507701
+      "aggression": 1.010089312,
+      "bluff": 1.031434578,
+      "tightness": 0.943299638,
+      "sizing": 1.015592592,
+      "stickiness": 1.062251748
     },
     {
-      "aggression": 0.980210221,
-      "bluff": 0.997424376,
-      "tightness": 0.96244438,
-      "sizing": 0.998587003,
-      "stickiness": 1.032476979
+      "aggression": 0.980305564,
+      "bluff": 0.997499536,
+      "tightness": 0.962600225,
+      "sizing": 0.998647752,
+      "stickiness": 1.032338102
     },
     {
-      "aggression": 0.980179789,
-      "bluff": 0.997105331,
-      "tightness": 0.963399106,
-      "sizing": 0.998452331,
-      "stickiness": 1.031308648
+      "aggression": 0.98117826,
+      "bluff": 0.998203454,
+      "tightness": 0.962977294,
+      "sizing": 0.999022932,
+      "stickiness": 1.032050325
     },
     {
-      "aggression": 0.989660125,
-      "bluff": 1.010593448,
-      "tightness": 0.950932567,
-      "sizing": 1.001704732,
-      "stickiness": 1.042982822
+      "aggression": 0.990111729,
+      "bluff": 1.011071213,
+      "tightness": 0.950861385,
+      "sizing": 1.001967371,
+      "stickiness": 1.043196197
     },
     {
-      "aggression": 1.022116068,
-      "bluff": 1.054290741,
-      "tightness": 0.930535906,
-      "sizing": 1.023497223,
-      "stickiness": 1.06080801
+      "aggression": 1.0222679,
+      "bluff": 1.054431716,
+      "tightness": 0.930643195,
+      "sizing": 1.023589812,
+      "stickiness": 1.060731229
     },
     {
-      "aggression": 1.076618782,
-      "bluff": 1.116199785,
-      "tightness": 0.918099897,
-      "sizing": 1.043507354,
-      "stickiness": 1.058260461
+      "aggression": 1.076544756,
+      "bluff": 1.11612402,
+      "tightness": 0.918200279,
+      "sizing": 1.043469166,
+      "stickiness": 1.05813062
     },
     {
-      "aggression": 1.064913663,
-      "bluff": 1.102232665,
-      "tightness": 0.926248444,
-      "sizing": 1.036970975,
-      "stickiness": 1.046226636
+      "aggression": 1.064289218,
+      "bluff": 1.10155429,
+      "tightness": 0.926658588,
+      "sizing": 1.036617018,
+      "stickiness": 1.045533516
     },
     {
-      "aggression": 1.047350894,
-      "bluff": 1.081842894,
-      "tightness": 0.937910743,
-      "sizing": 1.02707547,
-      "stickiness": 1.028197975
+      "aggression": 1.047103856,
+      "bluff": 1.081578262,
+      "tightness": 0.938110334,
+      "sizing": 1.026936276,
+      "stickiness": 1.027897873
     },
     {
-      "aggression": 1.044197657,
-      "bluff": 1.07785276,
-      "tightness": 0.940513064,
-      "sizing": 1.025340936,
-      "stickiness": 1.024979939
+      "aggression": 1.044088874,
+      "bluff": 1.077741587,
+      "tightness": 0.94062954,
+      "sizing": 1.025280239,
+      "stickiness": 1.024823535
     },
     {
-      "aggression": 1.084982489,
-      "bluff": 1.127589155,
-      "tightness": 0.919467682,
-      "sizing": 1.047364504,
-      "stickiness": 1.04664282
+      "aggression": 1.085295228,
+      "bluff": 1.127976476,
+      "tightness": 0.91925328,
+      "sizing": 1.047526944,
+      "stickiness": 1.046991432
     },
     {
-      "aggression": 1.075570991,
-      "bluff": 1.116987652,
-      "tightness": 0.924921244,
-      "sizing": 1.041910102,
-      "stickiness": 1.037268359
+      "aggression": 1.076232475,
+      "bluff": 1.117755503,
+      "tightness": 0.924504947,
+      "sizing": 1.042272489,
+      "stickiness": 1.037988949
     },
     {
-      "aggression": 1.065596377,
-      "bluff": 1.105719268,
-      "tightness": 0.93084757,
-      "sizing": 1.036151608,
-      "stickiness": 1.02729569
+      "aggression": 1.064730147,
+      "bluff": 1.104805871,
+      "tightness": 0.931339113,
+      "sizing": 1.035645228,
+      "stickiness": 1.026381353
     },
     {
-      "aggression": 1.065596377,
-      "bluff": 1.105719268,
-      "tightness": 0.93084757,
-      "sizing": 1.036151608,
-      "stickiness": 1.02729569
+      "aggression": 1.064730147,
+      "bluff": 1.104805871,
+      "tightness": 0.931339113,
+      "sizing": 1.035645228,
+      "stickiness": 1.026381353
     },
     {
-      "aggression": 1.043260624,
-      "bluff": 1.081218848,
-      "tightness": 0.940590752,
-      "sizing": 1.024074153,
-      "stickiness": 1.011708205
+      "aggression": 1.043069221,
+      "bluff": 1.081037876,
+      "tightness": 0.940708177,
+      "sizing": 1.023952641,
+      "stickiness": 1.011493029
     },
     {
-      "aggression": 1.053063202,
-      "bluff": 1.092222469,
-      "tightness": 0.915050436,
-      "sizing": 1.033296625,
-      "stickiness": 1.064817906
+      "aggression": 1.053092116,
+      "bluff": 1.09238845,
+      "tightness": 0.914806173,
+      "sizing": 1.03322736,
+      "stickiness": 1.064954883
     },
     {
-      "aggression": 1.043329807,
-      "bluff": 1.080325868,
-      "tightness": 0.922603071,
-      "sizing": 1.02779597,
-      "stickiness": 1.05384752
+      "aggression": 1.044333182,
+      "bluff": 1.081601597,
+      "tightness": 0.921770094,
+      "sizing": 1.028285186,
+      "stickiness": 1.054957189
     },
     {
-      "aggression": 1.024931269,
-      "bluff": 1.058565816,
-      "tightness": 0.935583058,
-      "sizing": 1.017337438,
-      "stickiness": 1.03427118
+      "aggression": 1.026628446,
+      "bluff": 1.060631105,
+      "tightness": 0.934300032,
+      "sizing": 1.01822475,
+      "stickiness": 1.036073112
     },
     {
-      "aggression": 1.03002359,
-      "bluff": 1.064004626,
-      "tightness": 0.933245748,
-      "sizing": 1.0202703,
-      "stickiness": 1.038785938
+      "aggression": 1.030888584,
+      "bluff": 1.065118776,
+      "tightness": 0.932486502,
+      "sizing": 1.020683106,
+      "stickiness": 1.039755377
     },
     {
-      "aggression": 1.057378698,
-      "bluff": 1.093765676,
-      "tightness": 0.937401868,
-      "sizing": 1.029592844,
-      "stickiness": 1.018938282
+      "aggression": 1.055678792,
+      "bluff": 1.091443647,
+      "tightness": 0.939431779,
+      "sizing": 1.028886327,
+      "stickiness": 1.016763353
     },
     {
-      "aggression": 1.032764926,
-      "bluff": 1.06539391,
-      "tightness": 0.953584191,
-      "sizing": 1.015621562,
-      "stickiness": 0.994227204
+      "aggression": 1.028712157,
+      "bluff": 1.060398573,
+      "tightness": 0.957201178,
+      "sizing": 1.013566015,
+      "stickiness": 0.989690876
     },
     {
-      "aggression": 1.024138225,
-      "bluff": 1.055202578,
-      "tightness": 0.959769775,
-      "sizing": 1.010793795,
-      "stickiness": 0.985640054
+      "aggression": 1.02480201,
+      "bluff": 1.055579705,
+      "tightness": 0.960320515,
+      "sizing": 1.011431615,
+      "stickiness": 0.98586248
     },
     {
-      "aggression": 1.027612275,
-      "bluff": 1.058781424,
-      "tightness": 0.958077506,
-      "sizing": 1.012885197,
-      "stickiness": 0.989247829
+      "aggression": 1.02767007,
+      "bluff": 1.058476245,
+      "tightness": 0.959003758,
+      "sizing": 1.013171595,
+      "stickiness": 0.988868586
     },
     {
-      "aggression": 1.031045315,
-      "bluff": 1.067230735,
-      "tightness": 0.957154025,
-      "sizing": 1.01718583,
-      "stickiness": 0.980362774
+      "aggression": 1.030711287,
+      "bluff": 1.066481738,
+      "tightness": 0.958329249,
+      "sizing": 1.01724682,
+      "stickiness": 0.97959162
     },
     {
-      "aggression": 0.995970676,
-      "bluff": 1.016823587,
-      "tightness": 0.94357464,
-      "sizing": 1.009287967,
-      "stickiness": 1.06023186
+      "aggression": 0.995722463,
+      "bluff": 1.016447776,
+      "tightness": 0.944004881,
+      "sizing": 1.0092151,
+      "stickiness": 1.0598744
     },
     {
-      "aggression": 0.984728061,
-      "bluff": 1.00348225,
-      "tightness": 0.952651261,
-      "sizing": 1.002647613,
-      "stickiness": 1.046500989
+      "aggression": 0.98506984,
+      "bluff": 1.003785241,
+      "tightness": 0.952696108,
+      "sizing": 1.002908779,
+      "stickiness": 1.046738823
     },
     {
-      "aggression": 0.968151781,
-      "bluff": 0.984061963,
-      "tightness": 0.965375305,
-      "sizing": 0.992961726,
-      "stickiness": 1.027520775
+      "aggression": 0.968167531,
+      "bluff": 0.983996828,
+      "tightness": 0.965627201,
+      "sizing": 0.99303368,
+      "stickiness": 1.027438067
     },
     {
-      "aggression": 0.979485402,
-      "bluff": 0.999980121,
-      "tightness": 0.951008711,
-      "sizing": 0.99719723,
-      "stickiness": 1.041408671
+      "aggression": 0.979398133,
+      "bluff": 0.999816531,
+      "tightness": 0.951273168,
+      "sizing": 0.9971975,
+      "stickiness": 1.041245564
     },
     {
-      "aggression": 0.971120257,
-      "bluff": 0.986877674,
-      "tightness": 0.949620477,
-      "sizing": 0.997664581,
-      "stickiness": 1.063786885
+      "aggression": 0.970858604,
+      "bluff": 0.9865754,
+      "tightness": 0.949848261,
+      "sizing": 0.997525626,
+      "stickiness": 1.063526123
     },
     {
-      "aggression": 0.959261981,
-      "bluff": 0.973203198,
-      "tightness": 0.957261464,
-      "sizing": 0.990907495,
-      "stickiness": 1.05247795
+      "aggression": 0.958893297,
+      "bluff": 0.972779549,
+      "tightness": 0.957560693,
+      "sizing": 0.99070677,
+      "stickiness": 1.05211132
     },
     {
-      "aggression": 0.953976679,
-      "bluff": 0.967041838,
-      "tightness": 0.960675124,
-      "sizing": 0.987904469,
-      "stickiness": 1.047733734
+      "aggression": 0.952901591,
+      "bluff": 0.965811911,
+      "tightness": 0.961439958,
+      "sizing": 0.987299582,
+      "stickiness": 1.046662425
     },
     {
-      "aggression": 0.953976679,
-      "bluff": 0.967041838,
-      "tightness": 0.960675124,
-      "sizing": 0.987904469,
-      "stickiness": 1.047733734
+      "aggression": 0.952901591,
+      "bluff": 0.965811911,
+      "tightness": 0.961439958,
+      "sizing": 0.987299582,
+      "stickiness": 1.046662425
     },
     {
-      "aggression": 0.941307623,
-      "bluff": 0.9524464,
-      "tightness": 0.969032026,
-      "sizing": 0.980681774,
-      "stickiness": 1.035610885
+      "aggression": 0.941039857,
+      "bluff": 0.952139849,
+      "tightness": 0.969266509,
+      "sizing": 0.980537511,
+      "stickiness": 1.035347178
     },
     {
-      "aggression": 1.029315147,
-      "bluff": 1.055544581,
-      "tightness": 0.951726681,
-      "sizing": 1.015089991,
-      "stickiness": 1.017211613
+      "aggression": 1.029610497,
+      "bluff": 1.056284536,
+      "tightness": 0.950583516,
+      "sizing": 1.015008912,
+      "stickiness": 1.018058566
     },
     {
-      "aggression": 1.012187925,
-      "bluff": 1.035404938,
-      "tightness": 0.964180845,
-      "sizing": 1.005442051,
-      "stickiness": 0.999542901
+      "aggression": 1.01276796,
+      "bluff": 1.036459305,
+      "tightness": 0.962846232,
+      "sizing": 1.00553014,
+      "stickiness": 1.000660979
     },
     {
-      "aggression": 0.975346833,
-      "bluff": 0.99280668,
-      "tightness": 0.990472728,
-      "sizing": 0.984515969,
-      "stickiness": 0.962167434
+      "aggression": 0.975705315,
+      "bluff": 0.993599364,
+      "tightness": 0.989243185,
+      "sizing": 0.984483116,
+      "stickiness": 0.963051306
     },
     {
-      "aggression": 1.00111291,
-      "bluff": 1.024817332,
-      "tightness": 0.966134785,
-      "sizing": 0.997368735,
-      "stickiness": 0.991134209
+      "aggression": 1.001318225,
+      "bluff": 1.025339921,
+      "tightness": 0.965303917,
+      "sizing": 0.997311777,
+      "stickiness": 0.991751854
     },
     {
-      "aggression": 1.027225436,
-      "bluff": 1.053173389,
-      "tightness": 0.961999791,
-      "sizing": 1.009121088,
-      "stickiness": 0.992125625
+      "aggression": 1.027680351,
+      "bluff": 1.05385161,
+      "tightness": 0.961344062,
+      "sizing": 1.009284383,
+      "stickiness": 0.992790383
     },
     {
-      "aggression": 0.998409347,
-      "bluff": 1.021489356,
-      "tightness": 0.978334839,
-      "sizing": 0.991830163,
-      "stickiness": 0.964638284
+      "aggression": 0.999480226,
+      "bluff": 1.022740956,
+      "tightness": 0.977560863,
+      "sizing": 0.992430626,
+      "stickiness": 0.96578068
     },
     {
-      "aggression": 1.011964717,
-      "bluff": 1.036787602,
-      "tightness": 0.969174795,
-      "sizing": 0.999585892,
-      "stickiness": 0.978778813
+      "aggression": 1.01117639,
+      "bluff": 1.035929027,
+      "tightness": 0.96964877,
+      "sizing": 0.999119402,
+      "stickiness": 0.97803916
     },
     {
-      "aggression": 1.020328477,
-      "bluff": 1.046068515,
-      "tightness": 0.963851763,
-      "sizing": 1.004438428,
-      "stickiness": 0.987568066
+      "aggression": 1.019697005,
+      "bluff": 1.045219574,
+      "tightness": 0.964633625,
+      "sizing": 1.004173783,
+      "stickiness": 0.986792862
     },
     {
-      "aggression": 1.041141965,
-      "bluff": 1.075764921,
-      "tightness": 0.951542748,
-      "sizing": 1.019122416,
-      "stickiness": 0.992732966
+      "aggression": 1.040699651,
+      "bluff": 1.075128225,
+      "tightness": 0.952187209,
+      "sizing": 1.018967621,
+      "stickiness": 0.992152845
     },
     {
-      "aggression": 1.087068346,
-      "bluff": 1.130769944,
-      "tightness": 0.925331874,
-      "sizing": 1.045862643,
-      "stickiness": 1.026942145
+      "aggression": 1.086985993,
+      "bluff": 1.130712334,
+      "tightness": 0.925344098,
+      "sizing": 1.045800242,
+      "stickiness": 1.026904167
     },
     {
-      "aggression": 1.077974722,
-      "bluff": 1.120133942,
-      "tightness": 0.930623734,
-      "sizing": 1.040556654,
-      "stickiness": 1.019095249
+      "aggression": 1.078216101,
+      "bluff": 1.120443863,
+      "tightness": 0.930437193,
+      "sizing": 1.040679528,
+      "stickiness": 1.019385599
     },
     {
-      "aggression": 1.077741816,
-      "bluff": 1.119553702,
-      "tightness": 0.930510123,
-      "sizing": 1.040326126,
-      "stickiness": 1.020226436
+      "aggression": 1.077840451,
+      "bluff": 1.119701706,
+      "tightness": 0.930411301,
+      "sizing": 1.04036725,
+      "stickiness": 1.020371611
     },
     {
-      "aggression": 1.077973119,
-      "bluff": 1.119655524,
-      "tightness": 0.930244672,
-      "sizing": 1.040411482,
-      "stickiness": 1.021144059
+      "aggression": 1.077982453,
+      "bluff": 1.119702355,
+      "tightness": 0.930200646,
+      "sizing": 1.040401448,
+      "stickiness": 1.021198204
     },
     {
-      "aggression": 1.070770893,
-      "bluff": 1.109531736,
-      "tightness": 0.935812191,
-      "sizing": 1.036135817,
-      "stickiness": 1.017032817
+      "aggression": 1.070938174,
+      "bluff": 1.109709762,
+      "tightness": 0.935781704,
+      "sizing": 1.036247412,
+      "stickiness": 1.017190461
     },
     {
-      "aggression": 1.061906294,
-      "bluff": 1.099095704,
-      "tightness": 0.941814608,
-      "sizing": 1.031185104,
-      "stickiness": 1.008351723
+      "aggression": 1.062377047,
+      "bluff": 1.099617747,
+      "tightness": 0.941591024,
+      "sizing": 1.031469938,
+      "stickiness": 1.00882164
     },
     {
-      "aggression": 1.053327237,
-      "bluff": 1.08898632,
-      "tightness": 0.947704215,
-      "sizing": 1.026395554,
-      "stickiness": 0.999967408
+      "aggression": 1.050433996,
+      "bluff": 1.085706684,
+      "tightness": 0.949614288,
+      "sizing": 1.024751299,
+      "stickiness": 0.996995191
     },
     {
-      "aggression": 1.053327237,
-      "bluff": 1.08898632,
-      "tightness": 0.947704215,
-      "sizing": 1.026395554,
-      "stickiness": 0.999967408
+      "aggression": 1.050433996,
+      "bluff": 1.085706684,
+      "tightness": 0.949614288,
+      "sizing": 1.024751299,
+      "stickiness": 0.996995191
     },
     {
-      "aggression": 1.030035034,
-      "bluff": 1.062230676,
-      "tightness": 0.963221151,
-      "sizing": 1.013172018,
-      "stickiness": 0.9765623
+      "aggression": 1.029524839,
+      "bluff": 1.061644792,
+      "tightness": 0.963626385,
+      "sizing": 1.012893345,
+      "stickiness": 0.976032771
     },
     {
-      "aggression": 1.000960903,
-      "bluff": 1.018937273,
-      "tightness": 0.95842566,
-      "sizing": 1.007398178,
-      "stickiness": 1.034929449
+      "aggression": 1.00088126,
+      "bluff": 1.018846831,
+      "tightness": 0.958579196,
+      "sizing": 1.007345205,
+      "stickiness": 1.034728942
     },
     {
-      "aggression": 0.979949119,
-      "bluff": 0.994507122,
-      "tightness": 0.973903126,
-      "sizing": 0.995275553,
-      "stickiness": 1.01221376
+      "aggression": 0.979553098,
+      "bluff": 0.994057091,
+      "tightness": 0.974269489,
+      "sizing": 0.995041195,
+      "stickiness": 1.011703133
     },
     {
-      "aggression": 0.937543208,
-      "bluff": 0.945659162,
-      "tightness": 1.004994865,
-      "sizing": 0.970932039,
-      "stickiness": 0.96819797
+      "aggression": 0.93738137,
+      "bluff": 0.945478127,
+      "tightness": 1.00521054,
+      "sizing": 0.970830746,
+      "stickiness": 0.967926478
     },
     {
-      "aggression": 0.953060014,
-      "bluff": 0.96317814,
-      "tightness": 0.994695533,
-      "sizing": 0.97973283,
-      "stickiness": 0.982883383
+      "aggression": 0.952939452,
+      "bluff": 0.96304506,
+      "tightness": 0.99487461,
+      "sizing": 0.979654824,
+      "stickiness": 0.982655993
     },
     {
-      "aggression": 0.963442861,
-      "bluff": 0.974770463,
-      "tightness": 0.962656736,
-      "sizing": 0.99146656,
-      "stickiness": 1.048987001
+      "aggression": 0.963809818,
+      "bluff": 0.975200413,
+      "tightness": 0.962494109,
+      "sizing": 0.991660907,
+      "stickiness": 1.049237574
     },
     {
-      "aggression": 0.935385438,
-      "bluff": 0.947583543,
-      "tightness": 0.969707675,
-      "sizing": 0.971943706,
-      "stickiness": 1.025435813
+      "aggression": 0.936582184,
+      "bluff": 0.949028453,
+      "tightness": 0.968818705,
+      "sizing": 0.972567461,
+      "stickiness": 1.026594201
     },
     {
-      "aggression": 0.949207228,
-      "bluff": 0.963098509,
-      "tightness": 0.961717059,
-      "sizing": 0.979748733,
-      "stickiness": 1.037633151
+      "aggression": 0.950786072,
+      "bluff": 0.964979183,
+      "tightness": 0.960592587,
+      "sizing": 0.980591079,
+      "stickiness": 1.039172984
     },
     {
-      "aggression": 0.960409516,
-      "bluff": 0.975622924,
-      "tightness": 0.95554631,
-      "sizing": 0.986056961,
-      "stickiness": 1.047232615
+      "aggression": 0.961210062,
+      "bluff": 0.976614392,
+      "tightness": 0.954940775,
+      "sizing": 0.986455316,
+      "stickiness": 1.047998494
     },
     {
-      "aggression": 0.982081581,
-      "bluff": 1.005907728,
-      "tightness": 0.943736077,
-      "sizing": 1.001237262,
-      "stickiness": 1.052709662
+      "aggression": 0.982432632,
+      "bluff": 1.006386067,
+      "tightness": 0.943428658,
+      "sizing": 1.001379268,
+      "stickiness": 1.053030321
     },
     {
-      "aggression": 1.053950755,
-      "bluff": 1.089795956,
-      "tightness": 0.931411841,
-      "sizing": 1.028717617,
-      "stickiness": 1.035362851
+      "aggression": 1.053866905,
+      "bluff": 1.089727051,
+      "tightness": 0.931461737,
+      "sizing": 1.028656187,
+      "stickiness": 1.035278713
     },
     {
-      "aggression": 1.048355247,
-      "bluff": 1.083778748,
-      "tightness": 0.93364087,
-      "sizing": 1.024956433,
-      "stickiness": 1.030687292
+      "aggression": 1.048174712,
+      "bluff": 1.08362717,
+      "tightness": 0.933687164,
+      "sizing": 1.024821826,
+      "stickiness": 1.030538379
     },
     {
-      "aggression": 1.047587965,
-      "bluff": 1.082122638,
-      "tightness": 0.935513385,
-      "sizing": 1.024707923,
-      "stickiness": 1.029569141
+      "aggression": 1.047490794,
+      "bluff": 1.082065822,
+      "tightness": 0.935508096,
+      "sizing": 1.024621231,
+      "stickiness": 1.029504549
     },
     {
-      "aggression": 1.047630427,
-      "bluff": 1.081785338,
-      "tightness": 0.936169924,
-      "sizing": 1.024823712,
-      "stickiness": 1.029452228
+      "aggression": 1.047555131,
+      "bluff": 1.081753355,
+      "tightness": 0.93615102,
+      "sizing": 1.024749662,
+      "stickiness": 1.029409883
     },
     {
-      "aggression": 1.075118568,
-      "bluff": 1.116002834,
-      "tightness": 0.932709266,
-      "sizing": 1.040522428,
-      "stickiness": 1.020961961
+      "aggression": 1.075467893,
+      "bluff": 1.116586961,
+      "tightness": 0.932113993,
+      "sizing": 1.04060566,
+      "stickiness": 1.021521826
     },
     {
-      "aggression": 1.067294532,
-      "bluff": 1.106727098,
-      "tightness": 0.938024341,
-      "sizing": 1.036142237,
-      "stickiness": 1.013362547
+      "aggression": 1.067906622,
+      "bluff": 1.10760788,
+      "tightness": 0.937262854,
+      "sizing": 1.036377082,
+      "stickiness": 1.01418606
     },
     {
-      "aggression": 1.05431991,
-      "bluff": 1.091601407,
-      "tightness": 0.946659546,
-      "sizing": 1.028814072,
-      "stickiness": 1.000558196
+      "aggression": 1.054994868,
+      "bluff": 1.092552036,
+      "tightness": 0.945848135,
+      "sizing": 1.029086045,
+      "stickiness": 1.001443185
     },
     {
-      "aggression": 1.05431991,
-      "bluff": 1.091601407,
-      "tightness": 0.946659546,
-      "sizing": 1.028814072,
-      "stickiness": 1.000558196
+      "aggression": 1.054994868,
+      "bluff": 1.092552036,
+      "tightness": 0.945848135,
+      "sizing": 1.029086045,
+      "stickiness": 1.001443185
     },
     {
-      "aggression": 1.035601368,
-      "bluff": 1.069944652,
-      "tightness": 0.95919011,
-      "sizing": 1.018198906,
-      "stickiness": 0.981963295
+      "aggression": 1.035760412,
+      "bluff": 1.070306972,
+      "tightness": 0.958697983,
+      "sizing": 1.018176914,
+      "stickiness": 0.982325536
     },
     {
-      "aggression": 1.078166073,
-      "bluff": 1.119049819,
-      "tightness": 0.928810787,
-      "sizing": 1.040057978,
-      "stickiness": 1.026987133
+      "aggression": 1.078088181,
+      "bluff": 1.119000216,
+      "tightness": 0.928821294,
+      "sizing": 1.039996613,
+      "stickiness": 1.026944713
     },
     {
-      "aggression": 1.061546966,
-      "bluff": 1.099936413,
-      "tightness": 0.938833013,
-      "sizing": 1.030449787,
-      "stickiness": 1.01130327
+      "aggression": 1.060829575,
+      "bluff": 1.099164192,
+      "tightness": 0.939241185,
+      "sizing": 1.030021617,
+      "stickiness": 1.010608033
     },
     {
-      "aggression": 1.04530936,
-      "bluff": 1.081266365,
-      "tightness": 0.948822802,
-      "sizing": 1.021056337,
-      "stickiness": 0.996016888
+      "aggression": 1.044415943,
+      "bluff": 1.080294409,
+      "tightness": 0.949351824,
+      "sizing": 1.020527265,
+      "stickiness": 0.995143895
     },
     {
-      "aggression": 1.057151758,
-      "bluff": 1.094475111,
-      "tightness": 0.941277799,
-      "sizing": 1.027812561,
-      "stickiness": 1.008765488
+      "aggression": 1.056669936,
+      "bluff": 1.093969914,
+      "tightness": 0.941540122,
+      "sizing": 1.02751935,
+      "stickiness": 1.008309478
     },
     {
-      "aggression": 1.077155964,
-      "bluff": 1.120121598,
-      "tightness": 0.929133789,
-      "sizing": 1.040499733,
-      "stickiness": 1.021957836
+      "aggression": 1.075591778,
+      "bluff": 1.118394479,
+      "tightness": 0.93004945,
+      "sizing": 1.039587314,
+      "stickiness": 1.020391583
     },
     {
-      "aggression": 1.044403729,
-      "bluff": 1.082932754,
-      "tightness": 0.949410019,
-      "sizing": 1.021683268,
-      "stickiness": 0.989192607
+      "aggression": 1.040217356,
+      "bluff": 1.078230475,
+      "tightness": 0.952047289,
+      "sizing": 1.019269781,
+      "stickiness": 0.984968604
     },
     {
-      "aggression": 1.053937882,
-      "bluff": 1.093536774,
-      "tightness": 0.94326925,
-      "sizing": 1.027094099,
-      "stickiness": 0.999610365
+      "aggression": 1.051364422,
+      "bluff": 1.09066562,
+      "tightness": 0.944849975,
+      "sizing": 1.025603648,
+      "stickiness": 0.99702021
     },
     {
-      "aggression": 1.062502034,
-      "bluff": 1.103018595,
-      "tightness": 0.937828876,
-      "sizing": 1.031953806,
-      "stickiness": 1.009072263
+      "aggression": 1.061182923,
+      "bluff": 1.101568024,
+      "tightness": 0.938609113,
+      "sizing": 1.031181676,
+      "stickiness": 1.007758066
     },
     {
-      "aggression": 1.07517338,
-      "bluff": 1.12235842,
-      "tightness": 0.930278665,
-      "sizing": 1.041173138,
-      "stickiness": 1.009944171
+      "aggression": 1.07455199,
+      "bluff": 1.12169027,
+      "tightness": 0.930623781,
+      "sizing": 1.040801745,
+      "stickiness": 1.00935439
     },
     {
-      "aggression": 1.105205066,
-      "bluff": 1.154704305,
-      "tightness": 0.911773103,
-      "sizing": 1.057876867,
-      "stickiness": 1.045625928
+      "aggression": 1.10513822,
+      "bluff": 1.154664961,
+      "tightness": 0.91177871,
+      "sizing": 1.057823725,
+      "stickiness": 1.045591406
     },
     {
-      "aggression": 1.091294244,
-      "bluff": 1.138576717,
-      "tightness": 0.919817635,
-      "sizing": 1.049794022,
-      "stickiness": 1.032846515
+      "aggression": 1.091693009,
+      "bluff": 1.13906107,
+      "tightness": 0.919546723,
+      "sizing": 1.050007651,
+      "stickiness": 1.03329098
     },
     {
-      "aggression": 1.073359285,
-      "bluff": 1.117920216,
-      "tightness": 0.930452135,
-      "sizing": 1.03940766,
-      "stickiness": 1.015921344
+      "aggression": 1.073607254,
+      "bluff": 1.118234532,
+      "tightness": 0.93026698,
+      "sizing": 1.039535065,
+      "stickiness": 1.016210287
     },
     {
-      "aggression": 1.062476506,
-      "bluff": 1.105652422,
-      "tightness": 0.935221139,
-      "sizing": 1.033395304,
-      "stickiness": 1.009013649
+      "aggression": 1.062402979,
+      "bluff": 1.105612426,
+      "tightness": 0.93515984,
+      "sizing": 1.033349815,
+      "stickiness": 1.00911358
     },
     {
-      "aggression": 1.058745621,
-      "bluff": 1.093834179,
-      "tightness": 0.930433518,
-      "sizing": 1.041399986,
-      "stickiness": 1.054409437
+      "aggression": 1.058502318,
+      "bluff": 1.093676318,
+      "tightness": 0.930282448,
+      "sizing": 1.041214894,
+      "stickiness": 1.054480223
     },
     {
-      "aggression": 1.051879169,
-      "bluff": 1.087741369,
-      "tightness": 0.930530934,
-      "sizing": 1.036111533,
-      "stickiness": 1.049581889
+      "aggression": 1.051348757,
+      "bluff": 1.087177755,
+      "tightness": 0.930739586,
+      "sizing": 1.035815213,
+      "stickiness": 1.049270475
     },
     {
-      "aggression": 1.051372001,
-      "bluff": 1.086796785,
-      "tightness": 0.931491701,
-      "sizing": 1.035796311,
-      "stickiness": 1.048749766
+      "aggression": 1.050335296,
+      "bluff": 1.085658938,
+      "tightness": 0.932012113,
+      "sizing": 1.035212205,
+      "stickiness": 1.047927288
     },
     {
-      "aggression": 1.051372001,
-      "bluff": 1.086796785,
-      "tightness": 0.931491701,
-      "sizing": 1.035796311,
-      "stickiness": 1.048749766
+      "aggression": 1.050335296,
+      "bluff": 1.085658938,
+      "tightness": 0.932012113,
+      "sizing": 1.035212205,
+      "stickiness": 1.047927288
     },
     {
-      "aggression": 1.044124653,
-      "bluff": 1.078221509,
-      "tightness": 0.936569761,
-      "sizing": 1.031643313,
-      "stickiness": 1.041181013
+      "aggression": 1.043862799,
+      "bluff": 1.077960484,
+      "tightness": 0.936622239,
+      "sizing": 1.031500448,
+      "stickiness": 1.0411304
     },
     {
-      "aggression": 1.074145846,
-      "bluff": 1.110697079,
-      "tightness": 0.931603772,
-      "sizing": 1.042837684,
-      "stickiness": 1.040348235
+      "aggression": 1.074092552,
+      "bluff": 1.110681801,
+      "tightness": 0.93156625,
+      "sizing": 1.042794287,
+      "stickiness": 1.040369507
     },
     {
-      "aggression": 1.053828521,
-      "bluff": 1.08721517,
-      "tightness": 0.944958463,
-      "sizing": 1.031342765,
-      "stickiness": 1.019799679
+      "aggression": 1.054127747,
+      "bluff": 1.087590807,
+      "tightness": 0.944705648,
+      "sizing": 1.031501147,
+      "stickiness": 1.020186198
     },
     {
-      "aggression": 1.0135528,
-      "bluff": 1.041321219,
-      "tightness": 0.97168733,
-      "sizing": 1.008446817,
-      "stickiness": 0.978789801
+      "aggression": 1.013618215,
+      "bluff": 1.041434481,
+      "tightness": 0.971575732,
+      "sizing": 1.008472022,
+      "stickiness": 0.978935445
     },
     {
-      "aggression": 1.026105539,
-      "bluff": 1.055023461,
-      "tightness": 0.963945106,
-      "sizing": 1.015658106,
-      "stickiness": 0.99193992
+      "aggression": 1.026100923,
+      "bluff": 1.055057754,
+      "tightness": 0.963882864,
+      "sizing": 1.015643838,
+      "stickiness": 0.992010144
     },
     {
-      "aggression": 1.028398984,
-      "bluff": 1.055236195,
-      "tightness": 0.937174604,
-      "sizing": 1.026209366,
-      "stickiness": 1.063624253
+      "aggression": 1.029152365,
+      "bluff": 1.056502166,
+      "tightness": 0.935744796,
+      "sizing": 1.026390374,
+      "stickiness": 1.064973845
     },
     {
-      "aggression": 1.002101009,
-      "bluff": 1.025212271,
-      "tightness": 0.954144493,
-      "sizing": 1.011212262,
-      "stickiness": 1.036983499
+      "aggression": 1.003759364,
+      "bluff": 1.027500965,
+      "tightness": 0.952099035,
+      "sizing": 1.01190686,
+      "stickiness": 1.03922044
     },
     {
-      "aggression": 1.001752561,
-      "bluff": 1.024527461,
-      "tightness": 0.955135541,
-      "sizing": 1.010902617,
-      "stickiness": 1.035811068
+      "aggression": 1.002828948,
+      "bluff": 1.026150693,
+      "tightness": 0.953468901,
+      "sizing": 1.01127162,
+      "stickiness": 1.037465869
     },
     {
-      "aggression": 1.006663014,
-      "bluff": 1.02978948,
-      "tightness": 0.952816628,
-      "sizing": 1.013569061,
-      "stickiness": 1.039812785
+      "aggression": 1.007346562,
+      "bluff": 1.030960493,
+      "tightness": 0.951423362,
+      "sizing": 1.013720433,
+      "stickiness": 1.041070048
     },
     {
-      "aggression": 1.013555854,
-      "bluff": 1.043753131,
-      "tightness": 0.948779565,
-      "sizing": 1.02053079,
-      "stickiness": 1.032734284
+      "aggression": 1.014004507,
+      "bluff": 1.04466538,
+      "tightness": 0.947527436,
+      "sizing": 1.020543332,
+      "stickiness": 1.033769416
     },
     {
-      "aggression": 1.089185675,
-      "bluff": 1.134862563,
-      "tightness": 0.908070574,
-      "sizing": 1.050366192,
-      "stickiness": 1.065800845
+      "aggression": 1.089135406,
+      "bluff": 1.134846956,
+      "tightness": 0.908046852,
+      "sizing": 1.050326742,
+      "stickiness": 1.065808844
     }
   ]
 }

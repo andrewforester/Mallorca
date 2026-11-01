@@ -9,7 +9,6 @@ import type { Rng } from '../../src/cards/index.ts';
 import type { CfrModel, ShippedStrategyKey } from '../../src/cfr/index.ts';
 import { SHIPPED_STRATEGIES, createCfrBrain, loadCfrModel } from '../../src/cfr/index.ts';
 import { strengthOf } from '../../src/persona/index.ts';
-import type { Level } from '../../src/conversation/index.ts';
 import type { ArenaBot } from './arenaBot.ts';
 import { createExploiter } from './exploiter.ts';
 import { createReader } from './reader.ts';
@@ -82,9 +81,9 @@ const biased = (bias: Omit<BotBias, 'sizing' | 'stickiness'>): BotFactory =>
   cfrBot(SHIPPED, { ...bias, sizing: 1, stickiness: 1 / bias.tightness });
 
 const talking =
-  (level: Level): BotFactory =>
+  (mask: number): BotFactory =>
   (rng) =>
-    createTalkingBot(cfr(rng), level, rng);
+    createTalkingBot(cfr(rng), mask, rng);
 
 const reader: BotFactory = (rng) => createReader(math(rng));
 
@@ -113,9 +112,9 @@ export const BOTS: Record<
   'cfr-tilted': biased({ aggression: 1.6, bluff: 1.8, tightness: 0.85 }),
   'cfr-confident': biased({ aggression: 1.15, bluff: 1, tightness: 0.95 }),
   'cfr-cautious': biased({ aggression: 0.9, bluff: 0.9, tightness: 1.2 }),
-  'cfr-talk-obvious': talking('obvious'),
-  'cfr-talk-subtle': talking('subtle'),
-  'cfr-talk-hidden': talking('hidden'),
+  'cfr-talk-obvious': talking(0),
+  'cfr-talk-subtle': talking(0.5),
+  'cfr-talk-hidden': talking(0.9),
   reader,
   'tilt-exploiter': tiltExploiter,
   'always-call': alwaysCall,

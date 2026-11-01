@@ -1,5 +1,3 @@
-import type { Level } from '../game/index.ts';
-
 export type TableStyle = 'room' | 'simple';
 
 const KEY = 'mallorca.tableStyle';
@@ -56,8 +54,6 @@ export function writeTableStyle(style: TableStyle): void {
 }
 
 const CONVERSATION_KEY = 'mallorca.talk';
-const TELLS_KEY = 'mallorca.tells';
-const LEVELS: readonly Level[] = ['obvious', 'subtle', 'hidden'];
 
 export function readConversation(): boolean {
   try {
@@ -70,23 +66,6 @@ export function readConversation(): boolean {
 export function writeConversation(on: boolean): void {
   try {
     localStorage.setItem(CONVERSATION_KEY, on ? 'on' : 'off');
-  } catch {
-    return;
-  }
-}
-
-export function readTells(): Level {
-  try {
-    const stored = localStorage.getItem(TELLS_KEY);
-    return LEVELS.find((level) => level === stored) ?? 'subtle';
-  } catch {
-    return 'subtle';
-  }
-}
-
-export function writeTells(level: Level): void {
-  try {
-    localStorage.setItem(TELLS_KEY, level);
   } catch {
     return;
   }

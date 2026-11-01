@@ -4,12 +4,10 @@ import {
   readSound,
   readTableStyle,
   readConversation,
-  readTells,
   writeAutoNext,
   writeSound,
   writeTableStyle,
   writeConversation,
-  writeTells,
 } from './preferences.ts';
 
 afterEach(() => {
@@ -106,31 +104,6 @@ describe('table talk preference', () => {
     vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked });
     expect(() => writeConversation(false)).not.toThrow();
     expect(readConversation()).toBe(true);
-  });
-});
-
-describe('tells preference', () => {
-  it('defaults to subtle and remembers each level', () => {
-    expect(readTells()).toBe('subtle');
-    for (const level of ['obvious', 'hidden', 'subtle'] as const) {
-      writeTells(level);
-      expect(localStorage.getItem('mallorca.tells')).toBe(level);
-      expect(readTells()).toBe(level);
-    }
-  });
-
-  it('ignores an unknown stored value', () => {
-    localStorage.setItem('mallorca.tells', 'loud');
-    expect(readTells()).toBe('subtle');
-  });
-
-  it('stays subtle when storage throws', () => {
-    const blocked = () => {
-      throw new Error('blocked');
-    };
-    vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked });
-    expect(() => writeTells('hidden')).not.toThrow();
-    expect(readTells()).toBe('subtle');
   });
 });
 

@@ -160,7 +160,6 @@ function talking(on = true) {
   vm.conversation = {
     available: true,
     on,
-    level: 'subtle',
     lines: [her, mine],
     herBubble: her,
     playerBubble: mine,

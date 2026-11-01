@@ -12,11 +12,9 @@ afterEach(() => {
 function Harness({
   conversation,
   onConversation,
-  onTells,
 }: {
   conversation: boolean;
   onConversation: (on: boolean) => void;
-  onTells: (level: string) => void;
 }) {
   const preferences = usePreferences();
   return (
@@ -24,29 +22,31 @@ function Harness({
       preferences={preferences}
       conversation={conversation}
       onConversation={onConversation}
-      onTells={onTells}
     />
   );
 }
 
 function settings(conversation = true) {
   const onConversation = vi.fn();
-  const onTells = vi.fn();
-  render(<Harness conversation={conversation} onConversation={onConversation} onTells={onTells} />);
-  return { onConversation, onTells };
+  render(<Harness conversation={conversation} onConversation={onConversation} />);
+  return { onConversation };
 }
 
 describe('Settings conversation', () => {
-  it('shows the session state of conversation and tells, not the stored preference', () => {
+  it('shows the session state of conversation, not the stored preference', () => {
     function Bound() {
       const preferences = usePreferences();
-      return (
-        <Settings preferences={preferences} conversation conversationOn={false} tells="hidden" />
-      );
+      return <Settings preferences={preferences} conversation conversationOn={false} />;
     }
     render(<Bound />);
     expect((screen.getByTestId('table-conversation') as HTMLInputElement).checked).toBe(false);
-    expect((screen.getByTestId('tells') as HTMLSelectElement).value).toBe('hidden');
+  });
+
+  it('offers no tells setting: her readability is her own', () => {
+    localStorage.setItem('mallorca.tells', 'obvious');
+    settings();
+    expect(screen.queryByTestId('tells')).toBeNull();
+    expect(screen.queryByText('Tells')).toBeNull();
   });
 
   it('toggles table talk and keeps it', () => {
@@ -60,39 +60,20 @@ describe('Settings conversation', () => {
     expect((screen.getByTestId('table-conversation') as HTMLInputElement).checked).toBe(false);
   });
 
-  it('picks the tells level and keeps it', () => {
-    const { onTells } = settings();
-    const select = screen.getByTestId('tells') as HTMLSelectElement;
-    expect(select.value).toBe('subtle');
-    expect(Array.from(select.options).map((option) => option.textContent)).toEqual([
-      'Obvious',
-      'Subtle',
-      'Hidden',
-    ]);
-    expect(select.closest('label')?.textContent).toContain('Tells');
-    fireEvent.change(select, { target: { value: 'obvious' } });
-    expect(onTells).toHaveBeenCalledWith('obvious');
-    expect(localStorage.getItem('mallorca.tells')).toBe('obvious');
-  });
-
   it('still switches when storage throws', () => {
     const blocked = () => {
       throw new Error('blocked');
     };
     vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked, clear: () => undefined });
-    const { onConversation, onTells } = settings();
+    const { onConversation } = settings();
     fireEvent.click(screen.getByTestId('table-conversation'));
-    fireEvent.change(screen.getByTestId('tells'), { target: { value: 'hidden' } });
     expect(onConversation).toHaveBeenCalledWith(false);
-    expect(onTells).toHaveBeenCalledWith('hidden');
     expect((screen.getByTestId('table-conversation') as HTMLInputElement).checked).toBe(false);
-    expect((screen.getByTestId('tells') as HTMLSelectElement).value).toBe('hidden');
   });
 
   it('hides conversation settings when conversation is not available', () => {
     settings(false);
     expect(screen.queryByTestId('table-conversation')).toBeNull();
-    expect(screen.queryByTestId('tells')).toBeNull();
     expect(screen.getByTestId('simple-table')).not.toBeNull();
   });
 });

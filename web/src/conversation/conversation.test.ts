@@ -15,9 +15,9 @@ import type { LineIntent } from './conversation.ts';
 
 const always = (): Habits => {
   const row = {
-    strong: { speak: 1, honest: 1 },
-    medium: { speak: 1, honest: 1 },
-    weak: { speak: 1, honest: 1 },
+    strong: { speak: 1 },
+    medium: { speak: 1 },
+    weak: { speak: 1 },
   };
   const situations = Object.keys(BASE_HABITS) as Situation[];
   return Object.fromEntries(situations.map((s) => [s, row])) as Habits;
@@ -45,8 +45,7 @@ function table(conversation: Speaker, stacks: [number, number] = [2000, 2000]): 
   };
 }
 
-const chatty = (): Table =>
-  table(createSpeaker({ seat: 1, rng: mulberry32(3), level: 'obvious', habits: always() }));
+const chatty = (): Table => table(createSpeaker({ seat: 1, rng: mulberry32(3), habits: always() }));
 
 describe('observe', () => {
   it('yields herBet on her raise with the spot of the event', () => {
@@ -54,15 +53,17 @@ describe('observe', () => {
     expect(t.begin('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h')).toBeNull();
     expect(t.act(call)).toBeNull();
     const intent = t.act(raiseTo(60), 2000);
-    expect(intent).toEqual({
+    expect({ ...intent, hint: null, honest: null }).toEqual({
       situation: 'herBet',
-      hint: intent?.hint === null ? null : 'weak',
-      honest: true,
+      hint: null,
+      honest: null,
       strength: 'weak',
       street: 'preflop',
       actionStreet: 'preflop',
       handNumber: 1,
     });
+    expect([null, 'weak', 'strong']).toContain(intent?.hint);
+    expect(intent?.honest).toBe(intent?.hint !== 'strong');
   });
 
   it('yields playerBet on his raise and herCall on her check or call, one per street', () => {
@@ -209,7 +210,6 @@ describe('reproducibility', () => {
     const conversation = createSpeaker({
       seat: 1,
       rng: mulberry32(9),
-      level: 'obvious',
       habits,
     });
     const decks = mulberry32(2);
@@ -235,64 +235,63 @@ describe('reproducibility', () => {
 });
 
 describe('drawLine', () => {
-  const spots = (habits: Habits, strength: StrengthClass, count: number, seed: number) => {
+  const spots = (
+    spot: { strength: StrengthClass; mask: number; shows: StrengthClass | null },
+    count: number,
+    seed: number,
+    habits: Habits = BASE_HABITS,
+  ) => {
     const rng = mulberry32(seed);
     const draws = [];
     for (let i = 0; i < count; i++) {
-      draws.push(drawLine({ habits, situation: 'herBet', strength, speakFactor: 1 }, rng));
+      draws.push(drawLine({ habits, situation: 'herBet', speakFactor: 1, ...spot }, rng));
     }
     return draws;
   };
 
-  it('speaks 0.6 and tells the truth 0.2 after a weak bet on obvious', () => {
-    const draws = spots(habitsAt(BASE_HABITS, 'obvious'), 'weak', 5000, 11);
+  it('speaks as her habit says and hints on seven lines of ten, all true without a mask', () => {
+    const draws = spots({ strength: 'weak', mask: 0, shows: 'strong' }, 5000, 11);
     const spoken = draws.filter((d) => d.speak);
     expect(spoken.length / draws.length).toBeGreaterThan(0.57);
     expect(spoken.length / draws.length).toBeLessThan(0.63);
-    const honest = spoken.filter((d) => d.honest).length / spoken.length;
-    expect(honest).toBeGreaterThan(0.17);
-    expect(honest).toBeLessThan(0.23);
     const hinted = spoken.filter((d) => d.hint !== null);
     expect(hinted.length / spoken.length).toBeGreaterThan(0.67);
     expect(hinted.length / spoken.length).toBeLessThan(0.73);
-    for (const d of hinted) {
-      expect(d.hint).toBe(d.honest ? 'weak' : 'strong');
-    }
+    expect(hinted.every((d) => d.hint === 'weak' && d.honest)).toBe(true);
   });
 
-  it('speaks at almost the same rate with weak and strong hands on hidden', () => {
-    const hidden = habitsAt(BASE_HABITS, 'hidden');
+  it('lies in words only with what she presents', () => {
+    const acting = spots({ strength: 'weak', mask: 1, shows: 'strong' }, 2000, 3).filter(
+      (d) => d.hint !== null,
+    );
+    expect(acting.length).toBeGreaterThan(0);
+    expect(acting.every((d) => d.hint === 'strong' && !d.honest)).toBe(true);
+    const plain = spots({ strength: 'weak', mask: 1, shows: null }, 2000, 3).filter((d) => d.speak);
+    expect(plain.length).toBeGreaterThan(0);
+    expect(plain.every((d) => d.hint === null && d.honest)).toBe(true);
+  });
+
+  it('leaks the truth by the share her mask lets through', () => {
+    const hinted = spots({ strength: 'weak', mask: 0.75, shows: 'strong' }, 20000, 7).filter(
+      (d) => d.hint !== null,
+    );
+    const truth = hinted.filter((d) => d.hint === 'weak').length / hinted.length;
+    expect(truth).toBeGreaterThan(0.22);
+    expect(truth).toBeLessThan(0.28);
+  });
+
+  it('speaks alike with any hand behind a strong mask', () => {
     const rate = (strength: StrengthClass): number =>
-      spots(hidden, strength, 20000, 5).filter((d) => d.speak).length / 20000;
+      spots({ strength, mask: 0.9, shows: null }, 20000, 5).filter((d) => d.speak).length / 20000;
     expect(Math.abs(rate('weak') - rate('strong'))).toBeLessThan(0.05);
-  });
-
-  it('shows strong or weak with equal chance when a medium hand lies', () => {
-    const habits = habitsAt(BASE_HABITS, 'obvious');
-    const rng = mulberry32(9);
-    const lies: Array<StrengthClass | null> = [];
-    for (let i = 0; i < 4000; i++) {
-      const d = drawLine(
-        { habits, situation: 'playerBet', strength: 'medium', speakFactor: 1 },
-        rng,
-      );
-      if (d.speak && !d.honest && d.hint !== null) {
-        lies.push(d.hint);
-      }
-    }
-    expect(lies).not.toContain('medium');
-    const strong = lies.filter((h) => h === 'strong').length / lies.length;
-    expect(strong).toBeGreaterThan(0.4);
-    expect(strong).toBeLessThan(0.6);
   });
 
   it('never hints at hand end', () => {
     const habits = always();
     const rng = mulberry32(1);
     for (let i = 0; i < 200; i++) {
-      expect(
-        drawLine({ habits, situation: 'handWon', strength: 'strong', speakFactor: 1 }, rng).hint,
-      ).toBeNull();
+      const spot = { habits, situation: 'handWon' as const, strength: 'strong' as const };
+      expect(drawLine({ ...spot, speakFactor: 1, mask: 0, shows: null }, rng).hint).toBeNull();
     }
   });
 });
@@ -302,7 +301,6 @@ describe('replyIntent and state', () => {
     const conversation = createSpeaker({
       seat: 1,
       rng: mulberry32(2),
-      level: 'obvious',
       habits: always(),
     });
     const t = table(conversation);
@@ -316,7 +314,7 @@ describe('replyIntent and state', () => {
   });
 
   it('answers even when her habits keep her silent', () => {
-    const silent = habitsAt(BASE_HABITS, 'obvious');
+    const silent = habitsAt(BASE_HABITS, 0);
     for (const row of Object.values(silent)) {
       for (const habit of Object.values(row)) {
         habit.speak = 0;
@@ -325,7 +323,6 @@ describe('replyIntent and state', () => {
     const conversation = createSpeaker({
       seat: 1,
       rng: mulberry32(2),
-      level: 'obvious',
       habits: silent,
     });
     const t = table(conversation);
@@ -335,7 +332,7 @@ describe('replyIntent and state', () => {
   });
 
   it('exposes the hand facts for the prompt', () => {
-    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2), level: 'obvious' });
+    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2) });
     const t = table(conversation);
     t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h');
     t.act(raiseTo(60), 0);
@@ -351,15 +348,26 @@ describe('replyIntent and state', () => {
   });
 
   it('moves her feeling and bias with the signals it hears', () => {
-    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2), level: 'obvious' });
+    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2) });
     conversation.hear(['mockBluff', 'tease']);
     expect(conversation.feeling().emotions.anger).toBeGreaterThan(0.4);
     expect(conversation.moodWords()).toContain('annoyed');
     expect(conversation.bias().bluff).toBeGreaterThan(1);
   });
 
+  it('sends the mask her face shows', () => {
+    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2) });
+    const t = table(conversation);
+    t.begin('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
+    t.act(call, 0);
+    t.act(raiseTo(60), 500);
+    const shown = conversation.feelingFor(conversation.replyIntent()).shows.mask;
+    expect(shown).toBeCloseTo(conversation.mask(), 2);
+    expect(shown).toBeGreaterThan(0.5);
+  });
+
   it('gives the feeling for an intent, acting the hinted strength only when the hint is false', () => {
-    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2), level: 'obvious' });
+    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2) });
     conversation.hear(['mockBluff', 'tease']);
     const intent = conversation.replyIntent();
     const bluff = { ...intent, hint: 'strong' as const, honest: false };
@@ -369,29 +377,14 @@ describe('replyIntent and state', () => {
   });
 
   it('gives her character sheet', () => {
-    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2), level: 'obvious' });
+    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2) });
     expect(conversation.character()).toEqual(characterOf(MALLORCA));
-  });
-
-  it('changes the habits with setLevel', () => {
-    const conversation = createSpeaker({
-      seat: 1,
-      rng: mulberry32(2),
-      level: 'obvious',
-      habits: always(),
-    });
-    conversation.setLevel('hidden');
-    const t = table(conversation);
-    t.begin('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
-    t.act(call, 0);
-    const intents = t.act(raiseTo(60), 0);
-    expect(intents?.situation).toBe('herBet');
   });
 });
 
 describe('summary', () => {
   it('counts hands, net, player bluffs, all-ins and signals heard', () => {
-    const conversation = createSpeaker({ seat: 1, rng: mulberry32(4), level: 'obvious' });
+    const conversation = createSpeaker({ seat: 1, rng: mulberry32(4) });
     const t = table(conversation);
     t.begin('7c 2d', 'As Ah', 'Kd 9h 5h 3c Jd');
     t.act(raiseTo(60), 0);

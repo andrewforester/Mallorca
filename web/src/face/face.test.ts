@@ -84,9 +84,15 @@ describe('poker face', () => {
   });
 
   it('acts confident on a bluff and flat on a hidden strong hand', () => {
-    expect(STANCES.bluff.effort).toBeCloseTo(0.6);
-    expect(STANCES.bluff.acted).toEqual([0.2, 0, 0.6]);
-    expect(STANCES.hide.acted).toBeNull();
+    expect(STANCES.bluff).toEqual([0.2, 0, 0.6]);
+    expect(STANCES.hide).toBeNull();
+  });
+
+  it('hides as much as the effort of what she presents asks', () => {
+    const s = createEngine(MALLORCA).snapshot();
+    const frame = faceFrame(s, { stance: 'hide', effort: 0.5 }, MALLORCA_LOOK);
+    expect(frame.mask).toBeCloseTo(maskOf(s.traits.mask, 0.5, s.load.overload), 12);
+    expect(frame.shown).toEqual(faceFrame(s, { stance: 'hide', effort: 0.5 }, MALLORCA_LOOK).shown);
   });
 
   it('turns a masked reaction into a short leak and a control pulse', () => {
@@ -138,7 +144,7 @@ describe('frame', () => {
     engine.event({ kind: 'opponentBet', sizeBb: 40, equity: 0.1, raise: true });
     engine.step(0.5);
     const open = faceFrame(engine.snapshot(), null, MALLORCA_LOOK);
-    const acting = faceFrame(engine.snapshot(), 'bluff', MALLORCA_LOOK);
+    const acting = faceFrame(engine.snapshot(), { stance: 'bluff', effort: 0.6 }, MALLORCA_LOOK);
     expect(acting.mask).toBeGreaterThan(open.mask);
     expect(acting.shown[2]).toBeGreaterThan(open.shown[2]);
     expect(acting.idle.nervous).toBeCloseTo(open.idle.nervous);

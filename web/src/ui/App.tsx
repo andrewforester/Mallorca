@@ -4,7 +4,6 @@ import { toViewModel } from '../game/index.ts';
 import type {
   HandStore,
   Intent,
-  Level,
   Phase,
   QuickPhrase,
   Session,
@@ -55,9 +54,7 @@ function conversationActions(session: Session, vm: ViewModel) {
   return {
     conversation: vm.conversation.available,
     conversationOn: vm.conversation.on,
-    tells: vm.conversation.level,
     onConversation: (on: boolean) => session.getState().setConversation(on),
-    onTells: (level: Level) => session.getState().setTells(level),
     onSay: (text: string) => session.getState().say(text),
     onQuick: (id: QuickPhrase, text: string) => session.getState().quick(id, text),
   };

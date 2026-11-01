@@ -244,13 +244,7 @@
       "notThisTime": "Not this time"
     },
     "settings": {
-      "conversation": "Table talk",
-      "tells": "Tells",
-      "levels": {
-        "obvious": "Obvious",
-        "subtle": "Subtle",
-        "hidden": "Hidden"
-      }
+      "conversation": "Table talk"
     },
     "undelivered": "Not delivered",
     "message": "Message"

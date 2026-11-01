@@ -23,15 +23,18 @@ function allHands(): WeightedHands {
 
 export const ALL_HANDS = allHands();
 
+export function classOf(equity: number, boardLength: number): StrengthClass {
+  const strongAt = boardLength === 0 ? STRONG_PREFLOP : STRONG_POSTFLOP;
+  if (equity >= strongAt) {
+    return 'strong';
+  }
+  return equity < WEAK ? 'weak' : 'medium';
+}
+
 export function strengthOf(
   hole: readonly [Card, Card],
   board: readonly Card[],
   rng: Rng,
 ): StrengthClass {
-  const equity = equityVsRange(hole, ALL_HANDS, board, { rng, samples: SAMPLES });
-  const strongAt = board.length === 0 ? STRONG_PREFLOP : STRONG_POSTFLOP;
-  if (equity >= strongAt) {
-    return 'strong';
-  }
-  return equity < WEAK ? 'weak' : 'medium';
+  return classOf(equityVsRange(hole, ALL_HANDS, board, { rng, samples: SAMPLES }), board.length);
 }

@@ -1,5 +1,5 @@
 import type { Rng } from '../cards/index.ts';
-import { MALLORCA } from '../emotion/index.ts';
+import { MALLORCA, maskOf } from '../emotion/index.ts';
 import type { Personality, Snapshot } from '../emotion/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import type { Bias } from './bias.ts';
@@ -10,11 +10,19 @@ import type { JournalEntry } from './journal.ts';
 import { createFeeling } from './perception.ts';
 import type { Feeling } from './perception.ts';
 import type { Signal } from './signals.ts';
-import { strengthOf } from './strength.ts';
+import { classOf, strengthOf } from './strength.ts';
 import type { StrengthClass } from './strength.ts';
 import { botBiasOf, speakFactorOf, wordsOf } from './view.ts';
 
 export type Stance = 'bluff' | 'hide';
+
+export interface Presenting {
+  stance: Stance;
+  shows: StrengthClass;
+  effort: number;
+}
+
+export const PRESENTING_EFFORT: Readonly<Record<Stance, number>> = { bluff: 0.6, hide: 0.5 };
 
 export interface PersonaOptions {
   seat: SeatIndex;
@@ -35,6 +43,8 @@ export interface PersonaView {
   snapshot: Snapshot;
   hand: HandState;
   stance: Stance | null;
+  presenting: Presenting | null;
+  mask: number;
   bias: Bias;
   words: string[];
   speakFactor: number;
@@ -74,7 +84,6 @@ class TablePersona implements Persona {
   private readonly rng: Rng;
   private readonly feeling: Feeling;
   private readonly log = new Journal();
-  private readonly strengths = new Map<number, StrengthClass>();
   private hand: HandState = NO_HAND;
   private bluffKey: string | null = null;
   private personality: Personality;
@@ -107,11 +116,15 @@ class TablePersona implements Persona {
 
   view(nowMs: number): PersonaView {
     const snapshot = this.feeling.at(nowMs);
+    const presenting = this.presenting();
+    const effort = presenting?.effort ?? 0;
     return {
       personality: this.personality,
       snapshot,
       hand: this.hand,
-      stance: this.stance(),
+      stance: presenting?.stance ?? null,
+      presenting,
+      mask: maskOf(snapshot.traits.mask, effort, snapshot.load.overload),
       bias: botBiasOf(snapshot),
       words: wordsOf(snapshot),
       speakFactor: speakFactorOf(snapshot),
@@ -120,15 +133,7 @@ class TablePersona implements Persona {
 
   strength(): StrengthClass {
     const { her, board } = this.hand;
-    if (her === null) {
-      return UNKNOWN_STRENGTH;
-    }
-    let cached = this.strengths.get(board.length);
-    if (cached === undefined) {
-      cached = strengthOf(her, board, this.rng);
-      this.strengths.set(board.length, cached);
-    }
-    return cached;
+    return her === null ? UNKNOWN_STRENGTH : classOf(this.feeling.perceived(), board.length);
   }
 
   journal(): JournalEntry[] {
@@ -158,9 +163,6 @@ class TablePersona implements Persona {
   }
 
   private step(event: EngineEvent): Moment {
-    if (event.type === 'handStarted') {
-      this.strengths.clear();
-    }
     const before = this.hand;
     this.hand = track(before, event, this.seat);
     this.feeling.see(event, this.hand);
@@ -180,19 +182,17 @@ class TablePersona implements Persona {
     return strengthOf(cards, this.hand.board, this.rng) === 'weak';
   }
 
-  private stance(): Stance | null {
+  private presenting(): Presenting | null {
     if (this.hand.ended || this.hand.her === null) {
       return null;
     }
     if (this.bluffKey === this.streetKey()) {
-      return 'bluff';
+      return { stance: 'bluff', shows: 'strong', effort: PRESENTING_EFFORT.bluff };
     }
-    return this.knownStrength() === 'strong' ? 'hide' : null;
-  }
-
-  private knownStrength(): StrengthClass | null {
-    const known = [...this.strengths.entries()].sort((a, b) => b[0] - a[0]);
-    return known[0]?.[1] ?? null;
+    if (this.strength() !== 'strong') {
+      return null;
+    }
+    return { stance: 'hide', shows: 'weak', effort: PRESENTING_EFFORT.hide };
   }
 
   private streetKey(): string {

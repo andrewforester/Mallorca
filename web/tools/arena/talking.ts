@@ -1,11 +1,10 @@
 import type { Card, Rng } from '../../src/cards/index.ts';
 import { BASE_HABITS, habitsAt } from '../../src/conversation/index.ts';
 import { strengthOf } from '../../src/persona/index.ts';
-import type { Level } from '../../src/conversation/index.ts';
 import type { ArenaBot } from './arenaBot.ts';
 
-export function createTalkingBot(inner: ArenaBot, level: Level, rng: Rng): ArenaBot {
-  const habits = habitsAt(BASE_HABITS, level);
+export function createTalkingBot(inner: ArenaBot, mask: number, rng: Rng): ArenaBot {
+  const habits = habitsAt(BASE_HABITS, mask);
   let hole: [Card, Card] | null = null;
   let board: Card[] = [];
   let spoke = false;
