@@ -64,3 +64,13 @@ describe('card', () => {
     expect(fullDeck()).toHaveLength(52);
   });
 });
+
+describe('fullDeck', () => {
+  it('gives the 52 cards in order as a new array every time', () => {
+    const first = fullDeck();
+    expect(first).toEqual(Array.from({ length: 52 }, (_, i) => i));
+    first.pop();
+    first[0] = 51;
+    expect(fullDeck()).toEqual(Array.from({ length: 52 }, (_, i) => i));
+  });
+});

@@ -35,6 +35,8 @@ export function formatCard(card: Card): string {
   return `${RANK_CHARS.charAt(card >> 2)}${SUIT_CHARS.charAt(card & 3)}`;
 }
 
+const DECK: readonly Card[] = Array.from({ length: DECK_SIZE }, (_, i) => i);
+
 export function fullDeck(): Card[] {
-  return Array.from({ length: DECK_SIZE }, (_, i) => i);
+  return DECK.slice();
 }
