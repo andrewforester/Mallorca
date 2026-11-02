@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { netsOfRecords, pairedDifference } from './paired.ts';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { netsOfRecords, pairedDifference, sessionOfHands } from './paired.ts';
 
 const record = (handNumber: number, start: [number, number], end: [number, number]) => ({
   handNumber,
@@ -105,5 +108,16 @@ describe('pairedDifference of sessions', () => {
       [1, 0],
     ]);
     expect(pairedDifference(a, b, 20, 400).mean).toBe(2.5);
+  });
+});
+
+describe('sessionOfHands', () => {
+  it('reads the session length from the report next to the hands', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'paired-'));
+    writeFileSync(join(dir, 'run.json'), JSON.stringify({ session: 200 }));
+    writeFileSync(join(dir, 'old.json'), JSON.stringify({ pairs: 2 }));
+    expect(sessionOfHands(join(dir, 'run.jsonl'))).toBe(200);
+    expect(sessionOfHands(join(dir, 'old.jsonl'))).toBe(1);
+    expect(sessionOfHands(join(dir, 'lonely.jsonl'))).toBe(1);
   });
 });

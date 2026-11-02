@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from 'node:fs';
+
 export interface Paired {
   pairs: number;
   mean: number;
@@ -48,4 +50,11 @@ export function pairedDifference(
   const mean = differences.reduce((sum, d) => sum + d, 0) / n;
   const variance = differences.reduce((sum, d) => sum + (d - mean) ** 2, 0) / (n - 1);
   return { pairs: n, mean, ci95: (1.96 * Math.sqrt(variance)) / Math.sqrt(n) };
+}
+
+export function sessionOfHands(handsPath: string): number {
+  const report = handsPath.replace(/\.jsonl$/, '.json');
+  if (report === handsPath || !existsSync(report)) return 1;
+  const parsed = JSON.parse(readFileSync(report, 'utf8')) as { session?: number };
+  return parsed.session ?? 1;
 }

@@ -1,14 +1,20 @@
 import { readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
-import { netsOfRecords, pairedDifference } from './paired.ts';
+import { netsOfRecords, pairedDifference, sessionOfHands } from './paired.ts';
 
 const BIG_BLIND = 20;
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
-  options: { session: { type: 'string', default: '1' } },
+  options: { session: { type: 'string' } },
 });
-const session = Number(values.session);
+const [firstPath = '', secondPath = ''] = positionals;
+const fromReports = [sessionOfHands(firstPath), sessionOfHands(secondPath)];
+const session = values.session === undefined ? fromReports[0]! : Number(values.session);
+if (values.session === undefined && fromReports[0] !== fromReports[1]) {
+  console.error(`the runs play sessions of ${fromReports[0]} and ${fromReports[1]} hands`);
+  process.exit(1);
+}
 if (positionals.length !== 2 || !Number.isInteger(session) || session < 1) {
   console.error('usage: npm run arena:paired -- [--session <hands>] <first.jsonl> <second.jsonl>');
   process.exit(1);
