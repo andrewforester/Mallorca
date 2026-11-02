@@ -4,6 +4,7 @@ export interface SavedReport {
   pairs: number;
   hands: number;
   seed: number;
+  session?: number;
   bbPer100: number;
   ci95: number | null;
   durationMs: number;

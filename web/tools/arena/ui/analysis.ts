@@ -84,9 +84,12 @@ export function summarize(record: HandRecord, line: number): HandSummary {
   };
 }
 
-export function pairNets(hands: HandSummary[]): number[] {
+export function pairNets(hands: HandSummary[], session = 1): number[] {
   const nets: number[] = [];
-  for (const hand of hands) nets[hand.pair] = (nets[hand.pair] ?? 0) + hand.aNet;
+  for (const hand of hands) {
+    const pair = Math.floor(hand.pair / session);
+    nets[pair] = (nets[pair] ?? 0) + hand.aNet;
+  }
   return Array.from(nets, (net) => net ?? 0);
 }
 
