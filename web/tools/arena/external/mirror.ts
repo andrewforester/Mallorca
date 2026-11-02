@@ -1,7 +1,7 @@
 import type { Card } from '../../../src/cards/index.ts';
 import { fullDeck, parseCard } from '../../../src/cards/index.ts';
-import type { EngineEvent, Seat, Step, Street } from '../../../src/engine/index.ts';
-import { applyAction, IllegalActionError, startHandWith } from '../../../src/engine/index.ts';
+import type { EngineEvent, LegalActions, Seat, Step, Street } from '../../../src/engine/index.ts';
+import { applyAction, legalActionsOf, startHandWith } from '../../../src/engine/index.ts';
 import type { SlumbotAction } from './slumbot/actions.ts';
 import { toEngineAction } from './slumbot/actions.ts';
 
@@ -53,8 +53,7 @@ function apply(step: Step, action: SlumbotAction, street: number): Step {
   try {
     return applyAction(step.hand, step.seats, toEngineAction(action));
   } catch (error) {
-    if (error instanceof IllegalActionError) throw new MirrorError(error.message);
-    throw error;
+    throw new MirrorError(error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -66,6 +65,17 @@ function checkEnd(step: Step, input: MirrorInput): void {
   if (step.hand.board.length > input.board.length) {
     throw new MirrorError('The engine dealt cards that Slumbot has not shown');
   }
+}
+
+export function legalOf(step: Step): LegalActions {
+  return legalActionsOf({
+    mode: { kind: 'cash', bigBlind: BLINDS.big, buyIn: STACK },
+    seats: step.seats,
+    button: step.hand.button,
+    handNumber: 1,
+    hand: step.hand,
+    winner: null,
+  });
 }
 
 export function mirrorHand(input: MirrorInput): { step: Step; events: EngineEvent[] } {

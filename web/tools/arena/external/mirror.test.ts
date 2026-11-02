@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { legalActions } from '../../../src/engine/index.ts';
 import { parseActions } from './slumbot/actions.ts';
 import type { MirrorInput } from './mirror.ts';
-import { MirrorError, mirrorHand } from './mirror.ts';
+import { legalOf, MirrorError, mirrorHand } from './mirror.ts';
 
 function input(partial: Partial<MirrorInput> & { action: string }): MirrorInput {
   return {
@@ -55,7 +54,7 @@ describe('mirrorHand', () => {
     const { step } = mirrorHand(input({ action: 'b200c/kb300', board: ['Ah', '8d', '2s'] }));
     expect(step.hand.street).toBe('flop');
     expect(step.hand.toAct).toBe(0);
-    expect(legalActions(step.hand, step.seats).call).toBe(300);
+    expect(legalOf(step).call).toBe(300);
   });
 
   it('waits on a street that was just dealt', () => {

@@ -1,12 +1,11 @@
 import { mulberry32 } from '../../../src/cards/index.ts';
-import { legalActions } from '../../../src/engine/index.ts';
 import { toObservations } from '../../../src/brains/index.ts';
 import type { HandRecord } from '../../../src/game/records/index.ts';
 import { handRecord } from '../../../src/game/records/record.ts';
 import type { BotFactory } from '../bots.ts';
 import type { ExternalLine } from './log.ts';
 import { appendLine, openLog } from './log.ts';
-import { MirrorError, mirrorHand, STACK } from './mirror.ts';
+import { legalOf, MirrorError, mirrorHand, STACK } from './mirror.ts';
 import { parseActions, toIncr } from './slumbot/actions.ts';
 import type { SlumbotClient, SlumbotState } from './slumbot/client.ts';
 import { AbandonedHand } from './slumbot/client.ts';
@@ -58,7 +57,7 @@ function decide(context: HandContext, state: SlumbotState, decision: number): st
   const bot = context.options.bot(mulberry32(seed));
   try {
     for (const observation of toObservations(events, 0)) bot.observe(observation);
-    return toIncr(bot.decide(legalActions(step.hand, step.seats)));
+    return toIncr(bot.decide(legalOf(step)));
   } finally {
     bot.dispose?.();
   }
