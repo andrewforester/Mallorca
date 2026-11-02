@@ -1,3 +1,23 @@
+import {
+  isAmount,
+  isCard,
+  isCount,
+  isList,
+  isOneOf,
+  isRecord,
+  isText,
+  LIMITS,
+  parseEnvelope,
+  parseRecent,
+  parseText,
+  STREETS,
+} from "./json.ts";
+import type { Envelope, Json, RecentLine, Street } from "./json.ts";
+import { parsePlanRequest } from "./planTypes.ts";
+import type { LineRequestV2, ReplyRequestV2 } from "./planTypes.ts";
+
+export { LIMITS, STREETS } from "./json.ts";
+export type { RecentLine, Speaker, Street } from "./json.ts";
 import { parseCharacter, parseFeeling, UNKNOWN } from "./feeling.ts";
 import type { Character, Feeling } from "./feeling.ts";
 
@@ -11,9 +31,6 @@ export const SIGNALS = [
 ] as const;
 export type Signal = typeof SIGNALS[number];
 
-export const STREETS = ["preflop", "flop", "turn", "river", "showdown", "complete"] as const;
-export type Street = typeof STREETS[number];
-
 export const SITUATIONS = [
   "herBet",
   "herCall",
@@ -26,8 +43,6 @@ export type Situation = typeof SITUATIONS[number];
 
 export const HINTS = ["strong", "medium", "weak"] as const;
 export type Hint = typeof HINTS[number];
-
-export type Speaker = "mallorca" | "player";
 
 export interface Facts {
   street: Street;
@@ -46,22 +61,12 @@ export interface Intent {
   street: Street;
 }
 
-export interface RecentLine {
-  speaker: Speaker;
-  text: string;
-}
-
 export interface SessionSummary {
   hands: number;
   netBb: number;
   playerBluffsShown: number;
   playerAllIns: number;
   signals: Partial<Record<Signal, number>>;
-}
-
-interface Envelope {
-  sessionId: string;
-  locale: string;
 }
 
 interface HandContext extends Envelope {
@@ -88,45 +93,12 @@ export interface SummaryRequest extends Envelope {
   summary: SessionSummary;
 }
 
-export type TalkRequest = LineRequest | ReplyRequest | SummaryRequest;
-
-export const LIMITS = {
-  sessionId: 64,
-  localeMin: 2,
-  localeMax: 10,
-  board: 5,
-  actions: 30,
-  action: 80,
-  mood: 3,
-  moodWord: 40,
-  recent: 8,
-  recentText: 400,
-  text: 200,
-} as const;
-
-const CARD = /^[2-9TJQKA][cdhs]$/;
-const LOCALE = /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})?$/;
-
-type Json = Record<string, unknown>;
-
-const isRecord = (value: unknown): value is Json =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-const isText = (value: unknown, min: number, max: number): value is string =>
-  typeof value === "string" && value.length >= min && value.length <= max;
-
-const isAmount = (value: unknown): value is number =>
-  typeof value === "number" && Number.isFinite(value) && value >= 0;
-
-const isCount = (value: unknown): value is number => Number.isInteger(value) && isAmount(value);
-
-const isCard = (value: unknown): value is string => typeof value === "string" && CARD.test(value);
-
-const isOneOf = <T extends string>(options: readonly T[], value: unknown): value is T =>
-  typeof value === "string" && (options as readonly string[]).includes(value);
-
-const isList = <T>(value: unknown, max: number, item: (v: unknown) => v is T): value is T[] =>
-  Array.isArray(value) && value.length <= max && value.every(item);
+export type TalkRequest =
+  | LineRequest
+  | ReplyRequest
+  | SummaryRequest
+  | LineRequestV2
+  | ReplyRequestV2;
 
 const isAction = (value: unknown): value is string => isText(value, 1, LIMITS.action);
 const isMoodWord = (value: unknown): value is string => isText(value, 1, LIMITS.moodWord);
@@ -161,20 +133,6 @@ function parseIntent(value: unknown): Intent | null {
   return { situation, hint, honest, street };
 }
 
-function parseRecentLine(value: unknown): RecentLine | null {
-  if (!isRecord(value)) return null;
-  const { speaker, text } = value;
-  if (speaker !== "mallorca" && speaker !== "player") return null;
-  if (!isText(text, 1, LIMITS.recentText) || text.trim().length === 0) return null;
-  return { speaker, text };
-}
-
-function parseRecent(value: unknown): RecentLine[] | null {
-  if (!Array.isArray(value) || value.length > LIMITS.recent) return null;
-  const lines = value.map(parseRecentLine);
-  return lines.every((line) => line !== null) ? lines as RecentLine[] : null;
-}
-
 function parseSignalCounts(value: unknown): Partial<Record<Signal, number>> | null {
   if (!isRecord(value)) return null;
   const counts: Partial<Record<Signal, number>> = {};
@@ -193,13 +151,6 @@ function parseSummary(value: unknown): SessionSummary | null {
   const signals = parseSignalCounts(value.signals);
   if (signals === null) return null;
   return { hands, netBb, playerBluffsShown, playerAllIns, signals };
-}
-
-function parseEnvelope(body: Json): Envelope | null {
-  const { sessionId, locale } = body;
-  if (!isText(sessionId, 1, LIMITS.sessionId)) return null;
-  if (!isText(locale, LIMITS.localeMin, LIMITS.localeMax) || !LOCALE.test(locale)) return null;
-  return { sessionId, locale };
 }
 
 function parseHandContext(body: Json, envelope: Envelope): HandContext | null {
@@ -222,14 +173,10 @@ function parseHandContext(body: Json, envelope: Envelope): HandContext | null {
   };
 }
 
-function parseText(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const text = value.trim();
-  return text.length >= 1 && text.length <= LIMITS.text ? text : null;
-}
-
 export function parseRequest(body: unknown): TalkRequest | null {
   if (!isRecord(body)) return null;
+  if (body.version === 2) return parsePlanRequest(body);
+  if (body.version !== undefined) return null;
   const envelope = parseEnvelope(body);
   if (envelope === null) return null;
   if (body.kind === "summary") {

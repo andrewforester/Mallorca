@@ -4,6 +4,7 @@ import { buildMessages, buildSummaryMessages, parseFacts } from "./prompt.ts";
 import { DELIVERY_EMOTIONS } from "./prompt.ts";
 import type { Message, Schema, SystemBlock } from "./prompt.ts";
 import { parseSignals, SIGNAL_GUIDE, SIGNAL_SCHEMA } from "./signals.ts";
+import { isPlanRequest } from "./planTypes.ts";
 import { parseRequest } from "./types.ts";
 import type { LineRequest, ReplyRequest, SummaryRequest } from "./types.ts";
 
@@ -215,6 +216,7 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   if (body instanceof Response) return body;
   const parsed = parseRequest(body);
   if (parsed === null) return json(400, { error: "body" });
+  if (parsed.kind !== "summary" && isPlanRequest(parsed)) return json(400, { error: "version" });
   const known = loadMemories(user, deps);
   known.catch(() => undefined);
   if (!(await allowed(user, deps))) return silent();
