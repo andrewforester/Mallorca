@@ -201,7 +201,7 @@ describe('her own moves', () => {
     appraise(event, noEmotions(), traits).find((i) => i.emotion === emotion)?.amount ?? 0;
 
   it('frightens her by what she risks when she bets behind a weak hand', () => {
-    const bluff = { kind: 'ownMove', move: 'bet', amountBb: 20, equity: 0.2, facingBb: 0 } as const;
+    const bluff = { kind: 'ownMove', move: 'bet', amountBb: 20, equity: 0.2 } as const;
     expect(felt(bluff, 'fear')).toBeGreaterThan(0.2);
     expect(felt(bluff, 'pride')).toBe(0);
     const small = { ...bluff, amountBb: 2 };
@@ -209,7 +209,7 @@ describe('her own moves', () => {
   });
 
   it('makes her a little proud when she takes the lead with a strong hand', () => {
-    const value = { kind: 'ownMove', move: 'bet', amountBb: 20, equity: 0.9, facingBb: 0 } as const;
+    const value = { kind: 'ownMove', move: 'bet', amountBb: 20, equity: 0.9 } as const;
     expect(felt(value, 'pride')).toBeGreaterThan(0.05);
     expect(felt(value, 'pride')).toBeLessThan(0.2);
     expect(felt(value, 'fear')).toBe(0);
@@ -219,7 +219,6 @@ describe('her own moves', () => {
     const pushed = {
       kind: 'ownMove',
       move: 'fold',
-      amountBb: 0,
       equity: 0.75,
       facingBb: 30,
     } as const;
@@ -231,7 +230,7 @@ describe('her own moves', () => {
   });
 
   it('leaves a small bet with a middling hand unfelt', () => {
-    const plain = { kind: 'ownMove', move: 'bet', amountBb: 2, equity: 0.55, facingBb: 0 } as const;
+    const plain = { kind: 'ownMove', move: 'bet', amountBb: 2, equity: 0.55 } as const;
     expect(appraise(plain, noEmotions(), traits)).toEqual([]);
   });
 });

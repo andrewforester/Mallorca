@@ -222,6 +222,7 @@ describe('a persona at the table', () => {
     played.act(raiseTo(60), 1000);
     const [bet] = entries(played.persona, 'ownMove');
     expect(bet?.event).toMatchObject({ kind: 'ownMove', move: 'bet', amountBb: 2 });
+    expect(Object.keys(bet?.event ?? {}).sort()).toEqual(['amountBb', 'equity', 'kind', 'move']);
     expect(bet?.impulses.some((i) => i.emotion === 'fear')).toBe(true);
   });
 
@@ -231,6 +232,7 @@ describe('a persona at the table', () => {
     played.act({ kind: 'fold' }, 3000);
     const [fold] = entries(played.persona, 'ownMove');
     expect(fold?.event).toMatchObject({ kind: 'ownMove', move: 'fold', facingBb: 2 });
+    expect(Object.keys(fold?.event ?? {}).sort()).toEqual(['equity', 'facingBb', 'kind', 'move']);
     expect(fold?.impulses.some((i) => i.emotion === 'anger')).toBe(true);
   });
 

@@ -187,9 +187,9 @@ class TableFeeling implements Feeling {
     const facingBb = (this.streetChips[other] - this.streetChips[this.seat]) / bb;
     const { kind } = event.action;
     if (kind === 'raise') {
-      this.feel({ kind: 'ownMove', move: 'bet', amountBb: event.amount / bb, equity, facingBb });
+      this.feel({ kind: 'ownMove', move: 'bet', amountBb: event.amount / bb, equity });
     } else if (kind === 'fold') {
-      this.feel({ kind: 'ownMove', move: 'fold', amountBb: 0, equity, facingBb });
+      this.feel({ kind: 'ownMove', move: 'fold', facingBb, equity });
     } else if (kind === 'call' && hand.board.length === FULL_BOARD) {
       const weak = classOf(equity, hand.board.length) === 'weak';
       this.riverCall = { costBb: event.amount / bb, weak };
