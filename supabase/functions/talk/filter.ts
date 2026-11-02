@@ -12,8 +12,8 @@ const WINDOW = 4;
 
 const word = (body: string): RegExp => new RegExp(`${B}(?:${body})${E}`, "u");
 
-const AMBIGUOUS_TOKENS = new Set(["As", "Ah", "Ad"]);
-const CARD_TOKEN = new RegExp(`${B}(?:10|[2-9TJQKA]|[tjqk])[cdhs]${E}`, "gu");
+export const AMBIGUOUS_TOKENS = new Set(["As", "Ah", "Ad"]);
+export const CARD_TOKEN = new RegExp(`${B}(?:10|[2-9TJQKA]|[tjqk])[cdhs]${E}`, "gu");
 const SUIT_SYMBOL = /(?:10|[2-9TJQKA])\s?[♠♥♦♣♤♡♢♧]|[♠♥♦♣♤♡♢♧]\s?(?:10|[2-9TJQKA])/iu;
 
 const EN_RANK = "ace|king|queen|jack|ten|nine|eight|seven|six|five|four|three|two|deuce";
@@ -29,7 +29,7 @@ const RU_SUIT = "пик\\p{L}*|черв\\p{L}*|бубн\\p{L}*|бубен|тре
 const RANK_OF_SUIT = word(
   `(?:${EN_RANK})s?\\s+of\\s+(?:spade|heart|diamond|club)s?|(?:${RU_RANK})\\s+(?:${RU_SUIT})`,
 );
-const POCKET = word(
+export const POCKET = word(
   `pocket\\s+(?:${EN_RANK}|pair)\\p{L}*|карманн\\p{L}*\\s+(?:${RU_RANK}|пар\\p{L}*)`,
 );
 
@@ -72,7 +72,7 @@ const RANK_WORDS: Record<string, string> = {
   "2": "twos?|deuces?|двойк\\p{L}*",
 };
 
-const normalize = (text: string): string =>
+export const normalize = (text: string): string =>
   text.normalize("NFC").replace(/[‘’ʼ`]/g, "'").replace(/[︎️]/g, "");
 
 function namesCard(text: string, hole: readonly string[]): boolean {
@@ -82,7 +82,7 @@ function namesCard(text: string, hole: readonly string[]): boolean {
   return SUIT_SYMBOL.test(text);
 }
 
-function claimsHolding(lower: string): boolean {
+export function claimsHolding(lower: string): boolean {
   for (const match of lower.matchAll(POSSESSION)) {
     const tail = match[1].trim();
     if (tail.startsWith("to ") || tail === "to") continue;
