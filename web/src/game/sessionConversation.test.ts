@@ -34,6 +34,8 @@ interface Answers {
 function fakeClient(answers: Answers = {}): FakeClient {
   const client: FakeClient = {
     enabled: true,
+    planLine: () => Promise.resolve(null),
+    planReply: () => Promise.resolve(null),
     lines: [],
     replies: [],
     summaries: [],

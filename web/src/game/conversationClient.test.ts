@@ -7,8 +7,12 @@ import {
   silentConversationClient,
   toLinePayload,
   toReplyPayload,
+  toPlanLinePayload,
+  toPlanReplyPayload,
   toSummaryPayload,
 } from './conversationClient.ts';
+import type { PlanInput } from './conversationClient.ts';
+import type { UtterancePlan } from '../conversation/index.ts';
 import { remoteConversationClient } from './remoteConversation.ts';
 
 const fixture = (name: string): unknown =>
@@ -466,5 +470,147 @@ describe('feeling and character', () => {
     expect(payload.feeling).toEqual(feeling);
     expect(payload.character).toEqual(character);
     expect(toReplyPayload({ ...base, text: 'hi' }).feeling).toEqual(feeling);
+  });
+});
+
+const plan: UtterancePlan = {
+  version: 2,
+  act: 'complain',
+  occasion: 'the river came Ah and you lost a 38 bb pot',
+  voice: { emotion: 'injustice', intensity: 0.55 },
+  words: { min: 2, max: 7 },
+  humour: { style: 'selfEnhancing', target: 'self', intensity: 'soft', softened: false },
+  claim: null,
+  facts: {
+    street: 'complete',
+    board: parseCards('Kd 7s 2c 9h Ah'),
+    potBb: 38,
+    stacksBb: { her: 81, player: 119 },
+    actions: ['player raises to 60'],
+    card: null,
+    result: { won: false, potBb: 38 },
+    shown: {
+      her: parseCards('Kc Ks') as [number, number],
+      player: parseCards('Ac 7d') as [number, number],
+    },
+  },
+  heard: null,
+  session: {
+    hands: 17,
+    netBb: -12,
+    playerBluffsShown: 1,
+    playerAllIns: 0,
+    notable: [{ kind: 'bigLoss', handNumber: 17, potBb: 38, won: false, bets: 2 }],
+  },
+  handNumber: 17,
+  street: 'complete',
+  actionStreet: 'river',
+  endsHand: true,
+};
+
+const planInput: PlanInput = {
+  sessionId: 's-123',
+  locale: 'ru_RU',
+  personality: {
+    openness: 0.4,
+    conscientiousness: 0.2,
+    extraversion: 0.4,
+    agreeableness: 0.5,
+    neuroticism: 0.1,
+  },
+  plan,
+  recent: [
+    { speaker: 'player', text: 'Твой ход.' },
+    { speaker: 'mallorca', text: 'Посмотрим.' },
+  ],
+  debug: false,
+};
+
+describe('the version 2 payloads', () => {
+  it('match the shape the function reads', () => {
+    expect(shapeOf(toPlanLinePayload(planInput))).toEqual(shapeOf(fixture('planLine')));
+    const reply = toPlanReplyPayload({
+      ...planInput,
+      plan: {
+        ...plan,
+        act: 'answer',
+        heard: 'Ты блефуешь?',
+        claim: { about: 'strong', honest: false },
+      },
+      text: 'Ты блефуешь?',
+    });
+    expect(Object.keys(reply).sort()).toEqual(Object.keys(fixture('planReply') as object).sort());
+  });
+
+  it('carry the cards as text and the version', () => {
+    const payload = toPlanLinePayload(planInput);
+    expect(payload.version).toBe(2);
+    expect(payload.locale).toBe('ru-RU');
+    expect(payload.plan.facts.board).toEqual(['Kd', '7s', '2c', '9h', 'Ah']);
+    expect(payload.plan.facts.shown).toEqual({ her: ['Kc', 'Ks'], player: ['Ac', '7d'] });
+  });
+
+  it('carry no hidden card of a live hand', () => {
+    const live: UtterancePlan = {
+      ...plan,
+      facts: { ...plan.facts, shown: null, result: null, street: 'river' },
+    };
+    const text = JSON.stringify(toPlanLinePayload({ ...planInput, plan: live }));
+    expect(text).not.toMatch(/"Kc"|"Ks"/);
+  });
+
+  it('trim long text to the limits of the function', () => {
+    const long: UtterancePlan = {
+      ...plan,
+      occasion: 'x'.repeat(300),
+      facts: { ...plan.facts, actions: Array.from({ length: 40 }, () => 'y'.repeat(100)) },
+    };
+    const payload = toPlanLinePayload({ ...planInput, plan: long });
+    expect(payload.plan.occasion.length).toBe(200);
+    expect(payload.plan.facts.actions).toHaveLength(30);
+    expect(payload.plan.facts.actions[0]?.length).toBe(80);
+  });
+});
+
+describe('the version 2 answers', () => {
+  it('read the text, the attempts and the prompt', async () => {
+    const attempts = [{ text: 'Слишком длинно вышло тут.', rejected: ['longer than 4 words'] }];
+    const client = await remoteConversationClient({
+      url: URL_BASE,
+      anonKey: 'anon',
+      fetch: fakeFetch(() => json({ text: null, attempts, prompt: { system: 'S', state: 'T' } })),
+    });
+    expect(await client.planLine(toPlanLinePayload(planInput))).toEqual({
+      text: null,
+      attempts,
+      prompt: { system: 'S', state: 'T' },
+    });
+  });
+
+  it('read a reply with its signals and an answer without attempts', async () => {
+    const client = await remoteConversationClient({
+      url: URL_BASE,
+      anonKey: 'anon',
+      fetch: fakeFetch(() => json({ text: 'Хм.', signals: ['tease', 'bogus'] })),
+    });
+    expect(await client.planReply(toPlanReplyPayload({ ...planInput, text: 'x' }))).toEqual({
+      text: 'Хм.',
+      attempts: [],
+      prompt: null,
+      signals: ['tease'],
+    });
+  });
+
+  it('turn an error or a malformed body into null', async () => {
+    const answers = [json({}, 502), json({ text: 5 })];
+    let i = 0;
+    const client = await remoteConversationClient({
+      url: URL_BASE,
+      anonKey: 'anon',
+      fetch: fakeFetch(() => answers[i++] as Promise<Response>),
+    });
+    expect(await client.planLine(toPlanLinePayload(planInput))).toBeNull();
+    expect(await client.planLine(toPlanLinePayload(planInput))).toBeNull();
+    expect(await silentConversationClient.planLine(toPlanLinePayload(planInput))).toBeNull();
   });
 });

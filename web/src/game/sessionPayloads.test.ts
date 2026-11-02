@@ -33,6 +33,8 @@ const rounded = (bias: BotBias): BotBias => ({
 function capture(sent: Sent): ConversationClient {
   return {
     enabled: true,
+    planLine: () => Promise.resolve(null),
+    planReply: () => Promise.resolve(null),
     line: (request) => {
       sent.lines.push(request);
       return Promise.resolve('Here we go');

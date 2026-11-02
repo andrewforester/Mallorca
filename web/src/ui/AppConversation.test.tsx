@@ -17,6 +17,8 @@ function client(): ConversationClient & { reply: ReturnType<typeof vi.fn> } {
   return {
     enabled: true,
     line: vi.fn(() => Promise.resolve(null)),
+    planLine: vi.fn(() => Promise.resolve(null)),
+    planReply: vi.fn(() => Promise.resolve(null)),
     reply: vi.fn(() => Promise.resolve({ text: 'Is that so?', signals: [] })),
     summary: vi.fn(() => Promise.resolve()),
   };
