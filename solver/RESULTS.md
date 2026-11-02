@@ -65,6 +65,30 @@ The play file of checkpoint 10 in the web arena (`cfr:<play file>`), 100 bb, bli
 - Against the math bot `v2` wins as much as `v1` (+32.8 ± 9.2 on the same seed): the lower LBR does not show
   against this opponent.
 
+## Against Slumbot (200 bb, 2026-10-31)
+
+`v2` checkpoint 10 (`cfr:solver/data/v2/v2-10-play.mlcs`) against [Slumbot](https://www.slumbot.com) over its API,
+with `npm run arena:external` (issue #15, `web/tools/arena/external/`). Slumbot plays 200 bb (blinds 50/100), twice
+the depth of the blueprint, so the bot plays the deeper half of every hand through off-tree translation. Not
+duplicated, so the interval is wide; all-in EV cuts it.
+
+| date | strategy | stack | hands | raw bb/100 | all-in EV bb/100 | baseline bb/100 | commit |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-01 | v2 ckpt 10 | 200 bb | 110,047 | -21.9 ± 11.0 | -22.6 ± 10.3 | -4.3 ± 9.7 | 33742fa |
+
+- The headline figure is all-in EV: **-22.6 ± 10.3 bb/100**. Slumbot beats the blueprint at 200 bb with the
+  interval well below zero. 110,058 hands from 2026-10-31 to 2026-11-01, 11 abandoned for network errors, no
+  mismatch between the engine and Slumbot's `winnings`, positions 55,024 and 55,023.
+- The Slumbot baseline is biased and not used: the mean of `baseline_winnings` is -17.7 ± 11.3 bb/100, while the
+  estimate needs 0. Its own figure (-4.3) is that much too kind.
+- Standard deviation per hand: raw 1869, all-in EV 1738, baseline 1639 bb/100.
+- Where the chips go (first pass, issue #14): all-in pots -32 bb/100, pots of 60-200 bb -19, the big blind -18.0
+  against -3.9 on the button, and more folds against small bets than Slumbot makes (41% against 31% on the flop).
+  The big pots are play deeper than the blueprint: input for lever 7.
+- The log and the report are in the pre-release
+  [data-slumbot-v2-10-20261101](https://github.com/andrewforester/Mallorca/releases/tag/data-slumbot-v2-10-20261101);
+  `npm run arena:external -- --report <log>` gives the row above exactly.
+
 ## Arena against the math bot (2026-10-24)
 
 The play file of checkpoint 18 (`export --streets play`, 7.37 MB raw, 3.61 MB gzipped) in the web arena, through
