@@ -1,7 +1,7 @@
 import type { Card, Rng } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { BASE_HABITS, habitsAt } from './habits.ts';
-import type { Habit, Habits, Level, Situation } from './habits.ts';
+import type { Habits, Situation } from './habits.ts';
 import { characterOf, feelingState } from './state.ts';
 import type { Character, FeelingState } from './state.ts';
 import type {
@@ -44,13 +44,11 @@ export interface Conversation {
   character(view: PersonaView): Character;
   heard(signals: readonly Signal[]): void;
   summary(): SessionSummary;
-  setLevel(level: Level): void;
 }
 
 export interface ConversationOptions {
   seat: SeatIndex;
   rng: Rng;
-  level: Level;
   habits?: Habits;
 }
 
@@ -59,6 +57,8 @@ export interface Spot {
   situation: Situation;
   strength: StrengthClass;
   speakFactor: number;
+  mask: number;
+  shows: StrengthClass | null;
 }
 
 export interface Draw {
@@ -84,32 +84,34 @@ export const endsHand = (situation: Situation): boolean => HAND_END.has(situatio
 
 const hintRateOf = (situation: Situation): number => (HAND_END.has(situation) ? 0 : BET_HINT_RATE);
 
-function opposite(strength: StrengthClass, rng: Rng): StrengthClass {
-  if (strength === 'strong') {
-    return 'weak';
-  }
-  if (strength === 'weak') {
-    return 'strong';
-  }
-  return rng.next() < 0.5 ? 'strong' : 'weak';
-}
-
-function drawHint(habit: Habit, situation: Situation, strength: StrengthClass, rng: Rng) {
-  const honest = rng.next() < habit.honest;
+function drawHint(
+  situation: Situation,
+  strength: StrengthClass,
+  shown: { mask: number; shows: StrengthClass | null },
+  rng: Rng,
+): Pick<Draw, 'honest' | 'hint'> {
   if (rng.next() >= hintRateOf(situation)) {
-    return { honest, hint: null };
+    return { honest: true, hint: null };
   }
-  return { honest, hint: honest ? strength : opposite(strength, rng) };
+  if (rng.next() >= shown.mask) {
+    return { honest: true, hint: strength };
+  }
+  return shown.shows === null ? { honest: true, hint: null } : { honest: false, hint: shown.shows };
 }
 
 export function drawLine(spot: Spot, rng: Rng): Draw {
-  const habit = spot.habits[spot.situation][spot.strength];
+  const habit = habitsAt(spot.habits, spot.mask)[spot.situation][spot.strength];
   const chance = Math.min(1, habit.speak * spot.speakFactor);
   if (rng.next() >= chance) {
     return { speak: false, honest: false, hint: null };
   }
-  return { speak: true, ...drawHint(habit, spot.situation, spot.strength, rng) };
+  return { speak: true, ...drawHint(spot.situation, spot.strength, spot, rng) };
 }
+
+const shownOf = (view: PersonaView) => ({
+  mask: view.mask,
+  shows: view.presenting?.shows ?? null,
+});
 
 function actedSituation(event: EngineEvent, seat: SeatIndex): Situation | null {
   if (event.type !== 'acted') {
@@ -128,8 +130,7 @@ function actedSituation(event: EngineEvent, seat: SeatIndex): Situation | null {
 class TableConversation implements Conversation {
   private readonly seat: SeatIndex;
   private readonly rng: Rng;
-  private readonly base: Habits;
-  private habits: Habits;
+  private readonly habits: Habits;
   private session: SessionSummary = EMPTY_SUMMARY;
   private last: Situation | null = null;
   private lastLineAt = Number.NEGATIVE_INFINITY;
@@ -138,8 +139,7 @@ class TableConversation implements Conversation {
   constructor(options: ConversationOptions) {
     this.seat = options.seat;
     this.rng = options.rng;
-    this.base = options.habits ?? BASE_HABITS;
-    this.habits = habitsAt(this.base, options.level);
+    this.habits = options.habits ?? BASE_HABITS;
   }
 
   observe(moments: readonly Moment[], persona: PersonaReader, nowMs: number): LineIntent | null {
@@ -153,9 +153,9 @@ class TableConversation implements Conversation {
   replyIntent(persona: PersonaReader, nowMs: number): LineIntent {
     const situation = this.last ?? 'herCall';
     const strength = persona.strength();
-    const habit = this.habits[situation][strength];
-    const { honest, hint } = drawHint(habit, situation, strength, this.rng);
-    const { hand } = persona.view(nowMs);
+    const view = persona.view(nowMs);
+    const { honest, hint } = drawHint(situation, strength, shownOf(view), this.rng);
+    const { hand } = view;
     return this.intent(
       { situation, strength, key: '', street: hand.street },
       { speak: true, honest, hint },
@@ -181,7 +181,7 @@ class TableConversation implements Conversation {
   }
 
   feelingFor(intent: LineIntent, view: PersonaView): FeelingState {
-    return feelingState(view.snapshot, intent.honest ? null : intent.hint);
+    return feelingState(view.snapshot, intent.honest ? null : intent.hint, view.mask);
   }
 
   character(view: PersonaView): Character {
@@ -194,10 +194,6 @@ class TableConversation implements Conversation {
 
   summary(): SessionSummary {
     return this.session;
-  }
-
-  setLevel(level: Level): void {
-    this.habits = habitsAt(this.base, level);
   }
 
   private step(moment: Moment, persona: PersonaReader): Candidate | null {
@@ -239,7 +235,7 @@ class TableConversation implements Conversation {
       return null;
     }
     const spot = { habits: this.habits, situation, strength, speakFactor: view.speakFactor };
-    const draw = drawLine(spot, this.rng);
+    const draw = drawLine({ ...spot, ...shownOf(view) }, this.rng);
     if (!draw.speak) {
       return null;
     }

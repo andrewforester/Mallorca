@@ -13,16 +13,16 @@ import type { LineIntent } from './conversation.ts';
 
 const habits = (speak: number): Habits => {
   const row = {
-    strong: { speak, honest: 1 },
-    medium: { speak, honest: 1 },
-    weak: { speak, honest: 1 },
+    strong: { speak },
+    medium: { speak },
+    weak: { speak },
   };
   const situations = Object.keys(BASE_HABITS) as Situation[];
   return Object.fromEntries(situations.map((s) => [s, row])) as Habits;
 };
 
 const newConversation = (speak = 0): Speaker =>
-  createSpeaker({ seat: 1, rng: mulberry32(3), level: 'obvious', habits: habits(speak) });
+  createSpeaker({ seat: 1, rng: mulberry32(3), habits: habits(speak) });
 
 function play(
   conversation: Speaker,

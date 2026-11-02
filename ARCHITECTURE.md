@@ -365,9 +365,10 @@ what it returns.
 - `maskOf` is the poker face of `emotion`, re-exported, so the face and the prompt read the same mask;
   `feltPadOf(snapshot)` is half the mood plus every emotion's PAD point (surprise left out); `shownPadOf(felt,
 mask, acted)` blends the felt point toward the acted one (neutral when null).
-- `STANCES` turns a `Stance` (`bluff`, `hide`) into `effort` and `acted`: a bluff is effort 0.6 acting confident
-  `(0.2, 0, 0.6)`, a hidden strong hand effort 0.5 with a neutral face.
-- `faceFrame(snapshot, stance, look)` returns a `FaceFrame`: `felt`, `shown`, `mask`, the blendshape `weights`,
+- `STANCES` gives the acted face of a `Stance`: a bluff acts confident `(0.2, 0, 0.6)`, a hidden strong hand keeps a
+  neutral face (null).
+- `faceFrame(snapshot, presenting, look)` takes what her persona presents (`{ stance, effort }`, or null) and returns a `FaceFrame`: `felt`, `shown`, `mask`, the blendshape `weights`,
+  with `mask = maskOf(traits.mask, effort or 0, overload)`, the view's own mask,
   `idle` (`nervous = 0.7 fear + 0.4 shame + 0.3 max(0, -D of mood)`, `arousal` of the felt point and the look's
   `blinkRate`) and the `prosody` of her voice. Nervousness reads the felt state, so the mask never hides it.
 - `pulsesOf(impulses, mask, look)` gives a `Pulse` (`weights`, `amp`, `attack`, `hold`, `release`, `delay`,
@@ -396,15 +397,20 @@ speech, the face, the voice and the bias only read it through a `PersonaReader`.
   the money went in (0.5 without a showdown), a weak late bet caught or through as `bluff`, and the signals of
   `hear(signals)` as `chat`.
 - `view(nowMs)` reads her at `nowMs` without moving her (the engine's `ahead`; a time at or before the last
-  `observe` reads the current state): `personality`, `snapshot`, `hand`, `stance` (`bluff` after her bet or raise
-  with a weak hand until the street or the hand changes, `hide` while she holds a strong hand in a live hand, else
-  null), `bias` (the bot's `Bias`: aggression, bluff, sizing and stickiness of the engine's `PlayBias` and tightness
+  `observe` reads the current state): `personality`, `snapshot`, `hand`, `presenting`, what she acts, or null:
+  `{ stance: 'bluff', shows: 'strong', effort: 0.6 }` after her bet or raise with a weak class until the street or the
+  hand changes, else `{ stance: 'hide', shows: 'weak', effort: 0.5 }` while her class is strong in a live hand
+  (`PRESENTING_EFFORT`); `stance`, its stance; `mask`, `maskOf(traits.mask, effort or 0, overload)`, the share of her
+  feeling she hides right now, which the face, the words and the prompt all read; `bias` (the bot's `Bias`: aggression, bluff, sizing and stickiness of the engine's `PlayBias` and tightness
   `1 / looseness`; all ones when calm), `words` (up to three mood words for the prompt: `on tilt` at overload 0.6
   and more, then the emotions of 0.25 and more, strongest first) and `speakFactor`
   (`1 + 0.25 clamp((arousal above her default + overload) / 2, -1, 1)`). Every reader asks `view` with its own
   `now`, so there is one timeline.
-- `strength()` is her class on the current board, from equity against a random hand (`strengthOf`), computed once per
-  board and cached.
+- `strength()` is her class: `classOf` of her perceived equity, the last equity against the player's range she
+  computed while his cards were hidden (the number her hope and fear follow): strong at 0.62 and more preflop and 0.75
+  and more after the flop, weak under 0.45. It draws no samples, so a view polled by the face never moves her
+  generator. The bluff appraisal at the hand end reads the same class. `strengthOf(hole, board, rng)` classes a hand
+  against a random hand and stays for the player's shown bluff and the arena's bots.
 - The player's range is every pair at weight 1 when a hand starts. `narrow(weights, handNumber)` replaces it with
   1326 weights indexed as `cfr` indexes pairs (`b * (b - 1) / 2 + a`); the pairs that touch her cards or the board
   drop out. It is ignored for another hand, after the hand ended or the player showed, and when no live pair has
@@ -422,7 +428,7 @@ speech, the face, the voice and the bias only read it through a `PersonaReader`.
 
 ## conversation
 
-- `createConversation({ seat, rng, level, habits? })` returns a `Conversation` for one session against the CFR bot.
+- `createConversation({ seat, rng, habits? })` returns a `Conversation` for one session against the CFR bot.
   `observe(moments, persona, nowMs)` reads the moments of a step and returns a `LineIntent` or null: the situation
   (`herBet`, `herCall`, `playerBet`, `handWon`, `handLost`, `bluffCaught`; `endsHand` tells the last three), the hint
   (her hand-strength class `strong`, `medium` or `weak`, or null for a neutral line), whether the hint is honest, the
@@ -431,14 +437,16 @@ speech, the face, the voice and the bias only read it through a `PersonaReader`.
   `replyIntent(persona, nowMs)` is the intent for an answer, `facts(view)` the hand as the server sees it (her cards
   included, stacks by seat), `heard(signals)` counts what the player said in the summary, and `summary()` the session
   summary from her side (`netBb` is her net); `since(current, earlier)` gives what changed between two summaries.
-- The habits (`habits.ts`) give, for a situation and a class, the chance she speaks and the chance the hint is
-  honest, and the tells level (`obvious`, `subtle`, `hidden`) moves both toward the class-blind mean; the chance to
-  speak is scaled by her `speakFactor`. Code draws every chance from the `Rng` it was given; the model only words
+- The habits (`habits.ts`) give, for a situation and a class, the chance she speaks; `habitsAt(habits, mask)` moves it
+  toward the class-blind mean by her mask, so a masked player speaks alike with any hand, and her `speakFactor`
+  scales it. A hint is drawn with the chance 0.7 on her bets, calls and the player's bets and never at a hand end; a
+  drawn hint is the truth with the chance `1 - mask`, otherwise what she presents (`presenting.shows`), or no hint
+  when she presents nothing: she lies in words only while she acts. `honest` is false only on a hint she presents. Code draws every chance from the `Rng` it was given; the model only words
   the line. Pace limits her to one unprompted line per street and none in the 1.5 s after a line.
 - `state.ts` turns her view into what the server gets (version 1). `feelingFor(intent, view)` is `feelingState`: the
   up to three emotions of 0.1 and more with their intensity, strongest first, the mood octant and its strength,
-  overload with its dominant source (null below 0.1), and what she shows: `mask` from `maskOf` with an effort of 0.6
-  while she acts a strength she does not have (`acting`, the hint of a false intent) and 0 otherwise.
+  overload with its dominant source (null below 0.1), and what she shows: the view's `mask`, the number her face
+  uses, and `acting`, the hint of a false intent.
   `character(view)` is `characterOf(view.personality)`, her character sheet in [0, 1]: `talkativeness`
   `0.5 + 0.4 E`, `warmth` from agreeableness, `nerves` from neuroticism and `wit` from openness, each `(1 + x) / 2`.
   `moodWords(view)` are the view's `words`. Every number is rounded to two decimals.
@@ -568,8 +576,8 @@ speech, the face, the voice and the bias only read it through a `PersonaReader`.
   at completion.
 - Table talk (`sessionConversation.ts`): `SessionOptions` takes `conversation` (a `ConversationClient`, default `silentConversationClient`),
   `connectConversation` (a loader for the client, called at most once), `now` (default `Date.now`), `locale` (default `en`),
-  `conversationOn` (default true) and `tells` (default `subtle`). `SessionState.conversation` is
-  `{ available, on, level, lines, bubbles }`: with a Solver opponent (`cfr` or `cfr-v2`), `available` is
+  and `conversationOn` (default true). `SessionState.conversation` is
+  `{ available, on, lines, bubbles }`: with a Solver opponent (`cfr` or `cfr-v2`), `available` is
   `client.enabled`, or true while
   a `connectConversation` has not answered yet; `lines` are the last 100 `ChatLine`s (`id`, `speaker`, `text`, `handNumber`,
   optional `undelivered`) and `bubbles` the latest line per seat. `connectConversation` runs when a Solver session starts with
@@ -583,7 +591,8 @@ text)` (the caller's localized label) append the player's line at once and call 
   `quick: true`. `say` feeds the reply's signals to her persona (`persona.hear`) and the summary
   (`Conversation.heard`), `quick` its own (`compliment`, `mockBluff` after any
   raise of hers in the hand, else `tease`, `claimStrength`). A reply that is null or fails marks the player's line
-  `undelivered`. `setConversation`, `setTells` and `attachConversation(client)` change the switch, the tells level and the client.
+  `undelivered`. `setConversation` and `attachConversation(client)` change the switch and the client. There is no tells setting:
+  how readable she is comes from her mask.
   A `summary` goes out on an effective `leave`,
   on `dispose`, at the end of a tournament, before a new `start` replaces the `Conversation`, every 50th hand and on
   `pageHidden()` (with `keepalive`), only when a hand completed since the last one, and it holds what changed since
@@ -607,7 +616,7 @@ text)` (the caller's localized label) append the player's line at once and call 
   mask of the frame at that moment, and a `gaze` from the events (`gazeOf` in `faceCues.ts`): her hole cards `cards`,
   a dealt street `board`, her bet, call or raise `chips` with `then: 'player'`, the player's action `player`, the
   hand end `player`. The cursor moves also while it is off and when it is switched, so switching it on shows no old
-  reaction. `faceNow()` is `faceFrame(view.snapshot, view.stance, MALLORCA_LOOK)` of `persona.view(now())`, or null while it is off or before
+  reaction. `faceNow()` is `faceFrame(view.snapshot, view.presenting, MALLORCA_LOOK)` of `persona.view(now())`, or null while it is off or before
   `start`; it never moves the engine, so the face changes no move and no seed. `toViewModel` adds `face` (`on`,
   `cues`). `game` re-exports `FaceFrame`, `FaceCue`, `GazeTarget`, `Pulse`, `Weights`, `VisemeCue` and `speechOf`.
 - The payload builders (`conversationClient.ts`) send `facts.stacks` as `[hers, the player's]` from the bot seat, the intent
@@ -698,8 +707,8 @@ text)` (the caller's localized label) append the player's line at once and call 
   second and removes it after 7 s (full text at once under `prefers-reduced-motion`), her bubble at her plaque and the
   player's at theirs. On wide screens the chat sits in the right column of the table; on phones and short screens a
   chat button at her plaque opens `ChatSheet`, a sheet portalled to `body`. The hand log stays in its drawer. The menu
-  holds Table talk and Tells, kept in `localStorage` (`mallorca.talk`, `mallorca.tells`) and passed to
-  `createSession` as `conversationOn` and `tells`. Keyboard shortcuts ignore keys typed in a text field.
+  holds Table talk, kept in `localStorage` (`mallorca.talk`) and passed to `createSession` as `conversationOn`; a
+  stored `mallorca.tells` of older builds is ignored. Keyboard shortcuts ignore keys typed in a text field.
 - The start screen offers a cash game (100 bb) and a tournament. In cash the status bar shows the blinds, the
   running result in bb and a leave button, enabled only between hands; the session-over dialog shows the result in
   bb, bb/100 and the hands, with play again and the export of the session. `signed` formats a bb value as sign
@@ -791,7 +800,7 @@ text)` (the caller's localized label) append the player's line at once and call 
   `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and `export-text` (the session
   dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu). Table talk adds
   `bubble-mallorca`, `bubble-player`, `conversation-region`, `chat-panel`, `chat-open`, `chat-sheet`, `chat-close`,
-  `chat-line`, `chat-input`, `chat-send`, `quick-<id>`, `table-conversation` and `tells`. The face adds `face-seat` (with
+  `chat-line`, `chat-input`, `chat-send`, `quick-<id>` and `table-conversation`. The face adds `face-seat` (with
   `data-face` = `portrait` or `live`), `face` and `voice`. The emotion debug panel, in development builds only, adds
   `emotion-debug-toggle`, `emotion-debug`, `debug-personality-<key>`, `debug-reset`, `debug-emotions`, `debug-mood`,
   `debug-load`, `debug-bias`, `debug-decision` and `debug-journal`.
@@ -859,7 +868,8 @@ range     player action -> bot.observe -> bot.opponentRange() (worker, after the
 ```
 
 The player's range reaches her feeling after the bot's next decision and a worker round trip, so that decision uses
-the bias from before it; nothing in the hand waits for it. The read buckets each street of the hand once: the first
+the bias from before it, and a line at the player's raise reads her class, what she presents and her mask from
+before his raise narrows him; her face follows once the range arrives; nothing in the hand waits for it. The read buckets each street of the hand once: the first
 read on the turn costs about 30 ms on a desktop and 130 to 170 ms at a 4 to 6 times slower CPU (v1), every other
 read under 4 ms; her equity against the range costs up to 4 ms on a desktop and 17 ms at 6 times slower. The session never waits for the server: a line is requested without awaiting it, a late or missing answer is
 dropped, and an error leaves the game as it is. Her feeling reaches a move only through the bias, bounded by the

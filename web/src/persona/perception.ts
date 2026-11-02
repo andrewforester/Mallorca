@@ -9,7 +9,7 @@ import type { Felt } from './journal.ts';
 import { netOf, playerCardsShown } from './hand.ts';
 import { liveRange } from './range.ts';
 import type { Signal } from './signals.ts';
-import { ALL_HANDS, strengthOf } from './strength.ts';
+import { ALL_HANDS, classOf } from './strength.ts';
 import type { Bias } from './bias.ts';
 import { botBiasOf, speakFactorOf, wordsOf } from './view.ts';
 
@@ -32,6 +32,7 @@ export interface Feeling {
   bias(): Bias;
   words(): string[];
   speakFactor(): number;
+  perceived(): number;
 }
 
 const SAMPLES = 600;
@@ -46,6 +47,7 @@ class TableFeeling implements Feeling {
   private herAggressive = false;
   private readonly equities = new Map<string, number>();
   private range: WeightedHands = ALL_HANDS;
+  private lastPerceived = NO_SHOWDOWN_EQUITY;
   private handNumber = 0;
   private felt: Felt[] = [];
 
@@ -69,6 +71,7 @@ class TableFeeling implements Feeling {
         this.herAggressive = false;
         this.equities.clear();
         this.range = ALL_HANDS;
+        this.lastPerceived = NO_SHOWDOWN_EQUITY;
         return;
       case 'holeCards':
         if (event.seat === this.seat) this.dealt(hand);
@@ -150,6 +153,10 @@ class TableFeeling implements Feeling {
     return speakFactorOf(this.engine.snapshot());
   }
 
+  perceived(): number {
+    return this.lastPerceived;
+  }
+
   private dealt(hand: HandState): void {
     this.feel({ kind: 'deal', equity: this.equity(hand), ...this.money(hand) });
   }
@@ -179,7 +186,7 @@ class TableFeeling implements Feeling {
     this.feel({ kind: 'result', netBb, lastEquity: this.whenMoneyWentIn(hand) });
     const her = hand.her;
     if (her === null || !hand.herLateBet) return;
-    const weak = strengthOf(her, hand.board, this.rng) === 'weak';
+    const weak = classOf(this.lastPerceived, hand.board.length) === 'weak';
     if (!weak) return;
     const potBb = (hand.awarded[0] + hand.awarded[1]) / hand.bigBlind;
     if (!won && hand.showdown !== null) this.feel({ kind: 'bluff', succeeded: false, potBb });
@@ -209,10 +216,11 @@ class TableFeeling implements Feeling {
     if (her === null) return 0.5;
     const his = playerCardsShown(hand, this.seat);
     const key = `${hand.board.length}:${his === null ? '' : 'shown'}`;
-    const known = this.equities.get(key);
-    if (known !== undefined) return known;
-    const value = his === null ? this.vsRange(her, hand.board) : equityVsHand(her, his, hand.board);
+    const value =
+      this.equities.get(key) ??
+      (his === null ? this.vsRange(her, hand.board) : equityVsHand(her, his, hand.board));
     this.equities.set(key, value);
+    if (his === null) this.lastPerceived = value;
     return value;
   }
 

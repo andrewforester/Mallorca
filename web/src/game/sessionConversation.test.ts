@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 import type { BotBias } from '../brains/index.ts';
 import { CASH, TOURNAMENT } from '../engine/index.ts';
 import type { LegalActions } from '../engine/index.ts';
-import type { Level } from '../conversation/index.ts';
 import { memoryStore } from './records/store.ts';
 import type { RecordsOptions } from './records/recorder.ts';
 import { createSession } from './session.ts';
@@ -82,7 +81,6 @@ interface Table {
 interface Extra {
   mode?: typeof CASH | typeof TOURNAMENT;
   conversationOn?: boolean;
-  tells?: Level;
   records?: RecordsOptions;
   connectConversation?: () => Promise<ConversationClient>;
   debug?: boolean;
@@ -461,21 +459,21 @@ describe('session conversation', () => {
     expect(table.session.getState().conversation.lines).toEqual([]);
   });
 
-  it('switches conversation and tells', async () => {
+  it('switches conversation', async () => {
     const client = fakeClient();
-    const table = open(client, { tells: 'hidden' });
+    const table = open(client);
     await table.session.getState().start(CASH, 'cfr');
-    expect(table.session.getState().conversation).toMatchObject({ on: true, level: 'hidden' });
+    expect(table.session.getState().conversation).toMatchObject({ on: true });
     table.session.getState().setConversation(false);
-    table.session.getState().setTells('obvious');
-    expect(table.session.getState().conversation).toMatchObject({ on: false, level: 'obvious' });
+    expect(table.session.getState().conversation).toMatchObject({ on: false });
     table.session.getState().say('Hello');
     expect(client.replies).toEqual([]);
     table.session.getState().setConversation(true);
     table.session.getState().say('Hello');
     expect(client.replies).toHaveLength(1);
     const vm = toViewModel(table.session.getState(), 1);
-    expect(vm.conversation).toMatchObject({ available: true, on: true, level: 'obvious' });
+    expect(vm.conversation).toMatchObject({ available: true, on: true });
+    expect('level' in vm.conversation).toBe(false);
   });
 
   it('bias reaches decide and the records', async () => {
