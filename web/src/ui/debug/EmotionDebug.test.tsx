@@ -101,6 +101,14 @@ describe('EmotionDebug', () => {
     );
   });
 
+  it('carries her self-control slider into a custom personality', async () => {
+    const session = await seated();
+    const setPersonality = vi.spyOn(session.getState(), 'setPersonality');
+    await opened(session);
+    fireEvent.input(screen.getByLabelText(COPY.control), { target: { value: '0.1' } });
+    expect(setPersonality).toHaveBeenCalledWith(expect.objectContaining({ control: 0.1 }));
+  });
+
   it('says no bias was sent before her first decision', async () => {
     await opened(await seated());
     expect(within(screen.getByTestId('debug-bias')).getByText(COPY.notSent)).toBeTruthy();
@@ -115,8 +123,12 @@ describe('EmotionDebug', () => {
     expect(within(screen.getByTestId('debug-mood')).getAllByText(/^P [-\d.]+/)[0]).toBeTruthy();
     expect(within(screen.getByTestId('debug-load')).getByText(COPY.load.overload)).toBeTruthy();
     const bias = screen.getByTestId('debug-bias');
-    expect(within(bias).getByText(COPY.bias.looseness)).toBeTruthy();
+    expect(
+      within(screen.getByTestId('debug-bias-now')).getByText(COPY.bias.looseness),
+    ).toBeTruthy();
     expect(within(bias).getByText(COPY.sent.tightness)).toBeTruthy();
+    expect(within(bias).getByText(COPY.styleTitle)).toBeTruthy();
+    expect(within(screen.getByTestId('debug-style')).getByText(COPY.bias.looseness)).toBeTruthy();
   });
 
   it('shows the last decision with the blueprint and the biased shares', async () => {

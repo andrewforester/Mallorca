@@ -19,7 +19,14 @@ export { SIGNALS } from './signals.ts';
 export type { StrengthClass } from './strength.ts';
 export { classOf, strengthOf } from './strength.ts';
 export { wordsOf } from './view.ts';
-export { BIAS_KEYS, EMOTIONS, LOAD_SOURCES, MALLORCA, PERSONALITIES } from '../emotion/index.ts';
+export {
+  BIAS_KEYS,
+  EMOTIONS,
+  LOAD_SOURCES,
+  MALLORCA,
+  PERSONALITIES,
+  styleOf,
+} from '../emotion/index.ts';
 export type {
   BiasKey,
   BigFive,

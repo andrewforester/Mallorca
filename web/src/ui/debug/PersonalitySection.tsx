@@ -38,6 +38,13 @@ function slidersOf(view: DebugView): Slider[] {
       value: view.experience,
       put: (p, v) => ({ ...p, experience: v }),
     },
+    {
+      id: 'control',
+      label: COPY.control,
+      min: 0,
+      value: view.control,
+      put: (p, v) => ({ ...p, control: v }),
+    },
   ];
 }
 

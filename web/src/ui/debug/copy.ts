@@ -41,6 +41,7 @@ export const COPY = {
   } satisfies Record<keyof BigFive, string>,
   suppression: 'Poker face habit',
   experience: 'Poker experience',
+  control: 'Self-control',
   traits: {
     defaultMood: 'Default mood',
     composure: 'Composure',
@@ -106,6 +107,7 @@ export const COPY = {
     sizing: 'Bet size',
     stickiness: 'Stickiness',
   } satisfies Record<BiasKey, string>,
+  styleTitle: 'Natural style',
   sentTitle: 'Sent to the bot',
   notSent: 'No bias sent yet',
   sent: {

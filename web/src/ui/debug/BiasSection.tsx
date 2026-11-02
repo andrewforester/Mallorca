@@ -1,4 +1,4 @@
-import type { DebugView, Bias } from '../../game/index.ts';
+import type { DebugView, Bias, BiasKey } from '../../game/index.ts';
 import { Bar } from './Bar.tsx';
 import { COPY } from './copy.ts';
 import { f2 } from './format.ts';
@@ -23,13 +23,23 @@ function Sent({ bias }: { bias: Bias | null }) {
   );
 }
 
+function Bars({ testId, rows }: { testId: string; rows: [BiasKey, number][] }) {
+  return (
+    <div data-testid={testId}>
+      {rows.map(([key, value]) => (
+        <Bar key={key} label={COPY.bias[key]} value={value} text={f2(value)} centered />
+      ))}
+    </div>
+  );
+}
+
 export function BiasSection({ view }: { view: DebugView }) {
   return (
     <section class="debug-section" data-testid="debug-bias">
       <h3>{COPY.sections.bias}</h3>
-      {view.engineBias.map(([key, value]) => (
-        <Bar key={key} label={COPY.bias[key]} value={value} text={f2(value)} centered />
-      ))}
+      <Bars testId="debug-bias-now" rows={view.engineBias} />
+      <h4>{COPY.styleTitle}</h4>
+      <Bars testId="debug-style" rows={view.baseline} />
       <h4>{COPY.sentTitle}</h4>
       <Sent bias={view.sentBias} />
     </section>
