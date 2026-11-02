@@ -26,6 +26,14 @@ function stamp(date: Date): string {
   return `${iso.slice(0, 10).replaceAll('-', '')}-${iso.slice(11, 19).replaceAll(':', '')}`;
 }
 
-export function runName(a: string, b: string, pairs: number, seed: number, started: Date): string {
-  return `${a}-${b}-${pairs}-s${seed}-${stamp(started)}`;
+export function runName(
+  a: string,
+  b: string,
+  pairs: number,
+  seed: number,
+  started: Date,
+  session = 1,
+): string {
+  const count = session > 1 ? `${pairs}x${session}` : `${pairs}`;
+  return `${a}-${b}-${count}-s${seed}-${stamp(started)}`;
 }

@@ -24,7 +24,7 @@ const rolls = (...values: number[]): Rng => {
 
 function view(patch: Partial<PersonaView> = {}): PersonaView {
   const base = createPersona({ seat: 1, rng: mulberry32(1) }).view(0);
-  return { ...base, mask: 0, speakFactor: 1, presenting: null, stance: null, ...patch };
+  return { ...base, mask: 0, speakFactor: 1, presenting: null, ...patch };
 }
 
 function occasion(kind: OccasionKind, patch: Partial<Occasion> = {}): Occasion {
@@ -154,7 +154,7 @@ describe('the verdict', () => {
     const v = judge(
       {
         occasions: [occasion('herBet', { strength: 'weak' })],
-        view: view({ mask: 1, presenting, stance: 'bluff' }),
+        view: view({ mask: 1, presenting }),
         pace: FRESH,
         nowMs: 0,
       },

@@ -8,28 +8,28 @@ import type { BotFactory } from './bots.ts';
 const SEATS = createTable(['seat0', 'seat1'], CASH).seats;
 const STACK = SEATS[0].stack;
 
-function playHand(
-  factories: [BotFactory, BotFactory],
-  seed: number,
-  index: number,
-  k: number,
-): { events: EngineEvent[]; stacks: [number, number] } {
-  const deckRng = mulberry32((Math.imul(seed, 0x9e3779b1) + index) >>> 0);
+interface Deal {
+  seed: number;
+  deck: number;
+  side: number;
+  button: SeatIndex;
+}
+
+function playHand(bots: [ArenaBot, ArenaBot], deal: Deal): EngineEvent[] {
+  const deckRng = mulberry32((Math.imul(deal.seed, 0x9e3779b1) + deal.deck) >>> 0);
   const deck = shuffle(fullDeck(), deckRng);
-  const bots = factories.map((make, seat) =>
-    make(mulberry32((seed ^ (index * 4 + k * 2 + seat)) >>> 0)),
-  ) as [ArenaBot, ArenaBot];
   const events: EngineEvent[] = [];
   const feed = (step: Step) => {
     events.push(...step.events);
     for (const seat of [0, 1] as const) {
       for (const o of toObservations(step.events, seat)) bots[seat].observe(o);
+      bots[seat].events?.(step.events);
     }
   };
-  const handNumber = index * 2 + k + 1;
+  const handNumber = deal.deck * 2 + deal.side + 1;
   const start = startHandWith(
     SEATS,
-    { button: 0, blinds: rulesOf(CASH).blinds(handNumber), handNumber },
+    { button: deal.button, blinds: rulesOf(CASH).blinds(handNumber), handNumber },
     deck,
   );
   const act = (seat: SeatIndex, legal: LegalActions): Action => {
@@ -40,9 +40,33 @@ function playHand(
     }
     return action;
   };
-  const end = playToEnd(start, act, feed);
+  playToEnd(start, act, feed);
+  return events;
+}
+
+const finalStacks = (events: EngineEvent[]): [number, number] => {
+  const ended = events.find((e) => e.type === 'handEnded');
+  if (ended?.type !== 'handEnded') throw new Error('a hand ended without handEnded');
+  return ended.stacks;
+};
+
+function playSession(
+  factories: [BotFactory, BotFactory],
+  seed: number,
+  index: number,
+  side: number,
+  length: number,
+): EngineEvent[][] {
+  const bots = factories.map((make, seat) =>
+    make(mulberry32((seed ^ (index * 4 + side * 2 + seat)) >>> 0), seat as SeatIndex),
+  ) as [ArenaBot, ArenaBot];
+  const hands: EngineEvent[][] = [];
+  for (let j = 0; j < length; j++) {
+    const deck = index * length + j;
+    hands.push(playHand(bots, { seed, deck, side, button: (j % 2) as SeatIndex }));
+  }
   for (const bot of bots) bot.dispose?.();
-  return { events, stacks: [end.seats[0].stack, end.seats[1].stack] };
+  return hands;
 }
 
 export function playPair(
@@ -50,11 +74,12 @@ export function playPair(
   b: BotFactory,
   seed: number,
   index: number,
+  session = 1,
 ): { net: number; hands: EngineEvent[][] } {
-  const first = playHand([a, b], seed, index, 0);
-  const second = playHand([b, a], seed, index, 1);
-  return {
-    net: first.stacks[0] - STACK + (second.stacks[1] - STACK),
-    hands: [first.events, second.events],
-  };
+  const first = playSession([a, b], seed, index, 0, session);
+  const second = playSession([b, a], seed, index, 1, session);
+  const net =
+    first.reduce((sum, h) => sum + finalStacks(h)[0] - STACK, 0) +
+    second.reduce((sum, h) => sum + finalStacks(h)[1] - STACK, 0);
+  return { net, hands: [...first, ...second] };
 }

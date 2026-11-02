@@ -1,4 +1,4 @@
-import { EMOTIONS, LOAD_SOURCES, BIAS_KEYS } from '../persona/index.ts';
+import { EMOTIONS, LOAD_SOURCES, BIAS_KEYS, styleOf } from '../persona/index.ts';
 import type {
   BigFive,
   Emotion,
@@ -32,6 +32,7 @@ export interface DebugView {
   bigFive: BigFive;
   suppression: number;
   experience: number;
+  control: number;
   traits: DebugTraits | null;
   emotions: [Emotion, number][];
   mood: Pad | null;
@@ -41,6 +42,7 @@ export interface DebugView {
   sessionNetBb: number;
   pressure: number;
   engineBias: [BiasKey, number][];
+  baseline: [BiasKey, number][];
   sentBias: Bias | null;
   decision: DebugDecision | null;
   journal: DebugEntry[];
@@ -104,12 +106,15 @@ function feelingOf(s: Snapshot): FeelingPart {
 
 export function toDebugView(debug: DebugState): DebugView {
   const { snapshot, personality } = debug;
-  const { bigFive, suppression, experience } = personalityOf(personality);
+  const { bigFive, suppression, experience, control } = personalityOf(personality);
+  const style = styleOf(bigFive, experience);
   return {
     personality,
     bigFive,
     suppression,
     experience,
+    control,
+    baseline: BIAS_KEYS.map((k) => [k, style[k]]),
     ...(snapshot === null ? CALM : feelingOf(snapshot)),
     sentBias: debug.sentBias,
     decision: debug.decision,

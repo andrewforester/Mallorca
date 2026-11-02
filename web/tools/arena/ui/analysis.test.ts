@@ -10,13 +10,14 @@ import { cumulative, pairNets, pairRows, slices, summarize } from './analysis.ts
 
 const BB = 20;
 
-function play(a: BotName, b: BotName, seed: number, pairs: number) {
+function play(a: BotName, b: BotName, seed: number, pairs: number, session = 1) {
   const records: HandRecord[] = [];
   const nets: number[] = [];
   for (let index = 0; index < pairs; index++) {
-    const pair = playPair(BOTS[a], BOTS[b], seed, index);
+    const pair = playPair(BOTS[a], BOTS[b], seed, index, session);
     nets.push(pair.net);
-    pair.hands.forEach((events, k) => {
+    pair.hands.forEach((events, i) => {
+      const k = Math.floor(i / session) % 2;
       records.push(
         handRecord(events, [], {
           sessionId: `arena-${seed}`,
@@ -59,6 +60,14 @@ describe('pairNets', () => {
     expect(fromHands).toEqual(nets);
     const mean = fromHands.reduce((s, n) => s + (n / 2 / BB) * 100, 0) / fromHands.length;
     expect(mean).toBeCloseTo(stats(nets, BB).bbPer100, 9);
+  });
+});
+
+describe('pairNets of sessions', () => {
+  it('sums each pair of sessions, not each deck', () => {
+    const { hands, nets } = play('always-call', 'random', 3, 3, 4);
+    expect(pairNets(hands, 4)).toEqual(nets);
+    expect(pairNets(hands)).toHaveLength(12);
   });
 });
 

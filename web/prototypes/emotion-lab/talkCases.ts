@@ -20,8 +20,8 @@ import type {
   OccasionKind,
   PublicFacts,
 } from '../../src/conversation/index.ts';
-import { PRESENTING_EFFORT } from '../../src/persona/index.ts';
 import type { HandState, PersonaView, Presenting, StrengthClass } from '../../src/persona/index.ts';
+import { actingEffort } from './acting.ts';
 import { LAB_MOOD } from './lab.ts';
 import { PROFILES } from './profiles.ts';
 import { createRunner } from './scenes/runner.ts';
@@ -254,7 +254,13 @@ function planOf(
   const occasion = occasionOf(spot, m, street);
   const acting = spot.honest ? null : spot.hint;
   const presenting: Presenting | null =
-    acting === null ? null : { stance: 'bluff', shows: acting, effort: PRESENTING_EFFORT.bluff };
+    acting === null
+      ? null
+      : {
+          stance: acting === 'weak' ? 'hide' : 'bluff',
+          shows: acting,
+          effort: actingEffort(acting),
+        };
   const effort = presenting?.effort ?? 0;
   const mask = maskOf(m.snapshot.traits.mask, effort, m.snapshot.load.overload);
   const view = { snapshot: m.snapshot, mask, presenting } as PersonaView;

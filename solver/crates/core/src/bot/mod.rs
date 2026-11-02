@@ -1,5 +1,6 @@
 mod bias;
 mod decision;
+mod order;
 mod range;
 mod spot;
 mod translate;
@@ -12,8 +13,11 @@ use crate::cards::Card;
 use crate::strategy::{StrategyError, StrategyFile};
 use crate::tree::{ActionKind, Node, NodeId, Street};
 use bias::choose;
-pub use bias::{reweight, sample_weighted, size_position, Bias, Situation};
+pub use bias::{
+    reweight, sample_weighted, shift, Bias, Situation, AGGRESSIVE_SHIFT, LOOSE_SHIFT, STICKY_SHIFT,
+};
 pub use decision::DecisionView;
+use order::Order;
 use translate::{fraction, nearest, pseudo_harmonic, scaled_raise};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -36,9 +40,11 @@ pub struct Model {
     pub file: StrategyFile,
     pub abstraction: Abstraction,
     spots: Vec<Vec<NodeId>>,
+    orders: [Order; 4],
 }
 
 struct Spot<'a> {
+    id: NodeId,
     seat: usize,
     street: Street,
     committed: [u32; 2],
@@ -69,10 +75,12 @@ fn spot_key(street: Street, seat: usize, facing: bool) -> usize {
 impl Model {
     pub fn new(file: StrategyFile) -> Result<Model, StrategyError> {
         let abstraction = Abstraction::from_strategy(&file)?;
+        let file_buckets = file.tree.buckets();
         let mut model = Model {
             file,
             abstraction,
             spots: vec![Vec::new(); 16],
+            orders: Order::of_tree(file_buckets),
         };
         for id in 0..model.file.tree.nodes().len() as NodeId {
             if let Some(spot) = model.spot(id) {
@@ -92,6 +100,7 @@ impl Model {
                 street_bets,
                 actions,
             } => Some(Spot {
+                id,
                 seat: usize::from(*seat),
                 street: *street,
                 committed: *committed,
@@ -100,6 +109,10 @@ impl Model {
             }),
             _ => None,
         }
+    }
+
+    fn order(&self, street: Street) -> &Order {
+        &self.orders[street.as_index()]
     }
 
     fn raise_to(&self, spot: &Spot<'_>, kind: ActionKind) -> Option<u32> {
@@ -335,7 +348,7 @@ impl Bot {
             bias: self.bias,
         });
         hand.pending = Some(chosen.1);
-        to_real(&spot, hand, chosen.0, legal)
+        to_real(&spot, hand, chosen.0, legal, self.bias.sizing)
     }
 }
 
@@ -468,7 +481,7 @@ fn resync_to_check(model: &Model, hand: &mut Hand, draw: f64) -> f64 {
     draw / p
 }
 
-fn to_real(spot: &Spot<'_>, hand: &Hand, kind: ActionKind, legal: &Legal) -> Move {
+fn to_real(spot: &Spot<'_>, hand: &Hand, kind: ActionKind, legal: &Legal, sizing: f64) -> Move {
     let Some(range) = legal.raise.filter(|r| r.0 <= r.1) else {
         return match kind {
             ActionKind::Fold if legal.fold => Move::Fold,
@@ -483,7 +496,7 @@ fn to_real(spot: &Spot<'_>, hand: &Hand, kind: ActionKind, legal: &Legal) -> Mov
             let f = fraction(t, spot.street_bets[1 - spot.seat], spot.pot_after_call());
             let me = hand.hero;
             Move::RaiseTo(scaled_raise(
-                f,
+                f * sizing,
                 hand.bets[1 - me],
                 hand.pot_after_call(me),
                 range,

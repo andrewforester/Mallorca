@@ -10,6 +10,7 @@ export const MALLORCA: Personality = {
   },
   suppression: 0.35,
   experience: 0.7,
+  control: 0.7,
 };
 
 export const PERSONALITIES = {
@@ -24,6 +25,7 @@ export const PERSONALITIES = {
     },
     suppression: 0.3,
     experience: 0.5,
+    control: 0.5,
   },
   ingrid: {
     bigFive: {
@@ -35,6 +37,7 @@ export const PERSONALITIES = {
     },
     suppression: 0.85,
     experience: 0.9,
+    control: 0.9,
   },
   lola: {
     bigFive: {
@@ -46,6 +49,7 @@ export const PERSONALITIES = {
     },
     suppression: 0.08,
     experience: 0.2,
+    control: 0.2,
   },
   nina: {
     bigFive: {
@@ -57,6 +61,7 @@ export const PERSONALITIES = {
     },
     suppression: 0.55,
     experience: 0,
+    control: 0,
   },
 } satisfies Record<string, Personality>;
 

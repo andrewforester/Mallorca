@@ -4,6 +4,9 @@ import { applyAction } from '../engine/hand.ts';
 import { call, check, deckOf, raiseTo, startHand } from '../engine/testDeck.ts';
 import type { Action, Step } from '../engine/types.ts';
 import { createFeeling } from './perception.ts';
+import { botBiasOf, speakFactorOf, toBotBias } from './view.ts';
+import { MALLORCA } from '../emotion/index.ts';
+import { traitsOf } from '../emotion/personality.ts';
 import type { Feeling } from './perception.ts';
 import { NO_HAND, track } from './hand.ts';
 import type { HandState } from './hand.ts';
@@ -171,17 +174,11 @@ describe("her equity against the player's range", () => {
 });
 
 describe('what the feeling gives the rest of conversation', () => {
-  it('is calm at the start: no words, speaking factor one, neutral bias', () => {
+  it('is calm at the start: no words, speaking factor one, her natural style', () => {
     const feeling = createFeeling({ seat: HER, rng: mulberry32(1) });
     expect(feeling.words()).toEqual([]);
-    expect(feeling.speakFactor()).toBeCloseTo(1, 1);
-    expect(feeling.bias()).toEqual({
-      aggression: 1,
-      bluff: 1,
-      tightness: 1,
-      sizing: 1,
-      stickiness: 1,
-    });
+    expect(speakFactorOf(feeling.snapshot())).toBeCloseTo(1, 1);
+    expect(botBiasOf(feeling.snapshot())).toEqual(toBotBias(traitsOf(MALLORCA).baseline));
   });
 
   it('names the strongest emotions for the prompt, at most three', () => {
@@ -202,7 +199,7 @@ describe('what the feeling gives the rest of conversation', () => {
     hand.act(raiseTo(2000), 2000);
     hand.act(call, 3000);
     hand.feeling.advance(8000);
-    const bias = hand.feeling.bias();
+    const bias = botBiasOf(hand.feeling.snapshot());
     expect(bias.tightness).toBeLessThan(1);
     expect(bias.stickiness).toBeGreaterThan(1);
     expect(bias.tightness * hand.feeling.snapshot().bias.looseness).toBeCloseTo(1, 12);

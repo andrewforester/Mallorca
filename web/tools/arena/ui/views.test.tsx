@@ -14,13 +14,14 @@ import type { RunEntry } from './types.ts';
 
 afterEach(cleanup);
 
-function records(pairs: number): { records: HandRecord[]; nets: number[] } {
+function records(pairs: number, session = 1): { records: HandRecord[]; nets: number[] } {
   const out: HandRecord[] = [];
   const nets: number[] = [];
   for (let index = 0; index < pairs; index++) {
-    const pair = playPair(BOTS['random'], BOTS['always-call'], 5, index);
+    const pair = playPair(BOTS['random'], BOTS['always-call'], 5, index, session);
     nets.push(pair.net);
-    pair.hands.forEach((events, k) => {
+    pair.hands.forEach((events, i) => {
+      const k = Math.floor(i / session) % 2;
       out.push(
         handRecord(events, [], {
           sessionId: 'arena-5',
@@ -116,6 +117,16 @@ describe('RunView', () => {
     expect(screen.queryByText(/do not match this report/)).toBeNull();
     expect(screen.getAllByRole('cell', { name: 'Big blind' })).toHaveLength(1);
     expect(screen.getAllByRole('cell', { name: 'No showdown' })).toHaveLength(1);
+  });
+
+  it('shows no warning for a run of sessions whose hands match it', async () => {
+    const { records: list, nets } = records(6, 5);
+    const bbPer100 = stats(nets, 20, 10).bbPer100;
+    render(
+      <RunView run={run({ pairs: 6, hands: 60, session: 5, bbPer100 })} load={loader(list)} />,
+    );
+    expect(await screen.findByText('Where the result comes from')).toBeTruthy();
+    expect(screen.queryByText(/do not match this report/)).toBeNull();
   });
 
   it('reports skipped lines', async () => {

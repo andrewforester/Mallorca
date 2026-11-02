@@ -67,7 +67,7 @@ export function createSpeaker(options: SpeakerOptions): Speaker {
       cursor = persona.lastJournalId();
       return fresh.flatMap((e) => e.impulses);
     },
-    stance: () => view().stance,
+    stance: () => view().presenting?.stance ?? null,
     setPersonality: (p) => persona.setPersonality(p),
     resetFeeling() {
       persona.reset();

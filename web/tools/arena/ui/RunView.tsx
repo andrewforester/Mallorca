@@ -50,8 +50,12 @@ interface AnalysisProps {
 }
 
 function Checks({ run, hands, bigBlind }: AnalysisProps) {
-  const nets = useMemo(() => pairNets(hands.summaries), [hands]);
-  const mean = useMemo(() => summarize(nets, bigBlind).bbPer100, [nets, bigBlind]);
+  const session = run.report.session ?? 1;
+  const nets = useMemo(() => pairNets(hands.summaries, session), [hands, session]);
+  const mean = useMemo(
+    () => summarize(nets, bigBlind, 2 * session).bbPer100,
+    [nets, bigBlind, session],
+  );
   const mismatch =
     nets.length !== run.report.pairs || Math.abs(mean - run.report.bbPer100) > TOLERANCE;
   return (
@@ -70,7 +74,11 @@ function Checks({ run, hands, bigBlind }: AnalysisProps) {
 
 function Analysis({ run, hands, bigBlind }: AnalysisProps) {
   const [open, setOpen] = useState<PairRow | null>(null);
-  const points = useMemo(() => cumulative(pairNets(hands.summaries), bigBlind), [hands, bigBlind]);
+  const session = run.report.session ?? 1;
+  const points = useMemo(
+    () => cumulative(pairNets(hands.summaries, session), bigBlind),
+    [hands, bigBlind, session],
+  );
   const groups = useMemo(() => slices(hands.summaries, bigBlind), [hands, bigBlind]);
   return (
     <>

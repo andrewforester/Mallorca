@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { netsOfRecords, pairedDifference } from './paired.ts';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { netsOfRecords, pairedDifference, sessionOfHands } from './paired.ts';
 
 const record = (handNumber: number, start: [number, number], end: [number, number]) => ({
   handNumber,
@@ -19,6 +22,28 @@ describe('netsOfRecords', () => {
     ]);
     expect([...nets]).toEqual([
       [0, 60],
+      [1, -10],
+    ]);
+  });
+});
+
+describe('netsOfRecords of sessions', () => {
+  it('sums bot A over both sessions of a pair', () => {
+    const nets = netsOfRecords(
+      [
+        record(1, [2000, 2000], [2100, 1900]),
+        record(3, [2000, 2000], [2010, 1990]),
+        record(2, [2000, 2000], [2040, 1960]),
+        record(4, [2000, 2000], [2000, 2000]),
+        record(5, [2000, 2000], [1980, 2020]),
+        record(7, [2000, 2000], [2000, 2000]),
+        record(6, [2000, 2000], [1990, 2010]),
+        record(8, [2000, 2000], [2000, 2000]),
+      ],
+      2,
+    );
+    expect([...nets]).toEqual([
+      [0, 70],
       [1, -10],
     ]);
   });
@@ -69,5 +94,30 @@ describe('pairedDifference', () => {
         20,
       ),
     ).toThrow(/pairs/);
+  });
+});
+
+describe('pairedDifference of sessions', () => {
+  it('counts every hand of a session pair', () => {
+    const a = new Map([
+      [0, 0],
+      [1, 0],
+    ]);
+    const b = new Map([
+      [0, 400],
+      [1, 0],
+    ]);
+    expect(pairedDifference(a, b, 20, 400).mean).toBe(2.5);
+  });
+});
+
+describe('sessionOfHands', () => {
+  it('reads the session length from the report next to the hands', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'paired-'));
+    writeFileSync(join(dir, 'run.json'), JSON.stringify({ session: 200 }));
+    writeFileSync(join(dir, 'old.json'), JSON.stringify({ pairs: 2 }));
+    expect(sessionOfHands(join(dir, 'run.jsonl'))).toBe(200);
+    expect(sessionOfHands(join(dir, 'old.jsonl'))).toBe(1);
+    expect(sessionOfHands(join(dir, 'lonely.jsonl'))).toBe(1);
   });
 });

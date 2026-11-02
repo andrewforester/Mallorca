@@ -28,7 +28,7 @@ impl Bot {
         let moves = spot
             .actions
             .iter()
-            .map(|&(kind, _)| to_real(&spot, hand, kind, legal))
+            .map(|&(kind, _)| to_real(&spot, hand, kind, legal, self.bias.sizing))
             .collect();
         Some(SpotView {
             node,

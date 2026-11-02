@@ -1,4 +1,4 @@
-import type { Emotion, Snapshot } from '../emotion/index.ts';
+import type { Emotion, PlayBias, Snapshot } from '../emotion/index.ts';
 import type { Bias } from './bias.ts';
 
 const WORD_THRESHOLD = 0.25;
@@ -32,7 +32,10 @@ export function wordsOf(s: Snapshot): string[] {
 }
 
 export function botBiasOf(s: Snapshot): Bias {
-  const b = s.bias;
+  return toBotBias(s.bias);
+}
+
+export function toBotBias(b: PlayBias): Bias {
   return {
     aggression: b.aggression,
     bluff: b.bluff,

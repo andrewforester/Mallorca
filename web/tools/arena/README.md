@@ -190,6 +190,56 @@ stop. The clamps are not widened further.
 The bias runs also print bb/100; `cfr` vs `cfr` at 20000 pairs gives -6.2 ± 7.7, which is noise: the bot plays itself, so its
 true value is zero; the 200000 pair runs above are the measure of cost.
 
+These runs predate issue #80: since then tightness also moves `cfr-tilted`, `cfr-confident` and `cfr-cautious`, and
+their figures above are not re-measured.
+
+### The axes at their edges (issue #80)
+
+The bias used to multiply the blueprint's probabilities, so a pure decision could not move and looseness, stickiness
+and sizing barely changed play (`cfr@tightness=0.5,stickiness=2` played 74.2% vpip against 74.1%). Now tightness
+before the flop and stickiness after it, at nodes with a fold, and aggression at nodes without one, play a hand as a
+slightly stronger or weaker one: the row of the same node is blended from the two buckets next to the shifted
+strength percentile, `δ = 0.35 ln(1/tightness)`, `0.2 ln(stickiness)` and `0.2 ln(aggression)`. Preflop classes are
+ordered by their equity against a random hand; buckets after the flop are already ordered by strength. Sizing
+multiplies the pot fraction of the bot's own bet or raise. Aggression keeps its factor between calls and raises;
+bluff keeps its factor and is left for its own study. The goal: the edges of each axis, 0.5 and 2 (the clamp of the
+emotion model), make a different kind of player.
+
+Each axis against `cfr`, seed 5, 2000 pairs (4000 hands) per point, each frequency known to about ±1.5 points:
+
+| Axis, statistic                   | 0.5   | 0.67  | 0.8   | 1     | 1.25  | 1.5   | 2     |
+| --------------------------------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+| `tightness`, vpip                 | 84.2% | 82.8% | 80.6% | 73.7% | 68.2% | 64.0% | 55.5% |
+| `stickiness`, fold to bet         | 59.5% | 53.6% | 50.5% | 45.6% | 40.6% | 35.6% | 29.2% |
+| `aggression`, af                  | 1.03  | 1.38  | 1.64  | 2.09  | 2.70  | 3.30  | 4.33  |
+| `aggression`, bet after the flop  | 15.9% | 19.8% | 22.1% | 25.8% | 30.1% | 33.6% | 37.9% |
+| `sizing`, bet size after the flop | 0.55  | 0.62  | 0.68  | 0.80  | 0.97  | 1.13  | 1.47  |
+
+Loose play stops near 84% vpip: in the big blind after a limp the bot checks, which is not voluntary, and only a
+raise would add to vpip. Small sizes are held up by the minimum bet and raise.
+
+The edges against `cfr`, seed 2, 20000 pairs (40000 hands) each, frequencies known to about ±0.5 points:
+
+| Bot A            | bb/100       | vpip  | pfr   | af   | bet   | fold to bet | raise | bet size | preflop raise |
+| ---------------- | ------------ | ----- | ----- | ---- | ----- | ----------- | ----- | -------- | ------------- |
+| `cfr`            | -6.2 ± 7.7   | 74.1% | 43.7% | 2.12 | 25.4% | 45.9%       | 7.0%  | 0.81     | 1.43          |
+| `tightness=0.5`  | -8.5 ± 11.8  | 84.3% | 59.8% | 2.41 | 25.9% | 50.7%       | 6.4%  | 0.79     | 1.47          |
+| `tightness=2`    | -17.5 ± 7.5  | 56.1% | 30.6% | 1.83 | 24.0% | 41.7%       | 7.5%  | 0.82     | 1.36          |
+| `stickiness=0.5` | -20.1 ± 7.5  | 74.1% | 43.7% | 2.83 | 25.2% | 59.9%       | 4.5%  | 0.78     | 1.43          |
+| `stickiness=2`   | -13.5 ± 10.6 | 74.1% | 43.7% | 1.74 | 26.4% | 29.1%       | 12.0% | 0.90     | 1.43          |
+| `aggression=0.5` | -9.5 ± 7.8   | 71.4% | 33.4% | 1.14 | 16.7% | 40.0%       | 6.6%  | 0.86     | 1.43          |
+| `aggression=2`   | -19.6 ± 10.3 | 78.8% | 55.1% | 4.55 | 38.0% | 51.9%       | 10.3% | 0.80     | 1.43          |
+| `sizing=0.5`     | +0.8 ± 8.1   | 74.1% | 43.7% | 2.03 | 25.6% | 45.5%       | 7.1%  | 0.54     | 1.00          |
+| `sizing=2`       | -6.0 ± 11.8  | 74.1% | 43.7% | 1.90 | 23.7% | 44.5%       | 6.9%  | 1.50     | 2.51          |
+
+The neutral bot plays the blueprint exactly: its row is the `cfr` row of the table above. All runs play the same
+decks, so the -6.2 of `cfr` against itself is the luck of those decks, and the cost of an edge is about its result
+minus -6.2: about 11 to 14 bb/100 for the nit, the bot that folds to bets and the maniac, about 7 for the calling
+station after the flop, and within the noise for the loose bot before the flop, the passive one and both sizes.
+Folding too much costs more than calling too much. Sizing is free against `cfr`, which does not read sizes; its
+value is that a person can. The gain of an exploiting opponent is not measured: `tilt-exploiter` is too simple to
+stand for one.
+
 ## Managing runs
 
 Local runs live in the results directory (`web/arena-out` of the main checkout), each as `<name>.json` and

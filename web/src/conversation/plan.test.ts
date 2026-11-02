@@ -20,7 +20,6 @@ function view(
     snapshot: { ...base.snapshot, emotions: { ...base.snapshot.emotions, ...zero, ...emotions } },
     mask: 0,
     presenting: null,
-    stance: null,
     ...patch,
   };
 }

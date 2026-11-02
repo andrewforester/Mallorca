@@ -15,4 +15,11 @@ describe('summarize', () => {
     expect(s.ci95).toBe(Infinity);
     expect(s.bbPer100).toBe(250);
   });
+
+  it('counts the hands of a session pair', () => {
+    const s = summarize([400, -400], 20, 400);
+    expect(s.hands).toBe(800);
+    expect(s.bbPer100).toBe(0);
+    expect(summarize([400], 20, 400).bbPer100).toBe(5);
+  });
 });

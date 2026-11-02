@@ -54,7 +54,7 @@ function decide(context: HandContext, state: SlumbotState, decision: number): st
   }
   const seed =
     (Math.imul(context.options.seed, 0x9e3779b1) + context.handIndex * 64 + decision) >>> 0;
-  const bot = context.options.bot(mulberry32(seed));
+  const bot = context.options.bot(mulberry32(seed), 0);
   try {
     for (const observation of toObservations(events, 0)) bot.observe(observation);
     return toIncr(bot.decide(legalOf(step)));

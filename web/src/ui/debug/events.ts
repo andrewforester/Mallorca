@@ -5,9 +5,8 @@ import { bb, pct } from './format.ts';
 const E = COPY.event;
 
 function describeOwn(e: Extract<TableEvent, { kind: 'ownMove' }>): string {
-  const bet = e.move === 'bet';
-  const size = bet ? e.amountBb : e.facingBb;
-  return `${bet ? E.herBet : E.herFold} ${size.toFixed(1)} bb, ${E.equity} ${pct(e.equity)}`;
+  const [label, size] = e.move === 'bet' ? [E.herBet, e.amountBb] : [E.herFold, e.facingBb];
+  return `${label} ${size.toFixed(1)} bb, ${E.equity} ${pct(e.equity)}`;
 }
 
 export function describeEvent(e: TableEvent): string {

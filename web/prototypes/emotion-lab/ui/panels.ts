@@ -243,6 +243,12 @@ export function createPersonalityEditor(
     (p) => p.experience,
     (p, v) => ({ ...p, experience: v }),
   );
+  slider(
+    'Сдержанность',
+    0,
+    (p) => p.control,
+    (p, v) => ({ ...p, control: v }),
+  );
   return (p) => {
     current = p;
     inputs.forEach((i) => i.set(p));
