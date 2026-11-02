@@ -335,7 +335,9 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   share times what can still be lost, both counting the streets ahead (`stakesOf`).
 - `TableEvent`s: `deal` and `street` (her perceived equity and the money: pot, invested, stack behind, streets
   left), `opponentBet` (with `raise` for a raise against her, which also builds a session `pressure`), `result`
-  (judged by her equity before the deciding card), `bluff`, `mistake` and `chat` (a `ChatSignal`). A `street` after
+  (judged by her equity before the deciding card), `bluff`, `mistake`, `ownMove` (her own bet or fold with her
+  equity, the chips and the bet she faced: a bet behind a weak hand gives fear, one with a strong hand a little pride, a
+  fold of a hand she believed in anger, a fold of junk relief, all with small weights) and `chat` (a `ChatSignal`). A `street` after
   the hand is over is ignored.
 - Mood is a PAD point moved by ALMA's pull and push toward the intensity weighted centre of the active emotions and
   back to the default mood when none is active (`GAME_MOOD`: 600 s to change, 1200 s to return).
@@ -394,7 +396,8 @@ speech, the face, the voice and the bias only read it through a `PersonaReader`.
   her perceived equity (against the player's range until he shows, then against his cards) and the money (pot,
   invested, stack behind, streets left), a raise of the player as `opponentBet` (`raise` when it answers her own bet
   or raise on that street), the hand end as `result` judged by her equity against his shown cards on the board when
-  the money went in (0.5 without a showdown), a weak late bet caught or through as `bluff`, and the signals of
+  the money went in (0.5 without a showdown), a weak late bet caught or through as `bluff`, her own bet, raise or
+  fold as `ownMove`, a river call with a weak class lost at showdown as `mistake` (its cost), and the signals of
   `hear(signals)` as `chat`.
 - `view(nowMs)` reads her at `nowMs` without moving her (the engine's `ahead`; a time at or before the last
   `observe` reads the current state): `personality`, `snapshot`, `hand`, `presenting`, what she acts, or null:
