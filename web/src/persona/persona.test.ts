@@ -243,6 +243,18 @@ describe('a persona at the table', () => {
     expect(entries(played.persona, 'mistake')[0]?.event).toEqual({ kind: 'mistake', costBb: 3 });
   });
 
+  it('feels a bluff caught after her river call once, as a caught bluff and not also a mistake', () => {
+    const played = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
+    [call, check, check, check, raiseTo(40), call, check, raiseTo(60)].forEach((action, k) =>
+      played.act(action, (k + 1) * 500),
+    );
+    played.act(call, 5000);
+    expect(entries(played.persona, 'bluff').map((e) => e.event)).toMatchObject([
+      { kind: 'bluff', succeeded: false },
+    ]);
+    expect(entries(played.persona, 'mistake')).toEqual([]);
+  });
+
   it('folds to what she has left to call after his re-raise', () => {
     const played = deal('Kh Qd', '7c 6c', 'Kc 8d 4s 2h 3c');
     [call, check, raiseTo(40), raiseTo(120)].forEach((action, k) =>

@@ -211,18 +211,20 @@ class TableFeeling implements Feeling {
     const won = hand.awarded[this.seat] > 0;
     const netBb = netOf(hand, this.seat);
     this.feel({ kind: 'result', netBb, lastEquity: this.whenMoneyWentIn(hand) });
-    this.bluffed(hand, won);
-    if (!won && hand.showdown !== null && this.riverCall?.weak === true) {
+    const caught = this.bluffed(hand, won);
+    if (!caught && !won && hand.showdown !== null && this.riverCall?.weak === true) {
       this.feel({ kind: 'mistake', costBb: this.riverCall.costBb });
     }
   }
 
-  private bluffed(hand: HandState, won: boolean): void {
-    if (hand.her === null || !hand.herLateBet) return;
-    if (classOf(this.lastPerceived, hand.board.length) !== 'weak') return;
+  private bluffed(hand: HandState, won: boolean): boolean {
+    if (hand.her === null || !hand.herLateBet) return false;
+    if (classOf(this.lastPerceived, hand.board.length) !== 'weak') return false;
     const potBb = (hand.awarded[0] + hand.awarded[1]) / hand.bigBlind;
-    if (!won && hand.showdown !== null) this.feel({ kind: 'bluff', succeeded: false, potBb });
+    const caught = !won && hand.showdown !== null;
+    if (caught) this.feel({ kind: 'bluff', succeeded: false, potBb });
     if (won && hand.showdown === null) this.feel({ kind: 'bluff', succeeded: true, potBb });
+    return caught;
   }
 
   private whenMoneyWentIn(hand: HandState): number {
