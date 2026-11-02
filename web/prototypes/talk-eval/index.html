@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Разговор: eval</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="./eval.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header>
+        <h1>Разговор Mallorca: что показал eval</h1>
+        <p>
+          Каждая реплика здесь прошла настоящую функцию <code>talk</code> версии 2: план от
+          планировщика, промпт, ответ модели, проверки и слепой судья, который видит только текст.
+          Устройство разговора описано в <code>docs/conversation/README.md</code>, eval в
+          <code>supabase/functions/talk/eval/README.md</code>.
+        </p>
+        <p class="meta" id="meta"></p>
+      </header>
+      <section id="summary"></section>
+      <section id="pairs"></section>
+      <section id="character"></section>
+      <section id="matrices"></section>
+      <section id="cases"></section>
+    </main>
+    <script type="module" src="./eval.ts"></script>
+  </body>
+</html>

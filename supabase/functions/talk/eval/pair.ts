@@ -25,8 +25,16 @@ async function rows(variant: string): Promise<Map<string, string>> {
   return new Map(list.filter((r) => (r.rep ?? 0) === 0).map((r) => [r.prompt_id, r.text]));
 }
 
-async function better(prompt: string, flip: boolean): Promise<"a" | "b"> {
-  if (!client) return dry === "oracle" ? (flip ? "a" : "b") : (flip ? "b" : "a");
+interface Pick {
+  better: "a" | "b";
+  reason: string;
+}
+
+async function better(prompt: string, flip: boolean): Promise<Pick> {
+  if (!client) {
+    const b = dry === "oracle" ? (flip ? "a" : "b") : (flip ? "b" : "a");
+    return { better: b, reason: dry ?? "" };
+  }
   const request = {
     model: flags.judge,
     max_tokens: 300,
@@ -37,13 +45,14 @@ async function better(prompt: string, flip: boolean): Promise<"a" | "b"> {
   } as unknown as Anthropic.MessageCreateParamsNonStreaming;
   const response = await client.messages.create(request);
   const text = response.content.map((b) => (b.type === "text" ? b.text : "")).join("");
-  return (JSON.parse(text) as { better: "a" | "b" }).better;
+  return JSON.parse(text) as Pick;
 }
 
 const a = await rows(flags.a);
 const b = await rows(flags.b);
 let wins = 0;
 let n = 0;
+const records: unknown[] = [];
 for (const [id, lineB] of b) {
   const lineA = a.get(id);
   const where = context.get(id);
@@ -53,9 +62,17 @@ for (const [id, lineB] of b) {
     flip ? pairPrompt(where, lineB, lineA) : pairPrompt(where, lineA, lineB),
     flip,
   );
-  wins += (pick === "b") !== flip ? 1 : 0;
+  const won = (pick.better === "b") !== flip;
+  wins += won ? 1 : 0;
+  const winner = won ? flags.b : flags.a;
+  records.push({ id, context: where, a: lineA, b: lineB, winner, reason: pick.reason });
   n += 1;
 }
 const share = n === 0 ? 0 : wins / n;
 const half = n === 0 ? 0 : 1.96 * Math.sqrt((share * (1 - share)) / n);
+await Deno.mkdir(new URL("./out/pairs/", import.meta.url), { recursive: true });
+await Deno.writeTextFile(
+  new URL(`./out/pairs/${flags.a}__${flags.b}.json`, import.meta.url),
+  JSON.stringify({ a: flags.a, b: flags.b, wins, n, share, half, records }, null, 2),
+);
 console.log(`${flags.b} over ${flags.a}: ${wins} of ${n}, ${share.toFixed(2)} ±${half.toFixed(2)}`);

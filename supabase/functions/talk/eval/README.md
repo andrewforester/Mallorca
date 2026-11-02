@@ -38,6 +38,12 @@ ANTHROPIC_API_KEY=... deno run -A pair.ts --a v2 --b v2-sonnet
 `character.ts` and `pair.ts` alike. Every other run spends money: agree the budget with the owner
 first. `--only` takes case ids or scene names, comma separated.
 
+`npm run lab:talk-eval-data` in `web/` gathers the runs of `out/` (v2, v2-examples, v2-sonnet,
+baseline, the pairs and the character run) into `web/prototypes/talk-eval/report.json`, and
+`npm run lab:talk-eval` opens the report page: the summary of each variant, the pairwise picks with
+the judge's reasons, the traits read back, the confusion matrices and every line with its plan,
+prompt, attempts, checks, verdict and calls.
+
 The whole set above costs about $2 at today's prices: about 580 judge calls on Sonnet 5.5 (about
 $0.003 each), 78 line calls on Sonnet 5.5 and about 650 calls on Haiku 5.5 (about $0.0001 each, a
 system block of about 650 tokens and a state of about 120).
