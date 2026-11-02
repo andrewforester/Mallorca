@@ -2,7 +2,7 @@ import { assertEquals } from "../../_shared/testing.ts";
 import type { Feeling } from "../feeling.ts";
 import { checks, kindOf, languageOf, score, sentences } from "./grade.ts";
 import type { EvalCase, Verdict } from "./grade.ts";
-import cases from "./cases.json" with { type: "json" };
+import cases from "./cases.v1.json" with { type: "json" };
 
 const feeling = (over: Partial<Feeling>): Feeling => ({
   version: 1,

@@ -1,5 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { Kind, Verdict } from "./grade.ts";
+import { confusion, repeatsOf } from "./gradePlan.ts";
+import type { PlanVerdict } from "./gradePlan.ts";
 
 export interface Call {
   purpose: string;
@@ -12,7 +14,9 @@ export interface Row {
   prompt_id: string;
   prompt: string;
   tags: string[];
-  kind: Kind;
+  kind: Kind | "plan";
+  rep?: number;
+  expected?: { emotion: string; act: string; humour: string };
   status: "ok" | "truncated";
   stop_reason: string | null;
   grade: Record<string, number | null>;
@@ -20,7 +24,7 @@ export interface Row {
   text: string;
   delivered: string;
   delivery?: { emotion: string; intensity: number };
-  verdict: Verdict;
+  verdict: Verdict | PlanVerdict;
   model: string;
   calls: Call[];
   latency_s: number;
@@ -67,12 +71,33 @@ const METRICS = [
   "emotion",
   "poker_face",
   "intensity_err",
+  "act",
+  "humour",
+  "joke_without_humour",
   "in_character",
   "leak",
   "filter_leak",
   "length_ok",
+  "within_budget",
   "language_ok",
 ];
+
+const KEYS = ["emotion", "act", "humour"] as const;
+
+function matrixLines(rows: Row[]): string[] {
+  const planned = rows.filter((r) => r.expected !== undefined);
+  if (planned.length === 0) return [];
+  const read = (r: Row, k: (typeof KEYS)[number]): string =>
+    String((r.verdict as unknown as Record<string, unknown>)[k]);
+  const matrices = KEYS.map((k) => {
+    const pairs = planned.map((r) => [r.expected![k], read(r, k)] as [string, string]);
+    return `confusion ${k.padEnd(8)} ${JSON.stringify(confusion(pairs))}`;
+  });
+  const texts = new Map<string, string[]>();
+  for (const r of planned) texts.set(r.prompt_id, [...(texts.get(r.prompt_id) ?? []), r.text]);
+  const repeats = [...texts.values()].reduce((s, t) => s + repeatsOf(t), 0);
+  return [...matrices, `repeats        ${repeats} over ${planned.length} lines`];
+}
 
 export function summarize(variant: string, rows: Row[]): string {
   if (rows.length === 0) return `variant ${variant}: no results`;
@@ -86,6 +111,7 @@ export function summarize(variant: string, rows: Row[]): string {
   return [
     `variant ${variant}: ${rows.length} cases, ${rows.length - ok.length} truncated`,
     ...METRICS.map((id) => metricLine(ok, id)),
+    ...matrixLines(ok),
     `words          ${mean(rows.map((r) => r.words)).toFixed(1)} mean`,
     `latency        p50 ${quantile(latency, 0.5).toFixed(2)} s, p95 ${
       quantile(latency, 0.95).toFixed(2)

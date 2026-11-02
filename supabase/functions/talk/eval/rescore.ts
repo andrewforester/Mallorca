@@ -4,7 +4,7 @@ import { summarize } from "./summary.ts";
 import type { Row } from "./summary.ts";
 
 const cases: EvalCase[] = JSON.parse(
-  await Deno.readTextFile(new URL("./cases.json", import.meta.url)),
+  await Deno.readTextFile(new URL("./cases.v1.json", import.meta.url)),
 );
 const byId = new Map(cases.map((c) => [c.id, c]));
 

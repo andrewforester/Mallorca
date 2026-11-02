@@ -1,0 +1,4484 @@
+[
+  {
+    "id": "calm-mallorca",
+    "tags": [
+      "calm",
+      "mallorca",
+      "reply",
+      "ru"
+    ],
+    "language": "ru",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-calm-mallorca",
+      "locale": "ru",
+      "facts": {
+        "street": "preflop",
+        "board": [],
+        "pot": 6,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": null,
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herCall",
+        "hint": null,
+        "honest": true,
+        "street": "preflop"
+      },
+      "mood": [],
+      "feeling": {
+        "version": 1,
+        "emotions": [],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.01,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.35,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [],
+      "text": "Ещё чаю? Опять снег пошёл.",
+      "quick": false
+    }
+  },
+  {
+    "id": "calm-ingrid",
+    "tags": [
+      "calm",
+      "ingrid",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-calm-ingrid",
+      "locale": "en",
+      "facts": {
+        "street": "preflop",
+        "board": [],
+        "pot": 6,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": null,
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herCall",
+        "hint": null,
+        "honest": true,
+        "street": "preflop"
+      },
+      "mood": [],
+      "feeling": {
+        "version": 1,
+        "emotions": [],
+        "mood": {
+          "octant": "bored",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.85,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.3,
+        "warmth": 0.35,
+        "nerves": 0.2,
+        "wit": 0.45
+      },
+      "recent": []
+    }
+  },
+  {
+    "id": "calm-lola",
+    "tags": [
+      "calm",
+      "lola",
+      "reply",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-calm-lola",
+      "locale": "en",
+      "facts": {
+        "street": "preflop",
+        "board": [],
+        "pot": 6,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": null,
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herCall",
+        "hint": null,
+        "honest": true,
+        "street": "preflop"
+      },
+      "mood": [],
+      "feeling": {
+        "version": 1,
+        "emotions": [],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.1,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.08,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.86,
+        "warmth": 0.75,
+        "nerves": 0.75,
+        "wit": 0.8
+      },
+      "recent": [],
+      "text": "More tea? It is snowing again.",
+      "quick": false
+    }
+  },
+  {
+    "id": "calm-nina",
+    "tags": [
+      "calm",
+      "nina",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-calm-nina",
+      "locale": "en",
+      "facts": {
+        "street": "preflop",
+        "board": [],
+        "pot": 6,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": null,
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herCall",
+        "hint": null,
+        "honest": true,
+        "street": "preflop"
+      },
+      "mood": [],
+      "feeling": {
+        "version": 1,
+        "emotions": [],
+        "mood": {
+          "octant": "dependent",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.12,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.51,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.38,
+        "warmth": 0.7,
+        "nerves": 0.9,
+        "wit": 0.55
+      },
+      "recent": []
+    }
+  },
+  {
+    "id": "badbeat-mallorca",
+    "tags": [
+      "badbeat",
+      "mallorca",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-badbeat-mallorca",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "Kc",
+          "9d",
+          "2s",
+          "3h",
+          "Qh"
+        ],
+        "pot": 240,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "As",
+          "Ah"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "upset",
+        "feeling robbed"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "distress",
+            "intensity": 0.97
+          },
+          {
+            "name": "injustice",
+            "intensity": 0.89
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.86
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 1,
+          "source": "injustice"
+        },
+        "shows": {
+          "mask": 0.14,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Call."
+        }
+      ]
+    }
+  },
+  {
+    "id": "badbeat-ingrid",
+    "tags": [
+      "badbeat",
+      "ingrid",
+      "reply",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-badbeat-ingrid",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "Kc",
+          "9d",
+          "2s",
+          "3h",
+          "Qh"
+        ],
+        "pot": 240,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "As",
+          "Ah"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "feeling robbed",
+        "upset"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "injustice",
+            "intensity": 0.77
+          },
+          {
+            "name": "distress",
+            "intensity": 0.74
+          },
+          {
+            "name": "surprise",
+            "intensity": 0.69
+          }
+        ],
+        "mood": {
+          "octant": "bored",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.91,
+          "source": "injustice"
+        },
+        "shows": {
+          "mask": 0.39,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.3,
+        "warmth": 0.35,
+        "nerves": 0.2,
+        "wit": 0.45
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Call."
+        }
+      ],
+      "text": "Sorry, the river was kind to me.",
+      "quick": false
+    }
+  },
+  {
+    "id": "badbeat-lola",
+    "tags": [
+      "badbeat",
+      "lola",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-badbeat-lola",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "Kc",
+          "9d",
+          "2s",
+          "3h",
+          "Qh"
+        ],
+        "pot": 240,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "As",
+          "Ah"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "feeling robbed",
+        "upset"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "injustice",
+            "intensity": 1
+          },
+          {
+            "name": "distress",
+            "intensity": 0.99
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.96
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 1,
+          "source": "injustice"
+        },
+        "shows": {
+          "mask": 0.03,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.86,
+        "warmth": 0.75,
+        "nerves": 0.75,
+        "wit": 0.8
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Call."
+        }
+      ]
+    }
+  },
+  {
+    "id": "badbeat-nina",
+    "tags": [
+      "badbeat",
+      "nina",
+      "reply",
+      "ru"
+    ],
+    "language": "ru",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-badbeat-nina",
+      "locale": "ru",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "Kc",
+          "9d",
+          "2s",
+          "3h",
+          "Qh"
+        ],
+        "pot": 240,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "As",
+          "Ah"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "feeling robbed",
+        "upset"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "injustice",
+            "intensity": 1
+          },
+          {
+            "name": "distress",
+            "intensity": 0.99
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.93
+          }
+        ],
+        "mood": {
+          "octant": "dependent",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 1,
+          "source": "injustice"
+        },
+        "shows": {
+          "mask": 0.22,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.38,
+        "warmth": 0.7,
+        "nerves": 0.9,
+        "wit": 0.55
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Call."
+        }
+      ],
+      "text": "Извини, ривер был ко мне добр.",
+      "quick": false
+    }
+  },
+  {
+    "id": "cooler-mallorca",
+    "tags": [
+      "cooler",
+      "mallorca",
+      "reply",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-cooler-mallorca",
+      "locale": "en",
+      "facts": {
+        "street": "flop",
+        "board": [
+          "Kc",
+          "9d",
+          "2h"
+        ],
+        "pot": 320,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "9s",
+          "9h"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": null,
+        "honest": true,
+        "street": "flop"
+      },
+      "mood": [
+        "nervous",
+        "disappointed",
+        "surprised"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "fear",
+            "intensity": 0.82
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.76
+          },
+          {
+            "name": "surprise",
+            "intensity": 0.69
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.11,
+          "source": "disappointment"
+        },
+        "shows": {
+          "mask": 0.33,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Call."
+        }
+      ],
+      "text": "Set over set, what can you do.",
+      "quick": false
+    }
+  },
+  {
+    "id": "cooler-ingrid",
+    "tags": [
+      "cooler",
+      "ingrid",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-cooler-ingrid",
+      "locale": "en",
+      "facts": {
+        "street": "flop",
+        "board": [
+          "Kc",
+          "9d",
+          "2h"
+        ],
+        "pot": 320,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "9s",
+          "9h"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": null,
+        "honest": true,
+        "street": "flop"
+      },
+      "mood": [
+        "surprised",
+        "nervous",
+        "disappointed"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "surprise",
+            "intensity": 0.63
+          },
+          {
+            "name": "fear",
+            "intensity": 0.61
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.47
+          }
+        ],
+        "mood": {
+          "octant": "bored",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.01,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.85,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.3,
+        "warmth": 0.35,
+        "nerves": 0.2,
+        "wit": 0.45
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Call."
+        }
+      ]
+    }
+  },
+  {
+    "id": "cooler-lola",
+    "tags": [
+      "cooler",
+      "lola",
+      "reply",
+      "ru"
+    ],
+    "language": "ru",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-cooler-lola",
+      "locale": "ru",
+      "facts": {
+        "street": "flop",
+        "board": [
+          "Kc",
+          "9d",
+          "2h"
+        ],
+        "pot": 320,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "9s",
+          "9h"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": null,
+        "honest": true,
+        "street": "flop"
+      },
+      "mood": [
+        "on tilt",
+        "disappointed",
+        "nervous"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "disappointment",
+            "intensity": 0.92
+          },
+          {
+            "name": "fear",
+            "intensity": 0.83
+          },
+          {
+            "name": "surprise",
+            "intensity": 0.71
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.67,
+          "source": "disappointment"
+        },
+        "shows": {
+          "mask": 0.05,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.86,
+        "warmth": 0.75,
+        "nerves": 0.75,
+        "wit": 0.8
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Call."
+        }
+      ],
+      "text": "Сет на сет, что тут поделаешь.",
+      "quick": false
+    }
+  },
+  {
+    "id": "cooler-nina",
+    "tags": [
+      "cooler",
+      "nina",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-cooler-nina",
+      "locale": "en",
+      "facts": {
+        "street": "flop",
+        "board": [
+          "Kc",
+          "9d",
+          "2h"
+        ],
+        "pot": 320,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "9s",
+          "9h"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": null,
+        "honest": true,
+        "street": "flop"
+      },
+      "mood": [
+        "on tilt",
+        "nervous",
+        "disappointed"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "fear",
+            "intensity": 0.83
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.82
+          },
+          {
+            "name": "surprise",
+            "intensity": 0.65
+          }
+        ],
+        "mood": {
+          "octant": "dependent",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.68,
+          "source": "disappointment"
+        },
+        "shows": {
+          "mask": 0.32,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.38,
+        "warmth": 0.7,
+        "nerves": 0.9,
+        "wit": 0.55
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Call."
+        }
+      ]
+    }
+  },
+  {
+    "id": "bigpot-mallorca",
+    "tags": [
+      "bigpot",
+      "mallorca",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-bigpot-mallorca",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "7s",
+          "4d",
+          "2c",
+          "Jh",
+          "3s"
+        ],
+        "pot": 200,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Kh",
+          "Ks"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handWon",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "pleased"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "joy",
+            "intensity": 0.99
+          },
+          {
+            "name": "relief",
+            "intensity": 0.14
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.01,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.35,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Call."
+        }
+      ]
+    }
+  },
+  {
+    "id": "bigpot-ingrid",
+    "tags": [
+      "bigpot",
+      "ingrid",
+      "reply",
+      "ru"
+    ],
+    "language": "ru",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-bigpot-ingrid",
+      "locale": "ru",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "7s",
+          "4d",
+          "2c",
+          "Jh",
+          "3s"
+        ],
+        "pot": 200,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Kh",
+          "Ks"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handWon",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "pleased"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "joy",
+            "intensity": 0.87
+          }
+        ],
+        "mood": {
+          "octant": "bored",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.85,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.3,
+        "warmth": 0.35,
+        "nerves": 0.2,
+        "wit": 0.45
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Call."
+        }
+      ],
+      "text": "Крупный банк, а?",
+      "quick": false
+    }
+  },
+  {
+    "id": "bigpot-lola",
+    "tags": [
+      "bigpot",
+      "lola",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-bigpot-lola",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "7s",
+          "4d",
+          "2c",
+          "Jh",
+          "3s"
+        ],
+        "pot": 200,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Kh",
+          "Ks"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handWon",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "pleased"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "joy",
+            "intensity": 0.99
+          },
+          {
+            "name": "relief",
+            "intensity": 0.18
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.1,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.08,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.86,
+        "warmth": 0.75,
+        "nerves": 0.75,
+        "wit": 0.8
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Call."
+        }
+      ]
+    }
+  },
+  {
+    "id": "bigpot-nina",
+    "tags": [
+      "bigpot",
+      "nina",
+      "reply",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-bigpot-nina",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "7s",
+          "4d",
+          "2c",
+          "Jh",
+          "3s"
+        ],
+        "pot": 200,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Kh",
+          "Ks"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handWon",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "pleased"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "joy",
+            "intensity": 0.9
+          },
+          {
+            "name": "relief",
+            "intensity": 0.15
+          }
+        ],
+        "mood": {
+          "octant": "dependent",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.12,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.51,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.38,
+        "warmth": 0.7,
+        "nerves": 0.9,
+        "wit": 0.55
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Call."
+        }
+      ],
+      "text": "Big one, huh?",
+      "quick": false
+    }
+  },
+  {
+    "id": "suckout-mallorca",
+    "tags": [
+      "suckout",
+      "mallorca",
+      "reply",
+      "ru"
+    ],
+    "language": "ru",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-suckout-mallorca",
+      "locale": "ru",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "8c",
+          "5d",
+          "2s",
+          "Jc",
+          "Ah"
+        ],
+        "pot": 200,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Ac",
+          "Kd"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handWon",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "pleased",
+        "relieved",
+        "surprised"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "joy",
+            "intensity": 0.99
+          },
+          {
+            "name": "relief",
+            "intensity": 0.95
+          },
+          {
+            "name": "surprise",
+            "intensity": 0.75
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.01,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.35,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Snap call."
+        }
+      ],
+      "text": "Невероятно. Тебе просто повезло.",
+      "quick": false
+    }
+  },
+  {
+    "id": "suckout-ingrid",
+    "tags": [
+      "suckout",
+      "ingrid",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-suckout-ingrid",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "8c",
+          "5d",
+          "2s",
+          "Jc",
+          "Ah"
+        ],
+        "pot": 200,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Ac",
+          "Kd"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handWon",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "pleased",
+        "surprised",
+        "relieved"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "joy",
+            "intensity": 0.93
+          },
+          {
+            "name": "surprise",
+            "intensity": 0.74
+          },
+          {
+            "name": "relief",
+            "intensity": 0.69
+          }
+        ],
+        "mood": {
+          "octant": "bored",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.85,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.3,
+        "warmth": 0.35,
+        "nerves": 0.2,
+        "wit": 0.45
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Snap call."
+        }
+      ]
+    }
+  },
+  {
+    "id": "suckout-lola",
+    "tags": [
+      "suckout",
+      "lola",
+      "reply",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-suckout-lola",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "8c",
+          "5d",
+          "2s",
+          "Jc",
+          "Ah"
+        ],
+        "pot": 200,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Ac",
+          "Kd"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handWon",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "pleased",
+        "relieved",
+        "surprised"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "joy",
+            "intensity": 0.99
+          },
+          {
+            "name": "relief",
+            "intensity": 0.98
+          },
+          {
+            "name": "surprise",
+            "intensity": 0.75
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.13,
+          "source": "mood"
+        },
+        "shows": {
+          "mask": 0.07,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.86,
+        "warmth": 0.75,
+        "nerves": 0.75,
+        "wit": 0.8
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Snap call."
+        }
+      ],
+      "text": "Unbelievable. You got lucky.",
+      "quick": false
+    }
+  },
+  {
+    "id": "suckout-nina",
+    "tags": [
+      "suckout",
+      "nina",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-suckout-nina",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "8c",
+          "5d",
+          "2s",
+          "Jc",
+          "Ah"
+        ],
+        "pot": 200,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Ac",
+          "Kd"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handWon",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "pleased",
+        "relieved",
+        "surprised"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "joy",
+            "intensity": 0.95
+          },
+          {
+            "name": "relief",
+            "intensity": 0.89
+          },
+          {
+            "name": "surprise",
+            "intensity": 0.75
+          }
+        ],
+        "mood": {
+          "octant": "anxious",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.19,
+          "source": "mood"
+        },
+        "shows": {
+          "mask": 0.49,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.38,
+        "warmth": 0.7,
+        "nerves": 0.9,
+        "wit": 0.55
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "All in."
+        },
+        {
+          "speaker": "player",
+          "text": "Snap call."
+        }
+      ]
+    }
+  },
+  {
+    "id": "flopstraight-mallorca",
+    "tags": [
+      "flopstraight",
+      "mallorca",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-flopstraight-mallorca",
+      "locale": "en",
+      "facts": {
+        "street": "flop",
+        "board": [
+          "8d",
+          "9c",
+          "Th"
+        ],
+        "pot": 12,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "7s",
+          "6s"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": "strong",
+        "honest": true,
+        "street": "flop"
+      },
+      "mood": [
+        "hopeful",
+        "surprised",
+        "pleased"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "hope",
+            "intensity": 0.39
+          },
+          {
+            "name": "surprise",
+            "intensity": 0.36
+          },
+          {
+            "name": "joy",
+            "intensity": 0.29
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.01,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.35,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": []
+    }
+  },
+  {
+    "id": "flopstraight-ingrid",
+    "tags": [
+      "flopstraight",
+      "ingrid",
+      "reply",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-flopstraight-ingrid",
+      "locale": "en",
+      "facts": {
+        "street": "flop",
+        "board": [
+          "8d",
+          "9c",
+          "Th"
+        ],
+        "pot": 12,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "7s",
+          "6s"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": "strong",
+        "honest": true,
+        "street": "flop"
+      },
+      "mood": [
+        "surprised",
+        "hopeful"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "surprise",
+            "intensity": 0.32
+          },
+          {
+            "name": "hope",
+            "intensity": 0.3
+          },
+          {
+            "name": "joy",
+            "intensity": 0.23
+          }
+        ],
+        "mood": {
+          "octant": "bored",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.85,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.3,
+        "warmth": 0.35,
+        "nerves": 0.2,
+        "wit": 0.45
+      },
+      "recent": [],
+      "text": "What are you holding? Just tell me.",
+      "quick": false
+    }
+  },
+  {
+    "id": "flopstraight-lola",
+    "tags": [
+      "flopstraight",
+      "lola",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-flopstraight-lola",
+      "locale": "en",
+      "facts": {
+        "street": "flop",
+        "board": [
+          "8d",
+          "9c",
+          "Th"
+        ],
+        "pot": 12,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "7s",
+          "6s"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": "strong",
+        "honest": true,
+        "street": "flop"
+      },
+      "mood": [
+        "hopeful",
+        "surprised",
+        "pleased"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "hope",
+            "intensity": 0.44
+          },
+          {
+            "name": "surprise",
+            "intensity": 0.37
+          },
+          {
+            "name": "joy",
+            "intensity": 0.32
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.12,
+          "source": "fear"
+        },
+        "shows": {
+          "mask": 0.07,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.86,
+        "warmth": 0.75,
+        "nerves": 0.75,
+        "wit": 0.8
+      },
+      "recent": []
+    }
+  },
+  {
+    "id": "flopstraight-nina",
+    "tags": [
+      "flopstraight",
+      "nina",
+      "reply",
+      "ru"
+    ],
+    "language": "ru",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-flopstraight-nina",
+      "locale": "ru",
+      "facts": {
+        "street": "flop",
+        "board": [
+          "8d",
+          "9c",
+          "Th"
+        ],
+        "pot": 12,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "7s",
+          "6s"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": "strong",
+        "honest": true,
+        "street": "flop"
+      },
+      "mood": [
+        "surprised",
+        "hopeful"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "surprise",
+            "intensity": 0.34
+          },
+          {
+            "name": "hope",
+            "intensity": 0.32
+          },
+          {
+            "name": "joy",
+            "intensity": 0.24
+          }
+        ],
+        "mood": {
+          "octant": "dependent",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.16,
+          "source": "fear"
+        },
+        "shows": {
+          "mask": 0.5,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.38,
+        "warmth": 0.7,
+        "nerves": 0.9,
+        "wit": 0.55
+      },
+      "recent": [],
+      "text": "Что у тебя? Просто скажи.",
+      "quick": false
+    }
+  },
+  {
+    "id": "raisetoppair-mallorca",
+    "tags": [
+      "raisetoppair",
+      "mallorca",
+      "reply",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-raisetoppair-mallorca",
+      "locale": "en",
+      "facts": {
+        "street": "flop",
+        "board": [
+          "Kc",
+          "8d",
+          "4s"
+        ],
+        "pot": 48,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Kh",
+          "Qd"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "playerBet",
+        "hint": "medium",
+        "honest": true,
+        "street": "flop"
+      },
+      "mood": [
+        "hopeful",
+        "nervous",
+        "surprised"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "hope",
+            "intensity": 0.67
+          },
+          {
+            "name": "fear",
+            "intensity": 0.52
+          },
+          {
+            "name": "surprise",
+            "intensity": 0.36
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.06,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.34,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Four."
+        },
+        {
+          "speaker": "player",
+          "text": "Raise to fourteen."
+        }
+      ],
+      "text": "I raise. Your move.",
+      "quick": false
+    }
+  },
+  {
+    "id": "raisetoppair-ingrid",
+    "tags": [
+      "raisetoppair",
+      "ingrid",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-raisetoppair-ingrid",
+      "locale": "en",
+      "facts": {
+        "street": "flop",
+        "board": [
+          "Kc",
+          "8d",
+          "4s"
+        ],
+        "pot": 48,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Kh",
+          "Qd"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "playerBet",
+        "hint": "medium",
+        "honest": true,
+        "street": "flop"
+      },
+      "mood": [
+        "hopeful",
+        "nervous",
+        "surprised"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "hope",
+            "intensity": 0.52
+          },
+          {
+            "name": "fear",
+            "intensity": 0.37
+          },
+          {
+            "name": "surprise",
+            "intensity": 0.33
+          }
+        ],
+        "mood": {
+          "octant": "bored",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.01,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.85,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.3,
+        "warmth": 0.35,
+        "nerves": 0.2,
+        "wit": 0.45
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Four."
+        },
+        {
+          "speaker": "player",
+          "text": "Raise to fourteen."
+        }
+      ]
+    }
+  },
+  {
+    "id": "raisetoppair-lola",
+    "tags": [
+      "raisetoppair",
+      "lola",
+      "reply",
+      "ru"
+    ],
+    "language": "ru",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-raisetoppair-lola",
+      "locale": "ru",
+      "facts": {
+        "street": "flop",
+        "board": [
+          "Kc",
+          "8d",
+          "4s"
+        ],
+        "pot": 48,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Kh",
+          "Qd"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "playerBet",
+        "hint": "medium",
+        "honest": true,
+        "street": "flop"
+      },
+      "mood": [
+        "hopeful",
+        "nervous",
+        "surprised"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "hope",
+            "intensity": 0.76
+          },
+          {
+            "name": "fear",
+            "intensity": 0.6
+          },
+          {
+            "name": "surprise",
+            "intensity": 0.37
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.47,
+          "source": "fear"
+        },
+        "shows": {
+          "mask": 0.06,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.86,
+        "warmth": 0.75,
+        "nerves": 0.75,
+        "wit": 0.8
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Four."
+        },
+        {
+          "speaker": "player",
+          "text": "Raise to fourteen."
+        }
+      ],
+      "text": "Рейз. Твой ход.",
+      "quick": false
+    }
+  },
+  {
+    "id": "raisetoppair-nina",
+    "tags": [
+      "raisetoppair",
+      "nina",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-raisetoppair-nina",
+      "locale": "en",
+      "facts": {
+        "street": "flop",
+        "board": [
+          "Kc",
+          "8d",
+          "4s"
+        ],
+        "pot": 48,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Kh",
+          "Qd"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "playerBet",
+        "hint": "medium",
+        "honest": true,
+        "street": "flop"
+      },
+      "mood": [
+        "nervous",
+        "hopeful",
+        "surprised"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "fear",
+            "intensity": 0.66
+          },
+          {
+            "name": "hope",
+            "intensity": 0.56
+          },
+          {
+            "name": "surprise",
+            "intensity": 0.34
+          }
+        ],
+        "mood": {
+          "octant": "dependent",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.55,
+          "source": "fear"
+        },
+        "shows": {
+          "mask": 0.37,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.38,
+        "warmth": 0.7,
+        "nerves": 0.9,
+        "wit": 0.55
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Four."
+        },
+        {
+          "speaker": "player",
+          "text": "Raise to fourteen."
+        }
+      ]
+    }
+  },
+  {
+    "id": "bluffwin-mallorca",
+    "tags": [
+      "bluffwin",
+      "mallorca",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-bluffwin-mallorca",
+      "locale": "en",
+      "facts": {
+        "street": "river",
+        "board": [
+          "Ad",
+          "Kc",
+          "3h",
+          "4d",
+          "Qc"
+        ],
+        "pot": 140,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "7s",
+          "6s"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": "strong",
+        "honest": false,
+        "street": "river"
+      },
+      "mood": [
+        "nervous"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "fear",
+            "intensity": 0.91
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.05,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.72,
+          "acting": "strong"
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Pot."
+        },
+        {
+          "speaker": "player",
+          "text": "Hmm. Let me think about this one."
+        }
+      ]
+    }
+  },
+  {
+    "id": "bluffwin-ingrid",
+    "tags": [
+      "bluffwin",
+      "ingrid",
+      "reply",
+      "ru"
+    ],
+    "language": "ru",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-bluffwin-ingrid",
+      "locale": "ru",
+      "facts": {
+        "street": "river",
+        "board": [
+          "Ad",
+          "Kc",
+          "3h",
+          "4d",
+          "Qc"
+        ],
+        "pot": 140,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "7s",
+          "6s"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": "strong",
+        "honest": false,
+        "street": "river"
+      },
+      "mood": [
+        "nervous"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "fear",
+            "intensity": 0.65
+          }
+        ],
+        "mood": {
+          "octant": "bored",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.94,
+          "acting": "strong"
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.3,
+        "warmth": 0.35,
+        "nerves": 0.2,
+        "wit": 0.45
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Pot."
+        },
+        {
+          "speaker": "player",
+          "text": "Hmm. Let me think about this one."
+        }
+      ],
+      "text": "Хм. Дай подумать.",
+      "quick": false
+    }
+  },
+  {
+    "id": "bluffwin-lola",
+    "tags": [
+      "bluffwin",
+      "lola",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-bluffwin-lola",
+      "locale": "en",
+      "facts": {
+        "street": "river",
+        "board": [
+          "Ad",
+          "Kc",
+          "3h",
+          "4d",
+          "Qc"
+        ],
+        "pot": 140,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "7s",
+          "6s"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": "strong",
+        "honest": false,
+        "street": "river"
+      },
+      "mood": [
+        "nervous"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "fear",
+            "intensity": 0.97
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.38,
+          "source": "fear"
+        },
+        "shows": {
+          "mask": 0.49,
+          "acting": "strong"
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.86,
+        "warmth": 0.75,
+        "nerves": 0.75,
+        "wit": 0.8
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Pot."
+        },
+        {
+          "speaker": "player",
+          "text": "Hmm. Let me think about this one."
+        }
+      ]
+    }
+  },
+  {
+    "id": "bluffwin-nina",
+    "tags": [
+      "bluffwin",
+      "nina",
+      "reply",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-bluffwin-nina",
+      "locale": "en",
+      "facts": {
+        "street": "river",
+        "board": [
+          "Ad",
+          "Kc",
+          "3h",
+          "4d",
+          "Qc"
+        ],
+        "pot": 140,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "7s",
+          "6s"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": "strong",
+        "honest": false,
+        "street": "river"
+      },
+      "mood": [
+        "nervous"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "fear",
+            "intensity": 0.97
+          }
+        ],
+        "mood": {
+          "octant": "anxious",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.48,
+          "source": "fear"
+        },
+        "shows": {
+          "mask": 0.58,
+          "acting": "strong"
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.38,
+        "warmth": 0.7,
+        "nerves": 0.9,
+        "wit": 0.55
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Pot."
+        },
+        {
+          "speaker": "player",
+          "text": "Hmm. Let me think about this one."
+        }
+      ],
+      "text": "Hmm. Let me think about this one.",
+      "quick": false
+    }
+  },
+  {
+    "id": "bluffcaught-mallorca",
+    "tags": [
+      "bluffcaught",
+      "mallorca",
+      "reply",
+      "ru"
+    ],
+    "language": "ru",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-bluffcaught-mallorca",
+      "locale": "ru",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "Ad",
+          "Kc",
+          "3h",
+          "4d",
+          "Qc"
+        ],
+        "pot": 200,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "7s",
+          "6s"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "bluffCaught",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "embarrassed",
+        "upset"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "shame",
+            "intensity": 0.97
+          },
+          {
+            "name": "distress",
+            "intensity": 0.9
+          },
+          {
+            "name": "anger",
+            "intensity": 0.29
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 1,
+          "source": "shame"
+        },
+        "shows": {
+          "mask": 0.14,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Pot."
+        },
+        {
+          "speaker": "player",
+          "text": "I call."
+        },
+        {
+          "speaker": "player",
+          "text": "Nice bluff. Do it again."
+        }
+      ],
+      "text": "Классный блеф. Давай ещё.",
+      "quick": false
+    }
+  },
+  {
+    "id": "bluffcaught-ingrid",
+    "tags": [
+      "bluffcaught",
+      "ingrid",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-bluffcaught-ingrid",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "Ad",
+          "Kc",
+          "3h",
+          "4d",
+          "Qc"
+        ],
+        "pot": 200,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "7s",
+          "6s"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "bluffCaught",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "embarrassed",
+        "upset"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "shame",
+            "intensity": 0.93
+          },
+          {
+            "name": "distress",
+            "intensity": 0.67
+          },
+          {
+            "name": "anger",
+            "intensity": 0.34
+          }
+        ],
+        "mood": {
+          "octant": "bored",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.95,
+          "source": "shame"
+        },
+        "shows": {
+          "mask": 0.37,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.3,
+        "warmth": 0.35,
+        "nerves": 0.2,
+        "wit": 0.45
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Pot."
+        },
+        {
+          "speaker": "player",
+          "text": "I call."
+        },
+        {
+          "speaker": "player",
+          "text": "Nice bluff. Do it again."
+        }
+      ]
+    }
+  },
+  {
+    "id": "bluffcaught-lola",
+    "tags": [
+      "bluffcaught",
+      "lola",
+      "reply",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-bluffcaught-lola",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "Ad",
+          "Kc",
+          "3h",
+          "4d",
+          "Qc"
+        ],
+        "pot": 200,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "7s",
+          "6s"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "bluffCaught",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "embarrassed",
+        "upset"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "shame",
+            "intensity": 0.97
+          },
+          {
+            "name": "distress",
+            "intensity": 0.95
+          },
+          {
+            "name": "anger",
+            "intensity": 0.32
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 1,
+          "source": "shame"
+        },
+        "shows": {
+          "mask": 0.03,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.86,
+        "warmth": 0.75,
+        "nerves": 0.75,
+        "wit": 0.8
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Pot."
+        },
+        {
+          "speaker": "player",
+          "text": "I call."
+        },
+        {
+          "speaker": "player",
+          "text": "Nice bluff. Do it again."
+        }
+      ],
+      "text": "Nice bluff. Do it again.",
+      "quick": false
+    }
+  },
+  {
+    "id": "bluffcaught-nina",
+    "tags": [
+      "bluffcaught",
+      "nina",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-bluffcaught-nina",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "Ad",
+          "Kc",
+          "3h",
+          "4d",
+          "Qc"
+        ],
+        "pot": 200,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "7s",
+          "6s"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "bluffCaught",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "embarrassed",
+        "upset"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "shame",
+            "intensity": 0.97
+          },
+          {
+            "name": "distress",
+            "intensity": 0.96
+          },
+          {
+            "name": "anger",
+            "intensity": 0.35
+          }
+        ],
+        "mood": {
+          "octant": "anxious",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 1,
+          "source": "shame"
+        },
+        "shows": {
+          "mask": 0.22,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.38,
+        "warmth": 0.7,
+        "nerves": 0.9,
+        "wit": 0.55
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Pot."
+        },
+        {
+          "speaker": "player",
+          "text": "I call."
+        },
+        {
+          "speaker": "player",
+          "text": "Nice bluff. Do it again."
+        }
+      ]
+    }
+  },
+  {
+    "id": "mistake-mallorca",
+    "tags": [
+      "mistake",
+      "mallorca",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-mistake-mallorca",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "Ks",
+          "8c",
+          "4d",
+          "2h",
+          "9s"
+        ],
+        "pot": 160,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Qh",
+          "Qd"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "embarrassed",
+        "upset"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "shame",
+            "intensity": 0.99
+          },
+          {
+            "name": "distress",
+            "intensity": 0.64
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.54
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.97,
+          "source": "shame"
+        },
+        "shows": {
+          "mask": 0.15,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        {
+          "speaker": "player",
+          "text": "Forty."
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Fold."
+        },
+        {
+          "speaker": "player",
+          "text": "Had nothing, by the way."
+        }
+      ]
+    }
+  },
+  {
+    "id": "mistake-ingrid",
+    "tags": [
+      "mistake",
+      "ingrid",
+      "reply",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-mistake-ingrid",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "Ks",
+          "8c",
+          "4d",
+          "2h",
+          "9s"
+        ],
+        "pot": 160,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Qh",
+          "Qd"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "embarrassed",
+        "upset",
+        "disappointed"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "shame",
+            "intensity": 0.96
+          },
+          {
+            "name": "distress",
+            "intensity": 0.48
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.31
+          }
+        ],
+        "mood": {
+          "octant": "bored",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.56,
+          "source": "shame"
+        },
+        "shows": {
+          "mask": 0.57,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.3,
+        "warmth": 0.35,
+        "nerves": 0.2,
+        "wit": 0.45
+      },
+      "recent": [
+        {
+          "speaker": "player",
+          "text": "Forty."
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Fold."
+        },
+        {
+          "speaker": "player",
+          "text": "Had nothing, by the way."
+        }
+      ],
+      "text": "Had nothing, by the way.",
+      "quick": false
+    }
+  },
+  {
+    "id": "mistake-lola",
+    "tags": [
+      "mistake",
+      "lola",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-mistake-lola",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "Ks",
+          "8c",
+          "4d",
+          "2h",
+          "9s"
+        ],
+        "pot": 160,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Qh",
+          "Qd"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "embarrassed",
+        "upset"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "shame",
+            "intensity": 0.99
+          },
+          {
+            "name": "distress",
+            "intensity": 0.73
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.69
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 1,
+          "source": "shame"
+        },
+        "shows": {
+          "mask": 0.03,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.86,
+        "warmth": 0.75,
+        "nerves": 0.75,
+        "wit": 0.8
+      },
+      "recent": [
+        {
+          "speaker": "player",
+          "text": "Forty."
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Fold."
+        },
+        {
+          "speaker": "player",
+          "text": "Had nothing, by the way."
+        }
+      ]
+    }
+  },
+  {
+    "id": "mistake-nina",
+    "tags": [
+      "mistake",
+      "nina",
+      "reply",
+      "ru"
+    ],
+    "language": "ru",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-mistake-nina",
+      "locale": "ru",
+      "facts": {
+        "street": "complete",
+        "board": [
+          "Ks",
+          "8c",
+          "4d",
+          "2h",
+          "9s"
+        ],
+        "pot": 160,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Qh",
+          "Qd"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "embarrassed",
+        "upset"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "shame",
+            "intensity": 0.99
+          },
+          {
+            "name": "distress",
+            "intensity": 0.79
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.56
+          }
+        ],
+        "mood": {
+          "octant": "dependent",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 1,
+          "source": "shame"
+        },
+        "shows": {
+          "mask": 0.22,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.38,
+        "warmth": 0.7,
+        "nerves": 0.9,
+        "wit": 0.55
+      },
+      "recent": [
+        {
+          "speaker": "player",
+          "text": "Forty."
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Fold."
+        },
+        {
+          "speaker": "player",
+          "text": "Had nothing, by the way."
+        }
+      ],
+      "text": "У меня ничего не было, кстати.",
+      "quick": false
+    }
+  },
+  {
+    "id": "tell-mallorca",
+    "tags": [
+      "tell",
+      "mallorca",
+      "reply",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-tell-mallorca",
+      "locale": "en",
+      "facts": {
+        "street": "preflop",
+        "board": [],
+        "pot": 6,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Ad",
+          "Ac"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": "weak",
+        "honest": false,
+        "street": "preflop"
+      },
+      "mood": [
+        "pleased"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "joy",
+            "intensity": 0.66
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.01,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.74,
+          "acting": "weak"
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [],
+      "text": "You look nervous. Big hand?",
+      "quick": false
+    }
+  },
+  {
+    "id": "tell-ingrid",
+    "tags": [
+      "tell",
+      "ingrid",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-tell-ingrid",
+      "locale": "en",
+      "facts": {
+        "street": "preflop",
+        "board": [],
+        "pot": 6,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Ad",
+          "Ac"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": "weak",
+        "honest": false,
+        "street": "preflop"
+      },
+      "mood": [
+        "pleased"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "joy",
+            "intensity": 0.52
+          }
+        ],
+        "mood": {
+          "octant": "bored",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0,
+          "source": null
+        },
+        "shows": {
+          "mask": 0.94,
+          "acting": "weak"
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.3,
+        "warmth": 0.35,
+        "nerves": 0.2,
+        "wit": 0.45
+      },
+      "recent": []
+    }
+  },
+  {
+    "id": "tell-lola",
+    "tags": [
+      "tell",
+      "lola",
+      "reply",
+      "ru"
+    ],
+    "language": "ru",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-tell-lola",
+      "locale": "ru",
+      "facts": {
+        "street": "preflop",
+        "board": [],
+        "pot": 6,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Ad",
+          "Ac"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": "weak",
+        "honest": false,
+        "street": "preflop"
+      },
+      "mood": [
+        "pleased"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "joy",
+            "intensity": 0.73
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.1,
+          "source": "fear"
+        },
+        "shows": {
+          "mask": 0.59,
+          "acting": "weak"
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.86,
+        "warmth": 0.75,
+        "nerves": 0.75,
+        "wit": 0.8
+      },
+      "recent": [],
+      "text": "Ты как будто нервничаешь. Сильная рука?",
+      "quick": false
+    }
+  },
+  {
+    "id": "tell-nina",
+    "tags": [
+      "tell",
+      "nina",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-tell-nina",
+      "locale": "en",
+      "facts": {
+        "street": "preflop",
+        "board": [],
+        "pot": 6,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "Ad",
+          "Ac"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "herBet",
+        "hint": "weak",
+        "honest": false,
+        "street": "preflop"
+      },
+      "mood": [
+        "pleased"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "joy",
+            "intensity": 0.55
+          }
+        ],
+        "mood": {
+          "octant": "dependent",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 0.12,
+          "source": "fear"
+        },
+        "shows": {
+          "mask": 0.76,
+          "acting": "weak"
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.38,
+        "warmth": 0.7,
+        "nerves": 0.9,
+        "wit": 0.55
+      },
+      "recent": []
+    }
+  },
+  {
+    "id": "revenge-mallorca",
+    "tags": [
+      "revenge",
+      "mallorca",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-revenge-mallorca",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [],
+        "pot": 6,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "5h",
+          "4h"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "disappointed",
+        "annoyed"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "disappointment",
+            "intensity": 0.65
+          },
+          {
+            "name": "anger",
+            "intensity": 0.54
+          },
+          {
+            "name": "distress",
+            "intensity": 0.47
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.99,
+          "source": "anger"
+        },
+        "shows": {
+          "mask": 0.14,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [
+        {
+          "speaker": "player",
+          "text": "Too easy."
+        },
+        {
+          "speaker": "player",
+          "text": "Ten big blinds. Scared?"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Fold."
+        },
+        {
+          "speaker": "player",
+          "text": "Thought so."
+        }
+      ]
+    }
+  },
+  {
+    "id": "revenge-ingrid",
+    "tags": [
+      "revenge",
+      "ingrid",
+      "reply",
+      "ru"
+    ],
+    "language": "ru",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-revenge-ingrid",
+      "locale": "ru",
+      "facts": {
+        "street": "complete",
+        "board": [],
+        "pot": 6,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "5h",
+          "4h"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "annoyed",
+        "disappointed"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "anger",
+            "intensity": 0.59
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.41
+          },
+          {
+            "name": "distress",
+            "intensity": 0.34
+          }
+        ],
+        "mood": {
+          "octant": "bored",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.76,
+          "source": "anger"
+        },
+        "shows": {
+          "mask": 0.46,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.3,
+        "warmth": 0.35,
+        "nerves": 0.2,
+        "wit": 0.45
+      },
+      "recent": [
+        {
+          "speaker": "player",
+          "text": "Too easy."
+        },
+        {
+          "speaker": "player",
+          "text": "Ten big blinds. Scared?"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Fold."
+        },
+        {
+          "speaker": "player",
+          "text": "Thought so."
+        }
+      ],
+      "text": "Так и думал.",
+      "quick": false
+    }
+  },
+  {
+    "id": "revenge-lola",
+    "tags": [
+      "revenge",
+      "lola",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-revenge-lola",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [],
+        "pot": 6,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "5h",
+          "4h"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "disappointed",
+        "annoyed"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "disappointment",
+            "intensity": 0.76
+          },
+          {
+            "name": "anger",
+            "intensity": 0.58
+          },
+          {
+            "name": "distress",
+            "intensity": 0.54
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 1,
+          "source": "anger"
+        },
+        "shows": {
+          "mask": 0.03,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.86,
+        "warmth": 0.75,
+        "nerves": 0.75,
+        "wit": 0.8
+      },
+      "recent": [
+        {
+          "speaker": "player",
+          "text": "Too easy."
+        },
+        {
+          "speaker": "player",
+          "text": "Ten big blinds. Scared?"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Fold."
+        },
+        {
+          "speaker": "player",
+          "text": "Thought so."
+        }
+      ]
+    }
+  },
+  {
+    "id": "revenge-nina",
+    "tags": [
+      "revenge",
+      "nina",
+      "reply",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-revenge-nina",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [],
+        "pot": 6,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "5h",
+          "4h"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "disappointed",
+        "annoyed"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "disappointment",
+            "intensity": 0.69
+          },
+          {
+            "name": "anger",
+            "intensity": 0.62
+          },
+          {
+            "name": "distress",
+            "intensity": 0.59
+          }
+        ],
+        "mood": {
+          "octant": "anxious",
+          "strength": "moderately"
+        },
+        "overload": {
+          "level": 1,
+          "source": "anger"
+        },
+        "shows": {
+          "mask": 0.22,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.38,
+        "warmth": 0.7,
+        "nerves": 0.9,
+        "wit": 0.55
+      },
+      "recent": [
+        {
+          "speaker": "player",
+          "text": "Too easy."
+        },
+        {
+          "speaker": "player",
+          "text": "Ten big blinds. Scared?"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Fold."
+        },
+        {
+          "speaker": "player",
+          "text": "Thought so."
+        }
+      ],
+      "text": "Thought so.",
+      "quick": false
+    }
+  },
+  {
+    "id": "streak-mallorca",
+    "tags": [
+      "streak",
+      "mallorca",
+      "reply",
+      "ru"
+    ],
+    "language": "ru",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-streak-mallorca",
+      "locale": "ru",
+      "facts": {
+        "street": "complete",
+        "board": [],
+        "pot": 12,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "8h",
+          "8c"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "upset",
+        "disappointed"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "distress",
+            "intensity": 0.99
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.84
+          }
+        ],
+        "mood": {
+          "octant": "dependent",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.99,
+          "source": "desperation"
+        },
+        "shows": {
+          "mask": 0.14,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.66,
+        "warmth": 0.75,
+        "nerves": 0.55,
+        "wit": 0.7
+      },
+      "recent": [],
+      "text": "Тяжёлый вечер у тебя, да?",
+      "quick": false
+    }
+  },
+  {
+    "id": "streak-ingrid",
+    "tags": [
+      "streak",
+      "ingrid",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-streak-ingrid",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [],
+        "pot": 12,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "8h",
+          "8c"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "upset",
+        "disappointed"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "distress",
+            "intensity": 0.96
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.62
+          }
+        ],
+        "mood": {
+          "octant": "bored",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 0.82,
+          "source": "desperation"
+        },
+        "shows": {
+          "mask": 0.43,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.3,
+        "warmth": 0.35,
+        "nerves": 0.2,
+        "wit": 0.45
+      },
+      "recent": []
+    }
+  },
+  {
+    "id": "streak-lola",
+    "tags": [
+      "streak",
+      "lola",
+      "reply",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "reply",
+      "sessionId": "eval-streak-lola",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [],
+        "pot": 12,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "8h",
+          "8c"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "upset",
+        "disappointed"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "distress",
+            "intensity": 0.99
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.91
+          }
+        ],
+        "mood": {
+          "octant": "exuberant",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 1,
+          "source": "desperation"
+        },
+        "shows": {
+          "mask": 0.03,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.86,
+        "warmth": 0.75,
+        "nerves": 0.75,
+        "wit": 0.8
+      },
+      "recent": [],
+      "text": "Rough night for you, huh?",
+      "quick": false
+    }
+  },
+  {
+    "id": "streak-nina",
+    "tags": [
+      "streak",
+      "nina",
+      "line",
+      "en"
+    ],
+    "language": "en",
+    "body": {
+      "kind": "line",
+      "sessionId": "eval-streak-nina",
+      "locale": "en",
+      "facts": {
+        "street": "complete",
+        "board": [],
+        "pot": 12,
+        "stacks": [
+          200,
+          200
+        ],
+        "her": [
+          "8h",
+          "8c"
+        ],
+        "actions": [],
+        "bigBlind": 2
+      },
+      "intent": {
+        "situation": "handLost",
+        "hint": null,
+        "honest": true,
+        "street": "complete"
+      },
+      "mood": [
+        "on tilt",
+        "upset",
+        "disappointed"
+      ],
+      "feeling": {
+        "version": 1,
+        "emotions": [
+          {
+            "name": "distress",
+            "intensity": 0.99
+          },
+          {
+            "name": "disappointment",
+            "intensity": 0.86
+          }
+        ],
+        "mood": {
+          "octant": "anxious",
+          "strength": "slightly"
+        },
+        "overload": {
+          "level": 1,
+          "source": "desperation"
+        },
+        "shows": {
+          "mask": 0.22,
+          "acting": null
+        }
+      },
+      "character": {
+        "version": 1,
+        "talkativeness": 0.38,
+        "warmth": 0.7,
+        "nerves": 0.9,
+        "wit": 0.55
+      },
+      "recent": []
+    }
+  }
+]
