@@ -4,7 +4,10 @@ import { buildMessages, buildSummaryMessages, parseFacts } from "./prompt.ts";
 import { DELIVERY_EMOTIONS } from "./prompt.ts";
 import type { Message, Schema, SystemBlock } from "./prompt.ts";
 import { parseSignals, SIGNAL_GUIDE, SIGNAL_SCHEMA } from "./signals.ts";
+import { answerOf, fallbackFor, writePlanned } from "./planHandler.ts";
+import type { Writer } from "./planHandler.ts";
 import { isPlanRequest } from "./planTypes.ts";
+import type { LineRequestV2, ReplyRequestV2 } from "./planTypes.ts";
 import { parseRequest } from "./types.ts";
 import type { LineRequest, ReplyRequest, SummaryRequest } from "./types.ts";
 
@@ -151,7 +154,7 @@ async function writeText(
   };
 }
 
-async function readSignals(req: ReplyRequest, deps: Deps) {
+async function readSignals(req: { text: string }, deps: Deps) {
   try {
     const { data } = await deps.complete({
       purpose: "signals",
@@ -195,6 +198,45 @@ async function handleReply(
   return json(200, { text, delivery, signals });
 }
 
+const writerOf = (user: string, deps: Deps): Writer => ({
+  complete: deps.complete,
+  allow: () => allowed(user, deps),
+});
+
+async function handlePlanLine(
+  req: LineRequestV2,
+  user: string,
+  memories: string[],
+  deps: Deps,
+): Promise<Response> {
+  const written = await writePlanned(req, memories, writerOf(user, deps));
+  const { text } = written;
+  if (text !== null) {
+    keep(deps, () => deps.saveLines(user, req.sessionId, [{ speaker: "mallorca", text }]));
+  }
+  return json(200, answerOf(written, req.debug));
+}
+
+async function handlePlanReply(
+  req: ReplyRequestV2,
+  user: string,
+  memories: string[],
+  deps: Deps,
+): Promise<Response> {
+  if (!req.quick && !(await allowed(user, deps))) return silent();
+  const [written, signals] = await Promise.all([
+    writePlanned(req, memories, writerOf(user, deps)),
+    req.quick ? [] : readSignals(req, deps),
+  ]);
+  const text = written.text ?? fallbackFor(req);
+  keep(deps, () =>
+    deps.saveLines(user, req.sessionId, [
+      { speaker: "player", text: req.text },
+      { speaker: "mallorca", text },
+    ]));
+  return json(200, { ...answerOf({ ...written, text }, req.debug), signals });
+}
+
 async function handleSummary(
   req: SummaryRequest,
   user: string,
@@ -216,12 +258,16 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   if (body instanceof Response) return body;
   const parsed = parseRequest(body);
   if (parsed === null) return json(400, { error: "body" });
-  if (parsed.kind !== "summary" && isPlanRequest(parsed)) return json(400, { error: "version" });
   const known = loadMemories(user, deps);
   known.catch(() => undefined);
   if (!(await allowed(user, deps))) return silent();
   try {
     const memories = await known;
+    if (parsed.kind !== "summary" && isPlanRequest(parsed)) {
+      return parsed.kind === "line"
+        ? await handlePlanLine(parsed, user, memories, deps)
+        : await handlePlanReply(parsed, user, memories, deps);
+    }
     if (parsed.kind === "line") return await handleLine(parsed, user, memories, deps);
     if (parsed.kind === "reply") return await handleReply(parsed, user, memories, deps);
     return await handleSummary(parsed, user, memories, deps);
