@@ -81,7 +81,7 @@ into 200, 1200 hands a row:
 | `cfr-tilted`                                             | `cfr` with the bias aggression 1.6, bluff 1.8, tightness 0.85 (1.25, 1.3, 0.85 at the first clamps)                                                                                                                                                                |
 | `cfr-confident`                                          | `cfr` with the bias 1.15, 1, 0.95                                                                                                                                                                                                                                  |
 | `cfr-cautious`                                           | `cfr` with the bias 0.9, 0.9, 1.2                                                                                                                                                                                                                                  |
-| `cfr-talk-obvious`, `cfr-talk-subtle`, `cfr-talk-hidden` | plain `cfr` that, after deciding a raise, speaks with the chance of the base habit `herBet` for its hand strength class behind a mask of 0, 0.5 and 0.9                                                                                                            |
+| `cfr-talk-obvious`, `cfr-talk-subtle`, `cfr-talk-hidden` | plain `cfr` that, after deciding a raise, speaks with the chance of the `herBet` rule for its hand strength class behind a mask of 0, 0.5 and 0.9 (`speakChanceOf`)                                                                                                |
 | `reader`                                                 | the `math` bot that uses the talk: facing a bet after the opponent spoke, a math fold becomes a call when the call is at most half the pot; facing a bet after the opponent was silent, a math call becomes a fold                                                 |
 | `tilt-exploiter`                                         | the `math` bot that punishes tilt without knowing it: facing a bet or raise, a math fold becomes a call when the call is at most half the pot (the pot including the bet being called), and a math bet or raise with a weak strength class becomes a call or check |
 
@@ -89,7 +89,7 @@ A bot may implement `spoke()` (did it speak on its last decision) and `heard(spo
 `other.heard(actor.spoke())` after every raise by an actor that has `spoke`, before the next decision, and `heard`
 holds only for the next decision.
 
-Cost of a bias: `cfr-tilted vs cfr` should lose at most 5 bb/100. Readability of the habits: `reader` should win
+Cost of a bias: `cfr-tilted vs cfr` should lose at most 5 bb/100. Readability of the `herBet` rule: `reader` should win
 against `cfr-talk-obvious` by more than the interval above what it wins against `cfr-talk-hidden`.
 
 ### Table talk results

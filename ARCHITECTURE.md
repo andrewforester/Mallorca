@@ -54,7 +54,7 @@ web/src/
   emotion/  the opponent's emotions: personality, appraisal, mood, overload and the play bias they give
   persona/  her at the table: her view of the hand, her emotions, her journal, what she acts and her bias
   face/     her face and voice as numbers: expression, poker face, reactions, idle tells, visemes, prosody
-  conversation/  her speech: when she speaks, the line intent, the server contract, the session summary
+  conversation/  her speech: occasions, rules and verdicts, the plan of a line, her humour, the session summary
   coach/    the coach's facts: hint, strategy and range grids, equity, odds
   game/     session store, turn loop, bot worker client, view-model, hand records
   ui/       Preact components, layout, tokens, i18n
@@ -80,7 +80,7 @@ web/src/
 `ui` imports only from `game`; for the table, `game` re-exports `Card`, `formatCard`, `rankOf`, `SeatIndex`,
 `LogEntry`, `HandCategory`, `TableMode`, `CASH` and `TOURNAMENT`, for the opponent choice `Opponent` and
 `opponentsFor`, for the history `HandRecord`, `HandStore`, `openHandStore`, `memoryStore` and
-`toPokerStars`, and for the emotion debug panel `toDebugView`, `DebugView` and its parts, `PERSONALITIES`,
+`toPokerStars`, and for the emotion debug panel `toDebugView`, `DebugView` and its parts, `ConversationTrace`, `TraceEntry`, `TraceTotals`, `Fate`, `PERSONALITIES`,
 `PersonalityKey`, `Personality`, `EMOTIONS`, `Emotion`, `BIAS_KEYS` and `LOAD_SOURCES`.
 
 Each layer's `index.ts` exports only what other layers and `tools/` import; a test reaches the internals of its
@@ -392,8 +392,9 @@ speech, the face, the voice and the bias only read it through a `PersonaReader`.
   sample and strength class, so a seed fixes her. `observe(events, nowMs)` advances the engine to `nowMs`, then for
   each event tracks the hand (`hand.ts`), appraises it and returns one `Moment`: the `event`, the `HandState` `before`
   and `after` it, her `strength` class where she sizes up her hand (her check, call or raise, a raise of the player,
-  `handEnded`; null elsewhere) and, on `handEnded`, `playerBluffShown` (the player bet the river and showed a weak
-  hand). The moments are how speech learns what she perceived, event by event.
+  `handEnded`; null elsewhere), on `handEnded`, `playerBluffShown` (the player bet the river and showed a weak
+  hand), the `impulses` the event's appraisal returned and the `journalIds` of the journal entries it made. The
+  moments are how speech learns what she perceived, event by event.
 - `perception.ts` feeds the `emotion` engine: her cards as `deal`, every street, bet and showdown as `street` with
   her perceived equity (against the player's range until he shows, then against his cards) and the money (pot,
   invested, stack behind, streets left), a raise of the player as `opponentBet` (`raise` when it answers her own bet
@@ -433,29 +434,48 @@ speech, the face, the voice and the bias only read it through a `PersonaReader`.
 
 ## conversation
 
-- `createConversation({ seat, rng, habits? })` returns a `Conversation` for one session against the CFR bot.
-  `observe(moments, persona, nowMs)` reads the moments of a step and returns a `LineIntent` or null: the situation
-  (`herBet`, `herCall`, `playerBet`, `handWon`, `handLost`, `bluffCaught`; `endsHand` tells the last three), the hint
-  (her hand-strength class `strong`, `medium` or `weak`, or null for a neutral line), whether the hint is honest, the
-  street and hand number the line belongs to, and `actionStreet`, the street the action happened on. A call that
-  closes a street belongs to the next street (its pace slot and staleness), but its cue names `actionStreet`.
-  `replyIntent(persona, nowMs)` is the intent for an answer, `facts(view)` the hand as the server sees it (her cards
-  included, stacks by seat), `heard(signals)` counts what the player said in the summary, and `summary()` the session
-  summary from her side (`netBb` is her net); `since(current, earlier)` gives what changed between two summaries.
-- The habits (`habits.ts`) give, for a situation and a class, the chance she speaks; `habitsAt(habits, mask)` moves it
-  toward the class-blind mean by her mask, so a masked player speaks alike with any hand, and her `speakFactor`
-  scales it. A hint is drawn with the chance 0.7 on her bets, calls and the player's bets and never at a hand end; a
-  drawn hint is the truth with the chance `1 - mask`, otherwise what she presents (`presenting.shows`), or no hint
-  when she presents nothing: she lies in words only while she acts. `honest` is false only on a hint she presents. Code draws every chance from the `Rng` it was given; the model only words
-  the line. Pace limits her to one unprompted line per street and none in the 1.5 s after a line.
-- `state.ts` turns her view into what the server gets (version 1). `feelingFor(intent, view)` is `feelingState`: the
-  up to three emotions of 0.1 and more with their intensity, strongest first, the mood octant and its strength,
-  overload with its dominant source (null below 0.1), and what she shows: the view's `mask`, the number her face
-  uses, and `acting`, the hint of a false intent.
-  `character(view)` is `characterOf(view.personality)`, her character sheet in [0, 1]: `talkativeness`
-  `0.5 + 0.4 E`, `warmth` from agreeableness, `nerves` from neuroticism and `wit` from openness, each `(1 + x) / 2`.
-  `moodWords(view)` are the view's `words`. Every number is rounded to two decimals.
-- Her words never decide a move and never change her: the conversation holds no persona and takes only types from
+Her speech as a planner: code decides whether she speaks, which act it is, what can be heard, how long it may be and
+which facts it may name; the server only words the plan. The model, every number with its label and the sources are
+in `docs/conversation/README.md`; the code is the contract.
+
+- `occasionsOf(moments, seat, strengthNow)` (`occasion.ts`) turns the moments of a step into `Occasion`s, oldest
+  first: `herBet`, `herCall` (check or call), `herFold`, `playerRaise`, `card` (a dealt street whose strongest
+  impulse is at least 0.2, `CARD_IMPULSE`) and `handEnded` with its `end` (`bluffCaught`, `playerBluffShown`, `won`,
+  `lost`, the first that holds). An occasion carries its impulses and journal ids, the hand at the end of the step,
+  the street of the action and the street the line belongs to (a call that closes a street belongs to the next one),
+  her class and `endsHand`. `replyOccasion(text, hand, strength, previous)` is the player's line, `playerSaid`.
+- `RULES` (`rules.ts`) is a table of data: an occasion kind, conditions (an emotion of the occasion's impulses or her
+  snapshot at a minimum, a class, what she presents, overload, a hand end), an act and a chance (a number or one per
+  class). Of the rules that match, the one with the most conditions wins, then the first. `speakChanceOf(rule,
+class, mask)` moves a per-class chance toward the mean of its classes by her mask; the arena's talking bots read
+  the `herBet` rule through it.
+- `judge({ occasions, view, pace, nowMs, rules? }, rng)` (`verdict.ts`) returns a `Verdict` per occasion, newest
+  first: the matched rules, the chosen one, the chance (base, masked, her speak factor, final), the roll, the time
+  since her last line, and whether she speaks or why not: `noRule`, `pace` (1.5 s after a line, `PACE_MS`), `street`
+  (one unprompted line a street; not at a hand end), `roll`, or `superseded` (a newer occasion of the step spoke). A
+  `playerSaid` occasion passes every gate. A speaking `herBet`, `herCall` or `playerRaise`, or a reply after one of
+  them or before any, draws a claim about her hand: with the chance 0.7, the truth with `1 - mask`, else what she
+  presents, else nothing; a claim makes the act `claim`.
+- `drawHumour` (`humour.ts`) decides whether the line is a joke and of which style (`affiliative`,
+  `selfEnhancing`, `aggressive`, `selfDefeating`): a tendency per style from the Big Five weighted by the
+  meta-analysis of Plessen et al. 2020, a state multiplier from her emotions and mood, a chance of about 0.15 scaled
+  by extraversion, pleasure, overload, fear, a cooling after a joke and the act, and the styles the act allows. A joke
+  carries its target (`self`, `play`, `situation`), intensity and whether it is softened.
+- `planOf` (`plan.ts`) builds the `UtterancePlan` (version 2): the act; `occasion`, one English sentence of public
+  facts (`occasionText`); `voice`, what can be heard (her emotions times `1 - mask`, a bluff heard as pride at
+  `0.5 * mask`, the occasion's emotion first once it is heard at 0.15, else `calm`); `words`, the act's budget
+  scaled by extraversion and cut to 4 at overload 0.6; `humour`; `claim`; `facts` (`publicFacts`: the street, board,
+  pot and stacks in big blinds, the hand's actions, the dealt turn or river card, the result of a hand that ended and
+  both shown hands after a showdown; her cards never before they are shown); `heard`; `session`, the session line;
+  and the hand number and streets for staleness.
+- `createPlanner({ seat, rng, rules? })` (`planner.ts`) returns a `Planner`: `observe(moments, persona, nowMs)` and
+  `reply(text, persona, nowMs)` return `Planned` (`verdicts`, `plan` or null, the humour draw); `heard(signals)` and
+  `summary()`. It keeps the pace, the last occasion of the hand, the lines since her last joke and the bets and
+  reraises of the hand. A reply does not mark the pace.
+- `SessionSummary` (`summary.ts`) counts hands, her net, the player's shown bluffs and all-ins, the signals heard and
+  up to four `notable` hands: the biggest pot she won and lost of 20 bb or more, her last caught bluff and the most
+  fought hand (4 bets and raises or a reraise; more bets, then the bigger pot).
+- Her words never decide a move and never change her: the planner holds no persona and takes only types from
   `persona`.
 
 ## coach
@@ -587,27 +607,27 @@ speech, the face, the voice and the bias only read it through a `PersonaReader`.
   a `connectConversation` has not answered yet; `lines` are the last 100 `ChatLine`s (`id`, `speaker`, `text`, `handNumber`,
   optional `undelivered`) and `bubbles` the latest line per seat. `connectConversation` runs when a Solver session starts with
   conversation on, or when conversation is switched on in one, and its client is attached; a silent client hides the conversation.
-  Only a Solver opponent makes conversation available and connects a client. The `Conversation` lives across hands,
-  and every step's moments reach `Conversation.observe` after the persona, also with conversation off. A line intent calls
-  `client.line` without waiting. Its text is kept only if the epoch matches, conversation is still available and on, and the
-  hand number and street still match; a hand-end line (`handWon`, `handLost`, `bluffCaught`) is kept until the next
-  hand's first action. `say(text)` (trimmed, at most 200 characters) and `quick(niceHand | bluffing | notThisTime,
-text)` (the caller's localized label) append the player's line at once and call `client.reply`; `quick` sends
+  Only a Solver opponent makes conversation available and connects a client. The `Planner` lives across hands,
+  and every step's moments reach `Planner.observe` after the persona, also with conversation off. A plan calls
+  `client.planLine` (version 2) without waiting. Its text is kept only if the epoch matches, conversation is still
+  available and on, and the hand number and street still match; a hand-end line (`plan.endsHand`) is kept until the next
+  hand's first action; a `null` text (the function rejected both attempts) shows nothing. `say(text)` (trimmed, at most 200 characters) and `quick(niceHand | bluffing | notThisTime,
+text)` (the caller's localized label) append the player's line at once, plan an answer with `Planner.reply` and call `client.planReply`; `quick` sends
   `quick: true`. `say` feeds the reply's signals to her persona (`persona.hear`) and the summary
-  (`Conversation.heard`), `quick` its own (`compliment`, `mockBluff` after any
+  (`Planner.heard`), `quick` its own (`compliment`, `mockBluff` after any
   raise of hers in the hand, else `tease`, `claimStrength`). A reply that is null or fails marks the player's line
   `undelivered`. `setConversation` and `attachConversation(client)` change the switch and the client. There is no tells setting:
   how readable she is comes from her mask.
   A `summary` goes out on an effective `leave`,
-  on `dispose`, at the end of a tournament, before a new `start` replaces the `Conversation`, every 50th hand and on
+  on `dispose`, at the end of a tournament, before a new `start` replaces the `Planner`, every 50th hand and on
   `pageHidden()` (with `keepalive`), only when a hand completed since the last one, and it holds what changed since
   the last summary. Nothing is sent when conversation is off or unavailable, and every client error is ignored. `toViewModel`
   adds `conversation` with `herBubble` and `playerBubble`.
 - Her persona (`sessionPersona.ts`, wired with speech and the face in `sessionWiring.ts`): each `start` makes
   `speech = mulberry32(seed ^ 0x7a1c)`, then a `Persona` for the bot's seat seeded with
-  `mulberry32(floor(speech.next() * 2^32))` and the personality chosen in the debug panel, then a `Conversation` with
+  `mulberry32(floor(speech.next() * 2^32))` and the personality chosen in the debug panel, then a `Planner` with
   `speech`, for every opponent (her face needs her against the math bot too). Every step runs `bot.observe`, then
-  `persona.observe`, then `Conversation.observe` with its moments, then the face. Against a Solver, every `decide`
+  `persona.observe`, then `Planner.observe` with its moments, then the face. Against a Solver, every `decide`
   and the recorded decision get `persona.view(now()).bias`, whatever the client and the conversation switch: her
   feeling always reaches her play; the math bot gets no bias. Against a Solver, after a step with an action of the
   player that does not end the hand, the session asks `bot.opponentRange()` once the current task is done, so a
@@ -615,7 +635,7 @@ text)` (the caller's localized label) append the player's line at once and call 
   that step, if the epoch and the persona are the same and no later request was made; null or an error keeps the
   range she has.
 - Face (`sessionFace.ts`, wired in `sessionWiring.ts`): `SessionOptions.faceOn` (default true) and `setFace(on)` switch it;
-  `SessionState.face` is `{ on, cues }`. While it is on, every step's events, after `Conversation.observe`, add `FaceCue`s
+  `SessionState.face` is `{ on, cues }`. While it is on, every step's events, after `Planner.observe`, add `FaceCue`s
   with increasing `id` (the last 24 are kept): a `pulse` for each `Pulse` of `pulsesOf(impulses, mask)`, the impulses
   of the journal entries after the face's own cursor (`persona.journalSince`, from 0 for a new persona), the
   mask of the frame at that moment, and a `gaze` from the events (`gazeOf` in `faceCues.ts`): her hole cards `cards`,
@@ -624,8 +644,10 @@ text)` (the caller's localized label) append the player's line at once and call 
   reaction. `faceNow()` is `faceFrame(view.snapshot, view.presenting, MALLORCA_LOOK)` of `persona.view(now())`, or null while it is off or before
   `start`; it never moves the engine, so the face changes no move and no seed. `toViewModel` adds `face` (`on`,
   `cues`). `game` re-exports `FaceFrame`, `FaceCue`, `GazeTarget`, `Pulse`, `Weights`, `VisemeCue` and `speechOf`.
-- The payload builders (`conversationClient.ts`) send `facts.stacks` as `[hers, the player's]` from the bot seat, the intent
-  street as `actionStreet`, `quick` on a reply, and the summary `netBb` as the player's net (the negated net of hers).
+- The payload builders (`conversationClient.ts`) send version 2 bodies (`toPlanLinePayload`, `toPlanReplyPayload`):
+  the plan with its cards as text, the Big Five, the last 8 chat lines and `debug` in a traced session; `quick` on a
+  reply; the summary with only its counts (not `notable`) and `netBb` as the player's net (the negated net of hers).
+  The remote client reads `{ text, attempts, prompt? }` as a `LineAnswer` and adds `signals` for a reply.
   `loadConversationClient({ url, anonKey })` (`conversationLoader.ts`) imports `remoteConversation.ts`, the only module that uses
   supabase-js, on demand, and answers `silentConversationClient` when a value is missing or loading fails;
   `conversationConnector(config)` is undefined without both values and otherwise loads the client once. `main.tsx` passes it
@@ -639,8 +661,13 @@ text)` (the caller's localized label) append the player's line at once and call 
   the last `decide` (null before one, or against the math bot), the last `DebugDecision` (her hole cards, the board,
   one `DecisionRow` per move of the `Breakdown`, its `coachMove` label and amount with its `base` and `biased`
   probability and whether it was `chosen`, and the action the session applied as a `coachMove`; null until a
-  decision with a breakdown) and `journal`, the persona's `journal()` as `DebugEntry`s with `spoke`, true on the
-  entries of a step whose `Conversation.observe` returned a `LineIntent`. It is refreshed after every step's `Conversation.observe`,
+  decision with a breakdown), `journal`, the persona's `journal()` as `DebugEntry`s with `spoke`, true on the
+  entries whose ids an occasion with a plan holds, and `conversation`, the `ConversationTrace` (`conversationTrace.ts`):
+  one `TraceEntry` per verdict, newest 50 (the verdict, the plan and humour draw, the request time and the echoed
+  prompt, the attempts and the answer, and the `fate`: `shown`, `stale`, `filtered`, `error`, `noClient`, `off`,
+  `silent` or `pending`) with the `totals` (occasions, lines, silences by reason, the mean words of a shown line,
+  rejections by reason). The trace exists only in a debug session (`wireHer` makes it, `wireProbe` the probe) and
+  refreshes the debug state on every change. It is refreshed after every step's `Planner.observe`,
   every `hear`, every `start`, every bot decision and each action below. With it, every `decide` request
   carries `explain: true`; without it none does, and the worker never calls `explain()`. The actions
   `setPersonality(key | personality)` (applied to the running persona and to every persona a later `start` makes) and
@@ -650,7 +677,9 @@ text)` (the caller's localized label) append the player's line at once and call 
   emotion); `emotions` as `[emotion, value]` in `EMOTIONS` order; `mood`, `defaultMood` and `octant`; `load` with
   its `sources`, the `overload`, `composure` and `leakage`; `sessionNetBb` and `pressure`; `engineBias` (the five
   `PlayBias` multipliers in `BIAS_KEYS` order, all ones without a feeling) and `sentBias` (the `BotBias`,
-  `tightness = 1 / looseness`, or null); `decision`; and `journal`.
+  `tightness = 1 / looseness`, or null); `decision`; `journal`; and `conversation`. The panel has two tabs, Feelings
+  and Conversation (`mallorca.debugTab`); the Conversation tab shows the totals, every trace entry and a button that
+  copies the trace as JSON, and a journal entry and the trace entry it fed link to each other.
 - `simulation.test.ts` plays full tournaments between the bot and a seeded random human through the session and
   checks that chips are conserved, the session never stalls and the winner holds every chip.
 
@@ -844,13 +873,27 @@ text)` (the caller's localized label) append the player's line at once and call 
   `quick: true` (a quick phrase, which carries its own signals) makes only the answer call. The card filter rejects a
   text that names a card or her holding, also told in the past (`I had`, `folded`) or with `my`; the function asks once more with a stricter instruction and then falls back
   to a fixed neutral line. Over a limit it answers an error and she stays silent. It answers before it saves the
-  lines or facts, which run through `EdgeRuntime.waitUntil` when there is one.
+  lines or facts, which run through `EdgeRuntime.waitUntil` when there is one. This is version 1, served for a
+  body without `version` until every deployed client sends version 2.
+- Version 2 (`version: 2`, `planTypes.ts`, `planPrompt.ts`, `check.ts`, `planHandler.ts`) carries the plan of a line,
+  the Big Five, the last 8 lines and `debug`. The cached system block is a one-line setting (a home game between two
+  people who know each other; the room is the look, not her manner), how talk sounds at the table, her character in
+  graded words (`characterText`: each trait under 0.2 left out, else "a bit", "very" or "extremely" and one sentence of
+  manner of speech for its pole), the rules, the four humour styles with the rule of wit (one concrete thing of the
+  moment, no puns, no setup and punchline) and one line per act. The state, the last user turn after the recent
+  lines, is the plan as labelled fields, the session line, the memories and the locale. The output is `{ text }`; the
+  voice is the plan's. `rejections` checks the answer: more words than `words.max`, a card or rank that is not public
+  (the board, the dealt card, a shown hand), a holding while her cards are hidden, a repeat of one of her recent
+  lines. A rejected answer is asked once more with its reasons; when that fails too, a `line` answers `text: null` and
+  a `reply` the act's short fallback in English or Russian (`ACT_FALLBACK`). The answer is
+  `{ text, attempts: [{ text, rejected }], prompt? }` (`prompt` only with `debug`), a reply adds `signals`.
 - The browser reaches it through `remoteConversation.ts` (supabase-js, anonymous sign-in, a 5 s timeout, every error turned
-  into `null`). Without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` the build has no conversation. The game reads only
-  `text` and `signals` today; `delivery` waits for the voice (#64).
-- `talk/eval` measures the lines: 52 cases from the sandbox scenes and the emotion engine, a judge with structured
-  output, programmatic checks, latency and cost per call and per user-day (`talk/eval/README.md`). It runs only on
-  the owner's budget.
+  into `null`). Without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` the build has no conversation. The game sends
+  version 2 only; the voice (#64) will read the plan's `voice`.
+- `talk/eval` measures the planned lines: 52 version 2 cases from the sandbox scenes built with the planner's
+  functions, a blind judge of emotion, act and humour with confusion matrices, the word budget, leaks, repeats over
+  `--repeat`, her traits read back from 20 lines a preset (`character.ts`), pairwise comparisons of variants
+  (`pair.ts`), latency and cost (`talk/eval/README.md`). It runs only on the owner's budget.
 
 ### Data flow
 
@@ -861,13 +904,13 @@ bias      persona.view(now).bias (Solver opponent, any client) -> session decide
 face      persona.journalSince(cursor) -> pulses; persona.view(now) -> faceFrame -> face and voice prosody
 debug     (dev) decide(legal, bias, explain) -> worker -> CfrBot.explain() -> bot_decision (wasm)
           -> Decision.breakdown -> SessionState.debug -> toDebugView -> panel
-line      Moments -> Conversation.observe -> LineIntent
-          -> client.line(facts, intent, mood, feeling, character of persona.view(now))
-          -> function -> text
+line      Moments -> Planner.observe -> occasions -> judge (rules, gates, claim) -> drawHumour -> UtterancePlan
+          -> trace (dev) -> client.planLine(plan, Big Five, recent of persona.view(now))
+          -> function (prompt, checks, one retry) -> { text | null, attempts }
           -> session (kept if epoch, hand and street match, a hand-end line until the next hand's first action)
-          -> bubble and chat
-reply     say(text) -> client.reply -> function (signals + answer) -> { text, signals }
-          -> persona.hear(signals) moves her feeling, Conversation.heard(signals) the summary -> her line in the chat
+          -> bubble and chat; the fate to the trace
+reply     say(text) -> Planner.reply -> plan -> client.planReply -> function (signals + answer)
+          -> persona.hear(signals) moves her feeling, Planner.heard(signals) the summary -> her line in the chat
 range     player action -> bot.observe -> bot.opponentRange() (worker, after the observations)
           -> persona.narrow(weights, handNumber) -> her equity against his range -> feeling
 ```
@@ -981,8 +1024,8 @@ stacks 20000), run as `npm run arena:external`; see its `README.md` for the flag
   filling unknown cards from the bottom of `fullDeck`; throws `MirrorError` when the engine cannot follow or would
   deal a card Slumbot has not shown.
 - `runner.ts`: `runExternal` asks a fresh bot, seeded by `mulberry32((Math.imul(seed, 0x9e3779b1) + handIndex * 64
-  + decision) >>> 0)`, for every decision, checks the engine result against `winnings` at the end of the hand and
-  appends one line per hand to the log (`log.ts`), continuing the numbering of an existing log.
+  - decision) >>> 0)`, for every decision, checks the engine result against `winnings` at the end of the hand and
+appends one line per hand to the log (`log.ts`), continuing the numbering of an existing log.
 - `estimate.ts` and `allInEv.ts`: raw, all-in EV (exact equity with `equityVsHand`) and Slumbot baseline
   estimates in bb/100 with 95% intervals, from the log alone.
 - `options.ts` and `cli.ts`: the flags and the command; `cli.ts` is the only file that reads the environment.
