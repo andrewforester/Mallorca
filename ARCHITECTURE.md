@@ -272,12 +272,14 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   one `rng.next()` per observed action (the off-tree raise mapping) and one per decision (sampling the strategy),
   so a seed fixes its play. `solverChoice` is the kind of the action; `evByAction` is `NaN` for every class.
 - `setBias(bias)` passes a `BotBias` of five positive multipliers to `bot_bias`; all ones play the blueprint as
-  sampled. The bot reweights the node's probabilities by action kind: a fold before the flop by `tightness`, a fold
-  after the flop by `1 / stickiness`, a check or a call by `1 / aggression`, a raise or an all-in by `aggression`
-  (times `bluff` for a low bucket on the turn or the river). `sizing` then moves weight between the raises of the
-  node, bets and opens included: each raise is multiplied by `sizing ^ t`, `t = clamp(log2(chips added / pot), -1,
-1)` (half the pot -1, the pot 0, twice the pot and more +1), and the raises are scaled back to their total, so
-  `sizing` changes how big she bets, not how often.
+  sampled. The bot first plays its hand as a slightly stronger or weaker one: the buckets of each street are ordered
+  by strength (preflop classes by their equity against a random hand, buckets after the flop are ordered already),
+  and the node's row is blended from the two buckets next to the bot's strength percentile shifted by `δ`, which is
+  `0.35 ln(1 / tightness)` before the flop and `0.2 ln(stickiness)` after it at a node with a fold, and
+  `0.2 ln(aggression)` at a node without one. It then reweights by action kind: a check or a call by
+  `1 / aggression`, a raise or an all-in by `aggression` (times `bluff` for a low bucket on the turn or the river);
+  folds are not scaled. `sizing` multiplies the pot fraction of the bet or raise she makes, clamped to the legal
+  range, so it changes how big she bets, not how often.
 - The coach reads the strategy through two more `CfrBot` methods. Hole-card pairs are indexed
   `b * (b - 1) / 2 + a` for cards `a < b`, 1326 in all. `range()` is the bot's own range: 1 per pair at the start of
   a hand, 0 for pairs that touch the board, times the probability of every action the bot sampled from the strategy
@@ -1002,8 +1004,8 @@ stacks 20000), run as `npm run arena:external`; see its `README.md` for the flag
   filling unknown cards from the bottom of `fullDeck`; throws `MirrorError` when the engine cannot follow or would
   deal a card Slumbot has not shown.
 - `runner.ts`: `runExternal` asks a fresh bot, seeded by `mulberry32((Math.imul(seed, 0x9e3779b1) + handIndex * 64
-  + decision) >>> 0)`, for every decision, checks the engine result against `winnings` at the end of the hand and
-  appends one line per hand to the log (`log.ts`), continuing the numbering of an existing log.
+  - decision) >>> 0)`, for every decision, checks the engine result against `winnings` at the end of the hand and
+appends one line per hand to the log (`log.ts`), continuing the numbering of an existing log.
 - `estimate.ts` and `allInEv.ts`: raw, all-in EV (exact equity with `equityVsHand`) and Slumbot baseline
   estimates in bb/100 with 95% intervals, from the log alone.
 - `options.ts` and `cli.ts`: the flags and the command; `cli.ts` is the only file that reads the environment.
