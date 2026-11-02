@@ -10,8 +10,7 @@ import { netOf, playerCardsShown } from './hand.ts';
 import { liveRange } from './range.ts';
 import type { Signal } from './signals.ts';
 import { ALL_HANDS, classOf } from './strength.ts';
-import type { Bias } from './bias.ts';
-import { botBiasOf, speakFactorOf, wordsOf } from './view.ts';
+import { wordsOf } from './view.ts';
 
 export interface FeelingOptions {
   seat: SeatIndex;
@@ -29,9 +28,7 @@ export interface Feeling {
   takeFelt(): Felt[];
   setPersonality(p: Personality): void;
   reset(): void;
-  bias(): Bias;
   words(): string[];
-  speakFactor(): number;
   perceived(): number;
 }
 
@@ -150,16 +147,8 @@ class TableFeeling implements Feeling {
     this.felt.push({ handNumber: this.handNumber, event: e, impulses });
   }
 
-  bias(): Bias {
-    return botBiasOf(this.engine.snapshot());
-  }
-
   words(): string[] {
     return wordsOf(this.engine.snapshot());
-  }
-
-  speakFactor(): number {
-    return speakFactorOf(this.engine.snapshot());
   }
 
   perceived(): number {
