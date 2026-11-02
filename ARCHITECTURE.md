@@ -22,6 +22,7 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 | `web/prototypes/emotion-lab/`                                       | Emotion sandbox: the `emotion` engine with a face and a voice, see `docs/emotion`  |
 | `web/public/avatar/`                                                | Her 3D model `mallorca.glb`, its still `portrait.webp` and `LICENSE.md` (MIT)      |
 | `web/tools/avatar/`                                                 | Blender script that converts the Rocketbox source into `mallorca.glb`, see README  |
+| `web/tools/avatar/metahuman/`                                       | Google Cloud workstation for authoring her MetaHuman in Unreal, see README          |
 | `docs/emotion/`                                                     | Emotion model document, its screenshots and generated tables                       |
 | `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`               |
 | `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`               |
