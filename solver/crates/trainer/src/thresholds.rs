@@ -1,5 +1,6 @@
 use crate::buckets::turn_values;
 use mallorca_core::abstraction::Abstraction;
+use mallorca_core::bytes::f32s;
 use mallorca_core::iso::street_indexers;
 use mallorca_core::preset::Preset;
 use mallorca_core::strength::{bucket_of, percentile_thresholds};
@@ -48,12 +49,7 @@ pub fn read_river_hs(data: &Path, classes: usize) -> Result<Vec<f32>, String> {
             classes * 4
         ));
     }
-    Ok(bytes
-        .as_chunks::<4>()
-        .0
-        .iter()
-        .map(|&c| f32::from_le_bytes(c))
-        .collect())
+    Ok(f32s(&bytes))
 }
 
 pub fn play_thresholds(
@@ -63,7 +59,7 @@ pub fn play_thresholds(
 ) -> Result<Vec<(Street, Vec<f32>)>, String> {
     let indexers = street_indexers();
     let river = read_river_hs(data, abstraction.class_count(Street::River) as usize)?;
-    let turn = turn_values(&indexers, &river, preset.threads);
+    let turn = turn_values(indexers, &river, preset.threads);
     let turn_t = verified(
         Street::Turn,
         &turn,

@@ -1,0 +1,40 @@
+name: Talk checks
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/talk-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: talk-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  function:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: supabase/functions
+    steps:
+      - uses: actions/checkout@v7
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno fmt --check
+      - run: deno lint
+      - run: deno test --permit-no-files
+
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase db start
+      - run: supabase test db

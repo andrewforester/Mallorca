@@ -2,7 +2,8 @@ import type { Card } from '../cards/index.ts';
 import { legalActionsOf, rulesOf, toAct } from '../engine/index.ts';
 import type { Hand, LegalActions, LogEntry, SeatIndex } from '../engine/index.ts';
 import type { HandCategory } from '../equity/index.ts';
-import type { SessionState } from './session.ts';
+import type { FaceState } from './sessionFace.ts';
+import type { ChatLine, SessionState } from './session.ts';
 
 export interface SeatView {
   name: string;
@@ -22,6 +23,14 @@ export interface RaiseControl {
   presets: { halfPot: number; pot: number; allIn: number };
 }
 
+export interface ConversationView {
+  available: boolean;
+  on: boolean;
+  lines: ChatLine[];
+  herBubble: ChatLine | null;
+  playerBubble: ChatLine | null;
+}
+
 export interface ViewModel {
   seats: [SeatView, SeatView];
   board: Card[];
@@ -38,6 +47,8 @@ export interface ViewModel {
   handNumber: number;
   result: { winner: SeatIndex | null; category: HandCategory | null; amount: number } | null;
   tournamentWinner: SeatIndex | null;
+  conversation: ConversationView;
+  face: FaceState;
 }
 
 function roundTenth(value: number): number {
@@ -114,6 +125,21 @@ function sessionView(session: SessionState['session'], bigBlind: number): ViewMo
   };
 }
 
+function conversationView(
+  conversation: SessionState['conversation'],
+  humanSeat: SeatIndex,
+): ConversationView {
+  const { available, on, lines, bubbles } = conversation;
+  const botSeat = humanSeat === 0 ? 1 : 0;
+  return {
+    available,
+    on,
+    lines,
+    herBubble: bubbles[botSeat],
+    playerBubble: bubbles[humanSeat],
+  };
+}
+
 export function toViewModel(state: SessionState, humanSeat: SeatIndex): ViewModel {
   const { table, phase } = state;
   const { hand } = table;
@@ -138,5 +164,7 @@ export function toViewModel(state: SessionState, humanSeat: SeatIndex): ViewMode
     handNumber: table.handNumber,
     result: resultView(state.result),
     tournamentWinner: table.winner,
+    conversation: conversationView(state.conversation, humanSeat),
+    face: state.face,
   };
 }

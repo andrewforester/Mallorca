@@ -1,9 +1,8 @@
 import type { Card } from '../cards/index.ts';
 import { parseCard } from '../cards/index.ts';
-import type { Action, EngineEvent, SeatIndex } from '../engine/index.ts';
+import type { Action, DealtStreet, EngineEvent, SeatIndex } from '../engine/index.ts';
 
 export type Who = 'hero' | 'villain';
-export type PostflopStreet = 'flop' | 'turn' | 'river';
 
 export type Observation =
   | {
@@ -17,7 +16,7 @@ export type Observation =
     }
   | { type: 'holeCards'; cards: [Card, Card] }
   | { type: 'acted'; who: Who; action: Action; amount: number }
-  | { type: 'street'; street: PostflopStreet; board: Card[] };
+  | { type: 'street'; street: DealtStreet; board: Card[] };
 
 export type ObservationJson =
   | Extract<Observation, { type: 'handStarted' } | { type: 'acted' }>
@@ -63,7 +62,7 @@ export function toObservations(events: EngineEvent[], heroSeat: SeatIndex): Obse
   return result;
 }
 
-function parseStreet(street: string): PostflopStreet {
+function parseStreet(street: string): DealtStreet {
   if (street === 'flop' || street === 'turn' || street === 'river') {
     return street;
   }

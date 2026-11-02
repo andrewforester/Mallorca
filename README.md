@@ -23,6 +23,12 @@ actions it sees, computes the equity of its own hand against that range, and sol
 the expected profit of folding, calling and raising. On recorded situations the port makes the same decisions as
 the Java original in this repository.
 
+## Table talk
+
+Against the CFR bot, Mallorca can talk: she comments on the hand and answers what you write, in character, and her
+mood follows the session and shifts her style a little. It needs a small Supabase backend; without it the game plays
+as before and the chat stays hidden. The setup is in `supabase/README.md`.
+
 ## Build
 
 The game lives in `web/` and needs Node 24.

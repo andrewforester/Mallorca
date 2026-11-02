@@ -1,10 +1,20 @@
+mod bias;
+mod decision;
+mod range;
+mod spot;
 mod translate;
+
+pub use range::Step;
+pub use spot::SpotView;
 
 use crate::abstraction::Abstraction;
 use crate::cards::Card;
 use crate::strategy::{StrategyError, StrategyFile};
 use crate::tree::{ActionKind, Node, NodeId, Street};
-use translate::{fraction, nearest, pseudo_harmonic, sample, scaled_raise};
+use bias::choose;
+pub use bias::{reweight, sample_weighted, size_position, Bias, Situation};
+pub use decision::DecisionView;
+use translate::{fraction, nearest, pseudo_harmonic, scaled_raise};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Move {
@@ -38,11 +48,13 @@ struct Spot<'a> {
 
 impl Spot<'_> {
     fn to_call(&self) -> u32 {
-        self.street_bets[1 - self.seat] - self.street_bets[self.seat]
+        self.street_bets[1 - self.seat].saturating_sub(self.street_bets[self.seat])
     }
 
     fn pot_after_call(&self) -> u32 {
-        self.committed[0] + self.committed[1] + self.to_call()
+        self.committed[0]
+            .saturating_add(self.committed[1])
+            .saturating_add(self.to_call())
     }
 
     fn child(&self, kind: ActionKind) -> Option<NodeId> {
@@ -93,9 +105,10 @@ impl Model {
     fn raise_to(&self, spot: &Spot<'_>, kind: ActionKind) -> Option<u32> {
         match kind {
             ActionKind::RaiseTo(to) => Some(to),
-            ActionKind::AllIn => {
-                Some(spot.street_bets[spot.seat] + self.file.stack - spot.committed[spot.seat])
-            }
+            ActionKind::AllIn => Some(
+                spot.street_bets[spot.seat]
+                    .saturating_add(self.file.stack.saturating_sub(spot.committed[spot.seat])),
+            ),
             _ => None,
         }
     }
@@ -106,8 +119,13 @@ pub fn passive(legal: &Legal) -> Move {
         Move::Check
     } else if legal.call.is_some() {
         Move::Call
-    } else {
+    } else if legal.fold {
         Move::Fold
+    } else {
+        legal
+            .raise
+            .filter(|r| r.0 <= r.1)
+            .map_or(Move::Fold, |r| Move::RaiseTo(r.0))
     }
 }
 
@@ -123,6 +141,9 @@ struct Hand {
     node: Option<NodeId>,
     pending: Option<NodeId>,
     shifted: bool,
+    history: Vec<Step>,
+    opponent: Vec<Step>,
+    buckets: range::Buckets,
 }
 
 impl Hand {
@@ -131,11 +152,17 @@ impl Hand {
     }
 
     fn pot_after_call(&self, seat: usize) -> u32 {
-        self.committed[0] + self.committed[1] + self.to_call(seat)
+        self.committed[0]
+            .saturating_add(self.committed[1])
+            .saturating_add(self.to_call(seat))
+    }
+
+    fn pot(&self) -> f64 {
+        f64::from(self.committed[0]) + f64::from(self.committed[1])
     }
 
     fn apply(&mut self, seat: usize, mv: Move) {
-        let behind = self.start[seat] - self.committed[seat];
+        let behind = self.start[seat].saturating_sub(self.committed[seat]);
         let add = match mv {
             Move::Fold | Move::Check => 0,
             Move::Call => self.to_call(seat).min(behind),
@@ -149,11 +176,25 @@ impl Hand {
 #[derive(Default)]
 pub struct Bot {
     hand: Option<Hand>,
+    bias: Bias,
+    last: Option<DecisionView>,
 }
 
 impl Bot {
     pub fn new() -> Bot {
-        Bot { hand: None }
+        Bot {
+            hand: None,
+            bias: Bias::NEUTRAL,
+            last: None,
+        }
+    }
+
+    pub fn set_bias(&mut self, bias: Bias) {
+        self.bias = bias;
+    }
+
+    pub fn bias(&self) -> Bias {
+        self.bias
     }
 
     pub fn cursor(&self) -> Option<NodeId> {
@@ -173,6 +214,7 @@ impl Bot {
             start.swap(0, 1);
         }
         let bets = [blinds[0].min(start[0]), blinds[1].min(start[1])];
+        self.last = None;
         self.hand = Some(Hand {
             hero,
             start,
@@ -185,7 +227,15 @@ impl Bot {
             node: Some(model.file.tree.root()),
             pending: None,
             shifted: false,
+            history: Vec::new(),
+            opponent: Vec::new(),
+            buckets: Vec::new(),
         });
+    }
+
+    pub fn abandon_hand(&mut self) {
+        self.hand = None;
+        self.last = None;
     }
 
     pub fn hole_cards(&mut self, hole: [Card; 2]) {
@@ -225,45 +275,96 @@ impl Bot {
             Some(child) if hero => (Some(child), false),
             _ => follow(model, hand, seat, mv, draw),
         };
+        if !hero {
+            if let Some(step) = opponent_step(model, hand, next) {
+                hand.opponent.push(step);
+            }
+        }
         hand.apply(seat, mv);
         hand.node = next;
         hand.shifted = shifted;
     }
 
     pub fn decide(&mut self, model: &Model, legal: &Legal, mut draw: f64) -> Move {
+        self.last = None;
         let Some(hand) = self.hand.as_mut() else {
             return passive(legal);
         };
+        match target(model, hand, legal) {
+            Target::Passive => return passive(legal),
+            Target::Hold => {
+                hand.pending = hand.node;
+                return passive(legal);
+            }
+            Target::Keep(_) => {}
+            Target::Resync(node) => {
+                hand.node = node;
+                if legal.call.is_some() {
+                    draw = resync_to_check(model, hand, draw);
+                }
+            }
+        }
         let Some(hole) = hand.hole else {
             return passive(legal);
         };
-        let facing = legal.call.is_some();
-        let here = hand
-            .node
-            .and_then(|id| model.spot(id))
-            .filter(|s| s.seat == hand.hero && s.street == hand.street);
-        if hand.shifted && facing && here.is_none() && hand.node.is_some() {
-            hand.pending = hand.node;
-            return passive(legal);
-        }
-        let valid = here.is_some_and(|s| {
-            let free = hand.shifted && facing && s.to_call() == 0;
-            free || (s.to_call() > 0) == facing
-        });
-        if !valid {
-            hand.node = resync(model, hand, facing);
-            if facing {
-                draw = resync_to_check(model, hand, draw);
-            }
-        }
         let Some(id) = hand.node else {
             return passive(legal);
         };
-        let spot = model.spot(id).expect("a decision node");
+        let Some(spot) = model.spot(id) else {
+            return passive(legal);
+        };
         let bucket = model.abstraction.bucket(hand.street, hole, &hand.board);
-        let chosen = spot.actions[sample(model.file.probabilities(id, bucket), draw)];
+        let Some(probabilities) = model.file.try_probabilities(id, bucket) else {
+            return passive(legal);
+        };
+        let action = choose(model, &spot, probabilities, bucket, &self.bias, draw);
+        let sampled = decision::Sampled {
+            spot: &spot,
+            probabilities,
+            bucket,
+            bias: &self.bias,
+            chosen: action,
+        };
+        self.last = Some(decision::explain(model, hand, legal, &sampled));
+        let chosen = spot.actions[action];
+        hand.history.push(Step {
+            node: id,
+            action,
+            street: hand.street,
+            board: hand.board.clone(),
+            bias: self.bias,
+        });
         hand.pending = Some(chosen.1);
-        to_real(model, &spot, hand, chosen.0, legal)
+        to_real(&spot, hand, chosen.0, legal)
+    }
+}
+
+enum Target {
+    Passive,
+    Hold,
+    Keep(NodeId),
+    Resync(Option<NodeId>),
+}
+
+fn target(model: &Model, hand: &Hand, legal: &Legal) -> Target {
+    if !hand.hole.is_some_and(|h| distinct_cards(h, &hand.board)) {
+        return Target::Passive;
+    }
+    let facing = legal.call.is_some();
+    let here = hand
+        .node
+        .and_then(|id| model.spot(id))
+        .filter(|s| s.seat == hand.hero && s.street == hand.street);
+    if hand.shifted && facing && here.is_none() && hand.node.is_some() {
+        return Target::Hold;
+    }
+    let valid = here.is_some_and(|s| {
+        let free = hand.shifted && facing && s.to_call() == 0;
+        free || (s.to_call() > 0) == facing
+    });
+    match hand.node {
+        Some(id) if valid => Target::Keep(id),
+        _ => Target::Resync(resync(model, hand, facing)),
     }
 }
 
@@ -306,28 +407,49 @@ fn follow(model: &Model, hand: &Hand, seat: usize, mv: Move, draw: f64) -> (Opti
     }
 }
 
+fn opponent_step(model: &Model, hand: &Hand, next: Option<NodeId>) -> Option<Step> {
+    let node = hand.node?;
+    let child = next?;
+    let action = model
+        .spot(node)?
+        .actions
+        .iter()
+        .position(|a| a.1 == child)?;
+    Some(Step {
+        node,
+        action,
+        street: hand.street,
+        board: hand.board.clone(),
+        bias: Bias::NEUTRAL,
+    })
+}
+
+fn spot_pot(spot: &Spot<'_>) -> f64 {
+    f64::from(spot.committed[0]) + f64::from(spot.committed[1])
+}
+
 fn resync(model: &Model, hand: &Hand, facing: bool) -> Option<NodeId> {
-    let pot = hand.scale * f64::from(hand.committed[0] + hand.committed[1]);
+    let pot = hand.scale * hand.pot();
     let price = hand.scale * f64::from(hand.to_call(hand.hero)) / pot;
-    let distance = |id: NodeId| {
-        let spot = model.spot(id).expect("a decision node");
-        let p = f64::from(spot.committed[0] + spot.committed[1]);
+    let distance = |spot: &Spot<'_>| {
+        let p = spot_pot(spot);
         let q = f64::from(spot.to_call()) / p;
         (p / pot).ln().abs() + ((1.0 + q) / (1.0 + price)).ln().abs()
     };
     model.spots[spot_key(hand.street, hand.hero, facing)]
         .iter()
-        .copied()
-        .min_by(|&a, &b| distance(a).total_cmp(&distance(b)))
+        .filter_map(|&id| model.spot(id).map(|spot| (id, distance(&spot))))
+        .min_by(|a, b| a.1.total_cmp(&b.1))
+        .map(|(id, _)| id)
 }
 
 fn resync_to_check(model: &Model, hand: &mut Hand, draw: f64) -> f64 {
     let Some(spot) = hand.node.and_then(|id| model.spot(id)) else {
         return draw;
     };
-    let tree_pot = f64::from(spot.committed[0] + spot.committed[1] - spot.to_call());
+    let tree_pot = spot_pot(&spot) - f64::from(spot.to_call());
     let to_call = hand.to_call(hand.hero);
-    let pot = f64::from(hand.committed[0] + hand.committed[1] - to_call);
+    let pot = hand.pot() - f64::from(to_call);
     let p = pseudo_harmonic(
         0.0,
         f64::from(spot.to_call()) / tree_pot,
@@ -346,8 +468,8 @@ fn resync_to_check(model: &Model, hand: &mut Hand, draw: f64) -> f64 {
     draw / p
 }
 
-fn to_real(model: &Model, spot: &Spot<'_>, hand: &Hand, kind: ActionKind, legal: &Legal) -> Move {
-    let Some(range) = legal.raise else {
+fn to_real(spot: &Spot<'_>, hand: &Hand, kind: ActionKind, legal: &Legal) -> Move {
+    let Some(range) = legal.raise.filter(|r| r.0 <= r.1) else {
         return match kind {
             ActionKind::Fold if legal.fold => Move::Fold,
             _ => passive(legal),
@@ -357,8 +479,7 @@ fn to_real(model: &Model, spot: &Spot<'_>, hand: &Hand, kind: ActionKind, legal:
         ActionKind::Fold if legal.fold => Move::Fold,
         ActionKind::Fold | ActionKind::Check | ActionKind::Call => passive(legal),
         ActionKind::AllIn => Move::RaiseTo(range.1),
-        ActionKind::RaiseTo(_) => {
-            let t = model.raise_to(spot, kind).expect("a raise");
+        ActionKind::RaiseTo(t) => {
             let f = fraction(t, spot.street_bets[1 - spot.seat], spot.pot_after_call());
             let me = hand.hero;
             Move::RaiseTo(scaled_raise(
@@ -369,6 +490,16 @@ fn to_real(model: &Model, spot: &Spot<'_>, hand: &Hand, kind: ActionKind, legal:
             ))
         }
     }
+}
+
+fn distinct_cards(hole: [Card; 2], board: &[Card]) -> bool {
+    let mut seen = 0u64;
+    hole.iter().chain(board).all(|&c| {
+        let bit = 1u64 << (c % 64);
+        let fresh = c < 52 && seen & bit == 0;
+        seen |= bit;
+        fresh
+    })
 }
 
 #[cfg(test)]

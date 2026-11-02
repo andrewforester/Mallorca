@@ -3,9 +3,11 @@ import {
   readAutoNext,
   readSound,
   readTableStyle,
+  readConversation,
   writeAutoNext,
   writeSound,
   writeTableStyle,
+  writeConversation,
 } from './preferences.ts';
 
 afterEach(() => {
@@ -82,5 +84,36 @@ describe('sound preference', () => {
     vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked });
     expect(() => writeSound(false)).not.toThrow();
     expect(readSound()).toBe(true);
+  });
+});
+
+describe('table talk preference', () => {
+  it('is on by default and remembers turning it off', () => {
+    expect(readConversation()).toBe(true);
+    writeConversation(false);
+    expect(localStorage.getItem('mallorca.talk')).toBe('off');
+    expect(readConversation()).toBe(false);
+    writeConversation(true);
+    expect(readConversation()).toBe(true);
+  });
+
+  it('stays on when storage throws', () => {
+    const blocked = () => {
+      throw new Error('blocked');
+    };
+    vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked });
+    expect(() => writeConversation(false)).not.toThrow();
+    expect(readConversation()).toBe(true);
+  });
+});
+
+describe('coach preference', () => {
+  it('is off unless stored on', async () => {
+    const { readCoach, writeCoach } = await import('./preferences.ts');
+    expect(readCoach()).toBe(false);
+    writeCoach(true);
+    expect(readCoach()).toBe(true);
+    writeCoach(false);
+    expect(readCoach()).toBe(false);
   });
 });

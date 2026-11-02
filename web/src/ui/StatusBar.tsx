@@ -12,6 +12,7 @@ export interface StatusBarProps {
   onToggleLog: () => void;
   sound: boolean;
   onToggleSound: () => void;
+  coach?: { open: boolean; onToggle: () => void } | null;
   children: ComponentChildren;
 }
 
@@ -76,6 +77,31 @@ function LogToggle({ open, toggle, onToggle }: LogToggleProps) {
   );
 }
 
+function CoachToggle({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      class="log-toggle glass pill coach-toggle"
+      data-testid="coach-toggle"
+      aria-expanded={open}
+      aria-controls="coach-sheet"
+      aria-label={t('coach.open')}
+      onClick={onToggle}
+    >
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+        <path
+          d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
+  );
+}
+
 export function StatusBar({
   vm,
   canLeave,
@@ -85,6 +111,7 @@ export function StatusBar({
   onToggleLog,
   sound,
   onToggleSound,
+  coach = null,
   children,
 }: StatusBarProps) {
   const cash = vm.mode === 'cash';
@@ -113,6 +140,7 @@ export function StatusBar({
           {t('status.leave')}
         </button>
       )}
+      {coach !== null && <CoachToggle open={coach.open} onToggle={coach.onToggle} />}
       <SoundToggle sound={sound} onToggle={onToggleSound} />
       <LogToggle open={logOpen} toggle={logToggle} onToggle={onToggleLog} />
       {children}

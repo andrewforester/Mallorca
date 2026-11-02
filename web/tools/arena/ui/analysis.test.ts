@@ -41,6 +41,11 @@ describe('summarize', () => {
     expect(hands.every((h) => h.pot > 0)).toBe(true);
   });
 
+  it('takes the big blind of each hand from its start', () => {
+    const { hands } = play('always-call', 'always-raise', 4, 2);
+    expect(hands.map((h) => h.bigBlind)).toEqual([BB, BB, BB, BB]);
+  });
+
   it('decides A by hand number when a bot plays itself', () => {
     const { hands, nets } = play('random', 'random', 7, 12);
     expect(pairNets(hands)).toEqual(nets);

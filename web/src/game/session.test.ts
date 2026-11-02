@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Decision } from '../brains/index.ts';
-import { CASH, legalActionsOf, toAct, TOURNAMENT } from '../engine/index.ts';
+import { CASH, checkOrCall, legalActionsOf, toAct, TOURNAMENT } from '../engine/index.ts';
 import type { TableMode } from '../engine/index.ts';
 import type { BotClient } from './botClient.ts';
 import { inProcessBot } from './botClient.ts';
@@ -40,7 +40,7 @@ function callsThenFolds(): BotClient {
   return scriptedBot((legal) => {
     decisions += 1;
     if (decisions === 1 || !legal.fold) {
-      return legal.check ? { kind: 'check' } : { kind: 'call' };
+      return checkOrCall(legal);
     }
     return { kind: 'fold' };
   });
@@ -329,9 +329,7 @@ describe('session', () => {
   });
 
   it('restarts cleanly', async () => {
-    const session = open(
-      scriptedBot((legal) => (legal.check ? { kind: 'check' } : { kind: 'call' })),
-    );
+    const session = open(scriptedBot(checkOrCall));
     await session.getState().start();
     await session.getState().act({ kind: 'passive' });
     await session.getState().start();
@@ -585,6 +583,19 @@ describe('session recording', () => {
     expect(session.getState().table.handNumber).toBe(2);
     expect(session.getState().phase).toBe('humanToAct');
     expect(await store.list()).toEqual([]);
+  });
+
+  it('has no conversation without a conversation client', async () => {
+    const session = open(callingBot());
+    expect(session.getState().conversation).toEqual({
+      available: false,
+      on: true,
+      lines: [],
+      bubbles: [null, null],
+    });
+    await session.getState().start();
+    session.getState().say('Hello');
+    expect(session.getState().conversation.lines).toEqual([]);
   });
 
   it('records nothing without records', async () => {

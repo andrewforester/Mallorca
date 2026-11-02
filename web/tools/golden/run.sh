@@ -16,7 +16,6 @@ mkdir -p "$build/classes"
 "$java_home/bin/java" -cp "$build/classes:$repo/MallorcaEquilator/src" golden.GoldenMain "$web"
 
 fixtures=(
-  src/equity/fixtures/equity.json
   src/brains/fixtures/decisions.json
   src/brains/fixtures/preflop-strength-java.json
 )

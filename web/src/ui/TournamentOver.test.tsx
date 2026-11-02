@@ -20,7 +20,7 @@ describe('TournamentOver', () => {
     const { container } = render(
       <TournamentOver won={false} onPlayAgain={vi.fn()} onLeave={vi.fn()} />,
     );
-    expect(container.querySelector('.dialog-title')?.textContent).toBe('Good game');
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('Good game');
     expect(container.textContent).toContain('You lost the tournament');
   });
 });

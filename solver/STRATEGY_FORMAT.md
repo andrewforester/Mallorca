@@ -48,7 +48,8 @@ A node starts with a one-byte tag.
 ## Buckets
 
 The section holds one table for each included postflop street, in street order (flop, turn, river). A file with
-`streets = 0b0011` therefore holds the flop table only.
+`streets = 0b0011` therefore holds the flop table only. The trainer writes version 1 with `export --streets all`:
+all four streets and every table.
 
 ```
 for each included postflop street:
@@ -63,9 +64,9 @@ the trainer's `.bkt` files without their 9 byte header.
 
 ## Buckets in version 2
 
-Version 2 is the play file (`export --streets play`): all four streets, the flop table and percentile thresholds for
-the turn and river, so the browser never loads the 14 MB and 123 MB tables. Everything else is as in version 1. Each
-included postflop street, in street order, starts with a kind byte:
+Version 2 is the play file (`export`, whose `--streets` defaults to `play`): all four streets, the flop table and
+percentile thresholds for the turn and river, so the browser never loads the 14 MB and 123 MB tables. Everything else
+is as in version 1. Each included postflop street, in street order, starts with a kind byte:
 
 ```
 kind 0, table:       length u32, table length bytes

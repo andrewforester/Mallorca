@@ -91,6 +91,8 @@ mod tests {
     use super::*;
     use crate::export::{build, StreetSet};
     use crate::train::tests::{data_dir, go, session};
+    use mallorca_core::strategy::StrategyHeader;
+    use mallorca_core::tree::{Node, Street};
 
     fn exported(name: &str, iterations: u64) -> (PathBuf, PathBuf) {
         let dir = data_dir(name);
@@ -159,12 +161,41 @@ mod tests {
         std::fs::remove_dir_all(dir).unwrap();
     }
 
+    fn preflop_and_flop_only(full: &StrategyFile) -> StrategyFile {
+        let mut probabilities = Vec::new();
+        for (id, node) in full.tree.nodes().iter().enumerate() {
+            if let Node::Decision { street, .. } = node {
+                if matches!(street, Street::Preflop | Street::Flop) {
+                    for bucket in 0..full.tree.buckets()[street.as_index()] {
+                        probabilities.extend_from_slice(full.probabilities(id as u32, bucket));
+                    }
+                }
+            }
+        }
+        let header = StrategyHeader {
+            fingerprint: full.fingerprint,
+            small_blind: full.small_blind,
+            big_blind: full.big_blind,
+            stack: full.stack,
+            streets: 0b0011,
+            iterations: full.iterations,
+            checkpoint: full.checkpoint,
+        };
+        StrategyFile::new(
+            header,
+            full.tree.clone(),
+            vec![full.tables[0].clone()],
+            probabilities,
+        )
+    }
+
     #[test]
-    fn browser_file_without_late_streets_is_an_error() {
-        let dir = data_dir("match-browser");
+    fn file_without_late_streets_is_an_error() {
+        let dir = data_dir("match-flop-only");
         go(&session(&dir, Some(100), 3, Some(1))).unwrap();
-        let file = build(&dir.join("tiny.toml"), &dir, None, StreetSet::Browser).unwrap();
-        let path = dir.join("browser.bin");
+        let full = build(&dir.join("tiny.toml"), &dir, None, StreetSet::All).unwrap();
+        let file = preflop_and_flop_only(&full);
+        let path = dir.join("flop-only.bin");
         std::fs::write(&path, file.to_bytes()).unwrap();
         let err = results(&args(&path, Opponent::Call, 400)).err().unwrap();
         assert!(err.contains("Turn"), "{err}");

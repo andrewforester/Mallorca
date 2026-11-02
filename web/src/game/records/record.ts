@@ -1,19 +1,26 @@
-import type { Decision } from '../../brains/index.ts';
+import type { BotBias, Decision } from '../../brains/index.ts';
 import type { EngineEvent, SeatIndex, TableMode } from '../../engine/index.ts';
+import { SHIPPED_STRATEGIES } from '../../cfr/index.ts';
+import type { BotRecord } from '../../cfr/index.ts';
+import type { CoachDecision } from '../../coach/index.ts';
 import { formatCard } from '../cards.ts';
+import type { Opponent } from '../opponent.ts';
 
 export interface RecordedDecision {
   eventIndex: number;
   solverChoice: string;
   evByAction: Record<string, number | null>;
+  style?: BotBias;
 }
+
+export type RecordedCoach = CoachDecision & { eventIndex: number };
 
 export interface RecordMeta {
   sessionId: string;
   mode: TableMode;
   names: [string, string];
   humanSeat: SeatIndex | null;
-  bot: { id: string; version: string };
+  bot: BotRecord;
   playedAt: string;
 }
 
@@ -26,22 +33,29 @@ export interface HandRecord {
   playedAt: string;
   names: [string, string];
   humanSeat: SeatIndex | null;
-  bot: { id: string; version: string };
+  bot: BotRecord;
   holeCards: [[string, string], [string, string]];
   board: string[];
   events: EngineEvent[];
   decisions: RecordedDecision[];
+  coach?: RecordedCoach[];
 }
 
-export const MATH_BOT = { id: 'math', version: '1' };
-export const CFR_BOT = { id: 'cfr', version: 'v1-18' };
-export const CFR_V2_BOT = { id: 'cfr', version: 'v2-10' };
+export const MATH_BOT: BotRecord = { id: 'math', version: '1' };
+
+export function botRecord(opponent: Opponent): BotRecord {
+  return opponent === 'math' ? MATH_BOT : SHIPPED_STRATEGIES[opponent].record;
+}
 
 function finiteOrNull(value: number): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-export function recordDecision(decision: Decision, eventIndex: number): RecordedDecision {
+export function recordDecision(
+  decision: Decision,
+  eventIndex: number,
+  bias?: BotBias,
+): RecordedDecision {
   const { fold, passive, aggressive } = decision.evByAction;
   return {
     eventIndex,
@@ -51,6 +65,7 @@ export function recordDecision(decision: Decision, eventIndex: number): Recorded
       passive: finiteOrNull(passive),
       aggressive: finiteOrNull(aggressive),
     },
+    ...(bias === undefined ? {} : { style: bias }),
   };
 }
 
@@ -58,6 +73,7 @@ export function handRecord(
   events: EngineEvent[],
   decisions: RecordedDecision[],
   meta: RecordMeta,
+  coach: RecordedCoach[] = [],
 ): HandRecord {
   const holeCards: HandRecord['holeCards'] = [
     ['', ''],
@@ -88,5 +104,6 @@ export function handRecord(
     board,
     events,
     decisions,
+    ...(coach.length > 0 ? { coach } : {}),
   };
 }

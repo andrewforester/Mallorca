@@ -1,14 +1,17 @@
-import { createMathBrain, randomVillainModel } from '../brains/index.ts';
-import type { Decision, Observation } from '../brains/index.ts';
+import { createMathBrain } from '../brains/index.ts';
+import type { BotBias, Decision, Observation } from '../brains/index.ts';
+import type { CoachFacts } from '../coach/index.ts';
 import type { LegalActions } from '../engine/index.ts';
 import type { Opponent } from './opponent.ts';
 import type { WorkerReply, WorkerRequest } from './workerProtocol.ts';
 
 export interface BotClient {
   observe(o: Observation[]): void;
-  decide(legal: LegalActions): Promise<Decision>;
+  decide(legal: LegalActions, bias?: BotBias, explain?: boolean): Promise<Decision>;
   reset(): void;
   select?(opponent: Opponent, seed: number): Promise<Opponent>;
+  coach?(observations: Observation[], legal: LegalActions, pot: number): Promise<CoachFacts>;
+  opponentRange?(): Promise<Float32Array | null>;
   dispose?(): void;
 }
 
@@ -16,7 +19,7 @@ export const BOT_TIMEOUT_MS = 5000;
 export const SELECT_TIMEOUT_MS = 60_000;
 
 function newBrain() {
-  return createMathBrain({ villainModel: randomVillainModel });
+  return createMathBrain();
 }
 
 export function inProcessBot(): BotClient {
@@ -27,9 +30,14 @@ export function inProcessBot(): BotClient {
         brain.observe(observation);
       }
     },
-    decide(legal) {
+    decide(legal, bias) {
       const current = brain;
-      return Promise.resolve().then(() => current.decide(legal));
+      return Promise.resolve().then(() => {
+        if (bias !== undefined) {
+          current.setBias?.(bias);
+        }
+        return current.decide(legal);
+      });
     },
     reset() {
       brain = newBrain();
@@ -75,6 +83,16 @@ function selectOrFallBack(
   });
 }
 
+function timedCoach(ask: Promise<CoachFacts> | undefined, ms: number): Promise<CoachFacts> {
+  return ask === undefined
+    ? Promise.reject(new Error('The coach is not available'))
+    : withTimeout(ask, ms);
+}
+
+function timedRange(ask: Promise<Float32Array | null> | undefined, ms: number) {
+  return ask === undefined ? Promise.resolve(null) : withTimeout(ask, ms).catch(() => null);
+}
+
 export function withFallback(primary: BotClient, timeoutMs = BOT_TIMEOUT_MS): BotClient {
   if (guarded.has(primary)) {
     return primary;
@@ -101,20 +119,22 @@ export function withFallback(primary: BotClient, timeoutMs = BOT_TIMEOUT_MS): Bo
       seen = [];
       active.reset();
     },
-    async decide(legal) {
+    async decide(legal, bias, explain) {
       const mine = generation;
       try {
         return await withTimeout(
-          Promise.resolve().then(() => active.decide(legal)),
+          Promise.resolve().then(() => active.decide(legal, bias, explain)),
           timeoutMs,
         );
       } catch (error) {
         if (usedFallback || mine !== generation) {
           throw error;
         }
-        return fallBack().decide(legal);
+        return fallBack().decide(legal, bias);
       }
     },
+    coach: (...args) => timedCoach(usedFallback ? undefined : active.coach?.(...args), timeoutMs),
+    opponentRange: () => timedRange(usedFallback ? undefined : active.opponentRange?.(), timeoutMs),
     select: (opponent, seed) =>
       selectOrFallBack(active.select?.(opponent, seed), () => {
         if (!usedFallback) {
@@ -195,9 +215,15 @@ function rawWorkerBot(): BotClient {
     observe(observations) {
       send({ kind: 'observe', observations });
     },
-    decide(legal) {
+    decide(legal, bias, explain) {
       return ask(
-        (id) => ({ kind: 'decide', id, legal }),
+        (id) => ({
+          kind: 'decide',
+          id,
+          legal,
+          ...(bias === undefined ? {} : { bias }),
+          ...(explain === true ? { explain } : {}),
+        }),
         (r) => ('decision' in r ? r.decision : undefined),
       );
     },
@@ -205,6 +231,18 @@ function rawWorkerBot(): BotClient {
       return ask(
         (id) => ({ kind: 'select', id, opponent, seed }),
         (r) => ('opponent' in r ? r.opponent : undefined),
+      );
+    },
+    coach(observations, legal, pot) {
+      return ask(
+        (id) => ({ kind: 'coach', id, observations, legal, pot }),
+        (r) => ('facts' in r ? r.facts : undefined),
+      );
+    },
+    opponentRange() {
+      return ask(
+        (id) => ({ kind: 'opponentRange', id }),
+        (r) => ('range' in r ? r.range : undefined),
       );
     },
     reset() {

@@ -1,0 +1,12 @@
+{
+  "kind": "summary",
+  "sessionId": "5f2c9a1e-7b3d-4e8a-9c61-2d4f8b0a7e13",
+  "locale": "en",
+  "summary": {
+    "hands": 50,
+    "netBb": -12.5,
+    "playerBluffsShown": 3,
+    "playerAllIns": 2,
+    "signals": { "tease": 4, "compliment": 1, "mockBluff": 2 }
+  }
+}

@@ -1,16 +1,10 @@
 import type { GameContext } from './handState.ts';
-import { PREFLOP } from './handState.ts';
 import type {
   ActionDistribution,
   ActionProfitEntry,
-  ProfitCorrections,
   RandomVariable,
   SolverAction,
 } from './profit.ts';
-
-export interface AdviceCreatorFromMap {
-  create(distribution: ActionDistribution, game: GameContext): SolverAction;
-}
 
 class ActionProfit {
   evBBKoeff = 0;
@@ -56,27 +50,6 @@ function profitabilityIsGood(actionProfit: ActionProfit, lowEV: number): boolean
   return PROFITABLE_EV_VAR_ABOVE_VAR_BB_BELOW.some(
     ([minEvVar, maxVarBB]) => evVar > minEvVar && varBB < maxVarBB,
   );
-}
-
-function correctionOf(
-  corrections: ProfitCorrections | null,
-  aggro: boolean,
-  toCall: number,
-  preflop: boolean,
-): number {
-  if (corrections === null) {
-    return 0;
-  }
-  if (preflop) {
-    if (aggro) {
-      return toCall === 0 ? corrections.preflopBet : corrections.preflopRaise;
-    }
-    return toCall === 0 ? corrections.preflopCheck : corrections.preflopCall;
-  }
-  if (aggro) {
-    return toCall === 0 ? corrections.postflopBet : corrections.postflopRaise;
-  }
-  return toCall === 0 ? corrections.postflopCheck : corrections.postflopCall;
 }
 
 interface ScoredAction {
@@ -128,18 +101,9 @@ function completed(scored: ScoredDistribution): CompleteDistribution {
   return { fold, passive, raise, toCall };
 }
 
-function correctProfits(
-  game: GameContext,
-  corrections: ProfitCorrections | null,
-  scored: CompleteDistribution,
-): void {
+function recomputeProfits(game: GameContext, scored: CompleteDistribution): void {
   const bb = game.bigBlind;
-  const preflop = game.street === PREFLOP;
-  if (scored.raise !== null) {
-    scored.raise.profit.evVarKoeff += correctionOf(corrections, true, scored.toCall, preflop);
-    scored.raise.profit.calculateEVVarChanged(bb);
-  }
-  scored.passive.profit.evVarKoeff += correctionOf(corrections, false, scored.toCall, preflop);
+  scored.raise?.profit.calculateEVVarChanged(bb);
   scored.passive.profit.calculateEVVarChanged(bb);
 }
 
@@ -147,11 +111,10 @@ function bestAction(
   distribution: ActionDistribution,
   game: GameContext,
   fromTop: boolean,
-  corrections: ProfitCorrections | null,
 ): ActionProfitEntry {
   const scored = completed(scoreDistribution(distribution, game.bigBlind));
   if (fromTop) {
-    correctProfits(game, corrections, scored);
+    recomputeProfits(game, scored);
   }
   const lowEV = scored.fold.profit.evBBKoeff;
   if (scored.raise !== null && profitabilityIsGood(scored.raise.profit, lowEV)) {
@@ -163,22 +126,13 @@ function bestAction(
   return scored.fold.entry;
 }
 
-export function getOptimal(
-  distribution: ActionDistribution,
-  game: GameContext,
-  corrections: ProfitCorrections | null = null,
-): RandomVariable {
-  return bestAction(distribution, game, false, corrections).profit;
+export function getOptimal(distribution: ActionDistribution, game: GameContext): RandomVariable {
+  return bestAction(distribution, game, false).profit;
 }
 
-export class LessVarianceActionFromMap implements AdviceCreatorFromMap {
-  private readonly corrections: ProfitCorrections | null;
-
-  constructor(corrections: ProfitCorrections | null = null) {
-    this.corrections = corrections;
-  }
-
-  create(distribution: ActionDistribution, game: GameContext): SolverAction {
-    return bestAction(distribution, game, true, this.corrections).action;
-  }
+export function lessVarianceAction(
+  distribution: ActionDistribution,
+  game: GameContext,
+): SolverAction {
+  return bestAction(distribution, game, true).action;
 }

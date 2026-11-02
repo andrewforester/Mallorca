@@ -3,33 +3,23 @@ import { gzipSync } from 'node:zlib';
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { Rng } from '../cards/index.ts';
 import { fullDeck, mulberry32, parseCards, shuffle } from '../cards/index.ts';
-import type { Action, LegalActions, Seat, SeatIndex, Step } from '../engine/index.ts';
-import { applyAction, legalActions, startHandWith } from '../engine/index.ts';
+import type { Action, LegalActions, Seat, SeatIndex } from '../engine/index.ts';
+import { isLegal, playToEnd, startHandWith } from '../engine/index.ts';
+import type { Observation } from '../brains/index.ts';
 import { toObservations } from '../brains/index.ts';
-import type { CfrModel } from './index.ts';
-import { createCfrBrain, createCfrModel, inflate } from './index.ts';
+import { createCfrBrain } from './brain.ts';
+import type { CfrModel } from './model.ts';
+import { createCfrModel, inflate } from './model.ts';
+import { SHIPPED_STRATEGIES, WASM_URL } from './strategies.ts';
 
-const wasm = readFileSync(new URL('./mallorca.wasm', import.meta.url));
-const strategy = readFileSync(new URL('./v1.mlcs.gz', import.meta.url));
+const wasm = readFileSync(WASM_URL);
+const strategy = readFileSync(SHIPPED_STRATEGIES.cfr.url);
 
 let model: CfrModel;
 
 beforeAll(async () => {
   model = await createCfrModel(wasm, await inflate(strategy));
 });
-
-function isLegal(action: Action, legal: LegalActions): boolean {
-  switch (action.kind) {
-    case 'fold':
-      return legal.fold;
-    case 'check':
-      return legal.check;
-    case 'call':
-      return legal.call !== null;
-    case 'raise':
-      return legal.raise !== null && action.to >= legal.raise.min && action.to <= legal.raise.max;
-  }
-}
 
 function randomAction(legal: LegalActions, rng: Rng): Action {
   const options: Action[] = [];
@@ -54,21 +44,19 @@ function playHand(seed: number, stacks: [number, number], big: number, using = m
   const button = (seed % 2) as SeatIndex;
   const deck = shuffle(fullDeck(), rng);
   const blinds = { small: big / 2, big };
-  let step: Step = startHandWith(seats, { button, blinds, handNumber: 1 }, deck);
-  const feed = (s: Step) => toObservations(s.events, 0).forEach((o) => brain.observe(o));
-  feed(step);
+  const start = startHandWith(seats, { button, blinds, handNumber: 1 }, deck);
   const played: Action[] = [];
-  while (step.hand.street !== 'complete') {
-    const legal = legalActions(step.hand, step.seats);
-    const mine = step.hand.toAct === 0;
-    const action = mine ? brain.decide(legal).action : randomAction(legal, rng);
-    if (mine) {
-      expect(isLegal(action, legal), JSON.stringify({ action, legal })).toBe(true);
+  playToEnd(
+    start,
+    (seat, legal) => {
+      if (seat !== 0) return randomAction(legal, rng);
+      const action = brain.decide(legal).action;
+      expect(isLegal(legal, action), JSON.stringify({ action, legal })).toBe(true);
       played.push(action);
-    }
-    step = applyAction(step.hand, step.seats, action);
-    feed(step);
-  }
+      return action;
+    },
+    (step) => toObservations(step.events, 0).forEach((o) => brain.observe(o)),
+  );
   brain.dispose();
   return played;
 }
@@ -100,7 +88,7 @@ describe('CfrBrain', () => {
   it('plays the v2 blueprint legally', async () => {
     const v2 = await createCfrModel(
       wasm,
-      await inflate(readFileSync(new URL('./v2.mlcs.gz', import.meta.url))),
+      await inflate(readFileSync(SHIPPED_STRATEGIES['cfr-v2'].url)),
     );
     for (let seed = 1; seed <= 30; seed++) {
       playHand(seed, [2000, 2000], 20, v2);
@@ -135,5 +123,136 @@ describe('CfrBrain', () => {
       expect(Number.isFinite(decision.evByAction.fold)).toBe(false);
       brain.dispose();
     }
+  });
+
+  it('setBias reaches the module', () => {
+    const raises = (aggression: number): number => {
+      let count = 0;
+      for (let seed = 0; seed < 500; seed++) {
+        const brain = createCfrBrain(model, mulberry32(seed));
+        brain.setBias?.({ aggression, bluff: 1, tightness: 1, sizing: 1, stickiness: 1 });
+        brain.observe({
+          type: 'handStarted',
+          handNumber: 1,
+          heroOnButton: false,
+          heroStack: 2000,
+          villainStack: 2000,
+          smallBlind: 10,
+          bigBlind: 20,
+        });
+        const deck = shuffle(fullDeck(), mulberry32(seed + 1000));
+        const [a, b, c, d, e] = deck;
+        brain.observe({ type: 'holeCards', cards: [a ?? 0, b ?? 0] });
+        brain.observe({ type: 'street', board: [c ?? 0, d ?? 0, e ?? 0] } as Observation);
+        const decision = brain.decide({
+          fold: false,
+          check: true,
+          call: null,
+          raise: { min: 20, max: 2000 },
+        });
+        if (decision.action.kind === 'raise') count += 1;
+        brain.dispose();
+      }
+      return count;
+    };
+    expect(raises(1.25)).toBeGreaterThan(raises(1));
+  });
+});
+
+describe('the range of a cfr brain', () => {
+  const open: LegalActions = { fold: true, check: false, call: 10, raise: { min: 40, max: 2000 } };
+  const start = {
+    type: 'handStarted' as const,
+    handNumber: 1,
+    heroOnButton: true,
+    heroStack: 2000,
+    villainStack: 2000,
+    smallBlind: 10,
+    bigBlind: 20,
+  };
+
+  it('narrows after the brain decides and does not change its play', () => {
+    const asked = createCfrBrain(model, mulberry32(9));
+    const plain = createCfrBrain(model, mulberry32(9));
+    for (const brain of [asked, plain]) {
+      brain.observe(start);
+      brain.observe({ type: 'holeCards', cards: parseCards('Kc Qc') as [number, number] });
+    }
+    expect(asked.range()?.every((w) => w === 1)).toBe(true);
+    const action = asked.decide(open).action;
+    expect(plain.decide(open).action).toEqual(action);
+    expect(asked.range()?.some((w) => w !== 1)).toBe(true);
+    asked.dispose();
+    plain.dispose();
+  });
+
+  it("narrows the player's range after he acts", () => {
+    const brain = createCfrBrain(model, mulberry32(9));
+    brain.observe({ ...start, heroOnButton: false });
+    brain.observe({ type: 'holeCards', cards: parseCards('Kc Qc') as [number, number] });
+    expect(brain.opponentRange()?.some((w) => w > 0 && w < 1)).toBe(false);
+    brain.observe({ type: 'acted', who: 'villain', action: { kind: 'raise', to: 60 }, amount: 50 });
+    expect(brain.opponentRange()?.some((w) => w > 0 && w < 1)).toBe(true);
+    brain.dispose();
+  });
+});
+
+describe('the explanation of a cfr decision', () => {
+  const open: LegalActions = { fold: true, check: false, call: 10, raise: { min: 40, max: 2000 } };
+  const start = {
+    type: 'handStarted' as const,
+    handNumber: 1,
+    heroOnButton: true,
+    heroStack: 2000,
+    villainStack: 2000,
+    smallBlind: 10,
+    bigBlind: 20,
+  };
+  const seated = (seed: number) => {
+    const brain = createCfrBrain(model, mulberry32(seed));
+    brain.observe(start);
+    brain.observe({ type: 'holeCards', cards: parseCards('Kc Qc') as [number, number] });
+    return brain;
+  };
+  const sum = (xs: number[]): number => xs.reduce((a, b) => a + b, 0);
+
+  it('is null before a decision and after a new hand', () => {
+    const brain = seated(3);
+    expect(brain.explain()).toBeNull();
+    brain.decide(open);
+    expect(brain.explain()).not.toBeNull();
+    brain.observe(start);
+    expect(brain.explain()).toBeNull();
+    brain.dispose();
+  });
+
+  it('names the sampled move and the blueprint shares', () => {
+    const brain = seated(4);
+    const { action } = brain.decide(open);
+    const explained = brain.explain();
+    expect(explained).not.toBeNull();
+    if (explained === null) return;
+    expect(explained.moves[explained.chosen]).toEqual(action);
+    expect(explained.moves.length).toBe(explained.base.length);
+    expect(sum(explained.base)).toBeCloseTo(1, 5);
+    expect(explained.biased).toEqual(explained.base);
+    brain.dispose();
+  });
+
+  it('shows the bias moving the shares and does not change the play', () => {
+    const asked = seated(5);
+    const plain = seated(5);
+    const bias = { aggression: 1.6, bluff: 1, tightness: 0.6, sizing: 1, stickiness: 1 };
+    asked.setBias(bias);
+    plain.setBias(bias);
+    const action = asked.decide(open).action;
+    const explained = asked.explain();
+    expect(plain.decide(open).action).toEqual(action);
+    expect(explained).not.toBeNull();
+    if (explained === null) return;
+    expect(sum(explained.biased)).toBeCloseTo(1, 5);
+    expect(explained.biased).not.toEqual(explained.base);
+    asked.dispose();
+    plain.dispose();
   });
 });

@@ -1,6 +1,8 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig } from '@playwright/test';
+import { DEVICES } from './e2e/shared.ts';
+import { CONVERSATION_URL } from './e2e/conversationServer.ts';
 
-const PREVIEW_PORT = 4173;
+const PREVIEW_PORT = Number(process.env.E2E_PORT ?? 4173);
 const BASE_URL = `http://localhost:${PREVIEW_PORT}/`;
 const IS_CI = Boolean(process.env.CI);
 const TEST_TIMEOUT_MS = 180_000;
@@ -20,24 +22,28 @@ export default defineConfig({
   projects: [
     {
       name: 'phone',
-      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+      use: DEVICES.phone,
       testIgnore: '**/layout.spec.ts',
     },
     {
       name: 'small-phone',
-      use: { ...devices['Pixel 7'], viewport: { width: 360, height: 740 } },
+      use: DEVICES['small-phone'],
       testMatch: ['**/layout.spec.ts', '**/table.spec.ts'],
     },
     {
       name: 'desktop',
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+      use: DEVICES.desktop,
       testIgnore: '**/layout.spec.ts',
     },
   ],
   webServer: {
     command: `npm run build && npm run preview -- --port ${PREVIEW_PORT} --strictPort`,
     url: BASE_URL,
-    reuseExistingServer: !IS_CI,
+    reuseExistingServer: false,
     timeout: 120_000,
+    env: {
+      VITE_SUPABASE_URL: CONVERSATION_URL,
+      VITE_SUPABASE_ANON_KEY: 'e2e-anon-key',
+    },
   },
 });

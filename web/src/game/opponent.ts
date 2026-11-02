@@ -1,4 +1,6 @@
-export type Opponent = 'math' | 'cfr' | 'cfr-v2';
+import type { ShippedStrategyKey } from '../cfr/index.ts';
+
+export type Opponent = 'math' | ShippedStrategyKey;
 
 export const OPPONENTS: readonly Opponent[] = ['math', 'cfr', 'cfr-v2'];
 

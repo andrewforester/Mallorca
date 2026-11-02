@@ -26,7 +26,9 @@
     "leave": "Leave table",
     "simpleTable": "Simple table",
     "autoNext": "Auto next hand",
-    "sound": "Sound"
+    "sound": "Sound",
+    "face": "Her face",
+    "voice": "Her voice"
   },
   "seat": {
     "you": "You",
@@ -115,7 +117,87 @@
     }
   },
   "coach": {
-    "label": "Coach"
+    "label": "Coach",
+    "open": "Coach",
+    "close": "Close the coach",
+    "mode": "Coach mode",
+    "idle": "The coach speaks on your turn.",
+    "waiting": "The coach is thinking.",
+    "unavailable": "The coach is not available right now.",
+    "hintHeading": "Strategy with your hand",
+    "share": "{{move}} {{percent}}%",
+    "mixed": "A mixed strategy: play each action about this often.",
+    "approximate": "Approximate: this spot is off the strategy tree.",
+    "noHint": "The strategy has no advice for this spot.",
+    "tabs": {
+      "hint": "Strategy",
+      "range": "Bot range",
+      "numbers": "Numbers",
+      "session": "Session"
+    },
+    "move": {
+      "fold": "Fold",
+      "check": "Check",
+      "call": "Call {{amount}}",
+      "bet": "Bet {{amount}}",
+      "raise": "Raise to {{amount}}",
+      "allIn": "All-in {{amount}}"
+    },
+    "strategyCaption": "What the strategy plays from your seat with every hand",
+    "rangeCaption": "How likely the bot holds each hand after its actions",
+    "noRange": "The math bot does not play from the strategy, so it has no range to show.",
+    "combos": "{{combos}} combos in the range",
+    "equity": "Your equity",
+    "versus": {
+      "range": "against the bot range",
+      "random": "against a random hand"
+    },
+    "required": "Equity to call",
+    "mdf": "Minimum defence",
+    "bluffs": "Bluffs this bet can hold",
+    "percent": "{{value}}%",
+    "noBet": "Nothing to call: pot odds apply when you face a bet.",
+    "classes": {
+      "strong": "Sets and better",
+      "twoPair": "Two pair",
+      "topPair": "Top pair or overpair",
+      "pair": "Other pairs",
+      "draw": "Draws",
+      "air": "Nothing yet"
+    },
+    "ahead": "You are ahead of {{percent}}% of the range now",
+    "outs_one": "{{count}} out: {{cards}}",
+    "outs_other": "{{count}} outs: {{cards}}",
+    "noOuts": "No card puts you ahead of most of the range.",
+    "nextCard": "Next card {{percent}}%",
+    "byRiver": "By the river {{percent}}%",
+    "blockers": "Your cards block {{percent}}% of its two pair and better",
+    "reviewHeading": "This hand",
+    "action": {
+      "fold": "Fold",
+      "check": "Check",
+      "call": "Call",
+      "raise": "Raise to {{amount}}"
+    },
+    "grade": {
+      "strategy": "Strategy move",
+      "rare": "Rare in the strategy",
+      "off": "Off the strategy",
+      "none": "Not graded"
+    },
+    "leaksHeading": "Your leaks",
+    "leak": {
+      "open": "Raise first in from the button",
+      "threeBet": "Three-bet facing a raise",
+      "foldToThreeBet": "Fold to a three-bet",
+      "cbet": "Continuation bet on the flop",
+      "foldToCbet": "Fold to a continuation bet",
+      "turnBet": "Bet the turn with no bet to face",
+      "riverBet": "Bet the river with no bet to face",
+      "riverFold": "Fold to a river bet"
+    },
+    "leakLine": "You {{player}}%, strategy {{strategy}}%, {{spots}} spots",
+    "noLeaks": "Leaks appear after {{count}} spots of one kind."
   },
   "over": {
     "title": "Good game",
@@ -149,5 +231,22 @@
     "full-house": "Full house",
     "quads": "Four of a kind",
     "straight-flush": "Straight flush"
+  },
+  "conversation": {
+    "tab": "Chat",
+    "placeholder": "Say something to Mallorca",
+    "send": "Send",
+    "open": "Chat with Mallorca",
+    "close": "Close chat",
+    "quick": {
+      "niceHand": "Nice hand",
+      "bluffing": "You're bluffing",
+      "notThisTime": "Not this time"
+    },
+    "settings": {
+      "conversation": "Table talk"
+    },
+    "undelivered": "Not delivered",
+    "message": "Message"
   }
 }

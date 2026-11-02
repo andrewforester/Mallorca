@@ -1,12 +1,14 @@
+use crate::bytes::{ByteReader, Truncated};
 use crate::cards::Card;
 use crate::eval::rank;
-use crate::iso::{street_indexers, HandIndexer};
+use crate::iso::{street_indexer, street_indexers, HandIndexer};
 use crate::potential::{histogram, nearest, ochs_live, turn_counts, Metric};
 use crate::strategy::{centroid_dimension, StrategyError, StrategyFile};
 use crate::strength::{bucket_of, percentile_thresholds, river_hs, turn_value};
 use crate::tree::Street;
 use std::fmt;
-use std::sync::OnceLock;
+
+mod batch;
 
 pub const TABLE_MAGIC: &[u8; 4] = b"MLCB";
 pub const TABLE_FORMAT_VERSION: u16 = 1;
@@ -44,6 +46,12 @@ impl fmt::Display for TableError {
 
 impl std::error::Error for TableError {}
 
+impl From<Truncated> for TableError {
+    fn from(_: Truncated) -> TableError {
+        TableError::Truncated
+    }
+}
+
 pub fn encode_table(street: Street, buckets: u16, table: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(TABLE_HEADER_LEN + table.len());
     out.extend_from_slice(TABLE_MAGIC);
@@ -55,26 +63,25 @@ pub fn encode_table(street: Street, buckets: u16, table: &[u8]) -> Vec<u8> {
 }
 
 pub fn table_header(bytes: &[u8]) -> Result<TableHeader, TableError> {
-    if bytes.len() < TABLE_MAGIC.len() {
-        return Err(TableError::Truncated);
-    }
-    if &bytes[..4] != TABLE_MAGIC {
+    let mut r = ByteReader::new(bytes);
+    if &r.array::<4>()? != TABLE_MAGIC {
         return Err(TableError::BadMagic);
     }
     if bytes.len() < TABLE_HEADER_LEN {
         return Err(TableError::Truncated);
     }
-    let version = u16::from_le_bytes([bytes[4], bytes[5]]);
+    let version = r.u16()?;
     if version != TABLE_FORMAT_VERSION {
         return Err(TableError::UnknownVersion(version));
     }
-    let street = match Street::from_index(bytes[6]) {
+    let index = r.u8()?;
+    let street = match Street::from_index(index) {
         Some(s) if s != Street::Preflop => s,
-        _ => return Err(TableError::BadStreet(bytes[6])),
+        _ => return Err(TableError::BadStreet(index)),
     };
     Ok(TableHeader {
         street,
-        buckets: u16::from_le_bytes([bytes[7], bytes[8]]),
+        buckets: r.u16()?,
     })
 }
 
@@ -86,11 +93,6 @@ pub fn decode_table(mut bytes: Vec<u8>) -> Result<(TableHeader, Vec<u8>), TableE
 
 pub(crate) const LIVE_HOLES: usize = 1081;
 pub(crate) const LIVE_OPPONENTS: f32 = 990.0;
-
-pub(crate) fn river_indexer() -> &'static HandIndexer {
-    static INDEXER: OnceLock<HandIndexer> = OnceLock::new();
-    INDEXER.get_or_init(|| HandIndexer::new(&[2, 5]))
-}
 
 pub(crate) fn below_and_equal(sorted: &[u16], r: u16) -> (usize, usize) {
     let below = sorted.partition_point(|&x| x < r);
@@ -120,7 +122,7 @@ pub fn river_strength(board: &[Card; 5]) -> Vec<(u64, f32)> {
     for ranks in per_card.iter_mut() {
         ranks.sort_unstable();
     }
-    let indexer = river_indexer();
+    let indexer = street_indexer(Street::River);
     holes
         .iter()
         .map(|&(i, j, r)| {
@@ -191,7 +193,7 @@ pub enum BucketSource {
 }
 
 pub struct Abstraction {
-    indexers: [HandIndexer; 4],
+    indexers: &'static [HandIndexer; 4],
     sources: [BucketSource; 3],
 }
 
@@ -232,6 +234,9 @@ impl Abstraction {
         }
         let abstraction = Abstraction::with_sources(sources);
         let buckets = file.tree.buckets();
+        if u64::from(buckets[0]) < abstraction.class_count(Street::Preflop) {
+            return Err(StrategyError::BucketOutOfRange(Street::Preflop));
+        }
         for street in POSTFLOP {
             let BucketSource::Table(table) = &abstraction.sources[street.as_index() - 1] else {
                 continue;
@@ -270,7 +275,7 @@ impl Abstraction {
     }
 
     pub fn class_count(&self, street: Street) -> u64 {
-        self.indexers[street.as_index()].size(1)
+        self.indexers[street.as_index()].size(usize::from(street != Street::Preflop))
     }
 
     pub fn table_bytes(&self, street: Street) -> &[u8] {
@@ -345,13 +350,10 @@ mod tests {
     use super::*;
     use crate::cards::parse_cards;
     use crate::iso::board_indexer;
+    use crate::pairs::{pair_cards, PAIRS};
     use crate::potential::{BINS, CLUSTERS};
     use crate::rng::Rng;
     use std::collections::HashMap;
-
-    fn river_indexer() -> HandIndexer {
-        HandIndexer::new(&[2, 5])
-    }
 
     fn deal(rng: &mut Rng, n: usize) -> Vec<Card> {
         let mut deck: Vec<Card> = (0..52).collect();
@@ -418,7 +420,7 @@ mod tests {
 
     #[test]
     fn river_strength_matches_brute_force() {
-        let indexer = river_indexer();
+        let indexer = street_indexer(Street::River);
         let mut rng = Rng::new(41);
         for _ in 0..200 {
             let cards = deal(&mut rng, 7);
@@ -450,7 +452,7 @@ mod tests {
 
     #[test]
     fn river_strength_orders_aces_above_trash() {
-        let indexer = river_indexer();
+        let indexer = street_indexer(Street::River);
         let board: [Card; 5] = parse_cards("2c 7d 9h Js Kc").unwrap().try_into().unwrap();
         let strengths: HashMap<u64, f32> = river_strength(&board).into_iter().collect();
         let mut aces = parse_cards("As Ad").unwrap();
@@ -535,6 +537,7 @@ mod tests {
     #[test]
     fn class_counts_match_table_sizes() {
         let abstraction = Abstraction::new([vec![], vec![], vec![]]);
+        assert_eq!(abstraction.class_count(Street::Preflop), 169);
         assert_eq!(abstraction.class_count(Street::Flop), 1_286_792);
         assert_eq!(abstraction.class_count(Street::Turn), 13_960_050);
         assert_eq!(abstraction.class_count(Street::River), 123_156_254);
@@ -578,7 +581,7 @@ mod tests {
             expected += v * v;
         }
         expected /= 46.0;
-        let got = aggregate_hs2(&indexers, Street::Turn, turn_index, &next);
+        let got = aggregate_hs2(indexers, Street::Turn, turn_index, &next);
         assert!((got - expected).abs() < 1e-6, "{got} vs {expected}");
     }
 
@@ -754,7 +757,7 @@ mod tests {
     #[ignore]
     fn river_buckets_are_monotone_in_strength_on_tiny() {
         let boards = board_indexer(5);
-        let river = river_indexer();
+        let river = street_indexer(Street::River);
         let mut hs = vec![f32::NAN; river.size(1) as usize];
         for b in 0..boards.size(0) {
             let cards = boards.unindex(0, b);
@@ -778,6 +781,84 @@ mod tests {
             } else if hs[i as usize] < hs[j as usize] {
                 assert!(bi <= bj);
             }
+        }
+    }
+
+    fn threshold_abstraction() -> Abstraction {
+        let t: Vec<f32> = (1..8).map(|i| i as f32 / 8.0).collect();
+        let flop = (0..1_286_792u32).map(|i| (i % 8) as u8).collect();
+        Abstraction::with_sources([
+            BucketSource::Table(flop),
+            BucketSource::Thresholds(t.clone()),
+            BucketSource::Thresholds(t),
+        ])
+    }
+
+    const BATCH_BOARDS: [&str; 3] = ["2c 7d Kh 4s 9c", "5s 9s Jd Qs 2h", "8c 8h 3d Ac 3s"];
+
+    fn assert_batch_matches(
+        abstraction: &Abstraction,
+        street: Street,
+        board: &[Card],
+        step: usize,
+    ) {
+        let all = abstraction.buckets(street, board);
+        assert_eq!(all.len(), PAIRS);
+        for (i, &got) in all.iter().enumerate() {
+            let hole = pair_cards(i);
+            if board.contains(&hole[0]) || board.contains(&hole[1]) {
+                assert_eq!(got, u16::MAX, "{street:?} {hole:?}");
+            } else if i % step == 0 {
+                assert_eq!(
+                    got,
+                    abstraction.bucket(street, hole, board),
+                    "{street:?} {hole:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn batched_buckets_equal_per_pair_buckets() {
+        let thresholds = threshold_abstraction();
+        let centroids = centroid_abstraction();
+        assert_batch_matches(&thresholds, Street::Preflop, &[], 1);
+        for text in BATCH_BOARDS {
+            let board = parse_cards(text).unwrap();
+            assert_batch_matches(&thresholds, Street::Flop, &board[..3], 1);
+            assert_batch_matches(&thresholds, Street::River, &board, 1);
+            assert_batch_matches(&centroids, Street::River, &board, 1);
+            assert_batch_matches(&thresholds, Street::Turn, &board[..4], 37);
+            assert_batch_matches(&centroids, Street::Turn, &board[..4], 37);
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn batched_turn_buckets_equal_per_pair_buckets_on_every_pair() {
+        for text in BATCH_BOARDS {
+            let board = parse_cards(text).unwrap();
+            assert_batch_matches(&threshold_abstraction(), Street::Turn, &board[..4], 1);
+            assert_batch_matches(&centroid_abstraction(), Street::Turn, &board[..4], 1);
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn batched_river_and_turn_are_fast() {
+        let centroids = centroid_abstraction();
+        let thresholds = threshold_abstraction();
+        let board = parse_cards(BATCH_BOARDS[0]).unwrap();
+        for (abstraction, street, cards) in [
+            (&centroids, Street::Turn, &board[..4]),
+            (&centroids, Street::River, &board[..]),
+            (&thresholds, Street::Turn, &board[..4]),
+            (&thresholds, Street::River, &board[..]),
+        ] {
+            let start = std::time::Instant::now();
+            abstraction.buckets(street, cards);
+            let ms = start.elapsed().as_millis();
+            assert!(ms < 150, "{street:?} took {ms} ms");
         }
     }
 }

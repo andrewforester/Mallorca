@@ -104,16 +104,16 @@ fn run_hs2(preset: &Preset, out: &Path) -> Result<(), String> {
     let indexers = street_indexers();
     let turn_count = indexers[2].size(1) as usize;
     let flop_count = indexers[1].size(1) as usize;
-    let river_hs = river_pass(&indexers, threads)?;
+    let river_hs = river_pass(indexers, threads)?;
 
     println!("turn: {turn_count} classes");
-    let turn_values = turn_values(&indexers, &river_hs, threads);
+    let turn_values = turn_values(indexers, &river_hs, threads);
 
     println!("flop: {flop_count} classes");
     let flop_cells = atomic_cells(flop_count, 0.0);
     parallel_chunks("flop", flop_count, threads, |range| {
         for i in range {
-            let v = aggregate_hs2(&indexers, Street::Flop, i as u64, &turn_values);
+            let v = aggregate_hs2(indexers, Street::Flop, i as u64, &turn_values);
             flop_cells[i].store(v.to_bits(), Ordering::Relaxed);
         }
     });

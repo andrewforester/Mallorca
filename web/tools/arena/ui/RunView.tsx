@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
+import { summarize } from '../stats.ts';
 import { cumulative, pairNets, slices } from './analysis.ts';
-import type { PairRow } from './analysis.ts';
+import type { HandSummary, PairRow } from './analysis.ts';
 import { Curve } from './Curve.tsx';
-import { BIG_BLIND, megabytes, result, signed } from './format.ts';
+import { megabytes, result, signed } from './format.ts';
 import { HandList } from './HandList.tsx';
 import type { LoadedHands } from './handsClient.ts';
 import { PairPanel } from './PairPanel.tsx';
@@ -42,9 +43,15 @@ function useHands(file: string | null, load: Props['load']): State {
   return state;
 }
 
-function Checks({ run, hands }: { run: RunEntry; hands: LoadedHands }) {
+interface AnalysisProps {
+  run: RunEntry;
+  hands: LoadedHands;
+  bigBlind: number;
+}
+
+function Checks({ run, hands, bigBlind }: AnalysisProps) {
   const nets = useMemo(() => pairNets(hands.summaries), [hands]);
-  const mean = nets.reduce((s, n) => s + (n / 2 / BIG_BLIND) * 100, 0) / Math.max(1, nets.length);
+  const mean = useMemo(() => summarize(nets, bigBlind).bbPer100, [nets, bigBlind]);
   const mismatch =
     nets.length !== run.report.pairs || Math.abs(mean - run.report.bbPer100) > TOLERANCE;
   return (
@@ -61,13 +68,13 @@ function Checks({ run, hands }: { run: RunEntry; hands: LoadedHands }) {
   );
 }
 
-function Analysis({ run, hands }: { run: RunEntry; hands: LoadedHands }) {
+function Analysis({ run, hands, bigBlind }: AnalysisProps) {
   const [open, setOpen] = useState<PairRow | null>(null);
-  const points = useMemo(() => cumulative(pairNets(hands.summaries), BIG_BLIND), [hands]);
-  const groups = useMemo(() => slices(hands.summaries, BIG_BLIND), [hands]);
+  const points = useMemo(() => cumulative(pairNets(hands.summaries), bigBlind), [hands, bigBlind]);
+  const groups = useMemo(() => slices(hands.summaries, bigBlind), [hands, bigBlind]);
   return (
     <>
-      <Checks run={run} hands={hands} />
+      <Checks run={run} hands={hands} bigBlind={bigBlind} />
       <section>
         <h3>{`Cumulative big blinds for ${run.report.a}`}</h3>
         <Curve points={points} />
@@ -90,7 +97,9 @@ function Body({ run, load }: Props) {
     const size = run.handsBytes === null ? '' : ` (${megabytes(run.handsBytes)})`;
     return <p class="note">{`Reading ${run.handsFile}${size}.`}</p>;
   }
-  return <Analysis run={run} hands={state.hands} />;
+  const first: HandSummary | undefined = state.hands.summaries[0];
+  if (first === undefined) return <p class="warning">The hands file holds no readable hand.</p>;
+  return <Analysis run={run} hands={state.hands} bigBlind={first.bigBlind} />;
 }
 
 export function RunView({ run, load }: Props) {

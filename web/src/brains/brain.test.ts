@@ -1,39 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { parseCards } from '../cards/index.ts';
 import type { Card } from '../cards/index.ts';
-import type { Action, LegalActions } from '../engine/index.ts';
+import type { LegalActions } from '../engine/index.ts';
+import { isLegal } from '../engine/index.ts';
 import { createMathBrain } from './brain.ts';
 import { decisionFixtures as decisions } from './decisionFixtures.ts';
 import type { Observation } from './observation.ts';
 import { parseObservation } from './observation.ts';
 import { aggressive, call, check, fold } from './profit.ts';
 import { toLegalAction } from './preprocess.ts';
-import { randomVillainModel } from './villainModel.ts';
 
 function brainAfter(observations: readonly Observation[]) {
-  const brain = createMathBrain({ villainModel: randomVillainModel });
+  const brain = createMathBrain();
   for (const o of observations) {
     brain.observe(o);
   }
   return brain;
-}
-
-function isLegal(action: Action, legal: LegalActions): boolean {
-  switch (action.kind) {
-    case 'fold':
-      return legal.fold;
-    case 'check':
-      return legal.check;
-    case 'call':
-      return legal.call !== null;
-    case 'raise':
-      return (
-        legal.raise !== null &&
-        Number.isInteger(action.to) &&
-        action.to >= legal.raise.min &&
-        action.to <= legal.raise.max
-      );
-  }
 }
 
 const RAISE: LegalActions = { fold: true, check: false, call: 40, raise: { min: 120, max: 900 } };
@@ -88,7 +70,7 @@ describe('createMathBrain', () => {
         variants.push({ ...fixture.legal, raise: { min: max, max } });
       }
       for (const legal of variants) {
-        expect(isLegal(brain.decide(legal).action, legal)).toBe(true);
+        expect(isLegal(legal, brain.decide(legal).action)).toBe(true);
       }
     },
   );

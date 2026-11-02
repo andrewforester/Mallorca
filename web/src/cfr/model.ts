@@ -1,3 +1,4 @@
+import type { BotBias, Breakdown } from '../brains/index.ts';
 import type { Card } from '../cards/index.ts';
 import type { Action, LegalActions } from '../engine/index.ts';
 
@@ -28,6 +29,26 @@ interface Exports {
     draw: number,
   ): number;
   decided_to(bot: number): number;
+  bot_bias(
+    bot: number,
+    aggression: number,
+    bluff: number,
+    tightness: number,
+    sizing: number,
+    stickiness: number,
+  ): void;
+  bot_range(bot: number): number;
+  bot_opponent_range(bot: number): number;
+  bot_spot(
+    bot: number,
+    fold: number,
+    check: number,
+    call: number,
+    min: number,
+    max: number,
+  ): number;
+  bot_spot_grid(bot: number): number;
+  bot_decision(bot: number): number;
 }
 
 export interface HandStart {
@@ -44,7 +65,18 @@ export interface CfrBot {
   street(board: readonly Card[]): void;
   acted(hero: boolean, action: Action, draw: number): void;
   decide(legal: LegalActions, draw: number): Action;
+  setBias(bias: BotBias): void;
+  range(): Float32Array | null;
+  opponentRange(): Float32Array | null;
+  spot(legal: LegalActions): CfrSpot | null;
+  explain(): Breakdown | null;
   free(): void;
+}
+
+export interface CfrSpot {
+  approximate: boolean;
+  moves: Action[];
+  grid: Float32Array;
 }
 
 export interface CfrModel {
@@ -92,6 +124,47 @@ function toAction(kind: number, to: number): Action {
   }
 }
 
+const PAIRS = 1326;
+
+type LegalArgs = [number, number, number, number, number];
+
+function legalArgs({ fold, check, call, raise }: LegalActions): LegalArgs {
+  return [fold ? 1 : 0, check ? 1 : 0, call ?? -1, raise?.min ?? -1, raise?.max ?? -1];
+}
+
+function floats(e: Exports, ptr: number, length: number): Float32Array | null {
+  return ptr === 0 ? null : new Float32Array(e.memory.buffer, ptr, length).slice();
+}
+
+function readSpot(e: Exports, handle: number, legal: LegalActions): CfrSpot | null {
+  const ptr = e.bot_spot(handle, ...legalArgs(legal));
+  const count = floats(e, ptr, 2)?.[1] ?? 0;
+  const head = floats(e, ptr, 2 + 2 * count);
+  const grid = floats(e, e.bot_spot_grid(handle), PAIRS * count);
+  if (head === null || grid === null) {
+    return null;
+  }
+  const moves = Array.from({ length: count }, (_, k) =>
+    toAction(head[2 + 2 * k] ?? -1, head[3 + 2 * k] ?? 0),
+  );
+  return { approximate: head[0] === 1, moves, grid };
+}
+
+function readDecision(e: Exports, handle: number): Breakdown | null {
+  const ptr = e.bot_decision(handle);
+  const count = floats(e, ptr, 1)?.[0] ?? 0;
+  const all = floats(e, ptr, 2 + 4 * count);
+  if (all === null) {
+    return null;
+  }
+  const moves = Array.from({ length: count }, (_, k) =>
+    toAction(all[2 + 2 * k] ?? -1, all[3 + 2 * k] ?? 0),
+  );
+  const base = Array.from(all.subarray(2 + 2 * count, 2 + 3 * count));
+  const biased = Array.from(all.subarray(2 + 3 * count, 2 + 4 * count));
+  return { moves, base, biased, chosen: all[1] ?? 0 };
+}
+
 function bot(e: Exports, handle: number): CfrBot {
   return {
     handStarted(s) {
@@ -110,17 +183,23 @@ function bot(e: Exports, handle: number): CfrBot {
       e.acted(handle, hero ? 1 : 0, kindOf(action), to, draw);
     },
     decide(legal, draw) {
-      const { fold, check, call, raise } = legal;
-      const kind = e.decide(
-        handle,
-        fold ? 1 : 0,
-        check ? 1 : 0,
-        call ?? -1,
-        raise?.min ?? -1,
-        raise?.max ?? -1,
-        draw,
-      );
+      const kind = e.decide(handle, ...legalArgs(legal), draw);
       return toAction(kind, e.decided_to(handle));
+    },
+    setBias({ aggression, bluff, tightness, sizing, stickiness }) {
+      e.bot_bias(handle, aggression, bluff, tightness, sizing, stickiness);
+    },
+    range() {
+      return floats(e, e.bot_range(handle), PAIRS);
+    },
+    opponentRange() {
+      return floats(e, e.bot_opponent_range(handle), PAIRS);
+    },
+    spot(legal) {
+      return readSpot(e, handle, legal);
+    },
+    explain() {
+      return readDecision(e, handle);
     },
     free() {
       e.bot_free(handle);

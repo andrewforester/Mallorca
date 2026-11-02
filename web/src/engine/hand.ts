@@ -1,7 +1,8 @@
 import type { Card } from '../cards/index.ts';
-import { legalActions, otherSeat } from './legal.ts';
+import { isLegal, legalActions, otherSeat } from './legal.ts';
 import { awardShowdown, evaluateShowdown } from './showdown.ts';
-import type { Action, EngineEvent, Hand, LegalActions, Seat, SeatIndex, Step } from './types.ts';
+import { BOARD_SIZE } from './streets.ts';
+import type { Action, EngineEvent, Hand, Seat, SeatIndex, Step } from './types.ts';
 
 export class IllegalActionError extends Error {
   constructor(message: string) {
@@ -24,8 +25,11 @@ interface Payout {
   refund: Stacks;
 }
 
-const STREET_BY_BOARD_SIZE = { 0: 'flop', 3: 'turn', 4: 'river' } as const;
-const CARDS_BY_STREET = { flop: 3, turn: 1, river: 1 } as const;
+const STREET_BY_BOARD_SIZE = {
+  [BOARD_SIZE.preflop]: 'flop',
+  [BOARD_SIZE.flop]: 'turn',
+  [BOARD_SIZE.turn]: 'river',
+} as const;
 
 function pair<T>(first: T, second: T): [T, T] {
   return [first, second];
@@ -132,12 +136,12 @@ function settle(table: Table, last: SeatIndex): Step {
   return closeBetting(table);
 }
 
-function dealStreet(hand: Hand, events: EngineEvent[]): Hand {
-  const street = STREET_BY_BOARD_SIZE[hand.board.length as 0 | 3 | 4];
-  const count = CARDS_BY_STREET[street];
+function dealStreet(hand: Hand, events: EngineEvent[], pot: number): Hand {
+  const street = STREET_BY_BOARD_SIZE[hand.board.length as keyof typeof STREET_BY_BOARD_SIZE];
+  const count = BOARD_SIZE[street] - hand.board.length;
   const cards = hand.deck.slice(0, count);
   const board = [...hand.board, ...cards];
-  events.push({ type: 'streetDealt', street, cards, board });
+  events.push({ type: 'streetDealt', street, cards, board, pot });
   return { ...hand, street, deck: hand.deck.slice(count), board };
 }
 
@@ -145,7 +149,7 @@ function closeBetting(table: Table): Step {
   const { hand, stacks, seats, events } = table;
   const bothCanBet = stacks[0] > 0 && stacks[1] > 0;
   if (bothCanBet && hand.street !== 'river') {
-    const next = dealStreet(hand, events);
+    const next = dealStreet(hand, events, hand.pot);
     return {
       hand: {
         ...next,
@@ -172,13 +176,13 @@ function showdown(table: Table): Step {
     refund[bigger] = excess;
     committed[bigger] -= excess;
   }
+  const pot = committed[0] + committed[1];
   let current: Hand = hand;
-  while (current.board.length < 5) {
-    current = dealStreet(current, events);
+  while (current.board.length < BOARD_SIZE.river) {
+    current = dealStreet(current, events, pot);
   }
   const hands = evaluateShowdown(current.holeCards, current.board);
-  events.push({ type: 'showdown', hands });
-  const pot = committed[0] + committed[1];
+  events.push({ type: 'showdown', hands, pot });
   const awards = awardShowdown(pot, [hands[0].rank, hands[1].rank], otherSeat(hand.button));
   return finish({ ...table, hand: current }, { awards, refund });
 }
@@ -210,24 +214,6 @@ function finish(table: Table, payout: Payout): Step {
     seats: withSeats(seats, final),
     events,
   };
-}
-
-function isLegal(legal: LegalActions, action: Action): boolean {
-  switch (action.kind) {
-    case 'fold':
-      return legal.fold;
-    case 'check':
-      return legal.check;
-    case 'call':
-      return legal.call !== null;
-    case 'raise':
-      return (
-        legal.raise !== null &&
-        Number.isInteger(action.to) &&
-        action.to >= legal.raise.min &&
-        action.to <= legal.raise.max
-      );
-  }
 }
 
 function assertLegal(hand: Hand, seats: readonly [Seat, Seat], action: Action): void {

@@ -13,6 +13,7 @@ export interface KeyLike {
   ctrlKey?: boolean;
   metaKey?: boolean;
   altKey?: boolean;
+  target?: unknown;
 }
 
 type Binding = (handlers: KeyHandlers) => void;
@@ -36,13 +37,26 @@ const BINDINGS = new Map<string, Binding>([
   ['ArrowDown', down],
 ]);
 
+const NOT_TEXT = new Set(['button', 'checkbox', 'radio', 'range', 'reset', 'submit']);
+
+function isTyping(target: unknown): boolean {
+  if (typeof target !== 'object' || target === null) {
+    return false;
+  }
+  const node = target as { tagName?: unknown; type?: unknown; isContentEditable?: unknown };
+  if (node.isContentEditable === true || node.tagName === 'TEXTAREA' || node.tagName === 'SELECT') {
+    return true;
+  }
+  return node.tagName === 'INPUT' && !NOT_TEXT.has(String(node.type));
+}
+
 function hasModifier(event: KeyLike): boolean {
   return event.ctrlKey === true || event.metaKey === true || event.altKey === true;
 }
 
 export function handleKey(event: KeyLike, handlers: KeyHandlers): boolean {
   const binding = BINDINGS.get(event.key);
-  if (!handlers.enabled || hasModifier(event) || binding === undefined) {
+  if (!handlers.enabled || hasModifier(event) || binding === undefined || isTyping(event.target)) {
     return false;
   }
   binding(handlers);

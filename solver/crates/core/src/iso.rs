@@ -1,4 +1,6 @@
 use crate::cards::Card;
+use crate::tree::Street;
+use std::sync::OnceLock;
 
 const SUITS: usize = 4;
 const MAX_ROUNDS: usize = 4;
@@ -429,13 +431,20 @@ impl HandIndexer {
     }
 }
 
-pub fn street_indexers() -> [HandIndexer; 4] {
-    [
-        HandIndexer::new(&[2]),
-        HandIndexer::new(&[2, 3]),
-        HandIndexer::new(&[2, 4]),
-        HandIndexer::new(&[2, 5]),
-    ]
+pub fn street_indexers() -> &'static [HandIndexer; 4] {
+    static INDEXERS: OnceLock<[HandIndexer; 4]> = OnceLock::new();
+    INDEXERS.get_or_init(|| {
+        [
+            HandIndexer::new(&[2]),
+            HandIndexer::new(&[2, 3]),
+            HandIndexer::new(&[2, 4]),
+            HandIndexer::new(&[2, 5]),
+        ]
+    })
+}
+
+pub fn street_indexer(street: Street) -> &'static HandIndexer {
+    &street_indexers()[street.as_index()]
 }
 
 pub fn board_indexer(cards: u8) -> HandIndexer {
@@ -472,6 +481,17 @@ mod tests {
             assert_eq!(hand.len(), cards);
             assert_valid(&hand);
             assert_eq!(indexer.index(&hand), i);
+        }
+    }
+
+    #[test]
+    fn street_indexers_are_built_once() {
+        assert!(std::ptr::eq(street_indexers(), street_indexers()));
+        for street in [Street::Preflop, Street::Flop, Street::Turn, Street::River] {
+            assert!(std::ptr::eq(
+                street_indexer(street),
+                &street_indexers()[street.as_index()]
+            ));
         }
     }
 
@@ -564,8 +584,8 @@ mod tests {
     #[test]
     fn turn_and_river_round_trip_random() {
         let [_, _, turn, river] = street_indexers();
-        round_trip_random(&turn, 1, 6, 5, 100_000);
-        round_trip_random(&river, 1, 7, 6, 100_000);
+        round_trip_random(turn, 1, 6, 5, 100_000);
+        round_trip_random(river, 1, 7, 6, 100_000);
     }
 
     #[test]

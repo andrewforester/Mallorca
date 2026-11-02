@@ -196,6 +196,42 @@ describe('workerBot', () => {
     expect(currentWorker().terminated).toBe(true);
   });
 
+  it('sends the bias with the decide request', async () => {
+    const bot = workerBot();
+    const bias = { aggression: 1.1, bluff: 1, tightness: 0.9, sizing: 1, stickiness: 1 };
+    const pending = bot.decide(legal, bias);
+    await settle();
+    const sent = currentWorker().sent.at(-1);
+    expect(sent).toMatchObject({ kind: 'decide', bias });
+    bot.dispose?.();
+    await pending.catch(() => undefined);
+  });
+
+  it('asks for the explanation only when told to', async () => {
+    const bot = workerBot();
+    const first = bot.decide(legal, undefined, true);
+    await settle();
+    expect(currentWorker().sent.at(-1)).toMatchObject({ kind: 'decide', explain: true });
+    const second = bot.decide(legal);
+    await settle();
+    expect(currentWorker().sent.at(-1)).not.toHaveProperty('explain');
+    bot.dispose?.();
+    await first.catch(() => undefined);
+    await second.catch(() => undefined);
+  });
+
+  it('fallback ignores bias', async () => {
+    vi.useFakeTimers();
+    const bot = workerBot();
+    bot.observe(hand);
+    const bias = { aggression: 1.3, bluff: 1.2, tightness: 0.8, sizing: 1.1, stickiness: 1.2 };
+    const pending = bot.decide(legal, bias);
+    const settled = expect(pending).resolves.toMatchObject({ action: expect.any(Object) });
+    await vi.advanceTimersByTimeAsync(BOT_TIMEOUT_MS);
+    await settled;
+    await expect(bot.decide(legal, bias)).resolves.toMatchObject({ action: expect.any(Object) });
+  });
+
   it('rejects pending requests and terminates the worker on dispose', async () => {
     const bot = workerBot();
     const { pending, worker } = await startDecide(bot);
@@ -304,5 +340,79 @@ describe('workerBot select', () => {
     expect(request).toMatchObject({ kind: 'select', opponent: 'cfr', seed: 9 });
     worker.reply({ id: (request as { id: number }).id, opponent: 'cfr' });
     await expect(pending).resolves.toBe('cfr');
+  });
+});
+
+describe('withFallback coach', () => {
+  it('gives up on a coach that never answers', async () => {
+    const silent: BotClient = {
+      observe: () => undefined,
+      reset: () => undefined,
+      decide: () => new Promise(() => undefined),
+      coach: () => new Promise(() => undefined),
+    };
+    const client = withFallback(silent, 10);
+    const legal = { fold: false, check: true, call: null, raise: null };
+    await expect(client.coach?.([], legal, 40)).rejects.toThrow();
+  });
+});
+
+describe('opponentRange', () => {
+  const asking = (opponentRange?: () => Promise<Float32Array | null>): BotClient => ({
+    observe: () => undefined,
+    reset: () => undefined,
+    decide: () => Promise.resolve(decision),
+    ...(opponentRange === undefined ? {} : { opponentRange }),
+  });
+
+  it('forwards the range of the active client', async () => {
+    const range = new Float32Array([0.5]);
+    const client = withFallback(asking(() => Promise.resolve(range)));
+    await expect(client.opponentRange?.()).resolves.toBe(range);
+  });
+
+  it('answers null for a client without one, an error or no answer', async () => {
+    await expect(withFallback(asking()).opponentRange?.()).resolves.toBeNull();
+    const failing = withFallback(asking(() => Promise.reject(new Error('gone'))));
+    await expect(failing.opponentRange?.()).resolves.toBeNull();
+    const silent = withFallback(
+      asking(() => new Promise(() => undefined)),
+      10,
+    );
+    await expect(silent.opponentRange?.()).resolves.toBeNull();
+  });
+
+  it('answers null after the fallback', async () => {
+    const broken: BotClient = {
+      ...asking(() => Promise.resolve(new Float32Array([1]))),
+      decide: () => Promise.reject(new Error('down')),
+    };
+    const client = withFallback(broken);
+    await client.decide(legal).catch(() => undefined);
+    await expect(client.opponentRange?.()).resolves.toBeNull();
+  });
+});
+
+describe('workerBot opponentRange', () => {
+  beforeEach(() => {
+    FakeWorker.instances = [];
+    vi.stubGlobal('Worker', FakeWorker);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('asks the worker after the observations and resolves with its range', async () => {
+    const bot = workerBot();
+    bot.observe(hand);
+    const pending = bot.opponentRange?.();
+    await settle();
+    const worker = currentWorker();
+    const request = worker.sent.at(-1) as { kind: string; id: number };
+    expect(worker.sent.map((r) => r.kind)).toEqual(['observe', 'opponentRange']);
+    const range = new Float32Array([0.25]);
+    worker.reply({ id: request.id, range });
+    await expect(pending).resolves.toBe(range);
   });
 });

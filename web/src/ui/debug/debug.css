@@ -1,0 +1,219 @@
+.debug-toggle {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  z-index: 40;
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+  rotate: 180deg;
+  min-width: var(--tap-size);
+  padding: var(--space-3) var(--space-2);
+  border: 1px solid var(--color-glass-border);
+  border-left: none;
+  border-radius: var(--radius-small) 0 0 var(--radius-small);
+  background: var(--color-glass-strong);
+  color: var(--color-text);
+  font: 600 var(--font-size-small) / 1 var(--font-body);
+  cursor: pointer;
+}
+
+.debug-toggle[aria-expanded='true'] {
+  left: min(360px, 88vw);
+}
+
+.debug-panel {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 39;
+  width: min(360px, 88vw);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-3);
+  background: var(--color-glass-strong);
+  backdrop-filter: blur(var(--blur-glass));
+  border-right: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-panel);
+  color: var(--color-text);
+  font: var(--font-size-small) / 1.35 var(--font-body);
+}
+
+.debug-section {
+  padding: var(--space-2) 0 var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.debug-section h3 {
+  margin: 0 0 var(--space-2);
+  font: 600 var(--font-size-large) / 1.2 var(--font-display);
+  color: var(--color-accent);
+}
+
+.debug-section h4 {
+  margin: var(--space-2) 0 var(--space-1);
+  font: 600 var(--font-size-small) / 1.2 var(--font-body);
+  color: var(--color-muted);
+}
+
+.debug-block {
+  margin-top: var(--space-2);
+}
+
+.debug-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  align-items: center;
+}
+
+.debug-pick,
+.debug-reset {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.debug-pick[aria-pressed='true'] {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.debug-reset {
+  margin-top: var(--space-2);
+}
+
+.debug-details summary {
+  margin-top: var(--space-2);
+  cursor: pointer;
+  color: var(--color-muted);
+}
+
+.debug-slider,
+.debug-bar {
+  display: grid;
+  grid-template-columns: 9rem 1fr 3.2rem;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: 20px;
+}
+
+.debug-bar-track {
+  position: relative;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+  overflow: hidden;
+}
+
+.debug-bar-track i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--color-accent);
+}
+
+.debug-bar-centered::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-muted);
+}
+
+.debug-bar-track i.debug-down {
+  background: var(--color-coach-passive);
+}
+
+.debug-bar-value,
+.debug-numbers,
+.debug-table td:last-child {
+  font-family: var(--font-numeric);
+  text-align: right;
+}
+
+.debug-numbers {
+  margin: var(--space-1) 0;
+}
+
+.debug-note {
+  display: block;
+  margin: var(--space-1) 0 0;
+  color: var(--color-muted);
+}
+
+.debug-map {
+  display: block;
+  width: 160px;
+  height: 160px;
+  border-radius: var(--radius-small);
+  background: var(--color-surface);
+}
+
+.debug-map text {
+  fill: var(--color-muted);
+  font: 9px var(--font-body);
+}
+
+.debug-axis {
+  stroke: var(--color-border);
+}
+
+.debug-rest {
+  fill: none;
+  stroke: var(--color-muted);
+  stroke-width: 1.5;
+}
+
+.debug-mood-dot {
+  fill: var(--color-accent);
+}
+
+.debug-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.debug-table th,
+.debug-table td {
+  padding: 2px var(--space-1);
+  text-align: left;
+}
+
+.debug-decision td:not(:first-child),
+.debug-decision th:not(:first-child) {
+  font-family: var(--font-numeric);
+  text-align: right;
+}
+
+.debug-chosen {
+  background: var(--color-surface-alt);
+  color: var(--color-highlight);
+  font-weight: 600;
+}
+
+.debug-journal {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.debug-journal li {
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.debug-entry-head,
+.debug-impulse {
+  display: block;
+}
+
+.debug-impulse {
+  padding-left: var(--space-3);
+  color: var(--color-text);
+}

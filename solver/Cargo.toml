@@ -6,3 +6,30 @@ members = ["crates/*"]
 lto = "fat"
 codegen-units = 1
 panic = "abort"
+
+[profile.dev.package.mallorca-core]
+opt-level = 1
+
+[profile.dev.package.sha2]
+opt-level = 3
+
+[profile.dev.package.digest]
+opt-level = 3
+
+[profile.dev.package.block-buffer]
+opt-level = 3
+
+[profile.dev.package.generic-array]
+opt-level = 3
+
+[profile.dev.package.miniz_oxide]
+opt-level = 3
+
+[profile.dev.package.crc32fast]
+opt-level = 3
+
+[profile.dev.package.adler2]
+opt-level = 3
+
+[profile.dev.package.simd-adler32]
+opt-level = 3

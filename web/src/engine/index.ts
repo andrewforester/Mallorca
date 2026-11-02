@@ -1,5 +1,7 @@
 export type {
   Action,
+  BettingStreet,
+  DealtStreet,
   EngineEvent,
   Hand,
   LegalActions,
@@ -9,22 +11,22 @@ export type {
   Step,
   Street,
 } from './types.ts';
-export { applyAction, IllegalActionError, startHandWith } from './hand.ts';
-export { legalActions } from './legal.ts';
+export { applyAction, startHandWith } from './hand.ts';
+export type { BoardSize } from './streets.ts';
+export { BOARD_SIZE } from './streets.ts';
+export { checkOrCall, isLegal } from './legal.ts';
+export { playToEnd } from './play.ts';
 export type { Table, TableMode } from './table.ts';
 export {
   apply,
-  BIG_BLINDS,
-  blindsFor,
   CASH,
   createTable,
   legalActionsOf,
   startHand,
+  startingStack,
   toAct,
   TOURNAMENT,
-  TOURNAMENT_STACK,
 } from './table.ts';
-export type { Rules } from './rules.ts';
 export { rulesOf } from './rules.ts';
 export type { LogEntry } from './history.ts';
 export { handHistory } from './history.ts';

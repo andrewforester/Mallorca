@@ -1,4 +1,5 @@
 import type { Action, LegalActions } from '../engine/index.ts';
+import { checkOrCall } from '../engine/index.ts';
 import type { BotClient } from './botClient.ts';
 
 export interface ScriptedBot extends BotClient {
@@ -23,7 +24,7 @@ export function scriptedBot(pick: (legal: LegalActions) => Action): ScriptedBot 
 }
 
 export function callingBot(): ScriptedBot {
-  return scriptedBot((legal) => (legal.check ? { kind: 'check' } : { kind: 'call' }));
+  return scriptedBot(checkOrCall);
 }
 
 export function shovingBot(): ScriptedBot {

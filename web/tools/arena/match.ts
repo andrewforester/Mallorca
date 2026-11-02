@@ -1,11 +1,12 @@
 import { fullDeck, mulberry32, shuffle } from '../../src/cards/index.ts';
-import type { EngineEvent, Seat, SeatIndex, Step } from '../../src/engine/index.ts';
-import { applyAction, legalActions, startHandWith } from '../../src/engine/index.ts';
+import type { Action, EngineEvent, LegalActions, SeatIndex, Step } from '../../src/engine/index.ts';
+import { CASH, createTable, playToEnd, rulesOf, startHandWith } from '../../src/engine/index.ts';
 import { toObservations } from '../../src/brains/index.ts';
-import type { ArenaBot, BotFactory } from './bots.ts';
+import type { ArenaBot } from './arenaBot.ts';
+import type { BotFactory } from './bots.ts';
 
-const STACK = 2000;
-const BLINDS = { small: 10, big: 20 };
+const SEATS = createTable(['seat0', 'seat1'], CASH).seats;
+const STACK = SEATS[0].stack;
 
 function playHand(
   factories: [BotFactory, BotFactory],
@@ -18,10 +19,6 @@ function playHand(
   const bots = factories.map((make, seat) =>
     make(mulberry32((seed ^ (index * 4 + k * 2 + seat)) >>> 0)),
   ) as [ArenaBot, ArenaBot];
-  const seats: [Seat, Seat] = [
-    { name: 'seat0', stack: STACK },
-    { name: 'seat1', stack: STACK },
-  ];
   const events: EngineEvent[] = [];
   const feed = (step: Step) => {
     events.push(...step.events);
@@ -29,20 +26,23 @@ function playHand(
       for (const o of toObservations(step.events, seat)) bots[seat].observe(o);
     }
   };
-  let step = startHandWith(
-    seats,
-    { button: 0, blinds: BLINDS, handNumber: index * 2 + k + 1 },
+  const handNumber = index * 2 + k + 1;
+  const start = startHandWith(
+    SEATS,
+    { button: 0, blinds: rulesOf(CASH).blinds(handNumber), handNumber },
     deck,
   );
-  feed(step);
-  while (step.hand.street !== 'complete') {
-    const seat = step.hand.toAct as SeatIndex;
-    const action = bots[seat].decide(legalActions(step.hand, step.seats));
-    step = applyAction(step.hand, step.seats, action);
-    feed(step);
-  }
+  const act = (seat: SeatIndex, legal: LegalActions): Action => {
+    const actor = bots[seat];
+    const action = actor.decide(legal);
+    if (action.kind === 'raise' && actor.spoke) {
+      bots[seat === 0 ? 1 : 0].heard?.(actor.spoke());
+    }
+    return action;
+  };
+  const end = playToEnd(start, act, feed);
   for (const bot of bots) bot.dispose?.();
-  return { events, stacks: [step.seats[0].stack, step.seats[1].stack] };
+  return { events, stacks: [end.seats[0].stack, end.seats[1].stack] };
 }
 
 export function playPair(

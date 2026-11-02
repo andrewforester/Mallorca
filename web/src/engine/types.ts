@@ -9,6 +9,8 @@ export interface Seat {
 }
 
 export type Street = 'preflop' | 'flop' | 'turn' | 'river' | 'showdown' | 'complete';
+export type BettingStreet = Exclude<Street, 'showdown' | 'complete'>;
+export type DealtStreet = Exclude<BettingStreet, 'preflop'>;
 
 export interface Hand {
   street: Street;
@@ -54,8 +56,14 @@ export type EngineEvent =
   | { type: 'blindPosted'; seat: SeatIndex; amount: number }
   | { type: 'holeCards'; seat: SeatIndex; cards: [Card, Card] }
   | { type: 'acted'; seat: SeatIndex; action: Action; amount: number; allIn: boolean }
-  | { type: 'streetDealt'; street: 'flop' | 'turn' | 'river'; cards: Card[]; board: Card[] }
-  | { type: 'showdown'; hands: [ShowdownHand, ShowdownHand] }
+  | {
+      type: 'streetDealt';
+      street: DealtStreet;
+      cards: Card[];
+      board: Card[];
+      pot: number;
+    }
+  | { type: 'showdown'; hands: [ShowdownHand, ShowdownHand]; pot: number }
   | { type: 'betReturned'; seat: SeatIndex; amount: number }
   | { type: 'potAwarded'; seat: SeatIndex; amount: number }
   | { type: 'handEnded'; stacks: [number, number] }

@@ -4,9 +4,8 @@ import { parseCards } from '../cards/index.ts';
 import { GameContext, HandStateObserver } from './handState.ts';
 import type { Observation } from './observation.ts';
 import { createRaiseAction, RandomVariable } from './profit.ts';
-import { NLGameSolver, ShowdownGameSolver } from './solver.ts';
-import { StrengthManager } from './strength.ts';
-import { randomVillainModel, VillainSpectrumTracker } from './villainModel.ts';
+import { NLGameSolver } from './solver.ts';
+import { VillainSpectrumTracker } from './villainModel.ts';
 
 const board = parseCards('Qs Js Ts 2c 3d');
 const hero = parseCards('As Ks') as [Card, Card];
@@ -38,12 +37,10 @@ const riverFacingBet: Observation[] = [
 function callProfit(solver: NLGameSolver): number {
   const game = new GameContext();
   const state = new HandStateObserver(true);
-  const strength = new StrengthManager();
-  const tracker = new VillainSpectrumTracker(randomVillainModel, strength);
+  const tracker = new VillainSpectrumTracker();
   for (const o of riverFacingBet) {
     game.observe(o);
     state.observe(o);
-    strength.observe(o);
     tracker.observe(o);
   }
   const distribution = solver.onSecondAction(
@@ -54,7 +51,6 @@ function callProfit(solver: NLGameSolver): number {
       pot: game.pot,
       spectrum: tracker.spectrum,
       hero,
-      strength,
       isHeroOnButton: false,
     },
     100,
@@ -64,13 +60,7 @@ function callProfit(solver: NLGameSolver): number {
 
 describe('NLGameSolver', () => {
   it('counts only the chips the villain put in on this street when calling with the nuts', () => {
-    expect(callProfit(new NLGameSolver(randomVillainModel))).toBeCloseTo(100, 9);
-  });
-});
-
-describe('ShowdownGameSolver', () => {
-  it('counts the whole pot on the river', () => {
-    expect(callProfit(new ShowdownGameSolver(randomVillainModel))).toBeCloseTo(140, 9);
+    expect(callProfit(new NLGameSolver())).toBeCloseTo(100, 9);
   });
 });
 

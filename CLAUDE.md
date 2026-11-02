@@ -11,6 +11,9 @@
   also `npm run test:golden` (674 decisions of the Java bot, about 40 s).
 - Before a PR: `npm run lint`, `npx tsc --noEmit`, `npm test`, `npm run test:golden`, `npm run build`,
   `npm run test:e2e`. CI runs the same checks on every pull request that touches `web/`.
+- `npm run bench` is the timing check of the hand evaluator; it is not part of `npm test` and runs on demand.
+- Ports: `npm run test:e2e` previews on 4173 and `npm run contact` on 4174. When several worktrees run them at once,
+  choose free ports with `E2E_PORT=4810 npm run test:e2e` and `CONTACT_PORT=4811 npm run contact`.
 - TDD: the failing test comes first, then the code.
 - Fix the code, not the rule: never weaken a test, delete an assertion, loosen a tolerance or add an
   `eslint-disable`, an ignore, a suppression or a baseline. A rule changes only in its own commit.

@@ -12,6 +12,12 @@ Start with `CLAUDE.md` for the working rules.
 
 Checkpoints are keyed by a fingerprint of blinds, stack, buckets, bet sizes, the tree and the bucket tables, so `name`, `threads`, `checkpoint_minutes`, `memory_limit_gb` and the `[cfr]` parameters may change between resumes.
 
+Reproducibility: with `--threads 1` and a fixed `--seed`, a run is bit-reproducible, and a periodic checkpoint
+equals a fresh run of its iteration count. A resume reseeds the workers from the seed, the worker index and the
+iteration count it starts at, so a run stopped and resumed differs from an uninterrupted one. With more threads the
+discount still runs once per `discount_interval`, after exactly that many iterations and while no iteration runs,
+but concurrent iterations update shared regrets without locks, so the result depends on timing and thread count.
+
 ## Overnight runbook for `v1`
 
 Run everything from `solver/` in release mode. `D=data/v1` below; the preset is `presets/v1.toml` (stack 2000,
@@ -39,11 +45,10 @@ mkdir -p $D
    and writes a final checkpoint; a second Ctrl-C aborts without one. Release builds abort on a panic, so a crash
    writes no final checkpoint: the last periodic checkpoint is the recovery point, and running the same command
    again resumes from it.
-5. For each checkpoint `N` (files `$D/checkpoints/N.ckpt`), export both variants and measure:
-   - browser file: `$T export --preset $P --data $D --checkpoint N --streets browser --out $D/v1-N-browser.bin`
-     (preflop and flop only; its gzip size is printed and goes into `RESULTS.md`)
+5. For each checkpoint `N` (files `$D/checkpoints/N.ckpt`), export both variants and measure. Both hold all four
+   streets; `--streets` defaults to `play`, the file the bot loads. `export` prints the raw and gzip sizes.
    - full file: `$T export --preset $P --data $D --checkpoint N --streets all --out $D/v1-N-all.bin`
-     (all streets, needed by `lbr` and `match`)
+     (every bucket table, version 1, needed by `lbr` and `match`)
    - play file for the arena and the browser, version 2: `$T export --preset $P --data $D --checkpoint N --streets play --out $D/v1-N-play.mlcs`
      (all streets, the flop table and turn and river thresholds; needs `river_hs.f32` from step 1 and checks the
      thresholds against the tables). On a `bucketing = "potential"` preset the file is version 3: the flop table and

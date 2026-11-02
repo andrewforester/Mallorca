@@ -15,6 +15,10 @@ export const CASH: TableMode = { kind: 'cash', bigBlind: 20, buyIn: 2000 };
 
 export const TOURNAMENT_STACK = 2000;
 
+export function startingStack(mode: TableMode): number {
+  return mode.kind === 'cash' ? mode.buyIn : TOURNAMENT_STACK;
+}
+
 export interface Table {
   mode: TableMode;
   seats: [Seat, Seat];
@@ -29,12 +33,12 @@ export function createTable(
   mode: TableMode,
   firstButton: SeatIndex = 0,
 ): Table {
-  const startingStack = mode.kind === 'cash' ? mode.buyIn : TOURNAMENT_STACK;
+  const stack = startingStack(mode);
   return {
     mode,
     seats: [
-      { name: names[0], stack: startingStack },
-      { name: names[1], stack: startingStack },
+      { name: names[0], stack },
+      { name: names[1], stack },
     ],
     button: firstButton,
     handNumber: 0,

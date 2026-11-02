@@ -1,9 +1,17 @@
 import { render } from 'preact';
-import { createSession, openHandStore, TOURNAMENT, workerBot } from './game/index.ts';
+import {
+  createSession,
+  onPageExit,
+  openHandStore,
+  conversationConnector,
+  TOURNAMENT,
+  workerBot,
+} from './game/index.ts';
 import type { Session } from './game/index.ts';
 import { App } from './ui/App.tsx';
 import { createSynthPlayer } from './ui/sound/player.ts';
 import { t } from './ui/i18n.ts';
+import { readFace, readConversation } from './ui/preferences.ts';
 import '@fontsource/cormorant-garamond/latin-500.css';
 import '@fontsource/cormorant-garamond/latin-600.css';
 import '@fontsource/inter/latin-400.css';
@@ -36,6 +44,16 @@ const player = createSynthPlayer();
 let nextSeed: number | null = numberParam('seed');
 let session: Session | null = null;
 const store = await openHandStore();
+const connectConversation = conversationConnector({
+  url: import.meta.env.VITE_SUPABASE_URL as string | undefined,
+  anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
+});
+
+onPageExit(window, document, () => session?.getState().pageHidden());
+
+const debugPanel = import.meta.env.DEV
+  ? (await import('./ui/debug/EmotionDebug.tsx')).EmotionDebug
+  : undefined;
 
 const root = document.getElementById('app');
 if (root === null) {
@@ -53,6 +71,10 @@ function mount(farewell = false): void {
     humanSeat: HUMAN_SEAT,
     names: [t('seat.you'), t('seat.bot')],
     mode: TOURNAMENT,
+    connectConversation,
+    conversationOn: readConversation(),
+    faceOn: readFace(),
+    debug: import.meta.env.DEV,
     records: {
       store,
       sessionId: crypto.randomUUID(),
@@ -67,6 +89,7 @@ function mount(farewell = false): void {
       farewell={farewell}
       autoNext={autoNext}
       player={player}
+      debugPanel={debugPanel}
       onNewGame={() => mount()}
       onLeaveTonight={() => mount(true)}
     />,

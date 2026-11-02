@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/preact';
+import { cleanup, render, screen, within } from '@testing-library/preact';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Board } from './Board.tsx';
 import { BoardRow } from './BoardRow.tsx';
@@ -9,7 +9,7 @@ describe('Board', () => {
   it('fills the five slots with the cards and then empty placeholders', () => {
     render(<Board cards={[48, 41]} />);
     const board = screen.getByTestId('board');
-    expect(board.querySelectorAll('[data-testid="card"]').length).toBe(2);
+    expect(within(board).getAllByTestId('card').length).toBe(2);
     const slots = board.querySelectorAll('.board-slot');
     expect(slots.length).toBe(3);
     for (const slot of slots) {

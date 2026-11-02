@@ -66,7 +66,7 @@ pub fn play_centroids(
     let centroids = read_centroids(data, preset.buckets)?;
     let indexers = street_indexers();
     let river_hs = read_river_hs(data, abstraction.class_count(Street::River) as usize)?;
-    let turn = turn_table(&indexers, &river_hs, &centroids.turn, preset.threads);
+    let turn = turn_table(indexers, &river_hs, &centroids.turn, preset.threads);
     drop(river_hs);
     reproduced(Street::Turn, &turn, abstraction.table_bytes(Street::Turn))?;
     drop(turn);

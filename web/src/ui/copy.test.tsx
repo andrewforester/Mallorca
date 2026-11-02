@@ -1,4 +1,4 @@
-import { cleanup, render } from '@testing-library/preact';
+import { cleanup, render, screen } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { memoryStore } from '../game/index.ts';
 import type { LogEntry } from '../game/index.ts';
@@ -94,9 +94,7 @@ describe('copy', () => {
       <Table vm={vm} phase="handOver" humanSeat={0} onAct={vi.fn()} onNextHand={vi.fn()} />,
     );
     expectFromLocale(container);
-    expect(container.querySelector('[data-testid="result"]')?.textContent).toContain(
-      'Mallorca wins 120 with Two pair',
-    );
+    expect(screen.getByTestId('result').textContent).toContain('Mallorca wins 120 with Two pair');
     cleanup();
     const youWin = fixtureResult();
     youWin.result = { winner: 0, category: 'flush', amount: 120 };
@@ -104,9 +102,7 @@ describe('copy', () => {
       <Table vm={youWin} phase="handOver" humanSeat={0} onAct={vi.fn()} onNextHand={vi.fn()} />,
     );
     expectFromLocale(won.container);
-    expect(won.container.querySelector('[data-testid="result"]')?.textContent).toContain(
-      'You win 120 with Flush',
-    );
+    expect(screen.getByTestId('result').textContent).toContain('You win 120 with Flush');
     cleanup();
     const thinking = viewModel({ enabled: false });
     thinking.seats[1].isToAct = true;

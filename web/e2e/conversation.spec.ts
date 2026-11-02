@@ -1,0 +1,207 @@
+import type { Locator, Page } from '@playwright/test';
+import { byId, expect, FAST_URL, test, waitForWaypoint } from './fixtures.ts';
+import { serveConversation, CONVERSATION_URL } from './conversationServer.ts';
+import type { ConversationRequest } from './conversationServer.ts';
+
+const HER_BET = 'That bet is a question, darling.';
+const HER_ANSWER = 'Glad you came tonight.';
+const SOLVER_TIMEOUT_MS = 180_000;
+const MAX_ACTIONS = 80;
+const HER_PACE_MS = 1600;
+
+function answers(request: ConversationRequest) {
+  if (request.kind === 'line') {
+    return { status: 200, body: request.intent?.situation === 'herBet' ? { text: HER_BET } : {} };
+  }
+  if (request.kind === 'reply') {
+    return { status: 200, body: { text: HER_ANSWER, signals: [] } };
+  }
+  return { status: 200, body: {} };
+}
+
+async function sitWithSolver(page: Page): Promise<void> {
+  await page.goto(FAST_URL);
+  await byId(page, 'opponent-cfr').click();
+  await byId(page, 'start-cash').click();
+  await expect(byId(page, 'passive')).toBeEnabled({ timeout: SOLVER_TIMEOUT_MS });
+}
+
+async function step(page: Page): Promise<void> {
+  if ((await waitForWaypoint(page)) === 'next-hand') {
+    await byId(page, 'next-hand').click();
+  } else {
+    await byId(page, 'passive').click();
+  }
+}
+
+async function playUntil(page: Page, done: () => Promise<boolean>): Promise<void> {
+  for (let action = 0; action < MAX_ACTIONS && !(await done()); action += 1) {
+    await step(page);
+  }
+  expect(await done()).toBe(true);
+}
+
+async function myTurn(page: Page): Promise<void> {
+  await playUntil(page, async () => {
+    const waypoint = await waitForWaypoint(page);
+    return waypoint === 'act';
+  });
+}
+
+async function expectApart(over: Locator, under: Locator, name: string): Promise<void> {
+  const a = await over.boundingBox();
+  const b = await under.boundingBox();
+  expect(a, `${name} has a box`).not.toBeNull();
+  expect(b, `${name} has a box`).not.toBeNull();
+  if (a !== null && b !== null) {
+    const apart =
+      a.x + a.width <= b.x ||
+      b.x + b.width <= a.x ||
+      a.y + a.height <= b.y ||
+      b.y + b.height <= a.y;
+    expect(apart, `covers ${name}`).toBe(true);
+  }
+}
+
+test('the math opponent signs nobody in', async ({ page }) => {
+  const auth: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().startsWith(`${CONVERSATION_URL}/auth/`)) {
+      auth.push(request.url());
+    }
+  });
+  const requests = await serveConversation(page, answers);
+  await page.goto(FAST_URL);
+  await byId(page, 'start-cash').click();
+  let hands = 0;
+  await playUntil(page, async () => {
+    if (await byId(page, 'next-hand').isVisible()) {
+      hands += 1;
+    }
+    return hands >= 2;
+  });
+  expect(auth).toEqual([]);
+  expect(requests).toEqual([]);
+});
+
+test.describe('desktop', () => {
+  test.skip(({ isMobile }) => isMobile, 'the side panel is a desktop layout');
+
+  test('a bubble with her line appears after her bet', async ({ page }) => {
+    test.setTimeout(SOLVER_TIMEOUT_MS);
+    const requests = await serveConversation(page, answers);
+    await sitWithSolver(page);
+    const bubble = byId(page, 'seat-1').getByTestId('bubble-mallorca');
+    const herBet = () => requests.some((request) => request.intent?.situation === 'herBet');
+    await playUntil(page, async () => {
+      if (herBet()) {
+        return true;
+      }
+      await page.waitForTimeout(HER_PACE_MS);
+      return herBet();
+    });
+    await expect(bubble).toContainText(HER_BET);
+    await expect(bubble).toBeVisible();
+    for (const id of ['board', 'pot', 'fold', 'passive', 'raise']) {
+      await expectApart(bubble, byId(page, id), id);
+    }
+  });
+
+  test('the chat panel sends a message and shows her answer without acting', async ({ page }) => {
+    test.setTimeout(SOLVER_TIMEOUT_MS);
+    const requests = await serveConversation(page, answers);
+    await sitWithSolver(page);
+    await myTurn(page);
+    const panel = byId(page, 'chat-panel');
+    await expect(panel).toBeVisible();
+    const input = panel.getByTestId('chat-input');
+    await input.pressSequentially('Coffee first, cards later');
+    await expect(byId(page, 'passive')).toBeEnabled();
+    await expect(byId(page, 'next-hand')).toBeHidden();
+    await input.press('Enter');
+    await expect(input).toHaveValue('');
+    const lines = panel.getByTestId('chat-line');
+    await expect(lines.filter({ hasText: 'Coffee first, cards later' })).toHaveCount(1);
+    await expect(lines.filter({ hasText: HER_ANSWER })).toHaveCount(1);
+    await expect(byId(page, 'seat-0').getByTestId('bubble-player')).toContainText('Coffee first');
+    const reply = requests.find((request) => request.kind === 'reply');
+    expect(reply?.text).toBe('Coffee first, cards later');
+  });
+
+  test('switching conversation off sends no requests to her', async ({ page }) => {
+    test.setTimeout(SOLVER_TIMEOUT_MS);
+    await page.addInitScript(() => localStorage.setItem('mallorca.talk', 'off'));
+    const requests = await serveConversation(page, answers);
+    await sitWithSolver(page);
+    let hands = 0;
+    await playUntil(page, async () => {
+      if (await byId(page, 'next-hand').isVisible()) {
+        hands += 1;
+      }
+      return hands >= 3;
+    });
+    await page.locator('summary.menu-summary').click();
+    await expect(byId(page, 'table-conversation')).not.toBeChecked();
+    await expect(byId(page, 'chat-panel')).toHaveCount(0);
+    await expect(byId(page, 'chat-open')).toHaveCount(0);
+    expect(requests).toEqual([]);
+  });
+
+  test('a failing conversation server keeps the hand going', async ({ page, problems }) => {
+    test.setTimeout(SOLVER_TIMEOUT_MS);
+    const requests = await serveConversation(page, () => ({
+      status: 500,
+      body: { error: 'down' },
+    }));
+    await sitWithSolver(page);
+    await myTurn(page);
+    const input = byId(page, 'chat-panel').getByTestId('chat-input');
+    await input.fill('Anyone there?');
+    await input.press('Enter');
+    await expect(byId(page, 'chat-panel').getByTestId('chat-line')).toContainText('Not delivered');
+    let hands = 0;
+    await playUntil(page, async () => {
+      if (await byId(page, 'next-hand').isVisible()) {
+        hands += 1;
+      }
+      return hands >= 2;
+    });
+    expect(requests.length).toBeGreaterThan(0);
+    const failed =
+      'console.error: Failed to load resource: the server responded with a status of 500';
+    expect(problems.length).toBeGreaterThan(0);
+    expect(problems.every((problem) => problem.startsWith(failed))).toBe(true);
+    problems.splice(0, problems.length);
+  });
+});
+
+test.describe('phone', () => {
+  test.use({ viewport: { width: 360, height: 740 } });
+  test.skip(({ isMobile }) => !isMobile, 'the chat sheet is the phone layout');
+
+  test('the chat sheet opens from her plaque and closes back to the table', async ({ page }) => {
+    test.setTimeout(SOLVER_TIMEOUT_MS);
+    const requests = await serveConversation(page, answers);
+    await sitWithSolver(page);
+    await myTurn(page);
+    const open = byId(page, 'seat-1').getByTestId('chat-open');
+    await expect(open).toHaveAccessibleName('Chat with Mallorca');
+    await open.click();
+    const sheet = byId(page, 'chat-sheet');
+    await expect(sheet).toBeVisible();
+    await expect(byId(page, 'passive')).toBeInViewport();
+    await expectApart(sheet, byId(page, 'seat-0').locator('.seat-cards'), 'your cards');
+    await expectApart(sheet, page.locator('.action-bar'), 'the action bar');
+    await sheet.getByTestId('quick-niceHand').click();
+    await expect(sheet.getByTestId('chat-line').filter({ hasText: HER_ANSWER })).toHaveCount(1);
+    expect(
+      requests.some((request) => request.kind === 'reply' && request.text === 'Nice hand'),
+    ).toBe(true);
+    await sheet.getByTestId('chat-close').click();
+    await expect(sheet).toHaveCount(0);
+    await expect(open).toBeFocused();
+    for (const id of ['fold', 'passive', 'raise']) {
+      await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
+    }
+  });
+});

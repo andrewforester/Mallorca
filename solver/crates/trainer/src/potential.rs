@@ -40,17 +40,17 @@ pub fn run(preset: &Preset, out: &Path) -> Result<(), String> {
     let threads = preset.threads;
     let started = Instant::now();
     let indexers = street_indexers();
-    let river_hs = river_pass(&indexers, threads)?;
+    let river_hs = river_pass(indexers, threads)?;
     write_floats(&out.join("river_hs.f32"), &river_hs)?;
     println!("wrote river_hs.f32: {} bytes", river_hs.len() * 4);
-    let clusters = opponent_clusters(&indexers, &river_hs, threads);
+    let clusters = opponent_clusters(indexers, &river_hs, threads);
     let river = river_buckets(&indexers[3], &clusters, preset.buckets[2], threads)?;
     write_table(out, "river.bkt", Street::River, preset.buckets[2], &river.1)?;
     drop(river.1);
     let river_of =
         |hole: [Card; 2], board: &[Card; 5]| lookup(&indexers[3], &river_hs, hole, board);
-    let turn = turn_job(&indexers, preset.buckets[1], threads);
-    let (turn_centroids, turn_table) = street_buckets(&turn, turn_feature(&indexers, &river_hs));
+    let turn = turn_job(indexers, preset.buckets[1], threads);
+    let (turn_centroids, turn_table) = street_buckets(&turn, turn_feature(indexers, &river_hs));
     write_table(out, "turn.bkt", Street::Turn, turn.buckets, &turn_table)?;
     let flop = StreetJob {
         name: "flop",

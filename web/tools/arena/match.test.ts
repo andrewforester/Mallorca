@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { mulberry32 } from '../../src/cards/index.ts';
+import { CASH, createTable, rulesOf } from '../../src/engine/index.ts';
 import type { EngineEvent, SeatIndex } from '../../src/engine/index.ts';
 import { BOTS } from './bots.ts';
 import type { BotName } from './bots.ts';
+import type { ArenaBot } from './arenaBot.ts';
 import { playPair } from './match.ts';
 
 const hole = (hand: EngineEvent[], seat: SeatIndex) =>
@@ -65,6 +67,69 @@ describe('playPair', () => {
       const recomputed = finalStacks(hands[0]!)[0] - 2000 + (finalStacks(hands[1]!)[1] - 2000);
       expect(net).toBe(recomputed);
       expect(net).toBe(expected);
+    }
+  });
+
+  it('passes what a bot said to the other once per raise', () => {
+    const log: string[] = [];
+    let raises = 0;
+    const talker: ArenaBot = {
+      observe: () => undefined,
+      decide: (legal) => {
+        if (legal.raise) {
+          raises++;
+          return { kind: 'raise', to: legal.raise.min };
+        }
+        return { kind: 'call' };
+      },
+      spoke: () => true,
+    };
+    const listener: ArenaBot = {
+      observe: () => undefined,
+      decide: (legal) => (legal.check ? { kind: 'check' } : { kind: 'call' }),
+      heard: (spoke) => log.push(String(spoke)),
+    };
+    playPair(
+      () => talker,
+      () => listener,
+      1,
+      0,
+    );
+    expect(raises).toBeGreaterThan(0);
+    expect(log).toEqual(Array<string>(raises).fill('true'));
+  });
+
+  it('does not call heard when the actor has no spoke', () => {
+    let heard = 0;
+    const raiser: ArenaBot = {
+      observe: () => undefined,
+      decide: (legal) => (legal.raise ? { kind: 'raise', to: legal.raise.min } : { kind: 'call' }),
+    };
+    const listener: ArenaBot = {
+      observe: () => undefined,
+      decide: (legal) => (legal.check ? { kind: 'check' } : { kind: 'call' }),
+      heard: () => heard++,
+    };
+    playPair(
+      () => raiser,
+      () => listener,
+      1,
+      0,
+    );
+    expect(heard).toBe(0);
+  });
+
+  it('plays both hands at the cash stakes', () => {
+    const { hands } = playPair(BOTS['always-call'], BOTS['always-raise'], 5, 3);
+    const { small, big } = rulesOf(CASH).blinds(1);
+    const stack = createTable(['A', 'B'], CASH).seats[0].stack;
+    for (const hand of hands) {
+      expect(hand[0]).toMatchObject({
+        type: 'handStarted',
+        smallBlind: small,
+        bigBlind: big,
+        stacks: [stack, stack],
+      });
     }
   });
 });

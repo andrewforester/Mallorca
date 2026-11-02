@@ -1,17 +1,15 @@
 import type { Card } from '../cards/index.ts';
 import { getOptimal } from './adviceFromMap.ts';
 import type { AggressionInfo, GameContext } from './handState.ts';
-import { HandState, PREFLOP, RIVER } from './handState.ts';
+import { HandState, PREFLOP } from './handState.ts';
 import { preflopStrengthVsSpectrum } from './preflopEquilator.ts';
 import type { ActionDistribution, GameSolver, SolverRequest } from './profit.ts';
 import { call, check, createBetAction, createRaiseAction, fold, RandomVariable } from './profit.ts';
 import type { HoleCards } from './spectrum.ts';
 import { Spectrum } from './spectrum.ts';
 import { SpectrumEquilator } from './spectrumEquilator.ts';
-import type { StreetName, StrengthMap } from './strength.ts';
-import type { VillainModel } from './villainModel.ts';
+import { randomAdvice } from './villainModel.ts';
 
-const STREET_NAMES: readonly StreetName[] = ['preflop', 'flop', 'turn', 'river'];
 const NEARLY_ZERO = 0.0001;
 const DEFAULT_POSITIVE_POTENTIAL = 0.1;
 const DEFAULT_NEGATIVE_POTENTIAL = 0.1;
@@ -63,7 +61,6 @@ interface Hand {
   readonly board: readonly Card[];
   readonly street: number;
   readonly onButton: boolean;
-  readonly strengthMap: StrengthMap | undefined;
 }
 
 interface SolverNode {
@@ -126,12 +123,7 @@ function response(spectrum: Spectrum): VillainResponse {
 }
 
 export class NLGameSolver implements GameSolver {
-  private readonly villainModel: VillainModel;
   private readonly equilator = new SpectrumEquilator();
-
-  constructor(villainModel: VillainModel) {
-    this.villainModel = villainModel;
-  }
 
   onFirstActionPreflop(request: SolverRequest, bigBlind: number): ActionDistribution {
     const hand = this.hand(request);
@@ -201,21 +193,10 @@ export class NLGameSolver implements GameSolver {
     );
   }
 
-  protected calculatePassiveProfit(hand: Hand, showdown: Showdown): RandomVariable {
-    return this.equityProfit(hand, showdown, false);
-  }
-
-  protected equityProfit(
-    hand: Hand,
-    showdown: Showdown,
-    considerPreviousPot: boolean,
-  ): RandomVariable {
+  private calculatePassiveProfit(hand: Hand, showdown: Showdown): RandomVariable {
     const street = hand.street;
-    let win = showdown.pot - showdown.heroInvestment;
-    if (!considerPreviousPot) {
-      const previousStreetPot = street !== PREFLOP ? hand.game.potOnStreet(street - 1) : 0;
-      win -= previousStreetPot;
-    }
+    const previousStreetPot = street !== PREFLOP ? hand.game.potOnStreet(street - 1) : 0;
+    const win = showdown.pot - showdown.heroInvestment - previousStreetPot;
     const lose = showdown.heroInvestment;
     const strength =
       hand.board.length > 0
@@ -227,12 +208,8 @@ export class NLGameSolver implements GameSolver {
     return result;
   }
 
-  private hand({ game, hero, isHeroOnButton: onButton, strength }: SolverRequest): Hand {
-    const street = game.street;
-    const strengthMap = this.villainModel.needsEquity
-      ? strength.map(STREET_NAMES[street] ?? 'preflop')
-      : undefined;
-    return { game, hero, board: [...game.board], street, onButton, strengthMap };
+  private hand({ game, hero, isHeroOnButton: onButton }: SolverRequest): Hand {
+    return { game, hero, board: [...game.board], street: game.street, onButton };
   }
 
   private secondActionRecursive(hand: Hand, node: SolverNode, toCall: number): ActionDistribution {
@@ -277,7 +254,7 @@ export class NLGameSolver implements GameSolver {
       info.plusHeroAggressiveAction();
     }
     const villainSituation = villainSituationWithoutStrength(hand, { ...node, info }, action);
-    const responses = this.villainResponses(node.spectrum, villainSituation, hand.strengthMap);
+    const responses = this.villainResponses(node.spectrum, villainSituation);
     result.add(responses.fold.weight / responses.total, node.pot - node.heroInvestment);
     if (!responses.passive.spectrum.isEmpty()) {
       const passiveActionChance = responses.passive.weight / responses.total;
@@ -324,22 +301,12 @@ export class NLGameSolver implements GameSolver {
     return getOptimal(distribution, hand.game);
   }
 
-  private villainResponses(
-    spectrum: Spectrum,
-    villainSituation: HandState,
-    strengthMap: StrengthMap | undefined,
-  ): VillainResponses {
+  private villainResponses(spectrum: Spectrum, villainSituation: HandState): VillainResponses {
     const foldSpectrum = Spectrum.empty();
     const passiveSpectrum = Spectrum.empty();
     const aggressiveSpectrum = Spectrum.empty();
+    const advice = randomAdvice(villainSituation);
     for (const { cards, weight } of spectrum.entries()) {
-      const equity = strengthMap?.get(cards);
-      if (equity !== undefined) {
-        villainSituation.strength = equity.strength;
-        villainSituation.positivePotential = equity.positivePotential;
-        villainSituation.negativePotential = equity.negativePotential;
-      }
-      const advice = this.villainModel.advise(villainSituation, cards);
       foldSpectrum.add(cards, weight * advice.fold);
       passiveSpectrum.add(cards, weight * advice.passive);
       aggressiveSpectrum.add(cards, weight * advice.aggressive);
@@ -357,14 +324,5 @@ export class NLGameSolver implements GameSolver {
       );
     }
     return responses;
-  }
-}
-
-export class ShowdownGameSolver extends NLGameSolver {
-  protected override calculatePassiveProfit(hand: Hand, showdown: Showdown): RandomVariable {
-    if (hand.street === RIVER || hand.street === PREFLOP) {
-      return this.equityProfit(hand, showdown, true);
-    }
-    throw new Error('ShowdownGameSolver supports only preflop and river');
   }
 }

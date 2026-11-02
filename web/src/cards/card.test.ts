@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCard, fullDeck, parseCard, parseCards, rankOf, suitOf } from './card.ts';
+import { cardOf, formatCard, fullDeck, parseCard, parseCards, rankOf, suitOf } from './card.ts';
 
 const RANKS = '23456789TJQKA';
 const SUITS = 'cdhs';
@@ -19,6 +19,15 @@ describe('card', () => {
     expect(suitOf(parseCard('9d'))).toBe(1);
     expect(suitOf(parseCard('Kh'))).toBe(2);
     expect(suitOf(parseCard('As'))).toBe(3);
+  });
+
+  it('builds a card from its rank and suit', () => {
+    expect(cardOf(2, 0)).toBe(parseCard('2c'));
+    expect(cardOf(10, 1)).toBe(parseCard('Td'));
+    expect(cardOf(14, 3)).toBe(parseCard('As'));
+    for (const card of fullDeck()) {
+      expect(cardOf(rankOf(card), suitOf(card))).toBe(card);
+    }
   });
 
   it('round trips every card through text', () => {

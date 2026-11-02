@@ -55,11 +55,11 @@ function describeEvent(event: EngineEvent): LogEntry[] {
       return event.allIn ? [line, { key: 'allIn', params: { seat: event.seat } }] : [line];
     }
     case 'streetDealt':
-      return [{ key: event.street, params: { cards: cardsText(event.cards) } }];
+      return [{ key: event.street, params: { cards: cardsText(event.cards), pot: event.pot } }];
     case 'showdown':
       return event.hands.map((hand, seat) => ({
         key: 'show',
-        params: { seat, cards: cardsText(hand.cards), category: hand.category },
+        params: { seat, cards: cardsText(hand.cards), category: hand.category, pot: event.pot },
       }));
     case 'tournamentEnded':
       return [{ key: 'winTournament', params: { seat: event.winner } }];

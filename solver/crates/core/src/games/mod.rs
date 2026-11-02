@@ -6,7 +6,6 @@ pub use exact::{exploitability, ExactGame};
 pub use kuhn::KuhnPoker;
 pub use leduc::LeducPoker;
 
-#[cfg(test)]
 pub(crate) fn train<G: crate::cfr::Game>(
     game: &G,
     iterations: u64,

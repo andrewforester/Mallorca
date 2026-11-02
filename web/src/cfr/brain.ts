@@ -1,11 +1,7 @@
 import type { Rng } from '../cards/index.ts';
-import type { Brain, Decision, Observation } from '../brains/index.ts';
+import type { BotBias, Brain, Breakdown, Decision, Observation } from '../brains/index.ts';
 import type { Action, LegalActions } from '../engine/index.ts';
 import type { CfrModel } from './model.ts';
-
-export interface CfrBrain extends Brain {
-  dispose(): void;
-}
 
 const UNKNOWN_EV = {
   fold: Number.NaN,
@@ -23,6 +19,12 @@ function choiceOf(action: Action): Decision['solverChoice'] {
       return 'passive';
   }
 }
+
+export type CfrBrain = Required<Brain> & {
+  range(): Float32Array | null;
+  opponentRange(): Float32Array | null;
+  explain(): Breakdown | null;
+};
 
 export function createCfrBrain(model: CfrModel, rng: Rng): CfrBrain {
   const bot = model.newBot();
@@ -46,6 +48,18 @@ export function createCfrBrain(model: CfrModel, rng: Rng): CfrBrain {
     decide(legal: LegalActions): Decision {
       const action = bot.decide(legal, rng.next());
       return { action, solverChoice: choiceOf(action), evByAction: { ...UNKNOWN_EV } };
+    },
+    range() {
+      return bot.range();
+    },
+    opponentRange() {
+      return bot.opponentRange();
+    },
+    explain() {
+      return bot.explain();
+    },
+    setBias(bias: BotBias) {
+      bot.setBias(bias);
     },
     dispose() {
       bot.free();

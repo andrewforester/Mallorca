@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/preact';
+import { cleanup, render, screen, within } from '@testing-library/preact';
 import { afterEach, describe, expect, it } from 'vitest';
 import { BetChips } from './BetChips.tsx';
 
@@ -14,7 +14,7 @@ describe('BetChips', () => {
   it('shows a decorative chip stack and the amount', () => {
     render(<BetChips seat={1} amount={60} />);
     const bet = screen.getByTestId('bet-1');
-    expect(bet.querySelector('.bet-amount')?.textContent).toBe('60');
+    expect(within(bet).getByText('60')).not.toBeNull();
     const stack = bet.querySelector('.chip-stack');
     expect(stack?.getAttribute('aria-hidden')).toBe('true');
     expect(stack?.querySelectorAll('.chip').length).toBe(2);
