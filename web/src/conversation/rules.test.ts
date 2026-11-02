@@ -3,7 +3,6 @@ import { MALLORCA, createEngine } from '../emotion/index.ts';
 import type { Emotion, Impulse, Snapshot } from '../emotion/index.ts';
 import { NO_HAND } from '../persona/hand.ts';
 import type { StrengthClass } from '../persona/index.ts';
-import { BASE_HABITS, habitsAt } from './habits.ts';
 import { RULES, chanceFor, chosen, matching, ruleFor, speakChanceOf } from './rules.ts';
 import type { RuleContext } from './rules.ts';
 import type { HandEnd, Occasion, OccasionKind } from './types.ts';
@@ -94,10 +93,14 @@ describe('rules', () => {
   });
 
   it('gives the arena the chances of the habits it had', () => {
-    for (const mask of [0, 0.5, 0.9]) {
-      const habits = habitsAt(BASE_HABITS, mask);
+    const habits: Record<number, Record<StrengthClass, number>> = {
+      0: { strong: 0.2, medium: 0.35, weak: 0.6 },
+      0.5: { strong: 0.2916666666666667, medium: 0.36666666666666664, weak: 0.4916666666666667 },
+      0.9: { strong: 0.365, medium: 0.38, weak: 0.405 },
+    };
+    for (const [mask, row] of Object.entries(habits)) {
       for (const c of CLASSES) {
-        expect(speakChanceOf(ruleFor('herBet'), c, mask)).toBeCloseTo(habits.herBet[c].speak, 12);
+        expect(speakChanceOf(ruleFor('herBet'), c, Number(mask))).toBeCloseTo(row[c], 12);
       }
     }
   });

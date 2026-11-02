@@ -6,13 +6,14 @@ import type { Action, LegalActions, SeatIndex, Table } from '../engine/index.ts'
 import { PERSONALITIES } from '../persona/index.ts';
 import type {
   JournalEntry,
-  Persona,
   Personality,
   PersonalityKey,
   Snapshot,
   Bias,
 } from '../persona/index.ts';
 import type { SessionPersona } from './sessionPersona.ts';
+import { EMPTY_TRACE } from './conversationTrace.ts';
+import type { ConversationTrace, TraceSink } from './conversationTrace.ts';
 
 export type PersonalityChoice =
   { key: PersonalityKey } | { key: 'custom'; personality: Personality };
@@ -41,6 +42,7 @@ export interface DebugState {
   sentBias: Bias | null;
   decision: DebugDecision | null;
   journal: DebugEntry[];
+  conversation: ConversationTrace;
 }
 
 export interface Decided {
@@ -55,7 +57,7 @@ export interface Decided {
 export interface DebugProbe {
   initial(): DebugState;
   refresh(): void;
-  observed(from: number, spoke: boolean): void;
+  observed(): void;
   decided(played: Decided): void;
   choose(choice: PersonalityKey | Personality): void;
   reset(): void;
@@ -89,10 +91,16 @@ export function personalityOf(choice: PersonalityChoice): Personality {
   return choice.key === 'custom' ? choice.personality : PERSONALITIES[choice.key];
 }
 
+function spokenIds(trace: ConversationTrace): Set<number> {
+  const planned = trace.entries.filter((e) => e.plan !== null);
+  return new Set(planned.flatMap((e) => e.verdict.occasion.journalIds));
+}
+
 export function createProbe(
   her: SessionPersona,
   now: () => number,
   write: (state: DebugState) => void,
+  trace: TraceSink | null,
 ): DebugProbe {
   let state: DebugState = {
     personality: { key: 'mallorca' },
@@ -100,32 +108,21 @@ export function createProbe(
     sentBias: null,
     decision: null,
     journal: [],
+    conversation: trace?.read() ?? EMPTY_TRACE,
   };
-  let seen: Persona | null = null;
-  const spoken = new Set<number>();
   const refresh = () => {
     const persona = her.current();
-    if (persona !== seen) {
-      seen = persona;
-      spoken.clear();
-    }
+    const conversation = trace?.read() ?? EMPTY_TRACE;
+    const spoken = spokenIds(conversation);
     const snapshot = persona?.view(now()).snapshot ?? null;
     const journal = (persona?.journal() ?? []).map((e) => ({ ...e, spoke: spoken.has(e.id) }));
-    state = { ...state, snapshot, journal };
+    state = { ...state, snapshot, journal, conversation };
     write(state);
   };
   return {
     initial: () => state,
     refresh,
-    observed(from, spoke) {
-      if (spoke) {
-        her
-          .current()
-          ?.journalSince(from)
-          .forEach((e) => spoken.add(e.id));
-      }
-      refresh();
-    },
+    observed: refresh,
     decided(played) {
       state = {
         ...state,
@@ -142,7 +139,6 @@ export function createProbe(
     },
     reset() {
       her.reset();
-      spoken.clear();
       refresh();
     },
   };

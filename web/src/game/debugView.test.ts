@@ -9,6 +9,7 @@ import {
 } from '../persona/index.ts';
 import { mulberry32 } from '../cards/index.ts';
 import type { DebugState } from './debug.ts';
+import { EMPTY_TRACE } from './conversationTrace.ts';
 import { toDebugView } from './debugView.ts';
 
 function state(extra: Partial<DebugState> = {}): DebugState {
@@ -20,6 +21,7 @@ function state(extra: Partial<DebugState> = {}): DebugState {
     sentBias: { aggression: 1.2, bluff: 1, tightness: 0.8, sizing: 1, stickiness: 1 },
     decision: null,
     journal: persona.journal().map((e) => ({ ...e, spoke: false })),
+    conversation: EMPTY_TRACE,
     ...extra,
   };
 }

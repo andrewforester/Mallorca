@@ -1,7 +1,8 @@
 import { mulberry32 } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import type { BotClient } from './botClient.ts';
-import type { DebugProbe } from './debug.ts';
+import { createProbe } from './debug.ts';
+import type { DebugProbe, DebugState } from './debug.ts';
 import type { Opponent } from './opponent.ts';
 import { sessionFace } from './sessionFace.ts';
 import type { SessionFace } from './sessionFace.ts';
@@ -11,6 +12,8 @@ import { sessionPersona } from './sessionPersona.ts';
 import type { SessionPersona } from './sessionPersona.ts';
 import type { SessionOptions, SessionState } from './sessionTypes.ts';
 import { silentConversationClient } from './conversationClient.ts';
+import { createTrace } from './conversationTrace.ts';
+import type { TraceSink } from './conversationTrace.ts';
 
 export interface WiringHost {
   bot(): BotClient;
@@ -26,6 +29,7 @@ export interface Her {
   conversation: SessionConversation;
   face: SessionFace;
   probe: DebugProbe | null;
+  trace: TraceSink | null;
   opponent: Opponent;
   seed: number;
 }
@@ -42,21 +46,22 @@ export function beginHer(her: Her): void {
 }
 
 export function observeHer(her: Her, events: readonly EngineEvent[]): void {
-  const from = her.persona.current()?.lastJournalId() ?? 0;
   const moments = her.persona.observe(events);
-  const spoke = her.conversation.observe(events, moments);
+  her.conversation.observe(events, moments);
   her.face.observe(events);
-  her.probe?.observed(from, spoke);
+  her.probe?.observed();
 }
 
 export function wireHer(
   host: WiringHost,
   options: SessionOptions,
   botSeat: SeatIndex,
-): Pick<Her, 'persona' | 'conversation' | 'face'> {
+): Pick<Her, 'persona' | 'conversation' | 'face' | 'trace'> {
   const persona = wirePersona(host, options, botSeat);
-  const conversation = wireConversation(host, options, botSeat, persona);
-  return { persona, conversation, face: wireFace(host, persona, options, botSeat) };
+  const traced = import.meta.env.DEV && options.debug === true;
+  const trace = traced ? createTrace(() => host.felt()) : null;
+  const conversation = wireConversation(host, options, botSeat, { persona, trace });
+  return { persona, conversation, face: wireFace(host, persona, options, botSeat), trace };
 }
 
 function wirePersona(
@@ -77,8 +82,9 @@ function wireConversation(
   host: WiringHost,
   options: SessionOptions,
   botSeat: SeatIndex,
-  persona: SessionPersona,
+  her: { persona: SessionPersona; trace: TraceSink | null },
 ): SessionConversation {
+  const { persona, trace } = her;
   return sessionConversation(
     {
       client: options.conversation ?? silentConversationClient,
@@ -86,6 +92,7 @@ function wireConversation(
       locale: options.locale ?? 'en',
       botSeat,
       connect: options.connectConversation,
+      trace: trace ?? undefined,
     },
     {
       read: () => host.get().conversation,
@@ -115,4 +122,15 @@ function wireFace(
     now: options.now ?? Date.now,
     botSeat,
   });
+}
+
+export function wireProbe(
+  her: Pick<Her, 'persona' | 'trace'>,
+  options: SessionOptions,
+  write: (state: DebugState) => void,
+): DebugProbe | null {
+  if (!import.meta.env.DEV || options.debug !== true) {
+    return null;
+  }
+  return createProbe(her.persona, options.now ?? Date.now, write, her.trace);
 }

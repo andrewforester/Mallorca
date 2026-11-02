@@ -3,30 +3,20 @@ import { fullDeck, mulberry32, parseCards, shuffle } from '../cards/index.ts';
 import { applyAction } from '../engine/hand.ts';
 import { call, check, deckOf, fold, raiseTo, startHand } from '../engine/testDeck.ts';
 import type { Action, Step } from '../engine/types.ts';
-import { BASE_HABITS, habitsAt } from './habits.ts';
-import type { Habits, Situation } from './habits.ts';
-import type { StrengthClass } from '../persona/index.ts';
-import { MALLORCA } from '../emotion/index.ts';
-import { characterOf } from './state.ts';
-import { drawLine, endsHand } from './conversation.ts';
+import type { Planned } from './planner.ts';
+import { RULES } from './rules.ts';
+import type { Rule } from './rules.ts';
 import { createSpeaker } from './testSpeaker.ts';
 import type { Speaker } from './testSpeaker.ts';
-import type { LineIntent } from './conversation.ts';
+import type { OccasionKind } from './types.ts';
 
-const always = (): Habits => {
-  const row = {
-    strong: { speak: 1 },
-    medium: { speak: 1 },
-    weak: { speak: 1 },
-  };
-  const situations = Object.keys(BASE_HABITS) as Situation[];
-  return Object.fromEntries(situations.map((s) => [s, row])) as Habits;
-};
+const ALWAYS: Rule[] = RULES.filter((r) => r.occasion !== 'card').map((r) => ({ ...r, chance: 1 }));
+const NEVER: Rule[] = RULES.map((r) => ({ ...r, chance: r.occasion === 'playerSaid' ? 1 : 0 }));
 
 interface Table {
   conversation: Speaker;
-  begin(her: string, player: string, board: string, nowMs?: number): LineIntent | null;
-  act(action: Action, nowMs?: number): LineIntent | null;
+  begin(her: string, player: string, board: string, nowMs?: number): Planned;
+  act(action: Action, nowMs?: number): Planned;
 }
 
 function table(conversation: Speaker, stacks: [number, number] = [2000, 2000]): Table {
@@ -45,93 +35,96 @@ function table(conversation: Speaker, stacks: [number, number] = [2000, 2000]): 
   };
 }
 
-const chatty = (): Table => table(createSpeaker({ seat: 1, rng: mulberry32(3), habits: always() }));
+const chatty = (): Table => table(createSpeaker({ seat: 1, rng: mulberry32(3), rules: ALWAYS }));
+
+const spoken = (planned: Planned): OccasionKind | null =>
+  planned.verdicts.find((v) => v.speak)?.occasion.kind ?? null;
 
 describe('observe', () => {
-  it('yields herBet on her raise with the spot of the event', () => {
+  it('plans a line at her raise with the spot of the event', () => {
     const t = chatty();
-    expect(t.begin('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h')).toBeNull();
-    expect(t.act(call)).toBeNull();
-    const intent = t.act(raiseTo(60), 2000);
-    expect({ ...intent, hint: null, honest: null }).toEqual({
-      situation: 'herBet',
-      hint: null,
-      honest: null,
+    t.begin('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
+    expect(spoken(t.act(call))).toBeNull();
+    const planned = t.act(raiseTo(60), 2000);
+    const verdict = planned.verdicts.find((v) => v.speak);
+    expect(verdict?.occasion).toMatchObject({
+      kind: 'herBet',
       strength: 'weak',
       street: 'preflop',
       actionStreet: 'preflop',
       handNumber: 1,
     });
-    expect([null, 'weak', 'strong']).toContain(intent?.hint);
-    expect(intent?.honest).toBe(intent?.hint !== 'strong');
+    const claim = planned.plan?.claim ?? null;
+    expect(claim === null || claim.honest === (claim.about !== 'strong')).toBe(true);
   });
 
-  it('yields playerBet on his raise and herCall on her check or call, one per street', () => {
+  it('speaks at his raise and at her check or call, one line a street', () => {
     const t = chatty();
     t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h');
-    expect(t.act(raiseTo(60), 0)?.situation).toBe('playerBet');
-    expect(t.act(call, 5000)).toBeNull();
+    expect(spoken(t.act(raiseTo(60), 0))).toBe('playerRaise');
+    expect(spoken(t.act(call, 5000))).toBeNull();
     const herCheck = t.act(check, 10000);
-    expect(herCheck?.situation).toBe('herCall');
-    expect(herCheck?.street).toBe('flop');
-    expect(t.act(raiseTo(40), 15000)).toBeNull();
-    expect(t.act(call, 20000)).toBeNull();
+    expect(spoken(herCheck)).toBe('herCall');
+    expect(herCheck.plan?.street).toBe('flop');
+    expect(spoken(t.act(raiseTo(40), 15000))).toBeNull();
+    expect(spoken(t.act(call, 20000))).toBeNull();
     const herCall = t.act(check, 25000);
-    expect(herCall?.situation).toBe('herCall');
-    expect(herCall?.street).toBe('turn');
+    expect(spoken(herCall)).toBe('herCall');
+    expect(herCall.plan?.street).toBe('turn');
   });
 
-  it('allows one unprompted line per street and none within 1500 ms', () => {
+  it('allows one unprompted line a street and none within 1500 ms', () => {
     const t = chatty();
     t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h', 0);
-    expect(t.act(raiseTo(60), 0)?.situation).toBe('playerBet');
-    expect(t.act(raiseTo(180), 5000)).toBeNull();
-    expect(t.act(call, 5000)).toBeNull();
-    expect(t.act(raiseTo(100), 5100)?.street).toBe('flop');
-    expect(t.act(call, 5200)).toBeNull();
-    expect(t.act(raiseTo(200), 6000)).toBeNull();
+    expect(spoken(t.act(raiseTo(60), 0))).toBe('playerRaise');
+    expect(spoken(t.act(raiseTo(180), 5000))).toBeNull();
+    expect(spoken(t.act(call, 5000))).toBeNull();
+    expect(t.act(raiseTo(100), 5100).plan?.street).toBe('flop');
+    expect(spoken(t.act(call, 5200))).toBeNull();
+    expect(spoken(t.act(raiseTo(200), 6000))).toBeNull();
     const late = t.act(raiseTo(600), 7000);
-    expect(late?.situation).toBe('playerBet');
-    expect(late?.street).toBe('turn');
+    expect(spoken(late)).toBe('playerRaise');
+    expect(late.plan?.street).toBe('turn');
   });
 
   it('lets a line on a call that closes the street take the next street slot', () => {
     const t = chatty();
     t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h', 0);
-    expect(t.act(call, 0)).toBeNull();
+    expect(spoken(t.act(call, 0))).toBeNull();
     const closing = t.act(check, 2000);
-    expect(closing?.situation).toBe('herCall');
-    expect(closing?.street).toBe('flop');
-    expect(t.act(check, 5000)).toBeNull();
+    expect(spoken(closing)).toBe('herCall');
+    expect(closing.plan?.street).toBe('flop');
+    expect(spoken(t.act(check, 5000))).toBeNull();
   });
 
-  it('keeps the street of the action for the cue when her call closes the street', () => {
+  it('keeps the street of the action when her call closes the street', () => {
     const t = chatty();
     t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h', 0);
     t.act(call, 0);
     const closing = t.act(check, 2000);
-    expect(closing).toMatchObject({ street: 'flop', actionStreet: 'preflop' });
-    const reply = t.conversation.replyIntent();
-    expect(reply).toMatchObject({ street: 'flop', actionStreet: 'flop' });
+    expect(closing.plan).toMatchObject({ street: 'flop', actionStreet: 'preflop' });
+    expect(t.conversation.reply().plan).toMatchObject({ street: 'flop', actionStreet: 'flop' });
   });
 
-  it('names the situations that end a hand', () => {
-    expect(['handWon', 'handLost', 'bluffCaught'].every((s) => endsHand(s as Situation))).toBe(
-      true,
-    );
-    expect(['herBet', 'herCall', 'playerBet'].some((s) => endsHand(s as Situation))).toBe(false);
-  });
-
-  it('answers a new hand with herCall, not the end of the previous hand', () => {
+  it('marks a line at the end of a hand', () => {
     const t = chatty();
     t.begin('7c 2d', 'As Ah', 'Kd 9h 5h 3c Jd');
     t.act(raiseTo(60), 0);
-    expect(t.act(fold, 2000)?.situation).toBe('handLost');
-    t.begin('7c 2d', 'As Ah', 'Kd 9h 5h 3c Jd', 4000);
-    expect(t.conversation.replyIntent().situation).toBe('herCall');
+    const end = t.act(fold, 2000);
+    expect(end.plan?.endsHand).toBe(true);
+    expect(end.verdicts[0]?.occasion.end).toBe('lost');
   });
 
-  it('upgrades a lost showdown after her river bet with a weak hand to bluffCaught', () => {
+  it('answers a new hand with no previous occasion', () => {
+    const t = chatty();
+    t.begin('7c 2d', 'As Ah', 'Kd 9h 5h 3c Jd');
+    t.act(raiseTo(60), 0);
+    expect(t.act(fold, 2000).verdicts[0]?.occasion.end).toBe('lost');
+    t.begin('7c 2d', 'As Ah', 'Kd 9h 5h 3c Jd', 4000);
+    expect(t.conversation.reply().verdicts[0]?.occasion.previous).toBeNull();
+  });
+
+  it('upgrades a lost showdown after her river bet with a weak hand to a caught bluff', () => {
     const t = chatty();
     t.begin('7c 2d', 'As Ah', 'Kd 9h 5h 3c Jd');
     for (const [i, action] of [call, check, check, check, check, check].entries()) {
@@ -139,21 +132,21 @@ describe('observe', () => {
     }
     t.act(raiseTo(40), 20000);
     const end = t.act(call, 40000);
-    expect(end?.situation).toBe('bluffCaught');
-    expect(end?.hint).toBeNull();
+    expect(end.verdicts[0]?.occasion.end).toBe('bluffCaught');
+    expect(end.plan?.claim).toBeNull();
     expect(t.conversation.feeling().emotions.shame).toBeGreaterThan(0);
     expect(t.conversation.feeling().emotions.injustice).toBe(0);
   });
 
-  it('says handLost without a bluff when she only checked and lost', () => {
+  it('says lost without a bluff when she only checked and lost', () => {
     const t = chatty();
     t.begin('7c 2d', 'As Ah', 'Kd 9h 5h 3c Jd');
-    let end: LineIntent | null = null;
+    let end: Planned | null = null;
     for (const [i, action] of [call, check, check, check, check, check, check, check].entries()) {
       end = t.act(action, 2000 * (i + 1));
     }
-    expect(end?.situation).toBe('handLost');
-    expect(end?.street).toBe('complete');
+    expect(end?.verdicts[0]?.occasion.end).toBe('lost');
+    expect(end?.plan?.street).toBe('complete');
   });
 });
 
@@ -162,7 +155,7 @@ describe('outcomes', () => {
     const t = chatty();
     t.begin('7c 2d', 'As Ah', 'Kd 9h 5h 3c Jd');
     t.act(raiseTo(60), 0);
-    expect(t.act(fold, 2000)?.situation).toBe('handLost');
+    expect(t.act(fold, 2000).verdicts[0]?.occasion.end).toBe('lost');
     expect(t.conversation.feeling().sessionNetBb).toBe(-1);
     expect(t.conversation.feeling().emotions.injustice).toBe(0);
   });
@@ -172,11 +165,11 @@ describe('outcomes', () => {
     t.begin('2c 3d', '4c 5d', 'As Ks Qs Js Ts');
     t.act(raiseTo(100), 0);
     t.act(call, 2000);
-    let end: LineIntent | null = null;
+    let end: Planned | null = null;
     for (let i = 0; i < 6; i++) {
       end = t.act(check, 4000 + 2000 * i);
     }
-    expect(end?.situation).toBe('handWon');
+    expect(end?.verdicts[0]?.occasion.end).toBe('won');
     expect(t.conversation.feeling().sessionNetBb).toBe(0);
     expect(t.conversation.feeling().emotions.distress).toBe(0);
   });
@@ -185,8 +178,7 @@ describe('outcomes', () => {
     const t = chatty();
     t.begin('Ah Ad', '7c 2d', '7h 7d 2s 3c 4c');
     t.act(raiseTo(2000), 0);
-    const end = t.act(call, 2000);
-    expect(end?.situation).toBe('handLost');
+    expect(t.act(call, 2000).verdicts[0]?.occasion.end).toBe('lost');
     const feeling = t.conversation.feeling();
     expect(feeling.emotions.injustice).toBeGreaterThan(0.3);
     expect(feeling.load.overload).toBeGreaterThan(0.5);
@@ -206,12 +198,8 @@ describe('outcomes', () => {
 });
 
 describe('reproducibility', () => {
-  const play = (habits?: Habits) => {
-    const conversation = createSpeaker({
-      seat: 1,
-      rng: mulberry32(9),
-      habits,
-    });
+  const play = (rules?: readonly Rule[]) => {
+    const conversation = createSpeaker({ seat: 1, rng: mulberry32(9), rules });
     const decks = mulberry32(2);
     let now = 0;
     for (let i = 0; i < 12; i++) {
@@ -230,120 +218,47 @@ describe('reproducibility', () => {
   };
 
   it('keeps the same feeling and bias for a seed and a clock whatever lines she speaks', () => {
-    expect(play(always())).toEqual(play());
+    expect(play(ALWAYS)).toEqual(play());
   });
 });
 
-describe('drawLine', () => {
-  const spots = (
-    spot: { strength: StrengthClass; mask: number; shows: StrengthClass | null },
-    count: number,
-    seed: number,
-    habits: Habits = BASE_HABITS,
-  ) => {
-    const rng = mulberry32(seed);
-    const draws = [];
-    for (let i = 0; i < count; i++) {
-      draws.push(drawLine({ habits, situation: 'herBet', speakFactor: 1, ...spot }, rng));
-    }
-    return draws;
-  };
-
-  it('speaks as her habit says and hints on seven lines of ten, all true without a mask', () => {
-    const draws = spots({ strength: 'weak', mask: 0, shows: 'strong' }, 5000, 11);
-    const spoken = draws.filter((d) => d.speak);
-    expect(spoken.length / draws.length).toBeGreaterThan(0.57);
-    expect(spoken.length / draws.length).toBeLessThan(0.63);
-    const hinted = spoken.filter((d) => d.hint !== null);
-    expect(hinted.length / spoken.length).toBeGreaterThan(0.67);
-    expect(hinted.length / spoken.length).toBeLessThan(0.73);
-    expect(hinted.every((d) => d.hint === 'weak' && d.honest)).toBe(true);
-  });
-
-  it('lies in words only with what she presents', () => {
-    const acting = spots({ strength: 'weak', mask: 1, shows: 'strong' }, 2000, 3).filter(
-      (d) => d.hint !== null,
-    );
-    expect(acting.length).toBeGreaterThan(0);
-    expect(acting.every((d) => d.hint === 'strong' && !d.honest)).toBe(true);
-    const plain = spots({ strength: 'weak', mask: 1, shows: null }, 2000, 3).filter((d) => d.speak);
-    expect(plain.length).toBeGreaterThan(0);
-    expect(plain.every((d) => d.hint === null && d.honest)).toBe(true);
-  });
-
-  it('leaks the truth by the share her mask lets through', () => {
-    const hinted = spots({ strength: 'weak', mask: 0.75, shows: 'strong' }, 20000, 7).filter(
-      (d) => d.hint !== null,
-    );
-    const truth = hinted.filter((d) => d.hint === 'weak').length / hinted.length;
-    expect(truth).toBeGreaterThan(0.22);
-    expect(truth).toBeLessThan(0.28);
-  });
-
-  it('speaks alike with any hand behind a strong mask', () => {
-    const rate = (strength: StrengthClass): number =>
-      spots({ strength, mask: 0.9, shows: null }, 20000, 5).filter((d) => d.speak).length / 20000;
-    expect(Math.abs(rate('weak') - rate('strong'))).toBeLessThan(0.05);
-  });
-
-  it('never hints at hand end', () => {
-    const habits = always();
-    const rng = mulberry32(1);
-    for (let i = 0; i < 200; i++) {
-      const spot = { habits, situation: 'handWon' as const, strength: 'strong' as const };
-      expect(drawLine({ ...spot, speakFactor: 1, mask: 0, shows: null }, rng).hint).toBeNull();
-    }
-  });
-});
-
-describe('replyIntent and state', () => {
-  it('always answers for the current spot with the last situation', () => {
-    const conversation = createSpeaker({
-      seat: 1,
-      rng: mulberry32(2),
-      habits: always(),
-    });
-    const t = table(conversation);
+describe('replies', () => {
+  it('always answers for the current spot after the last occasion', () => {
+    const t = table(createSpeaker({ seat: 1, rng: mulberry32(2), rules: ALWAYS }));
     t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h');
     t.act(raiseTo(60), 0);
-    const reply = conversation.replyIntent();
-    expect(reply.situation).toBe('playerBet');
-    expect(reply.strength).toBe('strong');
-    expect(reply.street).toBe('preflop');
-    expect(reply.handNumber).toBe(1);
-  });
-
-  it('answers even when her habits keep her silent', () => {
-    const silent = habitsAt(BASE_HABITS, 0);
-    for (const row of Object.values(silent)) {
-      for (const habit of Object.values(row)) {
-        habit.speak = 0;
-      }
-    }
-    const conversation = createSpeaker({
-      seat: 1,
-      rng: mulberry32(2),
-      habits: silent,
+    const reply = t.conversation.reply();
+    expect(reply.verdicts[0]?.occasion).toMatchObject({
+      kind: 'playerSaid',
+      previous: 'playerRaise',
+      strength: 'strong',
+      street: 'preflop',
+      handNumber: 1,
     });
-    const t = table(conversation);
-    t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h');
-    expect(t.act(raiseTo(60), 0)).toBeNull();
-    expect(conversation.replyIntent().situation).toBe('playerBet');
+    expect(reply.plan?.handNumber).toBe(1);
   });
 
-  it('exposes the hand facts for the prompt', () => {
-    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2) });
-    const t = table(conversation);
+  it('answers even when her rules keep her silent', () => {
+    const t = table(createSpeaker({ seat: 1, rng: mulberry32(2), rules: NEVER }));
+    t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h');
+    expect(t.act(raiseTo(60), 0).plan).toBeNull();
+    expect(t.conversation.reply().plan?.act).toMatch(/answer|claim/);
+  });
+
+  it('gives the public facts of the hand and none of her cards', () => {
+    const t = table(createSpeaker({ seat: 1, rng: mulberry32(2) }));
     t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h');
     t.act(raiseTo(60), 0);
-    expect(conversation.facts()).toEqual({
+    const facts = t.conversation.reply().plan?.facts;
+    expect(facts).toEqual({
       street: 'preflop',
       board: [],
-      pot: 80,
-      stacks: [1940, 1980],
-      her: parseCards('Ah Ad'),
+      potBb: 4,
+      stacksBb: { her: 99, player: 97 },
       actions: ['player posts 10', 'Mallorca posts 20', 'player raises to 60'],
-      bigBlind: 20,
+      card: null,
+      result: null,
+      shown: null,
     });
   });
 
@@ -355,30 +270,23 @@ describe('replyIntent and state', () => {
     expect(conversation.bias().bluff).toBeGreaterThan(1);
   });
 
-  it('sends the mask her face shows', () => {
+  it('hears the anger in her voice once her mask lets it through', () => {
+    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2) });
+    conversation.hear(['mockBluff', 'tease']);
+    const voice = conversation.reply().plan?.voice;
+    expect(voice?.emotion).toBe('anger');
+    const anger = conversation.feeling().emotions.anger * (1 - conversation.mask());
+    expect(voice?.intensity).toBeCloseTo(anger, 2);
+  });
+
+  it('acts a strength she claims falsely only behind her mask', () => {
     const conversation = createSpeaker({ seat: 1, rng: mulberry32(2) });
     const t = table(conversation);
     t.begin('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
     t.act(call, 0);
     t.act(raiseTo(60), 500);
-    const shown = conversation.feelingFor(conversation.replyIntent()).shows.mask;
-    expect(shown).toBeCloseTo(conversation.mask(), 2);
-    expect(shown).toBeGreaterThan(0.5);
-  });
-
-  it('gives the feeling for an intent, acting the hinted strength only when the hint is false', () => {
-    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2) });
-    conversation.hear(['mockBluff', 'tease']);
-    const intent = conversation.replyIntent();
-    const bluff = { ...intent, hint: 'strong' as const, honest: false };
-    expect(conversation.feelingFor(bluff).shows.acting).toBe('strong');
-    expect(conversation.feelingFor({ ...bluff, honest: true }).shows.acting).toBeNull();
-    expect(conversation.feelingFor(bluff).emotions[0]?.name).toBe('anger');
-  });
-
-  it('gives her character sheet', () => {
-    const conversation = createSpeaker({ seat: 1, rng: mulberry32(2) });
-    expect(conversation.character()).toEqual(characterOf(MALLORCA));
+    expect(conversation.mask()).toBeGreaterThan(0.5);
+    expect(conversation.view().presenting?.shows).toBe('strong');
   });
 });
 
@@ -406,7 +314,7 @@ describe('summary', () => {
       playerBluffsShown: 1,
       playerAllIns: 1,
       signals: { tease: 2, friendly: 1 },
-      notable: [{ kind: 'bigLoss', handNumber: 1, potBb: 200, won: false, bets: 0 }],
+      notable: [{ kind: 'bigLoss', handNumber: 1, potBb: 200, won: false, bets: 1 }],
     });
   });
 });

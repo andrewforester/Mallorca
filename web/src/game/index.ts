@@ -30,17 +30,17 @@ export type { HandRecord, HandStore } from './records/index.ts';
 export { memoryStore, openHandStore, toPokerStars } from './records/index.ts';
 export type {
   ChatTurn,
-  HandInput,
-  LinePayload,
-  ReplyPayload,
+  PlanLinePayload,
+  PlanReplyPayload,
   SummaryPayload,
   ConversationClient,
-  ConversationReply,
+  LineAnswer,
+  ReplyAnswer,
 } from './conversationClient.ts';
 export {
   silentConversationClient,
-  toLinePayload,
-  toReplyPayload,
+  toPlanLinePayload,
+  toPlanReplyPayload,
   toSummaryPayload,
 } from './conversationClient.ts';
 export type { RemoteOptions } from './remoteConversation.ts';

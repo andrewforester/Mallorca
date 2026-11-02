@@ -1,21 +1,23 @@
 import type { Rng } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex, Table } from '../engine/index.ts';
-import { EMPTY_SUMMARY, createConversation, endsHand, since } from '../conversation/index.ts';
-import type { LineIntent, SessionSummary, Conversation } from '../conversation/index.ts';
+import { EMPTY_SUMMARY, createPlanner, since } from '../conversation/index.ts';
+import type { Planned, Planner, SessionSummary, UtterancePlan } from '../conversation/index.ts';
 import type { Moment, Persona, Signal } from '../persona/index.ts';
 import type { Opponent } from './opponent.ts';
 import {
   silentConversationClient,
-  toLinePayload,
-  toReplyPayload,
+  toPlanLinePayload,
+  toPlanReplyPayload,
   toSummaryPayload,
 } from './conversationClient.ts';
 import type {
   ChatTurn,
-  HandInput,
   ConversationClient,
-  ConversationReply,
+  LineAnswer,
+  PlanInput,
+  ReplyAnswer,
 } from './conversationClient.ts';
+import type { Fate, TraceSink } from './conversationTrace.ts';
 
 export interface ChatLine {
   id: number;
@@ -50,6 +52,7 @@ export interface ConversationSetup {
   locale: string;
   botSeat: SeatIndex;
   connect?: () => Promise<ConversationClient>;
+  trace?: TraceSink;
 }
 
 export interface SessionConversation {
@@ -77,7 +80,7 @@ function attempt<T>(call: () => Promise<T>): Promise<T | null> {
 }
 
 interface Talker {
-  conversation: Conversation;
+  planner: Planner;
   her: Persona;
 }
 
@@ -87,7 +90,7 @@ export function initialConversation(on: boolean): ConversationState {
 
 class Wiring implements SessionConversation {
   private client: ConversationClient;
-  private conversation: Conversation | null = null;
+  private planner: Planner | null = null;
   private solver = false;
   private herRaised = false;
   private acted = false;
@@ -106,7 +109,7 @@ class Wiring implements SessionConversation {
 
   begin(opponent: Opponent, rng: Rng): void {
     this.sendSummary();
-    this.conversation = createConversation({ seat: this.setup.botSeat, rng });
+    this.planner = createPlanner({ seat: this.setup.botSeat, rng });
     this.solver = opponent !== 'math';
     this.herRaised = false;
     this.acted = false;
@@ -118,18 +121,19 @@ class Wiring implements SessionConversation {
 
   observe(events: readonly EngineEvent[], moments: readonly Moment[]): boolean {
     const her = this.host.her();
-    if (this.conversation === null || her === null) {
+    if (this.planner === null || her === null) {
       return false;
     }
     const ended = this.track(events);
-    const intent = this.conversation.observe(moments, her, this.setup.now());
-    if (intent !== null && this.speaking()) {
-      this.requestLine(intent);
+    const planned = this.planner.observe(moments, her, this.setup.now());
+    const [id] = this.setup.trace?.add(planned, this.setup.now()) ?? [];
+    if (planned.plan !== null) {
+      this.requestLine(planned.plan, id);
     }
     if (ended) {
       this.sendSummary();
     }
-    return intent !== null;
+    return planned.plan !== null;
   }
 
   say(text: string): void {
@@ -176,7 +180,7 @@ class Wiring implements SessionConversation {
 
   private hear(signals: readonly Signal[]): void {
     this.host.hear(signals);
-    this.conversation?.heard(signals);
+    this.planner?.heard(signals);
   }
 
   private connect(): void {
@@ -231,57 +235,77 @@ class Wiring implements SessionConversation {
     return this.herRaised ? ['mockBluff'] : ['tease'];
   }
 
-  private input(talker: Talker, intent: LineIntent, recent: ChatTurn[]): HandInput {
-    const { conversation, her } = talker;
-    const view = her.view(this.setup.now());
+  private input(talker: Talker, plan: UtterancePlan, recent: ChatTurn[]): PlanInput {
+    const view = talker.her.view(this.setup.now());
     return {
       sessionId: this.host.sessionId(),
       locale: this.setup.locale,
-      seat: this.setup.botSeat,
-      facts: conversation.facts(view),
-      intent,
-      mood: conversation.moodWords(view),
-      feeling: conversation.feelingFor(intent, view),
-      character: conversation.character(view),
+      personality: view.personality.bigFive,
+      plan,
       recent,
+      debug: this.setup.trace !== undefined,
     };
   }
 
   private talker(): Talker | null {
     const her = this.host.her();
-    const { conversation } = this;
-    return conversation === null || her === null ? null : { conversation, her };
+    const { planner } = this;
+    return planner === null || her === null ? null : { planner, her };
   }
 
   private recent(): ChatTurn[] {
     return this.host.read().lines.map(({ speaker, text }) => ({ speaker, text }));
   }
 
-  private requestLine(intent: LineIntent): void {
+  private fateOf(): Fate {
+    if (!this.client.enabled || !this.solver) {
+      return 'noClient';
+    }
+    return this.host.read().on ? 'pending' : 'off';
+  }
+
+  private requestLine(plan: UtterancePlan, id: number | undefined): void {
     const { client } = this;
     const talker = this.talker();
-    if (talker === null) {
+    const trace = this.setup.trace;
+    const fate = this.fateOf();
+    if (talker === null || fate !== 'pending') {
+      if (id !== undefined) trace?.fate(id, fate);
       return;
     }
     const epoch = this.host.epoch();
-    const payload = toLinePayload(this.input(talker, intent, this.recent()));
-    void attempt(() => client.line(payload)).then((text) => {
-      if (text !== null && this.speaking() && this.current(epoch, intent)) {
-        this.append('mallorca', text, intent.handNumber);
-      }
+    const payload = toPlanLinePayload(this.input(talker, plan, this.recent()));
+    if (id !== undefined) trace?.sent(id, this.setup.now(), null);
+    void attempt(() => client.planLine(payload)).then((answer) => {
+      const placed = this.place(epoch, plan, answer);
+      if (id !== undefined) trace?.answered(id, answer, this.setup.now(), placed);
     });
   }
 
-  private current(epoch: number, intent: LineIntent): boolean {
+  private place(epoch: number, plan: UtterancePlan, answer: LineAnswer | null): Fate {
+    if (answer === null) {
+      return 'error';
+    }
+    if (answer.text === null) {
+      return 'filtered';
+    }
+    if (!this.speaking() || !this.current(epoch, plan)) {
+      return 'stale';
+    }
+    this.append('mallorca', answer.text, plan.handNumber);
+    return 'shown';
+  }
+
+  private current(epoch: number, plan: UtterancePlan): boolean {
     if (epoch !== this.host.epoch()) {
       return false;
     }
     const table = this.host.table();
-    if (endsHand(intent.situation)) {
-      const next = table.handNumber === intent.handNumber + 1 && !this.acted;
-      return table.handNumber === intent.handNumber || next;
+    if (plan.endsHand) {
+      const next = table.handNumber === plan.handNumber + 1 && !this.acted;
+      return table.handNumber === plan.handNumber || next;
     }
-    return table.handNumber === intent.handNumber && table.hand?.street === intent.street;
+    return table.handNumber === plan.handNumber && table.hand?.street === plan.street;
   }
 
   private send(text: string, typed: boolean): void {
@@ -293,31 +317,37 @@ class Wiring implements SessionConversation {
     const recent = this.recent();
     const line = this.append('player', text, this.host.table().handNumber);
     const epoch = this.host.epoch();
-    const intent = talker.conversation.replyIntent(talker.her, this.setup.now());
-    const input = this.input(talker, intent, recent);
-    const payload = toReplyPayload({ ...input, text, quick: !typed });
-    void attempt(() => client.reply(payload)).then((reply) => {
-      this.answered(epoch, line.id, reply, typed);
+    const planned: Planned = talker.planner.reply(text, talker.her, this.setup.now());
+    const [id] = this.setup.trace?.add(planned, this.setup.now()) ?? [];
+    const plan = planned.plan;
+    if (plan === null) {
+      return;
+    }
+    const payload = toPlanReplyPayload({
+      ...this.input(talker, plan, recent),
+      text,
+      quick: !typed,
+    });
+    if (id !== undefined) this.setup.trace?.sent(id, this.setup.now(), null);
+    void attempt(() => client.planReply(payload)).then((reply) => {
+      const fate = this.answered(epoch, line.id, reply, typed);
+      if (id !== undefined) this.setup.trace?.answered(id, reply, this.setup.now(), fate);
     });
   }
 
-  private answered(
-    epoch: number,
-    lineId: number,
-    reply: ConversationReply | null,
-    hear: boolean,
-  ): void {
-    if (epoch !== this.host.epoch() || this.conversation === null || !this.speaking()) {
-      return;
+  private answered(epoch: number, lineId: number, reply: ReplyAnswer | null, hear: boolean): Fate {
+    if (epoch !== this.host.epoch() || this.planner === null || !this.speaking()) {
+      return 'stale';
     }
     if (reply === null) {
       this.markUndelivered(lineId);
-      return;
+      return 'error';
     }
     if (hear) {
       this.hear(reply.signals);
     }
-    this.append('mallorca', reply.text, this.host.table().handNumber);
+    this.append('mallorca', reply.text ?? '', this.host.table().handNumber);
+    return 'shown';
   }
 
   private markUndelivered(lineId: number): void {
@@ -339,12 +369,12 @@ class Wiring implements SessionConversation {
   }
 
   private sendSummary(keepalive = false): void {
-    const { conversation, client } = this;
-    if (conversation === null || !this.speaking() || this.unsent === 0) {
+    const { planner, client } = this;
+    if (planner === null || !this.speaking() || this.unsent === 0) {
       return;
     }
     this.unsent = 0;
-    const summary = conversation.summary();
+    const summary = planner.summary();
     const payload = toSummaryPayload({
       sessionId: this.host.sessionId(),
       locale: this.setup.locale,

@@ -5,7 +5,6 @@ import { CONVERSATION_TIMEOUT_MS, silentConversationClient } from './conversatio
 import type {
   Attempt,
   ConversationClient,
-  ConversationReply,
   LineAnswer,
   PromptEcho,
   ReplyAnswer,
@@ -31,11 +30,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function parseSignals(value: unknown): Signal[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is Signal => (SIGNALS as readonly unknown[]).includes(item));
-}
-
-function parseReply(body: unknown): ConversationReply | null {
-  if (!isRecord(body) || typeof body.text !== 'string' || body.text.trim() === '') return null;
-  return { text: body.text, signals: parseSignals(body.signals) };
 }
 
 function parseAttempt(value: unknown): Attempt[] {
@@ -129,8 +123,6 @@ function connected(options: RemoteOptions, tokens: TokenCache): ConversationClie
   const { fresh } = tokens;
   return {
     enabled: true,
-    line: async (request) => parseReply(await post(options, fresh, request))?.text ?? null,
-    reply: async (request) => parseReply(await post(options, fresh, request)),
     planLine: async (request) => parseAnswer(await post(options, fresh, request)),
     planReply: async (request) => parsePlanReply(await post(options, fresh, request)),
     summary: async (request, send) => {

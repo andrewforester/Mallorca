@@ -40,8 +40,8 @@ import type { Opponent } from './opponent.ts';
 import { initialFace } from './sessionFace.ts';
 import type { SessionFace } from './sessionFace.ts';
 import { initialConversation } from './sessionConversation.ts';
-import { beginHer, observeHer, wireHer } from './sessionWiring.ts';
-import type { WiringHost } from './sessionWiring.ts';
+import { beginHer, observeHer, wireHer, wireProbe } from './sessionWiring.ts';
+import type { Her, WiringHost } from './sessionWiring.ts';
 import { createTimers } from './timers.ts';
 import type { Timers } from './timers.ts';
 import type { SessionConversation } from './sessionConversation.ts';
@@ -50,7 +50,6 @@ import type { SessionPersona } from './sessionPersona.ts';
 import { COACH_OFF, createCoach } from './coach.ts';
 import type { Coach } from './coach.ts';
 import type { CoachDecision } from '../coach/index.ts';
-import { createProbe } from './debug.ts';
 import type { DebugProbe } from './debug.ts';
 
 export { resolveIntent, toIntent } from './intent.ts';
@@ -101,6 +100,7 @@ interface Runtime {
   conversation: SessionConversation;
   face: SessionFace;
   probe: DebugProbe | null;
+  trace: Her['trace'];
 }
 
 function freshTable(options: SessionOptions, mode: TableMode): Table {
@@ -389,9 +389,7 @@ export function createSession(options: SessionOptions): Session {
       ...wireHer(host, options, botSeat),
       probe: null,
     };
-    if (import.meta.env.DEV && options.debug === true) {
-      rt.probe = createProbe(rt.persona, options.now ?? Date.now, (debug) => set({ debug }));
-    }
+    rt.probe = wireProbe(rt, options, (debug) => set({ debug }));
     const initial = freshTable(options, rt.mode);
     return {
       table: initial,

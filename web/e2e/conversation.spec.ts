@@ -9,9 +9,12 @@ const SOLVER_TIMEOUT_MS = 180_000;
 const MAX_ACTIONS = 80;
 const HER_PACE_MS = 1600;
 
+const herBet = (request: ConversationRequest): boolean =>
+  request.plan?.occasion.startsWith('you bet') === true;
+
 function answers(request: ConversationRequest) {
   if (request.kind === 'line') {
-    return { status: 200, body: request.intent?.situation === 'herBet' ? { text: HER_BET } : {} };
+    return { status: 200, body: herBet(request) ? { text: HER_BET } : {} };
   }
   if (request.kind === 'reply') {
     return { status: 200, body: { text: HER_ANSWER, signals: [] } };
@@ -92,13 +95,13 @@ test.describe('desktop', () => {
     const requests = await serveConversation(page, answers);
     await sitWithSolver(page);
     const bubble = byId(page, 'seat-1').getByTestId('bubble-mallorca');
-    const herBet = () => requests.some((request) => request.intent?.situation === 'herBet');
+    const askedHerBet = () => requests.some(herBet);
     await playUntil(page, async () => {
-      if (herBet()) {
+      if (askedHerBet()) {
         return true;
       }
       await page.waitForTimeout(HER_PACE_MS);
-      return herBet();
+      return askedHerBet();
     });
     await expect(bubble).toContainText(HER_BET);
     await expect(bubble).toBeVisible();

@@ -7,46 +7,47 @@ import type { RecordsOptions } from './records/recorder.ts';
 import { createSession } from './session.ts';
 import type { Session } from './session.ts';
 import type {
-  LinePayload,
-  ReplyPayload,
+  PlanLinePayload,
+  PlanReplyPayload,
   SummaryPayload,
   ConversationClient,
-  ConversationReply,
 } from './conversationClient.ts';
+import type { Signal } from '../persona/index.ts';
 import { silentConversationClient } from './conversationClient.ts';
 import { callingBot, scriptedBot, shovingBot } from './testBot.ts';
 import type { ScriptedBot } from './testBot.ts';
 import { toViewModel } from './viewModel.ts';
 
 interface FakeClient extends ConversationClient {
-  lines: LinePayload[];
-  replies: ReplyPayload[];
+  lines: PlanLinePayload[];
+  replies: PlanReplyPayload[];
   summaries: SummaryPayload[];
   kept: boolean[];
 }
 
 interface Answers {
-  line?: (request: LinePayload) => Promise<string | null>;
-  reply?: (request: ReplyPayload) => Promise<ConversationReply | null>;
+  line?: (request: PlanLinePayload) => Promise<string | null>;
+  reply?: (request: PlanReplyPayload) => Promise<{ text: string; signals: Signal[] } | null>;
   summary?: (request: SummaryPayload) => Promise<void>;
 }
 
 function fakeClient(answers: Answers = {}): FakeClient {
   const client: FakeClient = {
     enabled: true,
-    planLine: () => Promise.resolve(null),
-    planReply: () => Promise.resolve(null),
     lines: [],
     replies: [],
     summaries: [],
     kept: [],
-    line: (request) => {
+    planLine: async (request) => {
       client.lines.push(request);
-      return answers.line?.(request) ?? Promise.resolve('Here we go');
+      const text = await (answers.line?.(request) ?? Promise.resolve('Here we go'));
+      return text === null ? null : { text, attempts: [{ text, rejected: [] }], prompt: null };
     },
-    reply: (request) => {
+    planReply: async (request) => {
       client.replies.push(request);
-      return answers.reply?.(request) ?? Promise.resolve({ text: 'Sure', signals: ['tease'] });
+      const reply = await (answers.reply?.(request) ??
+        Promise.resolve({ text: 'Sure', signals: ['tease' as const] }));
+      return reply === null ? null : { ...reply, attempts: [], prompt: null };
     },
     summary: (request, options) => {
       client.summaries.push(request);
@@ -111,6 +112,8 @@ function open(client: ConversationClient, extra: Extra = {}, base = shovingBot()
   };
 }
 
+const isHerBet = (request: PlanLinePayload): boolean => request.plan.occasion.startsWith('you bet');
+
 const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 async function foldHand(table: Table): Promise<void> {
@@ -120,7 +123,7 @@ async function foldHand(table: Table): Promise<void> {
 }
 
 async function untilHerBet(table: Table, client: FakeClient): Promise<void> {
-  const asked = () => client.lines.some((p) => p.intent.situation === 'herBet');
+  const asked = () => client.lines.some(isHerBet);
   for (let i = 0; i < 40 && !asked(); i += 1) {
     await foldHand(table);
   }
@@ -135,14 +138,16 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-type Pending = { situation: string; answer: ReturnType<typeof deferred<string | null>> };
-
-const HAND_END = ['handWon', 'handLost', 'bluffCaught'];
+type Pending = {
+  herBet: boolean;
+  end: boolean;
+  answer: ReturnType<typeof deferred<string | null>>;
+};
 
 function pendingLines(pending: Pending[]): Answers['line'] {
   return (request) => {
     const answer = deferred<string | null>();
-    pending.push({ situation: request.intent.situation, answer });
+    pending.push({ herBet: isHerBet(request), end: request.plan.endsHand, answer });
     return answer.promise;
   };
 }
@@ -150,7 +155,7 @@ function pendingLines(pending: Pending[]): Answers['line'] {
 async function nextHandWithEndLine(table: Table, pending: Pending[]): Promise<Pending> {
   for (let i = 0; i < 80; i += 1) {
     await table.session.getState().act({ kind: 'fold' });
-    const end = pending.find((p) => HAND_END.includes(p.situation));
+    const end = pending.find((p) => p.end);
     pending.splice(0, pending.length);
     table.tick();
     await table.session.getState().nextHand();
@@ -169,10 +174,11 @@ describe('session conversation', () => {
     expect(table.session.getState().conversation.available).toBe(true);
     await untilHerBet(table, client);
     expect(table.session.getState().phase).toBe('humanToAct');
-    const request = client.lines.find((p) => p.intent.situation === 'herBet');
+    const request = client.lines.find(isHerBet);
     expect(request?.kind).toBe('line');
+    expect(request?.version).toBe(2);
     expect(request?.locale).toBe('en');
-    expect(request?.facts.her).toHaveLength(2);
+    expect(request?.plan.facts.shown).toBeNull();
   });
 
   it('shows a line that arrives on its street', async () => {
@@ -193,18 +199,12 @@ describe('session conversation', () => {
   });
 
   it('drops a stale line', async () => {
-    const pending: { situation: string; answer: ReturnType<typeof deferred<string | null>> }[] = [];
-    const client = fakeClient({
-      line: (request) => {
-        const answer = deferred<string | null>();
-        pending.push({ situation: request.intent.situation, answer });
-        return answer.promise;
-      },
-    });
+    const pending: Pending[] = [];
+    const client = fakeClient({ line: pendingLines(pending) });
     const table = open(client);
     await table.session.getState().start(CASH, 'cfr');
     await untilHerBet(table, client);
-    const bet = pending.find((p) => p.situation === 'herBet');
+    const bet = pending.find((p) => p.herBet);
     await table.session.getState().act({ kind: 'fold' });
     bet?.answer.resolve('Too late');
     await flush();
@@ -292,7 +292,7 @@ describe('session conversation', () => {
     expect(table.session.getState().conversation.lines).toEqual([]);
   });
 
-  it('sends her feeling at the moment of the reply', async () => {
+  it('plans the voice of a reply from her state at the moment of the reply', async () => {
     const feelingAfter = async (waitMs: number) => {
       const client = fakeClient({
         reply: () => Promise.resolve({ text: 'Hm', signals: ['mockBluff', 'mockBluff'] }),
@@ -304,13 +304,12 @@ describe('session conversation', () => {
       table.tick(waitMs);
       table.session.getState().say('Again');
       await flush();
-      return client.replies[1]?.feeling;
+      return client.replies[1]?.plan.voice;
     };
     const soon = await feelingAfter(0);
     const later = await feelingAfter(600_000);
-    const anger = (f: typeof soon) => f?.emotions.find((e) => e.name === 'anger')?.intensity ?? 0;
-    expect(anger(soon)).toBeGreaterThan(0.1);
-    expect(anger(later)).toBeLessThan(anger(soon));
+    expect(soon?.intensity).toBeGreaterThan(0);
+    expect(later).not.toEqual(soon);
   });
 
   it('say sends a reply and applies signals', async () => {
@@ -531,7 +530,11 @@ describe('session conversation', () => {
     await table.session.getState().start(CASH, 'cfr');
     table.session.getState().say('Hello');
     const { seats } = table.session.getState().table;
-    expect(client.replies[0]?.facts.stacks).toEqual([seats[0].stack, seats[1].stack]);
+    const stacks = client.replies[0]?.plan.facts.stacksBb;
+    expect((stacks?.her ?? 0) / (stacks?.player ?? 1)).toBeCloseTo(
+      seats[0].stack / seats[1].stack,
+      9,
+    );
     await table.session.getState().act({ kind: 'fold' });
     table.session.getState().leave();
     expect(client.summaries[0]?.summary.netBb).toBeLessThan(0);
@@ -625,7 +628,7 @@ describe('session conversation', () => {
     await table.session.getState().start(CASH, 'cfr-v2');
     expect(table.session.getState().conversation.available).toBe(true);
     await untilHerBet(table, client);
-    expect(client.lines.some((p) => p.intent.situation === 'herBet')).toBe(true);
+    expect(client.lines.some(isHerBet)).toBe(true);
   });
 
   it('math opponent has no conversation', async () => {
@@ -777,7 +780,7 @@ describe('session conversation', () => {
   });
 
   it('drops a reply that arrives after conversation was switched off', async () => {
-    const answer = deferred<ConversationReply | null>();
+    const answer = deferred<{ text: string; signals: Signal[] } | null>();
     const client = fakeClient({ reply: () => answer.promise });
     const table = open(client, { debug: true });
     await table.session.getState().start(CASH, 'cfr');

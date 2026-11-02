@@ -128,4 +128,30 @@ describe('the emotion debug state', () => {
     expect(debug?.sentBias).toBeNull();
     expect(bot.biases.every((bias) => bias === undefined)).toBe(true);
   });
+
+  it('traces every occasion of the conversation, with no client too', async () => {
+    const { session } = open({ debug: true });
+    await session.getState().start(CASH, 'cfr');
+    for (let i = 0; i < 6; i += 1) await session.getState().act({ kind: 'passive' });
+    const trace = session.getState().debug?.conversation;
+    expect(trace?.entries.length).toBeGreaterThan(0);
+    expect(trace?.totals.occasions).toBe(trace?.entries.length);
+    const fates = new Set(trace?.entries.map((e) => e.fate));
+    expect([...fates].every((f) => f === 'silent' || f === 'noClient')).toBe(true);
+  });
+
+  it('marks the journal entries of an occasion she planned a line for', async () => {
+    const { session } = open({ debug: true });
+    await session.getState().start(CASH, 'cfr');
+    for (let i = 0; i < 12; i += 1) await session.getState().act({ kind: 'passive' });
+    const debug = session.getState().debug;
+    const planned = new Set(
+      debug?.conversation.entries
+        .filter((e) => e.plan !== null)
+        .flatMap((e) => e.verdict.occasion.journalIds),
+    );
+    expect(debug?.journal.filter((e) => e.spoke).map((e) => e.id)).toEqual(
+      debug?.journal.filter((e) => planned.has(e.id)).map((e) => e.id),
+    );
+  });
 });
