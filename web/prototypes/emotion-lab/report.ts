@@ -5,7 +5,7 @@ import type { ProfileId } from './profiles.ts';
 import { writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { mulberry32 } from '../../src/cards/index.ts';
-import { LOAD_LABEL } from './ui/labels.ts';
+import { BIAS_LABEL, LOAD_LABEL } from './ui/labels.ts';
 import { loadBlueprint } from './scenes/blueprint.ts';
 import { createRunner } from './scenes/runner.ts';
 import type { RunnerHooks } from './scenes/runner.ts';
@@ -41,6 +41,10 @@ function traitsTable(): string[] {
       ids.map((id) => f2(PROFILES[id].personality.experience)),
     ),
     row(
+      'Сдержанность',
+      ids.map((id) => f2(PROFILES[id].personality.control)),
+    ),
+    row(
       '**Настроение по умолчанию (P, A, D)**',
       traits.map((t) => pad(t.defaultMood)),
     ),
@@ -51,6 +55,12 @@ function traitsTable(): string[] {
     row(
       '**Дисциплина**',
       traits.map((t) => f2(t.discipline)),
+    ),
+    ...BIAS_KEYS.map((k) =>
+      row(
+        `**Манера: ${BIAS_LABEL[k].toLowerCase()}**`,
+        traits.map((t) => f2(t.baseline[k])),
+      ),
     ),
     row(
       '**Выразительность**',

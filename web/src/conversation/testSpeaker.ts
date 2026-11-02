@@ -70,7 +70,7 @@ export function createSpeaker(options: SpeakerOptions): Speaker {
       cursor = persona.lastJournalId();
       return fresh.flatMap((e) => e.impulses);
     },
-    stance: () => view().stance,
+    stance: () => view().presenting?.stance ?? null,
     feelingFor: (intent) => conversation.feelingFor(intent, view()),
     character: () => conversation.character(view()),
     setPersonality: (p) => persona.setPersonality(p),

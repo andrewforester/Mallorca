@@ -164,6 +164,7 @@ describe('numeric flags', () => {
     ['--workers', '0'],
     ['--seed', '-1'],
     ['--seed', '1.5'],
+    ['--session', '0'],
   ])('%s %s exits with 1', (flag, value) => {
     const r = cli([flag, value]);
     expect(r.status).toBe(1);
@@ -203,6 +204,31 @@ describe('runArena', () => {
     expect(new Set(records.map((r) => r.playedAt)).size).toBe(8);
     const times = records.map((r) => Date.parse(r.playedAt));
     expect(times.map((t) => t - times[0]!)).toEqual([0, 1, 2, 3, 4, 5, 6, 7].map((n) => n * 1000));
+  });
+
+  it('plays sessions: hands, names and the seat of bot A follow the session', async () => {
+    const file = join(mkdtempSync(join(tmpdir(), 'arena-')), 'hands.jsonl');
+    const report = await runArena({
+      a: 'always-raise',
+      b: 'always-call',
+      pairs: 2,
+      seed: 1,
+      workers: 1,
+      session: 3,
+      saveHands: file,
+      stats: true,
+    });
+    expect(report.hands).toBe(12);
+    expect(report.session).toBe(3);
+    expect(report.styleStats?.pfr).toBe(1);
+    const records = readFileSync(file, 'utf8')
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line) as { handNumber: number; names: [string, string] });
+    expect(records.map((r) => r.handNumber)).toEqual([1, 3, 5, 2, 4, 6, 7, 9, 11, 8, 10, 12]);
+    expect(records.map((r) => r.names[0])).toEqual(
+      [0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1].map((k) => (k === 0 ? 'always-raise' : 'always-call')),
+    );
   });
 
   it('runs in process', async () => {

@@ -26,7 +26,8 @@ export type TableEvent =
   | { kind: 'result'; netBb: number; lastEquity?: number }
   | { kind: 'bluff'; succeeded: boolean; potBb: number }
   | { kind: 'mistake'; costBb: number }
-  | { kind: 'ownMove'; move: 'bet' | 'fold'; amountBb: number; equity: number; facingBb: number }
+  | { kind: 'ownMove'; move: 'bet'; amountBb: number; equity: number }
+  | { kind: 'ownMove'; move: 'fold'; facingBb: number; equity: number }
   | { kind: 'chat'; signal: ChatSignal };
 
 export interface Impulse {

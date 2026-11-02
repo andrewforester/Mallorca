@@ -144,11 +144,11 @@ describe('a persona at the table', () => {
     const weak = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
     weak.act(call, 1000);
     weak.act(raiseTo(60), 1500);
-    expect(weak.persona.view(1500).stance).toBe('bluff');
+    expect(weak.persona.view(1500).presenting?.stance).toBe('bluff');
     const strong = deal('As Ah', 'Js Ts', 'Kc 9d 2s 3h Qh');
     strong.act(call, 1000);
     strong.act(check, 1500);
-    expect(strong.persona.view(1500).stance).toBe('hide');
+    expect(strong.persona.view(1500).presenting?.stance).toBe('hide');
   });
 
   it('takes her class from her equity against the range she reads', () => {
@@ -222,6 +222,7 @@ describe('a persona at the table', () => {
     played.act(raiseTo(60), 1000);
     const [bet] = entries(played.persona, 'ownMove');
     expect(bet?.event).toMatchObject({ kind: 'ownMove', move: 'bet', amountBb: 2 });
+    expect(Object.keys(bet?.event ?? {}).sort()).toEqual(['amountBb', 'equity', 'kind', 'move']);
     expect(bet?.impulses.some((i) => i.emotion === 'fear')).toBe(true);
   });
 
@@ -231,6 +232,7 @@ describe('a persona at the table', () => {
     played.act({ kind: 'fold' }, 3000);
     const [fold] = entries(played.persona, 'ownMove');
     expect(fold?.event).toMatchObject({ kind: 'ownMove', move: 'fold', facingBb: 2 });
+    expect(Object.keys(fold?.event ?? {}).sort()).toEqual(['equity', 'facingBb', 'kind', 'move']);
     expect(fold?.impulses.some((i) => i.emotion === 'anger')).toBe(true);
   });
 
@@ -241,6 +243,18 @@ describe('a persona at the table', () => {
     );
     played.act(call, 5000);
     expect(entries(played.persona, 'mistake')[0]?.event).toEqual({ kind: 'mistake', costBb: 3 });
+  });
+
+  it('feels a bluff caught after her river call once, as a caught bluff and not also a mistake', () => {
+    const played = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
+    [call, check, check, check, raiseTo(40), call, check, raiseTo(60)].forEach((action, k) =>
+      played.act(action, (k + 1) * 500),
+    );
+    played.act(call, 5000);
+    expect(entries(played.persona, 'bluff').map((e) => e.event)).toMatchObject([
+      { kind: 'bluff', succeeded: false },
+    ]);
+    expect(entries(played.persona, 'mistake')).toEqual([]);
   });
 
   it('folds to what she has left to call after his re-raise', () => {

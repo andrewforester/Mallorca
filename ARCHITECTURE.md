@@ -323,9 +323,13 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   returns the `Impulse`s it gave (emotion, amount, an English reason); `step(dt)` advances time in seconds;
   `snapshot()` reads the state; `ahead(dt)` is the snapshot `dt` seconds later without changing the engine;
   `reset()` starts a session over. The engine holds no clock and no randomness.
-- `Personality` is the Big Five in [-1, 1] plus `suppression` (habitual poker face) and `experience`, both in
-  [0, 1]. `traitsOf` derives the default mood (Mehrabian's weights, as in ALMA), the gain and the half-life factor of
-  every emotion, `composure` (the overload threshold), `discipline`, `expressiveness`, `mask` and `talkativeness`.
+- `Personality` is the Big Five in [-1, 1] plus `suppression` (habitual poker face), `experience` (knowledge of the
+  game) and `control` (self-control), all three in [0, 1]. `traitsOf` derives the default mood (Mehrabian's weights,
+  as in ALMA), the gain and the half-life factor of every emotion, `composure` (the overload threshold, from C, N,
+  `control` and a little `experience`), `discipline` (from C, N and `control`, not from experience),
+  `expressiveness`, `mask`, `talkativeness` and `baseline`, her natural style: `styleOf(bigFive, experience)`
+  (`style.ts`) is `exp((1 - experience) * sum of STYLE_COEFFICIENTS * trait)` per axis, 1 for a neutral character
+  and at experience 1. The profiles have `control` equal to `experience`.
   `MALLORCA` is the personality of the shipped opponent. `PERSONALITIES` (`profiles.ts`) maps a `PersonalityKey` to
   a personality: `mallorca` and the four presets of the sandbox, `mira`, `ingrid`, `lola` and `nina`. The sandbox
   imports them from here and keeps only their names, descriptions and face looks.
@@ -337,8 +341,8 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   share times what can still be lost, both counting the streets ahead (`stakesOf`).
 - `TableEvent`s: `deal` and `street` (her perceived equity and the money: pot, invested, stack behind, streets
   left), `opponentBet` (with `raise` for a raise against her, which also builds a session `pressure`), `result`
-  (judged by her equity before the deciding card), `bluff`, `mistake`, `ownMove` (her own bet or fold with her
-  equity, the chips and the bet she faced: a bet behind a weak hand gives fear, one with a strong hand a little pride, a
+  (judged by her equity before the deciding card), `bluff`, `mistake`, `ownMove` (her own bet with its size or her
+  fold with the bet she faced, both with her equity: a bet behind a weak hand gives fear, one with a strong hand a little pride, a
   fold of a hand she believed in anger, a fold of junk relief, all with small weights) and `chat` (a `ChatSignal`). A `street` after
   the hand is over is ignored.
 - Mood is a PAD point moved by ALMA's pull and push toward the intensity weighted centre of the active emotions and
@@ -351,8 +355,8 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
 - `snapshot().bias` is a `PlayBias` of five multipliers (`aggression`, `looseness`, `bluff`, `sizing`,
   `stickiness`) that tilt the blueprint's action probabilities at one decision:
   `clamp(baseline * (1 + leakage * sum of coefficient * driver), 0.5, 2)` (`biasOf`). `baseline` is
-  `Traits.baseline`, her natural manner, all ones (`NEUTRAL_PLAY_BIAS`) for every personality for now; with it the
-  bias is all ones when calm. The bot's `BotBias` reads `tightness` as `1 / looseness`.
+  `Traits.baseline`, her natural style; with it the bias is her natural style when calm. The bot's `BotBias` reads
+  `tightness` as `1 / looseness`.
 
 ## face
 
@@ -398,16 +402,16 @@ speech, the face, the voice and the bias only read it through a `PersonaReader`.
   her perceived equity (against the player's range until he shows, then against his cards) and the money (pot,
   invested, stack behind, streets left), a raise of the player as `opponentBet` (`raise` when it answers her own bet
   or raise on that street), the hand end as `result` judged by her equity against his shown cards on the board when
-  the money went in (0.5 without a showdown), a weak late bet caught or through as `bluff`, her own bet, raise or
+  the money went in (0.5 without a showdown), a weak late bet caught or through as `bluff` (a caught one is not also a `mistake`), her own bet, raise or
   fold as `ownMove`, a river call with a weak class lost at showdown as `mistake` (its cost), and the signals of
   `hear(signals)` as `chat`.
 - `view(nowMs)` reads her at `nowMs` without moving her (the engine's `ahead`; a time at or before the last
   `observe` reads the current state): `personality`, `snapshot`, `hand`, `presenting`, what she acts, or null:
   `{ stance: 'bluff', shows: 'strong', effort: 0.6 }` after her bet or raise with a weak class until the street or the
   hand changes, else `{ stance: 'hide', shows: 'weak', effort: 0.5 }` while her class is strong in a live hand
-  (`PRESENTING_EFFORT`); `stance`, its stance; `mask`, `maskOf(traits.mask, effort or 0, overload)`, the share of her
+  (`PRESENTING_EFFORT`); `mask`, `maskOf(traits.mask, effort or 0, overload)`, the share of her
   feeling she hides right now, which the face, the words and the prompt all read; `bias` (the bot's `Bias`: aggression, bluff, sizing and stickiness of the engine's `PlayBias` and tightness
-  `1 / looseness`; all ones when calm), `words` (up to three mood words for the prompt: `on tilt` at overload 0.6
+  `1 / looseness`, `toBotBias`; her natural style when calm), `words` (up to three mood words for the prompt: `on tilt` at overload 0.6
   and more, then the emotions of 0.25 and more, strongest first) and `speakFactor`
   (`1 + 0.25 clamp((arousal above her default + overload) / 2, -1, 1)`). Every reader asks `view` with its own
   `now`, so there is one timeline.
@@ -646,7 +650,7 @@ text)` (the caller's localized label) append the player's line at once and call 
   `setPersonality(key | personality)` (applied to the running persona and to every persona a later `start` makes) and
   `resetFeeling()` (the persona's `reset`) do nothing without it. Opening or closing the panel calls nothing on the session.
 - `toDebugView(debug)` returns the `DebugView`, plain data for the panel: `personality` and the `bigFive`,
-  `suppression`, `experience` and the derived `traits` (default mood, composure, discipline, the gain of each
+  `suppression`, `experience`, `control`, `baseline` (her natural style as `[key, value]` in `BIAS_KEYS` order) and the derived `traits` (default mood, composure, discipline, the gain of each
   emotion); `emotions` as `[emotion, value]` in `EMOTIONS` order; `mood`, `defaultMood` and `octant`; `load` with
   its `sources`, the `overload`, `composure` and `leakage`; `sessionNetBb` and `pressure`; `engineBias` (the five
   `PlayBias` multipliers in `BIAS_KEYS` order, all ones without a feeling) and `sentBias` (the `BotBias`,
@@ -924,46 +928,63 @@ clamps above; her words reach her feeling only as the signals the player's reply
 ## arena
 
 `web/tools/arena/` is a Node script outside the app bundle, run as `npm run arena -- --a <bot> --b <bot>`. It
-imports `engine`, `brains`, `cards`, `cfr` and `game/records/record.ts` and nothing from `ui`; Node 24 runs the
+imports `engine`, `brains`, `cards`, `cfr`, `persona` and `game/records/record.ts` and nothing from `ui`; Node 24 runs the
 `.ts` files directly, including in workers. `tools/` may use the clock and Node APIs.
 
-- `bots.ts`: `BOTS`, the `BotFactory` (`(rng) => ArenaBot` with `observe`, `decide` and an optional `dispose`)
-  of each name: `fromBrain(brain)` plays a `Brain`'s action and disposes it, for `math` (`createMathBrain()`) and
-  `cfr` (`createCfrBrain` over the model that `prepareBots` loads from `SHIPPED_STRATEGIES.cfr` once per process
-  or worker; it throws before that),
+- `arenaBot.ts`: the `ArenaBot` (`observe`, `decide`, optional `events` for the raw engine events of every step,
+  `spoke`, `heard` and `dispose`), the `BotFactory` (`(rng, seat) => ArenaBot`) and `fromBrain(brain)`, which plays
+  a `Brain`'s action and disposes it.
+- `cfrModels.ts`: the cfr models of the process or worker; `prepareModel(key, url)` loads one once and
+  `cfrBrainOf(key, rng)` makes a `CfrBrain` over it (it throws before `prepareBots`).
+- `bots.ts`: `BOTS`, the `BotFactory` of each name: `math` (`createMathBrain()`) and
+  `cfr` (`createCfrBrain` over the model that `prepareBots` loads from `SHIPPED_STRATEGIES.cfr`),
   `always-call` (checks or calls), `always-raise` (raises to `legal.raise.min` when it can, else checks or calls),
   `min-bettor` (bets the minimum when nobody has bet, else checks or calls) and `random` (uniform over the legal
   kinds, a raise to the minimum, from its seeded `Rng`). `cfr:<play file>` plays any play file the same way and is
   labelled `cfr-<file name>` in the report (`botLabel`).
-- `match.ts`: `playPair(a, b, seed, index)` plays one deck twice with the seats swapped: the deck is shuffled by
-  `mulberry32((Math.imul(seed, 0x9e3779b1) + index) >>> 0)`; hand `k` (0, 1) starts both seats at the cash stakes
-  (the stacks of `createTable` with `CASH`, the blinds of `rulesOf(CASH)`), button seat 0,
-  `handNumber = index * 2 + k + 1`, with `a` on seat 0 in hand 0 and `b` in hand 1. Each hand
-  gets fresh bots, the bot on `seat` seeded by `mulberry32((seed ^ (index * 4 + k * 2 + seat)) >>> 0)`, the hand is
-  played by `playToEnd`, and each bot receives `toObservations` of the new events for its seat after every step. It returns `net`, the chips of
-  `a` over both hands, and the events of both hands. The math bot against itself nets exactly 0 per pair.
-- `stats.ts`: `summarize(nets, bigBlind)`. The per-pair value is `v = net / 2 / bigBlind * 100`; `bbPer100` is the
-  mean of `v` and `ci95 = 1.96 * sd(v) / sqrt(n)` with the sample standard deviation (n - 1). With fewer than 2
-  pairs `ci95` is `Infinity`, and null in the report. `hands = 2 * pairs`.
+- `profileBots.ts`: `profileOfName(name)` reads `style:<profile>` and `persona:<profile>` of `PERSONALITIES`, with
+  overrides after `@` (`persona:lola@experience=0.9,control=0.1`: Big Five traits in [-1, 1], `suppression`,
+  `experience` and `control` in [0, 1]; anything else is not a bot name), labelled `persona-lola-experience0.9-control0.1`.
+  A `style:` bot is cfr with the constant bias `toBotBias(styleOf(bigFive, experience))`; a `persona:` bot is
+  `createPersonaBot` over a cfr brain and a persona of that personality at the bot's seat.
+- `personaBot.ts`: `createPersonaBot(brain, persona, seat)` feeds the persona every step's engine events on a model
+  clock (8 s for every `handStarted`, 6 s for every `acted`; nothing waits), narrows her view of his range with the
+  brain's `opponentRange()` after a step with his action in a live hand, and sets `view(now).bias` on the brain
+  before every decision.
+- `match.ts`: `playPair(a, b, seed, index, session = 1)` plays two sessions of `session` hands on one series of
+  decks, the second with the seats swapped: `a` on seat 0 in side `k = 0`, `b` in side 1. Hand `j` of side `k` plays
+  deck `d = index * session + j`, shuffled by `mulberry32((Math.imul(seed, 0x9e3779b1) + d) >>> 0)`, starts both
+  seats at the cash stakes (the stacks of `createTable` with `CASH`, the blinds of `rulesOf(CASH)`), button `j % 2`,
+  `handNumber = d * 2 + k + 1`. Each side makes its bots once, the bot on `seat` seeded by
+  `mulberry32((seed ^ (index * 4 + k * 2 + seat)) >>> 0)` and told its seat, and disposes them after its last hand.
+  A hand is played by `playToEnd`; after every step each bot receives `toObservations` of the new events for its
+  seat, then `events` of them. It returns `net`, the chips of `a` over all hands, and the events of every hand, side
+  0 first. With `session` 1 this is one deck twice with fresh bots, button seat 0. The math bot against itself nets
+  exactly 0 per pair.
+- `stats.ts`: `summarize(nets, bigBlind, handsPerPair = 2)`. The per-pair value is
+  `v = net / handsPerPair / bigBlind * 100`; `bbPer100` is the mean of `v` and `ci95 = 1.96 * sd(v) / sqrt(n)` with
+  the sample standard deviation (n - 1). With fewer than 2 pairs `ci95` is `Infinity`, and null in the report.
+  `hands = handsPerPair * pairs`.
 - `paths.ts`: `resultsDir(cwd, env)` is `ARENA_DIR` resolved against `cwd`, else `web/arena-out` of the main
   checkout (the parent of `git rev-parse --git-common-dir`, shared by every worktree), else `<cwd>/arena-out`.
-  `runName(a, b, pairs, seed, started)` is `<a>-<b>-<pairs>-s<seed>-<YYYYMMDD-HHMMSS>` in UTC.
-- `run.ts`: `runArena({ a, b, pairs, seed, workers, saveHands?, reportDir? })` splits the pair indices into
+  `runName(a, b, pairs, seed, started, session = 1)` is `<a>-<b>-<pairs>-s<seed>-<YYYYMMDD-HHMMSS>` in UTC, with
+  `<pairs>x<session>` in place of `<pairs>` for sessions longer than one hand.
+- `run.ts`: `runArena({ a, b, pairs, seed, workers, saveHands?, reportDir?, stats?, session? })` splits the pair indices into
   contiguous chunks,
   runs them in process (`workers: 1`) or in `worker_threads` (`worker.ts`), gathers the results in index order and
-  returns the `Report` (`a`, `b`, `pairs`, `hands`, `seed`, `bbPer100` in the big blind of `CASH`, `ci95`, `durationMs`, `commit` from
+  returns the `Report` (`a`, `b`, `pairs`, `hands`, `seed`, `session`, `bbPer100` in the big blind of `CASH`, `ci95`, `durationMs`, `commit` from
   `git rev-parse --short HEAD` or `unknown`, `finishedAt`, and `handsFile`, the `saveHands` path relative to
   `reportDir`, or null); the result depends only on the seed, not on the worker count.
   `saveHands` writes one `HandRecord` per line (JSONL) with `humanSeat: null`, `sessionId: arena-<seed>`,
   `bot: { id: '<a>-vs-<b>', version: '1' }` and a `playedAt` one second apart per hand from the start of the run.
-- `cli.ts`: flags `--a`, `--b`, `--pairs` (1000), `--seed` (1), `--workers` (`os.availableParallelism()`),
+- `cli.ts`: flags `--a`, `--b`, `--pairs` (1000), `--seed` (1), `--session` (1), `--workers` (`os.availableParallelism()`),
   `--dir <path>` (`resultsDir` by default), `--out <file>`, `--save-hands <file>` and `--no-hands`. Every run is
   saved: the report to `--out` or `<dir>/<runName>.json`, the hands to `--save-hands` or `<dir>/<runName>.jsonl`
   unless `--no-hands`; both directories are created before the match. A directory that cannot be created, an
   unknown bot or a bad number exits with code 1. It prints the report path on stderr and one line on stdout:
   `a vs b: +12.3 ± 4.5 bb/100 over 10000 hands in 182 s`.
 - The tests in `tools/arena/*.test.ts` run under `npm test`.
-- `match.ts` calls `dispose` on both bots after each hand; `worker.ts` and the in-process path of `run.ts` await
+- `worker.ts` and the in-process path of `run.ts` await
   `prepareBots([a, b])` first.
 
 ### External

@@ -6,6 +6,7 @@ import {
   LOAD_SOURCES,
   PERSONALITIES,
   createPersona,
+  styleOf,
 } from '../persona/index.ts';
 import { mulberry32 } from '../cards/index.ts';
 import type { DebugState } from './debug.ts';
@@ -31,6 +32,7 @@ describe('toDebugView', () => {
     expect(view.bigFive).toEqual(PERSONALITIES.lola.bigFive);
     expect(view.suppression).toBe(PERSONALITIES.lola.suppression);
     expect(view.experience).toBe(PERSONALITIES.lola.experience);
+    expect(view.control).toBe(PERSONALITIES.lola.control);
     expect(view.traits?.gains.map(([e]) => e)).toEqual([...EMOTIONS]);
   });
 
@@ -40,6 +42,9 @@ describe('toDebugView', () => {
     expect(view.emotions.find(([e]) => e === 'anger')?.[1]).toBeGreaterThan(0);
     expect(view.load?.sources.map(([s]) => s)).toEqual([...LOAD_SOURCES]);
     expect(view.engineBias.map(([k]) => k)).toEqual([...BIAS_KEYS]);
+    expect(view.baseline).toEqual(
+      BIAS_KEYS.map((k) => [k, styleOf(PERSONALITIES.lola.bigFive, 0.2)[k]]),
+    );
     expect(view.sentBias).toEqual(state().sentBias);
     expect(view.journal).toHaveLength(1);
   });
@@ -51,6 +56,7 @@ describe('toDebugView', () => {
     expect(view.mood).toBeNull();
     expect(view.emotions.every(([, v]) => v === 0)).toBe(true);
     expect(view.engineBias.every(([, v]) => v === 1)).toBe(true);
+    expect(view.baseline.map(([k]) => k)).toEqual([...BIAS_KEYS]);
   });
 
   it('keeps the rows of the last decision', () => {

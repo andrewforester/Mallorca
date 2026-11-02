@@ -38,11 +38,23 @@ function slidersOf(view: DebugView): Slider[] {
       value: view.experience,
       put: (p, v) => ({ ...p, experience: v }),
     },
+    {
+      id: 'control',
+      label: COPY.control,
+      min: 0,
+      value: view.control,
+      put: (p, v) => ({ ...p, control: v }),
+    },
   ];
 }
 
 function current(view: DebugView): Personality {
-  return { bigFive: view.bigFive, suppression: view.suppression, experience: view.experience };
+  return {
+    bigFive: view.bigFive,
+    suppression: view.suppression,
+    experience: view.experience,
+    control: view.control,
+  };
 }
 
 function Traits({ view }: { view: DebugView }) {

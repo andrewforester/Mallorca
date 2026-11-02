@@ -25,10 +25,11 @@ const { values } = parseArgs({
     dir: { type: 'string' },
     'no-hands': { type: 'boolean', default: false },
     stats: { type: 'boolean', default: false },
+    session: { type: 'string', default: '1' },
   },
 });
 
-const names = [...Object.keys(BOTS), 'cfr:<play file>'];
+const names = [...Object.keys(BOTS), 'cfr:<play file>', 'style:<profile>', 'persona:<profile>'];
 for (const name of [values.a, values.b]) {
   if (!isBotName(name)) {
     console.error(`unknown bot "${name}", choose from: ${names.join(', ')}`);
@@ -48,9 +49,10 @@ function integerFlag(name: string, raw: string, min: number): number {
 const pairs = integerFlag('pairs', values.pairs, 1);
 const seed = integerFlag('seed', values.seed, 0);
 const workers = integerFlag('workers', values.workers, 1);
+const session = integerFlag('session', values.session, 1);
 
 const dir = values.dir === undefined ? resultsDir(process.cwd()) : resolve(values.dir);
-const name = runName(botLabel(values.a), botLabel(values.b), pairs, seed, new Date());
+const name = runName(botLabel(values.a), botLabel(values.b), pairs, seed, new Date(), session);
 const out = values.out === undefined ? join(dir, `${name}.json`) : resolve(values.out);
 const saveHands = values['no-hands']
   ? undefined
@@ -77,6 +79,7 @@ const report = await runArena({
   saveHands,
   reportDir: dirname(out),
   stats: values.stats,
+  session,
 });
 
 writeFileSync(out, JSON.stringify(report, null, 2) + '\n');

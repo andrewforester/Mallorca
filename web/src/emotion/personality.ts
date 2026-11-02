@@ -1,7 +1,7 @@
 import { EMOTIONS, NEGATIVE, POSITIVE, clamp } from './emotions.ts';
 import type { Emotion, Pad } from './emotions.ts';
-import { NEUTRAL_PLAY_BIAS } from './biasKeys.ts';
 import type { PlayBias } from './biasKeys.ts';
+import { styleOf } from './style.ts';
 
 export interface BigFive {
   openness: number;
@@ -15,6 +15,7 @@ export interface Personality {
   bigFive: BigFive;
   suppression: number;
   experience: number;
+  control: number;
 }
 
 export interface Traits {
@@ -77,18 +78,22 @@ export function traitsOf(p: Personality): Traits {
     gains: gainsOf(b),
     halfLifeFactor: halfLifeFactorOf(b),
     composure: clamp(
-      0.45 + 0.15 * b.conscientiousness - 0.25 * b.neuroticism + 0.35 * p.experience,
+      0.45 +
+        0.15 * b.conscientiousness -
+        0.25 * b.neuroticism +
+        0.2 * p.control +
+        0.15 * p.experience,
       0.1,
       1.2,
     ),
     discipline: clamp(
-      0.25 + 0.2 * b.conscientiousness - 0.15 * b.neuroticism + 0.5 * p.experience,
+      0.25 + 0.2 * b.conscientiousness - 0.15 * b.neuroticism + 0.5 * p.control,
       0,
       0.95,
     ),
     expressiveness: clamp(0.85 + 0.35 * b.extraversion + 0.1 * b.neuroticism, 0.3, 1.4),
     mask: clamp(p.suppression, 0, 1),
     talkativeness: clamp(0.5 + 0.4 * b.extraversion, 0.1, 1),
-    baseline: NEUTRAL_PLAY_BIAS,
+    baseline: styleOf(b, p.experience),
   };
 }

@@ -30,8 +30,12 @@ export const nervousOf = (s: Snapshot): number =>
 export const sadnessOf = (s: Snapshot): number =>
   clamp01(s.emotions.distress + s.emotions.disappointment);
 
-export function faceFrame(s: Snapshot, presenting: Shown | null, look: FaceLook): FaceFrame {
-  const mask = maskOf(s.traits.mask, presenting?.effort ?? 0, s.load.overload);
+export function faceFrame(
+  s: Snapshot,
+  presenting: Shown | null,
+  look: FaceLook,
+  mask = maskOf(s.traits.mask, presenting?.effort ?? 0, s.load.overload),
+): FaceFrame {
   const felt = feltPadOf(s);
   const shown = shownPadOf(felt, mask, presenting === null ? null : STANCES[presenting.stance]);
   return {

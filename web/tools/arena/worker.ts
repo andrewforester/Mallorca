@@ -9,6 +9,7 @@ export interface WorkerInput {
   seed: number;
   indices: number[];
   withHands: boolean;
+  session?: number;
 }
 
 export interface WorkerResult {
@@ -20,7 +21,13 @@ export interface WorkerResult {
 const input = workerData as WorkerInput;
 await prepareBots([input.a, input.b]);
 for (const index of input.indices) {
-  const { net, hands } = playPair(botFactory(input.a), botFactory(input.b), input.seed, index);
+  const { net, hands } = playPair(
+    botFactory(input.a),
+    botFactory(input.b),
+    input.seed,
+    index,
+    input.session,
+  );
   const result: WorkerResult = input.withHands ? { index, net, hands } : { index, net };
   parentPort?.postMessage(result);
 }

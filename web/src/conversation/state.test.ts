@@ -80,6 +80,7 @@ describe('her character sheet', () => {
       },
       suppression: 1,
       experience: 0,
+      control: 0,
     };
     const sheet = characterOf(extreme);
     for (const key of ['talkativeness', 'warmth', 'nerves', 'wit'] as const) {
