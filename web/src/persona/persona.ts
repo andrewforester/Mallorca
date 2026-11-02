@@ -42,7 +42,6 @@ export interface PersonaView {
   personality: Personality;
   snapshot: Snapshot;
   hand: HandState;
-  stance: Stance | null;
   presenting: Presenting | null;
   mask: number;
   bias: Bias;
@@ -122,7 +121,6 @@ class TablePersona implements Persona {
       personality: this.personality,
       snapshot,
       hand: this.hand,
-      stance: presenting?.stance ?? null,
       presenting,
       mask: maskOf(snapshot.traits.mask, effort, snapshot.load.overload),
       bias: botBiasOf(snapshot),

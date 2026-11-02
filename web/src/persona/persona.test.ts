@@ -144,11 +144,11 @@ describe('a persona at the table', () => {
     const weak = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
     weak.act(call, 1000);
     weak.act(raiseTo(60), 1500);
-    expect(weak.persona.view(1500).stance).toBe('bluff');
+    expect(weak.persona.view(1500).presenting?.stance).toBe('bluff');
     const strong = deal('As Ah', 'Js Ts', 'Kc 9d 2s 3h Qh');
     strong.act(call, 1000);
     strong.act(check, 1500);
-    expect(strong.persona.view(1500).stance).toBe('hide');
+    expect(strong.persona.view(1500).presenting?.stance).toBe('hide');
   });
 
   it('takes her class from her equity against the range she reads', () => {
