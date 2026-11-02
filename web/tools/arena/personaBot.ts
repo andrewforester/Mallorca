@@ -27,8 +27,8 @@ export function createPersonaBot(brain: CfrBrain, persona: Persona, seat: SeatIn
     events(events) {
       now += elapsed(events);
       persona.observe(events, now);
-      const range = brain.opponentRange();
-      if (range !== null && opponentActed(events, seat)) {
+      const range = opponentActed(events, seat) ? brain.opponentRange() : null;
+      if (range !== null) {
         persona.narrow(range, persona.view(now).hand.handNumber);
       }
     },

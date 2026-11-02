@@ -87,6 +87,32 @@ describe('createPersonaBot', () => {
     expect(narrowed).toEqual(expected);
   }, 60_000);
 
+  it('reads his range from the brain only on a step with his action in a live hand', () => {
+    const seen: Watched = { biases: [], persona: null, steps: [] };
+    let reads = 0;
+    const counting: BotFactory = (rng, seat) => {
+      const brain = cfrBrainOf(SHIPPED, rng);
+      const range = brain.opponentRange.bind(brain);
+      brain.opponentRange = () => {
+        reads += 1;
+        return range();
+      };
+      const persona = createPersona({ seat, rng, personality: PERSONALITIES.nina });
+      const observe = persona.observe.bind(persona);
+      vi.spyOn(persona, 'observe').mockImplementation((events: readonly EngineEvent[], now) => {
+        const moments = observe(events, now);
+        seen.steps.push({ events, now, hand: 0, seat });
+        return moments;
+      });
+      return createPersonaBot(brain, persona, seat);
+    };
+    playPair(botFactory('always-call'), counting, 4, 0, 3);
+    const expected = seen.steps
+      .filter(({ events }) => !events.some((e) => e.type === 'handEnded'))
+      .filter(({ events, seat }) => events.some((e) => e.type === 'acted' && e.seat !== seat));
+    expect(reads).toBe(expected.length);
+  }, 60_000);
+
   it('sets the bias of her persona before every decision', () => {
     const brain = cfrBrainOf(SHIPPED, mulberry32(1));
     const set = vi.spyOn(brain, 'setBias');
