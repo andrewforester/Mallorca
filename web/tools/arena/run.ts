@@ -41,7 +41,7 @@ export interface Report {
   styleStats?: StyleStats;
 }
 
-function commitHash(): string {
+export function commitHash(): string {
   try {
     return execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
       encoding: 'utf8',

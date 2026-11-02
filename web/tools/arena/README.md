@@ -1,6 +1,7 @@
 # Arena
 
-Duplicate matches between two bots, reported in bb/100 with a 95% confidence interval.
+Duplicate matches between two bots, reported in bb/100 with a 95% confidence interval. Matches against external
+bots (Slumbot) are in [`external/`](external/README.md).
 
 ```
 npm run arena -- --a math --b always-call --pairs 2000

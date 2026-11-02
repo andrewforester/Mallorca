@@ -26,7 +26,9 @@
     "contact": "VITE_SUPABASE_URL=http://talk.test VITE_SUPABASE_ANON_KEY=contact-anon-key npm run build && node e2e/contact.ts",
     "contact:debug": "npm run wasm && node e2e/contactDebug.ts",
     "lint": "eslint . && prettier --check .",
-    "format": "prettier --write . && eslint . --fix"
+    "format": "prettier --write . && eslint . --fix",
+    "arena:external": "node tools/arena/external/cli.ts",
+    "prearena:external": "npm run wasm"
   },
   "engines": {
     "node": ">=24"
