@@ -55,21 +55,21 @@ export function writeTableStyle(style: TableStyle): void {
   }
 }
 
-const TALK_KEY = 'mallorca.talk';
+const CONVERSATION_KEY = 'mallorca.talk';
 const TELLS_KEY = 'mallorca.tells';
 const LEVELS: readonly Level[] = ['obvious', 'subtle', 'hidden'];
 
-export function readTalk(): boolean {
+export function readConversation(): boolean {
   try {
-    return localStorage.getItem(TALK_KEY) !== 'off';
+    return localStorage.getItem(CONVERSATION_KEY) !== 'off';
   } catch {
     return true;
   }
 }
 
-export function writeTalk(on: boolean): void {
+export function writeConversation(on: boolean): void {
   try {
-    localStorage.setItem(TALK_KEY, on ? 'on' : 'off');
+    localStorage.setItem(CONVERSATION_KEY, on ? 'on' : 'off');
   } catch {
     return;
   }

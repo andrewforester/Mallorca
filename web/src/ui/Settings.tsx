@@ -7,32 +7,38 @@ const LEVELS: readonly Level[] = ['obvious', 'subtle', 'hidden'];
 
 export interface SettingsProps {
   preferences: Preferences;
-  talk?: boolean;
-  talkOn?: boolean;
+  conversation?: boolean;
+  conversationOn?: boolean;
   tells?: Level;
-  onTalk?: (on: boolean) => void;
+  onConversation?: (on: boolean) => void;
   onTells?: (level: Level) => void;
 }
 
-function TalkSettings({ preferences, talkOn, tells, onTalk, onTells }: SettingsProps) {
-  const on = talkOn ?? preferences.talk;
+function ConversationSettings({
+  preferences,
+  conversationOn,
+  tells,
+  onConversation,
+  onTells,
+}: SettingsProps) {
+  const on = conversationOn ?? preferences.conversation;
   return (
     <>
       <label class="menu-toggle">
         <input
           type="checkbox"
-          data-testid="table-talk"
+          data-testid="table-conversation"
           checked={on}
           onChange={() => {
             const next = !on;
-            preferences.setTalk(next);
-            onTalk?.(next);
+            preferences.setConversation(next);
+            onConversation?.(next);
           }}
         />
-        <span>{t('talk.settings.talk')}</span>
+        <span>{t('conversation.settings.conversation')}</span>
       </label>
       <label class="menu-toggle menu-select">
-        <span>{t('talk.settings.tells')}</span>
+        <span>{t('conversation.settings.tells')}</span>
         <select
           data-testid="tells"
           value={tells ?? preferences.tells}
@@ -45,7 +51,7 @@ function TalkSettings({ preferences, talkOn, tells, onTalk, onTells }: SettingsP
         >
           {LEVELS.map((level) => (
             <option key={level} value={level}>
-              {t(`talk.settings.levels.${level}`)}
+              {t(`conversation.settings.levels.${level}`)}
             </option>
           ))}
         </select>
@@ -122,7 +128,7 @@ export function Settings(props: SettingsProps) {
         <span>{t('coach.mode')}</span>
       </label>
       <FaceSettings preferences={preferences} />
-      {props.talk === true && <TalkSettings {...props} />}
+      {props.conversation === true && <ConversationSettings {...props} />}
     </>
   );
 }

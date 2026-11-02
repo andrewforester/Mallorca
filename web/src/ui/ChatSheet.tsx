@@ -38,7 +38,7 @@ export function ChatSheet(props: ChatProps) {
         ref={button}
         class="chat-open glass"
         data-testid="chat-open"
-        aria-label={t('talk.open')}
+        aria-label={t('conversation.open')}
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
@@ -50,7 +50,7 @@ export function ChatSheet(props: ChatProps) {
             ref={sheet}
             class="chat-sheet glass"
             role="dialog"
-            aria-label={t('talk.open')}
+            aria-label={t('conversation.open')}
             data-testid="chat-sheet"
             onKeyDown={(event) => {
               if (event.key === 'Escape') {
@@ -62,7 +62,7 @@ export function ChatSheet(props: ChatProps) {
               type="button"
               class="chat-close button button-small"
               data-testid="chat-close"
-              aria-label={t('talk.close')}
+              aria-label={t('conversation.close')}
               onClick={close}
             >
               ×

@@ -2,7 +2,7 @@ import { expect, test as base } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { startingStack, TOURNAMENT } from '../src/engine/index.ts';
 import { byId } from './shared.ts';
-import { refuseTalk } from './talkServer.ts';
+import { refuseConversation } from './conversationServer.ts';
 
 declare global {
   interface Window {
@@ -39,7 +39,7 @@ export const test = base.extend<{ problems: string[] }>({
         problems.push(`pageerror: ${error.message}`);
       });
       await page.addInitScript(WORKER_TRACKER);
-      await refuseTalk(page);
+      await refuseConversation(page);
       await use(problems);
       expect(problems).toEqual([]);
     },

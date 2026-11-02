@@ -196,13 +196,13 @@ describe('workerBot', () => {
     expect(currentWorker().terminated).toBe(true);
   });
 
-  it('sends the style with the decide request', async () => {
+  it('sends the bias with the decide request', async () => {
     const bot = workerBot();
-    const style = { aggression: 1.1, bluff: 1, tightness: 0.9, sizing: 1, stickiness: 1 };
-    const pending = bot.decide(legal, style);
+    const bias = { aggression: 1.1, bluff: 1, tightness: 0.9, sizing: 1, stickiness: 1 };
+    const pending = bot.decide(legal, bias);
     await settle();
     const sent = currentWorker().sent.at(-1);
-    expect(sent).toMatchObject({ kind: 'decide', style });
+    expect(sent).toMatchObject({ kind: 'decide', bias });
     bot.dispose?.();
     await pending.catch(() => undefined);
   });
@@ -220,16 +220,16 @@ describe('workerBot', () => {
     await second.catch(() => undefined);
   });
 
-  it('fallback ignores style', async () => {
+  it('fallback ignores bias', async () => {
     vi.useFakeTimers();
     const bot = workerBot();
     bot.observe(hand);
-    const style = { aggression: 1.3, bluff: 1.2, tightness: 0.8, sizing: 1.1, stickiness: 1.2 };
-    const pending = bot.decide(legal, style);
+    const bias = { aggression: 1.3, bluff: 1.2, tightness: 0.8, sizing: 1.1, stickiness: 1.2 };
+    const pending = bot.decide(legal, bias);
     const settled = expect(pending).resolves.toMatchObject({ action: expect.any(Object) });
     await vi.advanceTimersByTimeAsync(BOT_TIMEOUT_MS);
     await settled;
-    await expect(bot.decide(legal, style)).resolves.toMatchObject({ action: expect.any(Object) });
+    await expect(bot.decide(legal, bias)).resolves.toMatchObject({ action: expect.any(Object) });
   });
 
   it('rejects pending requests and terminates the worker on dispose', async () => {

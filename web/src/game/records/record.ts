@@ -1,4 +1,4 @@
-import type { BotStyle, Decision } from '../../brains/index.ts';
+import type { BotBias, Decision } from '../../brains/index.ts';
 import type { EngineEvent, SeatIndex, TableMode } from '../../engine/index.ts';
 import { SHIPPED_STRATEGIES } from '../../cfr/index.ts';
 import type { BotRecord } from '../../cfr/index.ts';
@@ -10,7 +10,7 @@ export interface RecordedDecision {
   eventIndex: number;
   solverChoice: string;
   evByAction: Record<string, number | null>;
-  style?: BotStyle;
+  style?: BotBias;
 }
 
 export type RecordedCoach = CoachDecision & { eventIndex: number };
@@ -54,7 +54,7 @@ function finiteOrNull(value: number): number | null {
 export function recordDecision(
   decision: Decision,
   eventIndex: number,
-  style?: BotStyle,
+  bias?: BotBias,
 ): RecordedDecision {
   const { fold, passive, aggressive } = decision.evByAction;
   return {
@@ -65,7 +65,7 @@ export function recordDecision(
       passive: finiteOrNull(passive),
       aggressive: finiteOrNull(aggressive),
     },
-    ...(style === undefined ? {} : { style }),
+    ...(bias === undefined ? {} : { style: bias }),
   };
 }
 

@@ -585,9 +585,9 @@ describe('session recording', () => {
     expect(await store.list()).toEqual([]);
   });
 
-  it('has no talk without a talk client', async () => {
+  it('has no conversation without a conversation client', async () => {
     const session = open(callingBot());
-    expect(session.getState().talk).toEqual({
+    expect(session.getState().conversation).toEqual({
       available: false,
       on: true,
       level: 'subtle',
@@ -596,7 +596,7 @@ describe('session recording', () => {
     });
     await session.getState().start();
     session.getState().say('Hello');
-    expect(session.getState().talk.lines).toEqual([]);
+    expect(session.getState().conversation.lines).toEqual([]);
   });
 
   it('records nothing without records', async () => {

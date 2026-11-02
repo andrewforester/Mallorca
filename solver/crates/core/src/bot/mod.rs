@@ -1,7 +1,7 @@
+mod bias;
 mod decision;
 mod range;
 mod spot;
-mod style;
 mod translate;
 
 pub use range::Step;
@@ -11,9 +11,9 @@ use crate::abstraction::Abstraction;
 use crate::cards::Card;
 use crate::strategy::{StrategyError, StrategyFile};
 use crate::tree::{ActionKind, Node, NodeId, Street};
+use bias::choose;
+pub use bias::{reweight, sample_weighted, size_position, Bias, Situation};
 pub use decision::DecisionView;
-use style::choose;
-pub use style::{reweight, sample_weighted, size_position, Situation, Style};
 use translate::{fraction, nearest, pseudo_harmonic, scaled_raise};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -176,7 +176,7 @@ impl Hand {
 #[derive(Default)]
 pub struct Bot {
     hand: Option<Hand>,
-    style: Style,
+    bias: Bias,
     last: Option<DecisionView>,
 }
 
@@ -184,17 +184,17 @@ impl Bot {
     pub fn new() -> Bot {
         Bot {
             hand: None,
-            style: Style::NEUTRAL,
+            bias: Bias::NEUTRAL,
             last: None,
         }
     }
 
-    pub fn set_style(&mut self, style: Style) {
-        self.style = style;
+    pub fn set_bias(&mut self, bias: Bias) {
+        self.bias = bias;
     }
 
-    pub fn style(&self) -> Style {
-        self.style
+    pub fn bias(&self) -> Bias {
+        self.bias
     }
 
     pub fn cursor(&self) -> Option<NodeId> {
@@ -317,12 +317,12 @@ impl Bot {
         let Some(probabilities) = model.file.try_probabilities(id, bucket) else {
             return passive(legal);
         };
-        let action = choose(model, &spot, probabilities, bucket, &self.style, draw);
+        let action = choose(model, &spot, probabilities, bucket, &self.bias, draw);
         let sampled = decision::Sampled {
             spot: &spot,
             probabilities,
             bucket,
-            style: &self.style,
+            bias: &self.bias,
             chosen: action,
         };
         self.last = Some(decision::explain(model, hand, legal, &sampled));
@@ -332,7 +332,7 @@ impl Bot {
             action,
             street: hand.street,
             board: hand.board.clone(),
-            style: self.style,
+            bias: self.bias,
         });
         hand.pending = Some(chosen.1);
         to_real(&spot, hand, chosen.0, legal)
@@ -420,7 +420,7 @@ fn opponent_step(model: &Model, hand: &Hand, next: Option<NodeId>) -> Option<Ste
         action,
         street: hand.street,
         board: hand.board.clone(),
-        style: Style::NEUTRAL,
+        bias: Bias::NEUTRAL,
     })
 }
 

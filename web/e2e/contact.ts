@@ -5,7 +5,7 @@ import type { Browser, Page } from '@playwright/test';
 import { byId, DEVICES, playToTheEnd, waitForWaypoint } from './shared.ts';
 import { answers, compose, snap, waitForServer } from './sheet.ts';
 import type { Shot } from './sheet.ts';
-import { serveTalk } from './talkServer.ts';
+import { serveConversation } from './conversationServer.ts';
 
 const PORT = Number(process.env.CONTACT_PORT ?? 4174);
 const BASE = `http://localhost:${PORT}/`;
@@ -85,11 +85,11 @@ async function capture(browser: Browser, sheet: Sheet): Promise<Shot[]> {
 const HER_LINE = 'Careful now, I have been waiting all evening for a hand like this.';
 const HER_ANSWER = 'Kind of you. Pour yourself another one.';
 
-async function captureTalk(browser: Browser, sheet: Sheet): Promise<Shot[]> {
+async function captureConversation(browser: Browser, sheet: Sheet): Promise<Shot[]> {
   const shots: Shot[] = [];
   const { viewport, isMobile, hasTouch } = DEVICES[sheet];
   const context = await browser.newContext({ viewport, isMobile, hasTouch });
-  await serveTalk(context, (request) => ({
+  await serveConversation(context, (request) => ({
     status: 200,
     body:
       request.kind === 'line'
@@ -143,7 +143,10 @@ const browser = await chromium.launch({
 try {
   await waitForServer(server, BASE);
   for (const sheet of SHEETS) {
-    const shots = [...(await capture(browser, sheet)), ...(await captureTalk(browser, sheet))];
+    const shots = [
+      ...(await capture(browser, sheet)),
+      ...(await captureConversation(browser, sheet)),
+    ];
     await compose(browser, shots, `${OUT_DIR}/${sheet}.png`);
     console.log(`saved ${OUT_DIR}/${sheet}.png with ${shots.length} screenshots`);
   }

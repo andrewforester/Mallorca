@@ -1,4 +1,4 @@
-export type { BotStyle, Brain, Breakdown, Decision } from './brain.ts';
+export type { BotBias, Brain, Breakdown, Decision } from './brain.ts';
 export { createMathBrain } from './brain.ts';
 export type { Observation } from './observation.ts';
 export { toObservations } from './observation.ts';

@@ -11,5 +11,5 @@ export type { MoodConfig, Octant } from './mood.ts';
 export type { BigFive, Personality, Traits } from './personality.ts';
 export { MALLORCA, PERSONALITIES } from './profiles.ts';
 export type { PersonalityKey } from './profiles.ts';
-export { STYLE_KEYS } from './style.ts';
-export type { PlayStyle, StyleKey } from './style.ts';
+export { BIAS_KEYS, NEUTRAL_PLAY_BIAS } from './bias.ts';
+export type { BiasKey, PlayBias } from './bias.ts';

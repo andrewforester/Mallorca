@@ -125,12 +125,12 @@ describe('CfrBrain', () => {
     }
   });
 
-  it('setStyle reaches the module', () => {
+  it('setBias reaches the module', () => {
     const raises = (aggression: number): number => {
       let count = 0;
       for (let seed = 0; seed < 500; seed++) {
         const brain = createCfrBrain(model, mulberry32(seed));
-        brain.setStyle?.({ aggression, bluff: 1, tightness: 1, sizing: 1, stickiness: 1 });
+        brain.setBias?.({ aggression, bluff: 1, tightness: 1, sizing: 1, stickiness: 1 });
         brain.observe({
           type: 'handStarted',
           handNumber: 1,
@@ -235,23 +235,23 @@ describe('the explanation of a cfr decision', () => {
     expect(explained.moves[explained.chosen]).toEqual(action);
     expect(explained.moves.length).toBe(explained.base.length);
     expect(sum(explained.base)).toBeCloseTo(1, 5);
-    expect(explained.styled).toEqual(explained.base);
+    expect(explained.biased).toEqual(explained.base);
     brain.dispose();
   });
 
-  it('shows the style moving the shares and does not change the play', () => {
+  it('shows the bias moving the shares and does not change the play', () => {
     const asked = seated(5);
     const plain = seated(5);
-    const style = { aggression: 1.6, bluff: 1, tightness: 0.6, sizing: 1, stickiness: 1 };
-    asked.setStyle(style);
-    plain.setStyle(style);
+    const bias = { aggression: 1.6, bluff: 1, tightness: 0.6, sizing: 1, stickiness: 1 };
+    asked.setBias(bias);
+    plain.setBias(bias);
     const action = asked.decide(open).action;
     const explained = asked.explain();
     expect(plain.decide(open).action).toEqual(action);
     expect(explained).not.toBeNull();
     if (explained === null) return;
-    expect(sum(explained.styled)).toBeCloseTo(1, 5);
-    expect(explained.styled).not.toEqual(explained.base);
+    expect(sum(explained.biased)).toBeCloseTo(1, 5);
+    expect(explained.biased).not.toEqual(explained.base);
     asked.dispose();
     plain.dispose();
   });

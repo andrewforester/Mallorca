@@ -3,12 +3,12 @@ import {
   readAutoNext,
   readSound,
   readTableStyle,
-  readTalk,
+  readConversation,
   readTells,
   writeAutoNext,
   writeSound,
   writeTableStyle,
-  writeTalk,
+  writeConversation,
   writeTells,
 } from './preferences.ts';
 
@@ -91,12 +91,12 @@ describe('sound preference', () => {
 
 describe('table talk preference', () => {
   it('is on by default and remembers turning it off', () => {
-    expect(readTalk()).toBe(true);
-    writeTalk(false);
+    expect(readConversation()).toBe(true);
+    writeConversation(false);
     expect(localStorage.getItem('mallorca.talk')).toBe('off');
-    expect(readTalk()).toBe(false);
-    writeTalk(true);
-    expect(readTalk()).toBe(true);
+    expect(readConversation()).toBe(false);
+    writeConversation(true);
+    expect(readConversation()).toBe(true);
   });
 
   it('stays on when storage throws', () => {
@@ -104,8 +104,8 @@ describe('table talk preference', () => {
       throw new Error('blocked');
     };
     vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked });
-    expect(() => writeTalk(false)).not.toThrow();
-    expect(readTalk()).toBe(true);
+    expect(() => writeConversation(false)).not.toThrow();
+    expect(readConversation()).toBe(true);
   });
 });
 

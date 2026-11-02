@@ -1,5 +1,5 @@
-use super::style::styled;
-use super::{Bot, Model, Style};
+use super::bias::biased;
+use super::{Bias, Bot, Model};
 use crate::cards::Card;
 use crate::pairs::{pair_cards, PAIRS};
 use crate::tree::{NodeId, Street};
@@ -11,7 +11,7 @@ pub struct Step {
     pub action: usize,
     pub street: Street,
     pub board: Vec<Card>,
-    pub style: Style,
+    pub bias: Bias,
 }
 
 impl Bot {
@@ -42,24 +42,18 @@ impl Bot {
 }
 
 pub(crate) fn action_probability(model: &Model, node: NodeId, bucket: u16, action: usize) -> f32 {
-    styled_probability(model, node, bucket, action, &Style::NEUTRAL)
+    biased_probability(model, node, bucket, action, &Bias::NEUTRAL)
 }
 
-fn styled_probability(
-    model: &Model,
-    node: NodeId,
-    bucket: u16,
-    action: usize,
-    style: &Style,
-) -> f32 {
+fn biased_probability(model: &Model, node: NodeId, bucket: u16, action: usize, bias: &Bias) -> f32 {
     let Some(p) = model.file.try_probabilities(node, bucket) else {
         return 0.0;
     };
-    if *style != Style::NEUTRAL {
+    if *bias != Bias::NEUTRAL {
         let Some(spot) = model.spot(node) else {
             return 0.0;
         };
-        let weights = styled(model, &spot, p, bucket, style);
+        let weights = biased(model, &spot, p, bucket, bias);
         let total: f64 = weights.iter().sum();
         return match weights.get(action) {
             Some(&w) if total > 0.0 => (w / total) as f32,
@@ -113,7 +107,7 @@ fn cached_range(model: &Model, steps: &[Step], board: &[Card], cache: &mut Bucke
                     return 0.0;
                 }
                 let p = *by_bucket.entry(bucket).or_insert_with(|| {
-                    styled_probability(model, step.node, bucket, step.action, &step.style)
+                    biased_probability(model, step.node, bucket, step.action, &step.bias)
                 });
                 w * p
             })

@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 import { DEVICES } from './e2e/shared.ts';
-import { TALK_URL } from './e2e/talkServer.ts';
+import { CONVERSATION_URL } from './e2e/conversationServer.ts';
 
 const PREVIEW_PORT = Number(process.env.E2E_PORT ?? 4173);
 const BASE_URL = `http://localhost:${PREVIEW_PORT}/`;
@@ -42,7 +42,7 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 120_000,
     env: {
-      VITE_SUPABASE_URL: TALK_URL,
+      VITE_SUPABASE_URL: CONVERSATION_URL,
       VITE_SUPABASE_ANON_KEY: 'e2e-anon-key',
     },
   },

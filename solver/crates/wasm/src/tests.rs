@@ -203,26 +203,26 @@ fn a_raise_is_the_answer_when_it_is_the_only_legal_move() {
 fn unknown_handles_are_harmless() {
     assert_eq!(bot_new(9999), -1);
     hand_started(9999, 1, 400, 400, 10, 20);
-    bot_style(9999, 1.25, 1.3, 0.85, 1.0, 1.0);
-    bot_style(-1, 1.25, 1.3, 0.85, 1.0, 1.0);
+    bot_bias(9999, 1.25, 1.3, 0.85, 1.0, 1.0);
+    bot_bias(-1, 1.25, 1.3, 0.85, 1.0, 1.0);
     assert_eq!(decide(9999, 1, 0, 10, -1, -1, 0.5), KIND_NONE);
 }
 
 #[test]
-fn a_styled_bot_keeps_its_style_and_plays_legal_moves() {
+fn a_biased_bot_keeps_its_bias_and_plays_legal_moves() {
     let model = loaded(&play_file());
     let bot = bot_new(model);
-    bot_style(bot, 1.25, 1.3, 0.85, 1.2, 1.4);
+    bot_bias(bot, 1.25, 1.3, 0.85, 1.2, 1.4);
     for draw in [0.0, 0.3, 0.6, 0.99] {
         hand_started(bot, 1, 400, 400, 10, 20);
         hole_cards(bot, 48, 49);
         let kind = decide(bot, 1, 0, 10, 40, 400, draw);
         assert!([KIND_FOLD, KIND_CALL, KIND_RAISE].contains(&kind), "{kind}");
     }
-    let style = with_seat(bot, None, |s| Some(s.bot.style()));
+    let bias = with_seat(bot, None, |s| Some(s.bot.bias()));
     assert_eq!(
-        style,
-        Some(Style {
+        bias,
+        Some(Bias {
             aggression: 1.25,
             bluff: 1.3,
             tightness: 0.85,
@@ -231,7 +231,7 @@ fn a_styled_bot_keeps_its_style_and_plays_legal_moves() {
         })
     );
     bot_free(bot);
-    bot_style(bot, 1.0, 1.0, 1.0, 1.0, 1.0);
+    bot_bias(bot, 1.0, 1.0, 1.0, 1.0, 1.0);
 }
 
 #[test]
@@ -409,14 +409,14 @@ fn the_grid_needs_a_fresh_spot_after_the_hand_moves() {
 #[test]
 fn decision_layout_matches_the_core_decision() {
     let (model, mut core) = core_bot([48, 49]);
-    core.set_style(Style {
+    core.set_bias(Bias {
         aggression: 1.5,
-        ..Style::NEUTRAL
+        ..Bias::NEUTRAL
     });
     core.decide(&model, &OPEN, 0.3);
     let expected = core.last_decision().unwrap();
     let bot = seated([48, 49]);
-    bot_style(bot, 1.5, 1.0, 1.0, 1.0, 1.0);
+    bot_bias(bot, 1.5, 1.0, 1.0, 1.0, 1.0);
     decide(bot, 1, 0, 10, 40, 400, 0.3);
     let n = expected.moves.len();
     let out = read(bot_decision(bot), 2 + 4 * n);
@@ -427,7 +427,7 @@ fn decision_layout_matches_the_core_decision() {
         assert_eq!(out[2 + 2 * k], kind as f32, "{mv:?}");
         assert_eq!(out[3 + 2 * k], to as f32, "{mv:?}");
         assert_eq!(out[2 + 2 * n + k], expected.base[k] as f32);
-        assert_eq!(out[2 + 3 * n + k], expected.styled[k] as f32);
+        assert_eq!(out[2 + 3 * n + k], expected.biased[k] as f32);
     }
     bot_free(bot);
 }

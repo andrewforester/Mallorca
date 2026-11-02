@@ -15,13 +15,13 @@ function explainingBot(): BotClient {
   return {
     ...inner,
     select: (opponent) => Promise.resolve(opponent),
-    decide: async (legal, style, explain) => {
-      const decision = await inner.decide(legal, style);
+    decide: async (legal, bias, explain) => {
+      const decision = await inner.decide(legal, bias);
       if (explain !== true) return decision;
       const moves = [{ kind: 'fold' as const }, decision.action];
       return {
         ...decision,
-        breakdown: { moves, base: [0.25, 0.75], styled: [0.1, 0.9], chosen: 1 },
+        breakdown: { moves, base: [0.25, 0.75], biased: [0.1, 0.9], chosen: 1 },
       };
     },
   };
@@ -98,12 +98,12 @@ describe('EmotionDebug', () => {
     );
   });
 
-  it('says no style was sent before her first decision', async () => {
+  it('says no bias was sent before her first decision', async () => {
     await opened(await seated());
-    expect(within(screen.getByTestId('debug-style')).getByText(COPY.notSent)).toBeTruthy();
+    expect(within(screen.getByTestId('debug-bias')).getByText(COPY.notSent)).toBeTruthy();
   });
 
-  it('shows her emotions, mood, load and style', async () => {
+  it('shows her emotions, mood, load and bias', async () => {
     const session = await seated();
     await act(() => session.getState().act({ kind: 'passive' }));
     await opened(session);
@@ -111,12 +111,12 @@ describe('EmotionDebug', () => {
     expect(within(emotions).getByText(COPY.emotion.anger)).toBeTruthy();
     expect(within(screen.getByTestId('debug-mood')).getAllByText(/^P [-\d.]+/)[0]).toBeTruthy();
     expect(within(screen.getByTestId('debug-load')).getByText(COPY.load.overload)).toBeTruthy();
-    const style = screen.getByTestId('debug-style');
-    expect(within(style).getByText(COPY.style.looseness)).toBeTruthy();
-    expect(within(style).getByText(COPY.sent.tightness)).toBeTruthy();
+    const bias = screen.getByTestId('debug-bias');
+    expect(within(bias).getByText(COPY.bias.looseness)).toBeTruthy();
+    expect(within(bias).getByText(COPY.sent.tightness)).toBeTruthy();
   });
 
-  it('shows the last decision with the blueprint and the styled shares', async () => {
+  it('shows the last decision with the blueprint and the biased shares', async () => {
     const session = await seated();
     await act(() => session.getState().act({ kind: 'passive' }));
     const panel = await opened(session);

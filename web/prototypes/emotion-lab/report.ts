@@ -1,4 +1,4 @@
-import { EMOTIONS, STYLE_KEYS, createEngine } from '../../src/emotion/index.ts';
+import { EMOTIONS, BIAS_KEYS, createEngine } from '../../src/emotion/index.ts';
 import { LAB_MOOD } from './lab.ts';
 import { PROFILES } from './profiles.ts';
 import type { ProfileId } from './profiles.ts';
@@ -106,7 +106,7 @@ function sceneLog(sceneId: string, profileId: ProfileId): string[] {
         (e) => `${EMOTION_LABEL[e]} ${f2(s.emotions[e])}`,
       );
       log.push(
-        `- **${scene.moment} с, ключевой момент**: ${top.join(', ')}; настроение ${pad(s.mood)}; перегрузка ${f2(s.load.overload)}${s.load.dominant && s.load.overload > 0.05 ? ` (в основном ${LOAD_LABEL[s.load.dominant]})` : ''}, до игры доходит ${Math.round(s.load.leakage * 100)}%; стиль ${STYLE_KEYS.map((k) => `${k} ×${f2(s.style[k])}`).join(', ')}`,
+        `- **${scene.moment} с, ключевой момент**: ${top.join(', ')}; настроение ${pad(s.mood)}; перегрузка ${f2(s.load.overload)}${s.load.dominant && s.load.overload > 0.05 ? ` (в основном ${LOAD_LABEL[s.load.dominant]})` : ''}, до игры доходит ${Math.round(s.load.leakage * 100)}%; перекос ${BIAS_KEYS.map((k) => `${k} ×${f2(s.bias[k])}`).join(', ')}`,
       );
     }
   }

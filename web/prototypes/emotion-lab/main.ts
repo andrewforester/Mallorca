@@ -1,9 +1,9 @@
-import { EMOTIONS, LOAD_SOURCES, STYLE_KEYS, createEngine } from '../../src/emotion/index.ts';
+import { EMOTIONS, LOAD_SOURCES, BIAS_KEYS, createEngine } from '../../src/emotion/index.ts';
 import type { Pad, Personality, Snapshot } from '../../src/emotion/index.ts';
 import { LAB_MOOD, LAB_SPEEDUP, clamp01 } from './lab.ts';
 import { PROFILES } from './profiles.ts';
 import type { Profile, ProfileId } from './profiles.ts';
-import { OCTANT_LABEL, STYLE_LABEL } from './ui/labels.ts';
+import { OCTANT_LABEL, BIAS_LABEL } from './ui/labels.ts';
 import { mulberry32 } from '../../src/cards/index.ts';
 import { ANCHOR_LABEL, LOAD_LABEL } from './ui/labels.ts';
 import {
@@ -208,9 +208,9 @@ const loadBars = createBars(
   $('tiltParts'),
   LOAD_SOURCES.map((k) => ({ key: k, label: LOAD_LABEL[k], negative: true })),
 );
-const styleBars = createBars(
-  $('style'),
-  STYLE_KEYS.map((k) => ({ key: k, label: STYLE_LABEL[k], centered: true })),
+const biasBars = createBars(
+  $('bias'),
+  BIAS_KEYS.map((k) => ({ key: k, label: BIAS_LABEL[k], centered: true })),
 );
 const moodMap = createMoodMap($('map') as unknown as SVGSVGElement);
 
@@ -236,7 +236,7 @@ function renderPanels(s: Snapshot, mix: number[]): void {
   $('tiltText').textContent =
     `перегрузка ${s.load.overload.toFixed(2)}${dominant}\nнагрузка ${s.load.load.toFixed(2)} при самообладании ${s.traits.composure.toFixed(2)}\nдо игры доходит ${Math.round(s.load.leakage * 100)}% эмоций (дисциплина ${s.traits.discipline.toFixed(2)}), давление рейзами ${s.pressure.toFixed(1)}, сессия ${s.sessionNetBb} бб`;
   loadBars(s.load.parts);
-  styleBars(s.style, (v) => `×${v.toFixed(2)}`);
+  biasBars(s.bias, (v) => `×${v.toFixed(2)}`);
   $('faceText').textContent =
     `покерфейс ${lab.mask.toFixed(2)} (привычка ${s.traits.mask.toFixed(2)}, усилие ${lab.effort.toFixed(2)}, перегрузка снимает ${(0.6 * s.load.overload).toFixed(2)})\nвыразительность ${s.traits.expressiveness.toFixed(2)}\nголос ${voice.name()}: темп ${lab.prosody.rate.toFixed(2)}, высота ${lab.prosody.pitch.toFixed(2)}, громкость ${lab.prosody.volume.toFixed(2)}`;
   const clock = $('clock');

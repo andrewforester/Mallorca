@@ -1,7 +1,7 @@
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { MALLORCA_LOOK, faceFrame, pulsesOf } from '../face/index.ts';
 import type { FaceFrame, GazeTarget, Pulse } from '../face/index.ts';
-import type { Talk } from '../talk/index.ts';
+import type { Impulse, Persona } from '../persona/index.ts';
 import { gazeOf } from './faceCues.ts';
 
 export type FaceCue =
@@ -16,7 +16,7 @@ export interface FaceState {
 export interface FaceHost {
   read(): FaceState;
   write(face: FaceState): void;
-  talk(): Talk | null;
+  persona(): Persona | null;
   now(): number;
   botSeat: SeatIndex;
 }
@@ -35,21 +35,31 @@ export const initialFace = (on: boolean): FaceState => ({ on, cues: [] });
 
 export function sessionFace(host: FaceHost): SessionFace {
   let nextId = 0;
-  const frameOf = (talk: Talk): FaceFrame =>
-    faceFrame(talk.feelingAt(host.now()), talk.stance(), MALLORCA_LOOK);
-  const add = (fresh: NewCue[]): void => {
-    if (fresh.length === 0) return;
+  let seen: Persona | null = null;
+  let cursor = 0;
+  const frameOf = (persona: Persona): FaceFrame => {
+    const view = persona.view(host.now());
+    return faceFrame(view.snapshot, view.stance, MALLORCA_LOOK);
+  };
+  const fresh = (persona: Persona): Impulse[] => {
+    const from = persona === seen ? cursor : 0;
+    seen = persona;
+    cursor = persona.lastJournalId();
+    return persona.journalSince(from).flatMap((entry) => entry.impulses);
+  };
+  const add = (cues: NewCue[]): void => {
+    if (cues.length === 0) return;
     const face = host.read();
-    const cues = fresh.map((cue) => ({ ...cue, id: (nextId += 1) }) as FaceCue);
-    host.write({ ...face, cues: [...face.cues, ...cues].slice(-MAX_CUES) });
+    const numbered = cues.map((cue) => ({ ...cue, id: (nextId += 1) }) as FaceCue);
+    host.write({ ...face, cues: [...face.cues, ...numbered].slice(-MAX_CUES) });
   };
   return {
     observe(events) {
-      const talk = host.talk();
-      if (talk === null) return;
-      const impulses = talk.impulses();
+      const persona = host.persona();
+      if (persona === null) return;
+      const impulses = fresh(persona);
       if (!host.read().on) return;
-      const pulses = pulsesOf(impulses, frameOf(talk).mask, MALLORCA_LOOK);
+      const pulses = pulsesOf(impulses, frameOf(persona).mask, MALLORCA_LOOK);
       const gaze = gazeOf(events, host.botSeat);
       add([
         ...pulses.map((pulse): NewCue => ({ kind: 'pulse', pulse })),
@@ -57,12 +67,13 @@ export function sessionFace(host: FaceHost): SessionFace {
       ]);
     },
     setOn(on) {
-      host.talk()?.impulses();
+      const persona = host.persona();
+      if (persona !== null) fresh(persona);
       host.write({ ...host.read(), on });
     },
     now() {
-      const talk = host.talk();
-      return talk === null || !host.read().on ? null : frameOf(talk);
+      const persona = host.persona();
+      return persona === null || !host.read().on ? null : frameOf(persona);
     },
   };
 }

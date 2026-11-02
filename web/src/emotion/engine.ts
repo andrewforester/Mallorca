@@ -6,8 +6,8 @@ import { GAME_MOOD, octantOf, stepMood } from './mood.ts';
 import type { MoodConfig } from './mood.ts';
 import { traitsOf } from './personality.ts';
 import type { Personality, Traits } from './personality.ts';
-import { driversOf, styleOf } from './style.ts';
-import type { Drivers, PlayStyle } from './style.ts';
+import { biasOf, driversOf } from './bias.ts';
+import type { Drivers, PlayBias } from './bias.ts';
 import { loadOf } from './load.ts';
 import type { LoadReading } from './load.ts';
 
@@ -40,7 +40,7 @@ export interface Snapshot {
   pressure: number;
   load: LoadReading;
   drivers: Drivers;
-  style: PlayStyle;
+  bias: PlayBias;
 }
 
 export interface Engine {
@@ -165,7 +165,7 @@ class EmotionEngine implements Engine {
       pressure: this.pressure,
       load,
       drivers,
-      style: styleOf(drivers, load.leakage),
+      bias: biasOf(drivers, load.leakage, this.traits.baseline),
     };
   }
 

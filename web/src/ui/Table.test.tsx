@@ -157,7 +157,7 @@ function talking(on = true) {
   const vm = viewModel();
   const her = { id: 1, speaker: 'mallorca' as const, text: 'Brave call.', handNumber: 1 };
   const mine = { id: 2, speaker: 'player' as const, text: 'Thanks', handNumber: 1 };
-  vm.talk = {
+  vm.conversation = {
     available: true,
     on,
     level: 'subtle',
@@ -169,9 +169,9 @@ function talking(on = true) {
 }
 
 describe('Table talk', () => {
-  it('renders no chat or bubbles when talk is not available', () => {
+  it('renders no chat or bubbles when conversation is not available', () => {
     const vm = viewModel();
-    vm.talk.herBubble = { id: 1, speaker: 'mallorca', text: 'Hidden', handNumber: 1 };
+    vm.conversation.herBubble = { id: 1, speaker: 'mallorca', text: 'Hidden', handNumber: 1 };
     table(vm);
     expect(screen.queryByTestId('bubble-mallorca')).toBeNull();
     expect(screen.queryByTestId('chat-open')).toBeNull();
@@ -188,7 +188,7 @@ describe('Table talk', () => {
     expect(screen.getByTestId('coach')).not.toBeNull();
   });
 
-  it('hides the chat while talk is off', () => {
+  it('hides the chat while conversation is off', () => {
     table(talking(false));
     expect(screen.queryByTestId('bubble-mallorca')).toBeNull();
     expect(screen.queryByTestId('chat-open')).toBeNull();
@@ -202,20 +202,25 @@ describe('Table talk announcements', () => {
     const view = render(
       <Table vm={vm} phase="humanToAct" humanSeat={0} onAct={vi.fn()} onNextHand={vi.fn()} />,
     );
-    const region = screen.getByTestId('talk-region');
+    const region = screen.getByTestId('conversation-region');
     expect(region.getAttribute('aria-live')).toBe('polite');
     expect(region.textContent).toBe('Brave call.');
     const next = talking();
-    next.talk.herBubble = { id: 3, speaker: 'mallorca', text: 'Your turn, love.', handNumber: 1 };
+    next.conversation.herBubble = {
+      id: 3,
+      speaker: 'mallorca',
+      text: 'Your turn, love.',
+      handNumber: 1,
+    };
     view.rerender(
       <Table vm={next} phase="humanToAct" humanSeat={0} onAct={vi.fn()} onNextHand={vi.fn()} />,
     );
-    expect(screen.getByTestId('talk-region')).toBe(region);
+    expect(screen.getByTestId('conversation-region')).toBe(region);
     expect(region.textContent).toBe('Your turn, love.');
   });
 
-  it('keeps the region empty without talk', () => {
+  it('keeps the region empty without conversation', () => {
     table();
-    expect(screen.getByTestId('talk-region').textContent).toBe('');
+    expect(screen.getByTestId('conversation-region').textContent).toBe('');
   });
 });

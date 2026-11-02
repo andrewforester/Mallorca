@@ -1305,7 +1305,7 @@ button {
   }
 }
 
-.talk-bubble {
+.conversation-bubble {
   position: absolute;
   z-index: 4;
   width: max-content;
@@ -1323,7 +1323,7 @@ button {
   pointer-events: none;
 }
 
-.talk-bubble::after {
+.conversation-bubble::after {
   content: '';
   position: absolute;
   width: 10px;
@@ -1334,34 +1334,34 @@ button {
   border-left: none;
 }
 
-.talk-bubble-rest {
+.conversation-bubble-rest {
   visibility: hidden;
 }
 
-.talk-bubble-mallorca {
+.conversation-bubble-mallorca {
   bottom: calc(100% + var(--space-3) + var(--action-bubble-height));
   left: 50%;
   max-width: min(16rem, calc(100vw - 2 * var(--space-4)));
   translate: -50% 0;
 }
 
-.talk-bubble-mallorca::after {
+.conversation-bubble-mallorca::after {
   left: calc(50% - 5px);
   bottom: -6px;
   rotate: 45deg;
 }
 
-.table-result .talk-bubble-mallorca {
+.table-result .conversation-bubble-mallorca {
   display: none;
 }
 
-.talk-bubble-player {
+.conversation-bubble-player {
   bottom: calc(100% + var(--space-2) + var(--action-bubble-height));
   left: 0;
   max-width: min(11rem, calc(50vw - var(--space-4)));
 }
 
-.talk-bubble-player::after {
+.conversation-bubble-player::after {
   left: var(--space-4);
   bottom: -6px;
   rotate: 45deg;
@@ -1540,21 +1540,21 @@ button {
     display: none;
   }
 
-  .talk-bubble-mallorca {
+  .conversation-bubble-mallorca {
     bottom: auto;
     top: 0;
     left: calc(100% + var(--space-3));
     translate: none;
   }
 
-  .talk-bubble-mallorca::after {
+  .conversation-bubble-mallorca::after {
     left: -6px;
     top: 12px;
     bottom: auto;
     rotate: 135deg;
   }
 
-  .table-result .talk-bubble-mallorca {
+  .table-result .conversation-bubble-mallorca {
     display: block;
   }
 }
@@ -1577,20 +1577,20 @@ button {
     right: calc(var(--action-bar-width) + 2 * var(--space-5));
   }
 
-  .talk-bubble-mallorca {
+  .conversation-bubble-mallorca {
     left: calc(100% + var(--chat-button-size) + 2 * var(--space-2));
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .talk-bubble {
+  .conversation-bubble {
     animation:
-      talk-bubble-in 240ms ease-out calc(0ms - var(--bubble-elapsed, 0ms)) both,
-      talk-bubble-out 600ms ease-in calc(6400ms - var(--bubble-elapsed, 0ms)) forwards;
+      conversation-bubble-in 240ms ease-out calc(0ms - var(--bubble-elapsed, 0ms)) both,
+      conversation-bubble-out 600ms ease-in calc(6400ms - var(--bubble-elapsed, 0ms)) forwards;
   }
 }
 
-@keyframes talk-bubble-in {
+@keyframes conversation-bubble-in {
   from {
     opacity: 0;
     transform: translateY(4px);
@@ -1602,7 +1602,7 @@ button {
   }
 }
 
-@keyframes talk-bubble-out {
+@keyframes conversation-bubble-out {
   to {
     opacity: 0;
   }
@@ -1998,12 +1998,12 @@ button {
     z-index: 6;
   }
 
-  .table-layout:has(.face-seat) .talk-bubble-mallorca {
+  .table-layout:has(.face-seat) .conversation-bubble-mallorca {
     top: calc(100% + var(--card-width) * 1.3 + var(--space-3));
     bottom: auto;
   }
 
-  .table-layout:has(.face-seat) .talk-bubble-mallorca::after {
+  .table-layout:has(.face-seat) .conversation-bubble-mallorca::after {
     top: -6px;
     bottom: auto;
     rotate: 225deg;

@@ -2,7 +2,7 @@ mod buffers;
 mod slots;
 
 use buffers::Buffers;
-use mallorca_core::bot::{Bot, Legal, Model, Move, SpotView, Style};
+use mallorca_core::bot::{Bias, Bot, Legal, Model, Move, SpotView};
 use mallorca_core::cards::Card;
 use mallorca_core::strategy::{StrategyError, StrategyFile};
 use slots::Slots;
@@ -176,7 +176,7 @@ pub extern "C" fn hole_cards(bot: i32, a: u32, b: u32) {
 }
 
 #[no_mangle]
-pub extern "C" fn bot_style(
+pub extern "C" fn bot_bias(
     bot: i32,
     aggression: f64,
     bluff: f64,
@@ -185,7 +185,7 @@ pub extern "C" fn bot_style(
     stickiness: f64,
 ) {
     with_seat(bot, (), |s| {
-        s.bot.set_style(Style {
+        s.bot.set_bias(Bias {
             aggression,
             bluff,
             tightness,
@@ -310,7 +310,7 @@ pub extern "C" fn bot_decision(bot: i32) -> *const f32 {
             s.decision.push(to as f32);
         }
         s.decision.extend(view.base.iter().map(|&p| p as f32));
-        s.decision.extend(view.styled.iter().map(|&p| p as f32));
+        s.decision.extend(view.biased.iter().map(|&p| p as f32));
         s.decision.as_ptr()
     })
 }

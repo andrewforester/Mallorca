@@ -1,5 +1,7 @@
 import { EMOTIONS, NEGATIVE, POSITIVE, clamp } from './emotions.ts';
 import type { Emotion, Pad } from './emotions.ts';
+import { NEUTRAL_PLAY_BIAS } from './biasKeys.ts';
+import type { PlayBias } from './biasKeys.ts';
 
 export interface BigFive {
   openness: number;
@@ -24,6 +26,7 @@ export interface Traits {
   expressiveness: number;
   mask: number;
   talkativeness: number;
+  baseline: PlayBias;
 }
 
 export function defaultMoodOf(b: BigFive): Pad {
@@ -86,5 +89,6 @@ export function traitsOf(p: Personality): Traits {
     expressiveness: clamp(0.85 + 0.35 * b.extraversion + 0.1 * b.neuroticism, 0.3, 1.4),
     mask: clamp(p.suppression, 0, 1),
     talkativeness: clamp(0.5 + 0.4 * b.extraversion, 0.1, 1),
+    baseline: NEUTRAL_PLAY_BIAS,
   };
 }
