@@ -797,4 +797,78 @@ describe('session conversation', () => {
     table.session.getState().leave();
     expect(client.summaries[0]?.summary.signals).toEqual({});
   });
+
+  it('traces the fate of every planned line in a debug session', async () => {
+    const pending: Pending[] = [];
+    const client = fakeClient({ line: pendingLines(pending) });
+    const table = open(client, { debug: true });
+    await table.session.getState().start(CASH, 'cfr');
+    await untilHerBet(table, client);
+    const bet = pending.find((p) => p.herBet);
+    expect(client.lines.find(isHerBet)?.debug).toBe(true);
+    await table.session.getState().act({ kind: 'fold' });
+    bet?.answer.resolve('Too late');
+    await flush();
+    const entries = table.session.getState().debug?.conversation.entries ?? [];
+    const late = entries.find((e) => e.plan?.occasion.startsWith('you bet') && e.answer !== null);
+    expect(late?.fate).toBe('stale');
+    expect(late?.answer?.text).toBe('Too late');
+    expect(entries.some((e) => e.fate === 'silent')).toBe(true);
+  });
+
+  it('traces a shown line with its attempts, a filtered one and an error', async () => {
+    const texts: (string | null)[] = [];
+    const client = fakeClient({ line: () => Promise.resolve(texts.shift() ?? 'Your move') });
+    client.planLine = async (request) => {
+      client.lines.push(request);
+      const n = client.lines.length;
+      if (n === 1)
+        return { text: null, attempts: [{ text: 'x', rejected: ['named Qs'] }], prompt: null };
+      if (n === 2) return null;
+      return {
+        text: 'Hm.',
+        attempts: [{ text: 'Hm.', rejected: [] }],
+        prompt: { system: 'S', state: 'T' },
+      };
+    };
+    const table = open(client, { debug: true });
+    await table.session.getState().start(CASH, 'cfr');
+    for (let i = 0; i < 40 && client.lines.length < 3; i += 1) {
+      await foldHand(table);
+      await flush();
+    }
+    await flush();
+    const fates = (table.session.getState().debug?.conversation.entries ?? [])
+      .filter((e) => (e.plan !== null && e.answer !== null) || e.fate === 'error')
+      .map((e) => e.fate);
+    expect(fates).toContain('filtered');
+    expect(fates).toContain('error');
+    const shown = table.session
+      .getState()
+      .debug?.conversation.entries.find((e) => e.fate === 'shown');
+    expect(shown?.request?.prompt).toEqual({ system: 'S', state: 'T' });
+    expect(shown?.answer?.attempts).toEqual([{ text: 'Hm.', rejected: [] }]);
+  });
+
+  it('places a reply typed between hands', async () => {
+    const client = fakeClient();
+    const table = open(client);
+    await table.session.getState().start(CASH, 'cfr');
+    await table.session.getState().act({ kind: 'fold' });
+    table.session.getState().say('gg');
+    await flush();
+    const texts = table.session.getState().conversation.lines.map((l) => l.text);
+    expect(texts.indexOf('Sure')).toBeGreaterThan(texts.indexOf('gg'));
+    expect(texts.indexOf('gg')).toBeGreaterThanOrEqual(0);
+    expect(client.replies[0]?.plan.claim).toBeNull();
+  });
+
+  it('keeps no trace and sends no debug flag outside a debug session', async () => {
+    const client = fakeClient();
+    const table = open(client);
+    await table.session.getState().start(CASH, 'cfr');
+    await untilHerBet(table, client);
+    expect(table.session.getState().debug).toBeNull();
+    expect(client.lines.every((l) => l.debug === false)).toBe(true);
+  });
 });
