@@ -93,6 +93,13 @@ export function EmotionDebug({ session }: { session: Session }) {
     writeTab(next);
     setTab(next);
   };
+  const follow = (event: MouseEvent) => {
+    const href = (event.target as Element | null)?.closest('a')?.getAttribute('href') ?? '';
+    if (href.startsWith('#trace-') || href.startsWith('#journal-')) {
+      choose(href.startsWith('#trace-') ? 'conversation' : 'feelings');
+      requestAnimationFrame(() => document.getElementById(href.slice(1))?.scrollIntoView?.());
+    }
+  };
   return (
     <>
       <button
@@ -111,6 +118,7 @@ export function EmotionDebug({ session }: { session: Session }) {
           class="debug-panel"
           data-testid="emotion-debug"
           aria-label={COPY.title}
+          onClick={follow}
         >
           <Tabs tab={tab} choose={choose} />
           {tab === 'conversation' ? (

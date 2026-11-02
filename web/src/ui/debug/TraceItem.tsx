@@ -1,3 +1,4 @@
+import { formatCard } from '../../game/index.ts';
 import type { TraceEntry } from '../../game/index.ts';
 import { TALK } from './conversationCopy.ts';
 import { f2 } from './format.ts';
@@ -91,7 +92,43 @@ function Plan({ entry }: { entry: TraceEntry }) {
         {`${TALK.plan}: ${plan.act}, ${voice}, ${plan.words.min} to ${plan.words.max} ${TALK.words}${claim}`}
       </span>
       <span class="debug-note">{`${TALK.humour}: ${joke}${draw}`}</span>
+      <span class="debug-note">{factsText(plan)}</span>
     </>
+  );
+}
+
+type PlanOf = NonNullable<TraceEntry['plan']>;
+
+function factsText(plan: PlanOf): string {
+  const f = plan.facts;
+  const parts = [
+    f.street,
+    `pot ${f.potBb.toFixed(1).replace(/\.0$/, '')} bb`,
+    `stacks ${f.stacksBb.her} and ${f.stacksBb.player} bb`,
+  ];
+  if (f.board.length > 0) parts.push(`board ${f.board.map(formatCard).join(' ')}`);
+  if (f.card !== null) parts.push(`card ${formatCard(f.card)}`);
+  if (f.shown !== null) {
+    parts.push(
+      `shown ${f.shown.her.map(formatCard).join(' ')} / ${f.shown.player.map(formatCard).join(' ')}`,
+    );
+  }
+  return `${TALK.facts}: ${parts.join(', ')}`;
+}
+
+const numbers = (label: string, values: Record<string, number>): string =>
+  `${label} ${Object.entries(values)
+    .map(([k, v]) => `${k} ${f2(v)}`)
+    .join(', ')}`;
+
+function HumourNumbers({ entry }: { entry: TraceEntry }) {
+  const { humour } = entry;
+  if (humour === null) return null;
+  const roll = humour.styleRoll === null ? '' : `; ${TALK.styleRoll} ${f2(humour.styleRoll)}`;
+  return (
+    <span class="debug-note">
+      {`${numbers(TALK.tendency, humour.tendency)}; ${numbers(TALK.state, humour.state)}${roll}`}
+    </span>
   );
 }
 
@@ -128,6 +165,7 @@ export function TraceItem({ entry }: { entry: TraceEntry }) {
       <Rules entry={entry} />
       <Gates entry={entry} />
       <Plan entry={entry} />
+      <HumourNumbers entry={entry} />
       <Exchange entry={entry} />
       <span class="debug-note">
         {`${TALK.fate}: ${TALK.fates[entry.fate]}. ${TALK.journal}: `}

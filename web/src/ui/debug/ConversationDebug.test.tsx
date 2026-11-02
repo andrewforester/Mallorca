@@ -155,4 +155,21 @@ describe('ConversationDebug', () => {
     render(<ConversationDebug trace={{ ...trace, entries: [{ ...silent, atMs: at }] }} />);
     expect(screen.getByTestId('trace-1').textContent).toContain('14:02:31.2');
   });
+
+  it('shows the facts of a plan and the numbers of its humour draw', () => {
+    const humour = {
+      tendency: { affiliative: 0.62, selfEnhancing: 0.58, aggressive: 0.4, selfDefeating: 0.47 },
+      state: { affiliative: 1.2, selfEnhancing: 1, aggressive: 0.8, selfDefeating: 1 },
+      p: 0.18,
+      roll: 0.05,
+      styleRoll: 0.3,
+      style: 'affiliative' as const,
+    };
+    render(<ConversationDebug trace={{ ...trace, entries: [{ ...spoken, humour }] }} />);
+    const text = screen.getByTestId('trace-2').textContent ?? '';
+    expect(text).toContain('Facts: turn, pot 14 bb, stacks 90 and 96 bb');
+    expect(text).toContain('tendency affiliative 0.62');
+    expect(text).toContain('state affiliative 1.20');
+    expect(text).toContain('style roll 0.30');
+  });
 });
