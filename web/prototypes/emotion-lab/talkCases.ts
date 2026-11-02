@@ -4,7 +4,8 @@ import type { Card } from '../../src/cards/index.ts';
 import { MALLORCA, createEngine, maskOf } from '../../src/emotion/index.ts';
 import type { Personality, Snapshot } from '../../src/emotion/index.ts';
 import { characterOf, feelingState } from '../../src/conversation/index.ts';
-import { PRESENTING_EFFORT, wordsOf } from '../../src/persona/index.ts';
+import { wordsOf } from '../../src/persona/index.ts';
+import { actingEffort } from './acting.ts';
 import type { StrengthClass } from '../../src/persona/index.ts';
 import { LAB_MOOD } from './lab.ts';
 import { PROFILES } from './profiles.ts';
@@ -217,11 +218,7 @@ function caseOf(scene: Scene, si: number, person: (typeof PEOPLE)[number], pi: n
     feeling: feelingState(
       m.snapshot,
       acting,
-      maskOf(
-        m.snapshot.traits.mask,
-        acting === null ? 0 : PRESENTING_EFFORT.bluff,
-        m.snapshot.load.overload,
-      ),
+      maskOf(m.snapshot.traits.mask, actingEffort(acting), m.snapshot.load.overload),
     ),
     character: characterOf(person.personality),
     recent: m.lines.slice(-MAX_RECENT),
