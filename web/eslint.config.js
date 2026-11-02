@@ -60,8 +60,12 @@ const ARENA_MESSAGE =
 const VIEWER_MESSAGE = 'tools/arena/ui may import from src only game/records and types from engine';
 const GAME_OUTSIDE_RECORDS = '(^|/)src/game(/(?!records/)|$)';
 
+const EXTERNAL_MESSAGE =
+  'tools/arena/external may import from src only cards, engine, brains, cfr, persona, conversation, equity and game/records';
+
 const arenaLayer = {
   files: ['tools/arena/**/*.ts', 'tools/arena/**/*.tsx'],
+  ignores: ['tools/arena/external/**'],
   rules: {
     '@typescript-eslint/no-restricted-imports': [
       'error',
@@ -69,6 +73,21 @@ const arenaLayer = {
         patterns: [
           { regex: '(^|/)src/(ui|equity|main\\.tsx)(/|$)', message: ARENA_MESSAGE },
           { regex: GAME_OUTSIDE_RECORDS, message: ARENA_MESSAGE },
+        ],
+      },
+    ],
+  },
+};
+
+const externalLayer = {
+  files: ['tools/arena/external/**/*.ts'],
+  rules: {
+    '@typescript-eslint/no-restricted-imports': [
+      'error',
+      {
+        patterns: [
+          { regex: '(^|/)src/(ui|main\\.tsx)(/|$)', message: EXTERNAL_MESSAGE },
+          { regex: GAME_OUTSIDE_RECORDS, message: EXTERNAL_MESSAGE },
         ],
       },
     ],
@@ -179,6 +198,7 @@ export default tseslint.config(
   layer('ui', ['game']),
   layer('main', ['game', 'ui'], [], ['src/main.tsx']),
   arenaLayer,
+  externalLayer,
   viewerLayer,
   evaluatorGoldenLayer,
   ...pure.map((dir) => ({
