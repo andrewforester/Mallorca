@@ -1,6 +1,6 @@
 import type { Rng } from '../cards/index.ts';
 import { MALLORCA, maskOf } from '../emotion/index.ts';
-import type { Personality, Snapshot } from '../emotion/index.ts';
+import type { Impulse, Personality, Snapshot } from '../emotion/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import type { Bias } from './bias.ts';
 import { NO_HAND, playerCardsShown, track } from './hand.ts';
@@ -36,6 +36,8 @@ export interface Moment {
   after: HandState;
   strength: StrengthClass | null;
   playerBluffShown: boolean;
+  impulses: Impulse[];
+  journalIds: number[];
 }
 
 export interface PersonaView {
@@ -97,9 +99,7 @@ class TablePersona implements Persona {
 
   observe(events: readonly EngineEvent[], nowMs: number): Moment[] {
     this.feeling.advance(nowMs);
-    const moments = events.map((event) => this.step(event));
-    this.record();
-    return moments;
+    return events.map((event) => this.step(event));
   }
 
   narrow(weights: ArrayLike<number>, handNumber: number): void {
@@ -166,12 +166,15 @@ class TablePersona implements Persona {
     const before = this.hand;
     this.hand = track(before, event, this.seat);
     this.feeling.see(event, this.hand);
+    const felt = this.feeling.takeFelt();
+    const journalIds = this.log.add(felt, this.feeling.words());
     const strength = sizesUp(event, this.seat) ? this.strength() : null;
     if (event.type === 'acted' && event.seat === this.seat && event.action.kind === 'raise') {
       this.bluffKey = strength === 'weak' ? this.streetKey() : this.bluffKey;
     }
     const playerBluffShown = event.type === 'handEnded' && this.playerBluffShown();
-    return { event, before, after: this.hand, strength, playerBluffShown };
+    const impulses = felt.flatMap((f) => f.impulses);
+    return { event, before, after: this.hand, strength, playerBluffShown, impulses, journalIds };
   }
 
   private playerBluffShown(): boolean {

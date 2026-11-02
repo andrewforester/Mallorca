@@ -17,9 +17,10 @@ export class Journal {
   private entries: JournalEntry[] = [];
   private lastId = 0;
 
-  add(felt: readonly Felt[], words: readonly string[]): void {
+  add(felt: readonly Felt[], words: readonly string[]): number[] {
     const fresh = felt.map((f) => ({ ...f, id: (this.lastId += 1), words: [...words] }));
     this.entries = [...this.entries, ...fresh].slice(-JOURNAL_SIZE);
+    return fresh.map((e) => e.id);
   }
 
   list(): JournalEntry[] {
