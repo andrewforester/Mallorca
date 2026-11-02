@@ -80,3 +80,10 @@ Deno.test("gives the reasons in order", () => {
     "told about her hand",
   ]);
 });
+
+Deno.test("reads the verb дам as a verb, not a queen", () => {
+  const noQueen = plan({}, { board: ["Kd", "7s", "2c"] });
+  assertEquals(reasons("Не дам тебе выиграть.", noQueen), []);
+  assertEquals(reasons("Дама пришла.", noQueen), ["named дама"]);
+  assertEquals(reasons("Дамы нет.", noQueen), ["named дамы"]);
+});
