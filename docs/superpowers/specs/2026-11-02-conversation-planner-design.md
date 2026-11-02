@@ -131,9 +131,9 @@ today), her strength class and `endsHand`.
 | `handEnded`   | end `won`                               | `enjoy`    | 0.5                               |
 | `handEnded`   | end `won`, relief at least 0.3          | `react`    | 0.5                               |
 | `handEnded`   | end `lost`                              | `concede`  | 0.4                               |
-| `handEnded`   | end `lost`, disappointment at least 0.3 | `react`    | 0.4                               |
 | `handEnded`   | end `lost`, injustice at least 0.3      | `complain` | 0.6                               |
 | `handEnded`   | end `lost`, anger at least 0.4          | `complain` | 0.5                               |
+| `handEnded`   | end `lost`, disappointment at least 0.3 | `react`    | 0.4                               |
 | `handEnded`   | end `bluffCaught`                       | `concede`  | 0.9                               |
 | `handEnded`   | end `bluffCaught`, shame at least 0.3   | `deflect`  | 0.9                               |
 | `handEnded`   | end `playerBluffShown`                  | `tease`    | 0.6                               |
@@ -390,7 +390,8 @@ System block, cached:
    said about her hand.
 5. **Acts**: one line per act on what it is for. No example lines in this stage; the eval decides whether they help.
 
-State block, every call: the plan as labelled fields, the session line, the recent lines, the player's text for an
+State block, every call: the plan as labelled fields, the session line, the memories of the player (up to ten, as
+today), the recent lines, the player's text for an
 answer. Output: structured output with the schema `{ text }`.
 
 The model stays `claude-haiku-5-5` (`TALK_MODEL` overrides it); the eval compares it with `claude-sonnet-5-5`.
