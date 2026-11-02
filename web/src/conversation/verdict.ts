@@ -153,9 +153,11 @@ function verdictOf(occasion: Occasion, input: JudgeInput, rng: Rng, superseded: 
 export function judge(input: JudgeInput, rng: Rng): Verdict[] {
   const verdicts: Verdict[] = [];
   let spoken = false;
+  let ended = false;
   for (const occasion of [...input.occasions].reverse()) {
-    const verdict = verdictOf(occasion, input, rng, spoken);
+    const verdict = verdictOf(occasion, input, rng, spoken || ended);
     spoken ||= verdict.speak;
+    ended ||= occasion.kind === 'handEnded';
     verdicts.push(verdict);
   }
   return verdicts;

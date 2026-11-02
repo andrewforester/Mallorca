@@ -145,4 +145,13 @@ describe('occasions', () => {
       endsHand: false,
     });
   });
+
+  it('calls a shown bluff of the player that still won a lost hand', () => {
+    const p = deal('7c 2d', '8c 6d', 'Kd 9h 5h 3c Jd');
+    toRiver(p);
+    p.act(check);
+    p.act(raiseTo(40));
+    const end = occasions(p, p.act(call)).find((o) => o.kind === 'handEnded');
+    expect(end?.end).toBe('lost');
+  });
 });

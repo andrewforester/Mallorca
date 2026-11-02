@@ -203,4 +203,20 @@ describe('the verdict', () => {
     expect(v?.claim).toBeNull();
     expect(v?.act).toBe('answer');
   });
+
+  it('lets nothing of a step speak before its hand end', () => {
+    const verdicts = judge(
+      {
+        occasions: [occasion('herCall'), occasion('handEnded')],
+        view: view(),
+        pace: FRESH,
+        nowMs: 0,
+      },
+      rolls(0.99),
+    );
+    expect(verdicts.map((v) => [v.occasion.kind, v.reason, v.roll])).toEqual([
+      ['handEnded', 'roll', 0.99],
+      ['herCall', 'superseded', null],
+    ]);
+  });
 });

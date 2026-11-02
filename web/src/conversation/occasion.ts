@@ -39,7 +39,7 @@ function endOf(moment: Moment, seat: SeatIndex): HandEnd {
   if (!won && hand.showdown !== null && moment.strength === 'weak' && hand.herLateBet) {
     return 'bluffCaught';
   }
-  if (moment.playerBluffShown) {
+  if (won && moment.playerBluffShown) {
     return 'playerBluffShown';
   }
   return won ? 'won' : 'lost';
@@ -54,7 +54,7 @@ export function occasionsOf(
   if (last === undefined) {
     return [];
   }
-  const hand = last.after;
+  const { street } = last.after;
   const result: Occasion[] = [];
   for (const moment of moments) {
     const kind = kindOf(moment, seat);
@@ -68,11 +68,11 @@ export function occasionsOf(
       impulses: moment.impulses,
       journalIds: moment.journalIds,
       handNumber: moment.after.handNumber,
-      street: hand.street,
+      street,
       actionStreet: kind === 'card' ? moment.after.street : moment.before.street,
       strength: moment.strength ?? strengthNow(),
       endsHand: ended,
-      hand,
+      hand: moment.after,
       text: null,
       previous: null,
     });

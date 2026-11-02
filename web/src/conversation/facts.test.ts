@@ -97,4 +97,20 @@ describe('public facts', () => {
       'the player raised before the flop',
     );
   });
+
+  it('name the card of each street of a runout dealt in one step', () => {
+    const steps = play('Ah Ad', '7c 2d', 'Kd 9h 5h 3c Jd', [raiseTo(2000), call]);
+    const last = steps[steps.length - 1] as Moment[];
+    const fear = [{ emotion: 'fear' as const, amount: 0.5, reason: 'x' }];
+    const crafted = last.map((m) =>
+      m.event.type === 'streetDealt' ? { ...m, impulses: fear } : m,
+    );
+    const cards = occasionsOf(crafted, HER, () => 'medium').filter((o) => o.kind === 'card');
+    expect(cards.map((o) => o.actionStreet)).toEqual(['flop', 'turn', 'river']);
+    const turn = cards[1] as Occasion;
+    expect(publicFacts(turn, HER).card).toEqual(parseCards('3c')[0]);
+    expect(occasionText(cards[0] as Occasion, publicFacts(cards[0] as Occasion, HER))).toBe(
+      'the flop came Kd 9h 5h',
+    );
+  });
 });
