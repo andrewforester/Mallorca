@@ -1,4 +1,12 @@
-import { PERSONALITIES, createPersona, styleOf, toBotBias } from '../../src/persona/index.ts';
+import {
+  BIAS_KEYS,
+  BIAS_RANGE,
+  PERSONALITIES,
+  createPersona,
+  styleOf,
+  toBotBias,
+} from '../../src/persona/index.ts';
+import type { Bias } from '../../src/persona/index.ts';
 import type { Personality, PersonalityKey } from '../../src/persona/index.ts';
 import { fromBrain } from './arenaBot.ts';
 import type { BotFactory } from './arenaBot.ts';
@@ -58,12 +66,21 @@ export function profileOfName(name: string): ProfileBot | null {
   return { kind: parts.kind, personality, label: `${parts.kind}-${parts.key}${suffix}` };
 }
 
+export function styleBiasOf(p: Personality): Bias {
+  const style = styleOf(p.bigFive, p.experience);
+  const [low, high] = BIAS_RANGE;
+  const clamped = Object.fromEntries(
+    BIAS_KEYS.map((k) => [k, Math.min(high, Math.max(low, style[k]))]),
+  ) as Record<(typeof BIAS_KEYS)[number], number>;
+  return toBotBias(clamped);
+}
+
 export function profileFactory(profile: ProfileBot): BotFactory {
   const p = profile.personality;
   if (profile.kind === 'style') {
     return (rng) => {
       const brain = cfrBrainOf(SHIPPED, rng);
-      brain.setBias(toBotBias(styleOf(p.bigFive, p.experience)));
+      brain.setBias(styleBiasOf(p));
       return fromBrain(brain);
     };
   }

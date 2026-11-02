@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { PERSONALITIES, styleOf, toBotBias } from '../../src/persona/index.ts';
 import { botFactory, botLabel, isBotName, prepareBots } from './bots.ts';
 import { playPair } from './match.ts';
-import { profileOfName } from './profileBots.ts';
+import { profileOfName, styleBiasOf } from './profileBots.ts';
 
 describe('profileOfName', () => {
   it('reads a profile bot with its overrides', () => {
@@ -42,6 +42,20 @@ describe('profileOfName', () => {
     expect(botLabel('persona:lola@experience=0.9,control=0.1')).toBe(
       'persona-lola-experience0.9-control0.1',
     );
+  });
+});
+
+describe('styleBiasOf', () => {
+  it('keeps an extreme style inside the range of the bias, as her persona does at rest', () => {
+    const wild = profileOfName(
+      'style:lola@openness=1,extraversion=1,conscientiousness=-1,agreeableness=-1,neuroticism=-1,experience=0',
+    );
+    const bias = styleBiasOf(wild!.personality);
+    expect(bias.aggression).toBe(2);
+    expect(bias.bluff).toBeLessThanOrEqual(2);
+    expect(bias.tightness).toBeGreaterThanOrEqual(0.5);
+    const lola = PERSONALITIES.lola;
+    expect(styleBiasOf(lola)).toEqual(toBotBias(styleOf(lola.bigFive, lola.experience)));
   });
 });
 

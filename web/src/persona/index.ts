@@ -21,6 +21,7 @@ export { classOf, strengthOf } from './strength.ts';
 export { toBotBias, wordsOf } from './view.ts';
 export {
   BIAS_KEYS,
+  BIAS_RANGE,
   EMOTIONS,
   LOAD_SOURCES,
   MALLORCA,
