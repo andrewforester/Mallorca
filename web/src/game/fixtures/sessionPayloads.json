@@ -465,15 +465,10 @@
           "min": 2,
           "max": 7
         },
-        "humour": {
-          "style": "affiliative",
-          "target": "situation",
-          "intensity": "sharp",
-          "softened": false
-        },
+        "humour": null,
         "claim": {
-          "about": "strong",
-          "honest": false
+          "about": "weak",
+          "honest": true
         },
         "facts": {
           "street": "flop",
@@ -570,11 +565,138 @@
       },
       "plan": {
         "version": 2,
-        "act": "claim",
-        "occasion": "you bet before the flop",
+        "act": "concede",
+        "occasion": "you lost a 16 bb pot",
         "voice": {
-          "emotion": "relief",
-          "intensity": 0.29
+          "emotion": "distress",
+          "intensity": 0.25
+        },
+        "words": {
+          "min": 2,
+          "max": 6
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": ["Qd", "Ah", "4c", "3c", "9h"],
+          "potBb": 16,
+          "stacksBb": {
+            "her": 131,
+            "player": 108
+          },
+          "actions": [
+            "Mallorca posts 10",
+            "player posts 20",
+            "Mallorca calls 10",
+            "player checks",
+            "flop Qd Ah 4c",
+            "player checks",
+            "Mallorca raises to 20",
+            "player calls 20",
+            "turn 3c",
+            "player raises to 120",
+            "Mallorca calls 120",
+            "river 9h",
+            "player checks",
+            "Mallorca checks",
+            "Mallorca shows 7c 5c",
+            "player shows Ks Ad",
+            "player wins 320"
+          ],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 16
+          },
+          "shown": {
+            "her": ["7c", "5c"],
+            "player": ["Ks", "Ad"]
+          }
+        },
+        "heard": null,
+        "session": {
+          "hands": 5,
+          "netBb": 25,
+          "playerBluffsShown": 1,
+          "playerAllIns": 0,
+          "signals": {},
+          "notable": [
+            {
+              "kind": "bigWin",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            },
+            {
+              "kind": "bluffCaught",
+              "handNumber": 1,
+              "potBb": 12,
+              "won": false,
+              "bets": 2
+            },
+            {
+              "kind": "fought",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            }
+          ]
+        },
+        "handNumber": 5,
+        "street": "complete",
+        "actionStreet": "showdown",
+        "endsHand": true
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        }
+      ],
+      "debug": false
+    },
+    {
+      "kind": "line",
+      "version": 2,
+      "sessionId": "seed-11",
+      "locale": "en",
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "the player raised on the flop",
+        "voice": {
+          "emotion": "fear",
+          "intensity": 0.17
         },
         "words": {
           "min": 2,
@@ -582,22 +704,26 @@
         },
         "humour": null,
         "claim": {
-          "about": "medium",
+          "about": "weak",
           "honest": true
         },
         "facts": {
-          "street": "preflop",
-          "board": [],
-          "potBb": 3,
+          "street": "flop",
+          "board": ["Ah", "5d", "9d"],
+          "potBb": 10,
           "stacksBb": {
             "her": 129,
-            "player": 107
+            "player": 100
           },
           "actions": [
             "player posts 10",
             "Mallorca posts 20",
             "player calls 10",
-            "Mallorca raises to 40"
+            "Mallorca raises to 40",
+            "player calls 20",
+            "flop Ah 5d 9d",
+            "Mallorca checks",
+            "player raises to 120"
           ],
           "card": null,
           "result": null,
@@ -635,8 +761,8 @@
           ]
         },
         "handNumber": 6,
-        "street": "preflop",
-        "actionStreet": "preflop",
+        "street": "flop",
+        "actionStreet": "flop",
         "endsHand": false
       },
       "recent": [
@@ -663,134 +789,6 @@
         {
           "speaker": "mallorca",
           "text": "Here we go"
-        }
-      ],
-      "debug": false
-    },
-    {
-      "kind": "line",
-      "version": 2,
-      "sessionId": "seed-11",
-      "locale": "en",
-      "personality": {
-        "openness": 0.4,
-        "conscientiousness": 0.2,
-        "extraversion": 0.4,
-        "agreeableness": 0.5,
-        "neuroticism": 0.1
-      },
-      "plan": {
-        "version": 2,
-        "act": "deflect",
-        "occasion": "the player called your bet and you lost a 18 bb pot",
-        "voice": {
-          "emotion": "shame",
-          "intensity": 0.63
-        },
-        "words": {
-          "min": 1,
-          "max": 4
-        },
-        "humour": null,
-        "claim": null,
-        "facts": {
-          "street": "complete",
-          "board": ["Ah", "5d", "9d", "As", "8s"],
-          "potBb": 18,
-          "stacksBb": {
-            "her": 122,
-            "player": 117
-          },
-          "actions": [
-            "player posts 10",
-            "Mallorca posts 20",
-            "player calls 10",
-            "Mallorca raises to 40",
-            "player calls 20",
-            "flop Ah 5d 9d",
-            "Mallorca checks",
-            "player raises to 120",
-            "Mallorca calls 120",
-            "turn As",
-            "Mallorca raises to 20",
-            "player calls 20",
-            "river 8s",
-            "Mallorca checks",
-            "player checks",
-            "Mallorca shows Jc Qh",
-            "player shows 5s Jd",
-            "player wins 360"
-          ],
-          "card": null,
-          "result": {
-            "won": false,
-            "potBb": 18
-          },
-          "shown": {
-            "her": ["Jc", "Qh"],
-            "player": ["5s", "Jd"]
-          }
-        },
-        "heard": null,
-        "session": {
-          "hands": 6,
-          "netBb": 16,
-          "playerBluffsShown": 1,
-          "playerAllIns": 0,
-          "signals": {},
-          "notable": [
-            {
-              "kind": "bigWin",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            },
-            {
-              "kind": "bluffCaught",
-              "handNumber": 6,
-              "potBb": 18,
-              "won": false,
-              "bets": 3
-            },
-            {
-              "kind": "fought",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            }
-          ]
-        },
-        "handNumber": 6,
-        "street": "complete",
-        "actionStreet": "showdown",
-        "endsHand": true
-      },
-      "recent": [
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -813,24 +811,27 @@
       },
       "plan": {
         "version": 2,
-        "act": "react",
-        "occasion": "the player raised on the flop",
+        "act": "claim",
+        "occasion": "you bet on the flop",
         "voice": {
           "emotion": "shame",
           "intensity": 0.58
         },
         "words": {
-          "min": 1,
-          "max": 3
+          "min": 2,
+          "max": 4
         },
         "humour": null,
-        "claim": null,
+        "claim": {
+          "about": "medium",
+          "honest": true
+        },
         "facts": {
           "street": "flop",
           "board": ["5c", "Jd", "As"],
-          "potBb": 6,
+          "potBb": 14,
           "stacksBb": {
-            "her": 121,
+            "her": 113,
             "player": 112
           },
           "actions": [
@@ -839,7 +840,8 @@
             "Mallorca calls 10",
             "player checks",
             "flop 5c Jd As",
-            "player raises to 80"
+            "player raises to 80",
+            "Mallorca raises to 160"
           ],
           "card": null,
           "result": null,
@@ -932,146 +934,6 @@
       "plan": {
         "version": 2,
         "act": "claim",
-        "occasion": "you stayed in on the river",
-        "voice": {
-          "emotion": "shame",
-          "intensity": 0.53
-        },
-        "words": {
-          "min": 2,
-          "max": 4
-        },
-        "humour": {
-          "style": "affiliative",
-          "target": "situation",
-          "intensity": "sharp",
-          "softened": false
-        },
-        "claim": {
-          "about": "strong",
-          "honest": true
-        },
-        "facts": {
-          "street": "complete",
-          "board": ["5c", "Jd", "As", "8s", "Qh"],
-          "potBb": 18,
-          "stacksBb": {
-            "her": 131,
-            "player": 108
-          },
-          "actions": [
-            "Mallorca posts 10",
-            "player posts 20",
-            "Mallorca calls 10",
-            "player checks",
-            "flop 5c Jd As",
-            "player raises to 80",
-            "Mallorca raises to 160",
-            "player calls 80",
-            "turn 8s",
-            "player checks",
-            "Mallorca checks",
-            "river Qh",
-            "player checks",
-            "Mallorca checks",
-            "Mallorca shows 8d Js",
-            "player shows Jc 9d",
-            "Mallorca wins 360"
-          ],
-          "card": null,
-          "result": null,
-          "shown": {
-            "her": ["8d", "Js"],
-            "player": ["Jc", "9d"]
-          }
-        },
-        "heard": null,
-        "session": {
-          "hands": 7,
-          "netBb": 25,
-          "playerBluffsShown": 1,
-          "playerAllIns": 0,
-          "signals": {},
-          "notable": [
-            {
-              "kind": "bigWin",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            },
-            {
-              "kind": "bluffCaught",
-              "handNumber": 6,
-              "potBb": 18,
-              "won": false,
-              "bets": 3
-            },
-            {
-              "kind": "fought",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            }
-          ]
-        },
-        "handNumber": 7,
-        "street": "complete",
-        "actionStreet": "river",
-        "endsHand": false
-      },
-      "recent": [
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        }
-      ],
-      "debug": false
-    },
-    {
-      "kind": "line",
-      "version": 2,
-      "sessionId": "seed-11",
-      "locale": "en",
-      "personality": {
-        "openness": 0.4,
-        "conscientiousness": 0.2,
-        "extraversion": 0.4,
-        "agreeableness": 0.5,
-        "neuroticism": 0.1
-      },
-      "plan": {
-        "version": 2,
-        "act": "claim",
         "occasion": "the player raised before the flop",
         "voice": {
           "emotion": "shame",
@@ -1081,7 +943,12 @@
           "min": 2,
           "max": 4
         },
-        "humour": null,
+        "humour": {
+          "style": "affiliative",
+          "target": "play",
+          "intensity": "clear",
+          "softened": false
+        },
         "claim": {
           "about": "weak",
           "honest": true
@@ -1187,25 +1054,28 @@
       },
       "plan": {
         "version": 2,
-        "act": "deflect",
-        "occasion": "the player called your bet and you lost a 42 bb pot",
+        "act": "claim",
+        "occasion": "the player raised on the river",
         "voice": {
-          "emotion": "shame",
-          "intensity": 0.85
+          "emotion": "fear",
+          "intensity": 0.41
         },
         "words": {
-          "min": 1,
+          "min": 2,
           "max": 4
         },
         "humour": null,
-        "claim": null,
+        "claim": {
+          "about": "weak",
+          "honest": true
+        },
         "facts": {
-          "street": "complete",
+          "street": "river",
           "board": ["Jd", "7d", "4c", "Kh", "8s"],
-          "potBb": 42,
+          "potBb": 28,
           "stacksBb": {
-            "her": 110,
-            "player": 129
+            "her": 124,
+            "player": 87
           },
           "actions": [
             "player posts 10",
@@ -1221,26 +1091,16 @@
             "player checks",
             "river 8s",
             "Mallorca raises to 20",
-            "player raises to 300",
-            "Mallorca calls 280",
-            "Mallorca shows 9c 2h",
-            "player shows 7s 9s",
-            "player wins 840"
+            "player raises to 300"
           ],
           "card": null,
-          "result": {
-            "won": false,
-            "potBb": 42
-          },
-          "shown": {
-            "her": ["9c", "2h"],
-            "player": ["7s", "9s"]
-          }
+          "result": null,
+          "shown": null
         },
         "heard": null,
         "session": {
-          "hands": 8,
-          "netBb": 4,
+          "hands": 7,
+          "netBb": 25,
           "playerBluffsShown": 1,
           "playerAllIns": 0,
           "signals": {
@@ -1255,18 +1115,11 @@
               "bets": 4
             },
             {
-              "kind": "bigLoss",
-              "handNumber": 8,
-              "potBb": 42,
-              "won": false,
-              "bets": 4
-            },
-            {
               "kind": "bluffCaught",
-              "handNumber": 8,
-              "potBb": 42,
+              "handNumber": 6,
+              "potBb": 18,
               "won": false,
-              "bets": 4
+              "bets": 3
             },
             {
               "kind": "fought",
@@ -1278,9 +1131,9 @@
           ]
         },
         "handNumber": 8,
-        "street": "complete",
-        "actionStreet": "showdown",
-        "endsHand": true
+        "street": "river",
+        "actionStreet": "river",
+        "endsHand": false
       },
       "recent": [
         {
@@ -1455,24 +1308,27 @@
       },
       "plan": {
         "version": 2,
-        "act": "enjoy",
-        "occasion": "you won a 16 bb pot",
+        "act": "claim",
+        "occasion": "you stayed in on the turn",
         "voice": {
-          "emotion": "joy",
-          "intensity": 0.47
+          "emotion": "shame",
+          "intensity": 0.66
         },
         "words": {
           "min": 2,
           "max": 4
         },
         "humour": null,
-        "claim": null,
+        "claim": {
+          "about": "weak",
+          "honest": false
+        },
         "facts": {
-          "street": "complete",
-          "board": ["8h", "Th", "Jc", "As", "7c"],
+          "street": "turn",
+          "board": ["8h", "Th", "Jc", "As"],
           "potBb": 16,
           "stacksBb": {
-            "her": 118,
+            "her": 102,
             "player": 121
           },
           "actions": [
@@ -1486,28 +1342,16 @@
             "player calls 20",
             "turn As",
             "player raises to 120",
-            "Mallorca calls 120",
-            "river 7c",
-            "player checks",
-            "Mallorca checks",
-            "Mallorca shows Td 9c",
-            "player shows 3d 8d",
-            "Mallorca wins 320"
+            "Mallorca calls 120"
           ],
           "card": null,
-          "result": {
-            "won": true,
-            "potBb": 16
-          },
-          "shown": {
-            "her": ["Td", "9c"],
-            "player": ["3d", "8d"]
-          }
+          "result": null,
+          "shown": null
         },
         "heard": null,
         "session": {
-          "hands": 9,
-          "netBb": 12,
+          "hands": 8,
+          "netBb": 4,
           "playerBluffsShown": 1,
           "playerAllIns": 0,
           "signals": {
@@ -1545,9 +1389,9 @@
           ]
         },
         "handNumber": 9,
-        "street": "complete",
-        "actionStreet": "showdown",
-        "endsHand": true
+        "street": "river",
+        "actionStreet": "turn",
+        "endsHand": false
       },
       "recent": [
         {
@@ -1599,18 +1443,21 @@
       },
       "plan": {
         "version": 2,
-        "act": "react",
+        "act": "claim",
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "fear",
           "intensity": 0.17
         },
         "words": {
-          "min": 1,
-          "max": 3
+          "min": 2,
+          "max": 4
         },
         "humour": null,
-        "claim": null,
+        "claim": {
+          "about": "medium",
+          "honest": true
+        },
         "facts": {
           "street": "flop",
           "board": ["Ac", "8h", "Td"],
@@ -1728,28 +1575,25 @@
       },
       "plan": {
         "version": 2,
-        "act": "claim",
-        "occasion": "the player raised on the flop",
+        "act": "enjoy",
+        "occasion": "you won a 18 bb pot",
         "voice": {
-          "emotion": "shame",
-          "intensity": 0.63
+          "emotion": "joy",
+          "intensity": 0.49
         },
         "words": {
           "min": 2,
           "max": 4
         },
         "humour": null,
-        "claim": {
-          "about": "strong",
-          "honest": true
-        },
+        "claim": null,
         "facts": {
-          "street": "flop",
-          "board": ["Ts", "8c", "Tc"],
-          "potBb": 6,
+          "street": "complete",
+          "board": ["Ts", "8c", "Tc", "Qd", "3s"],
+          "potBb": 18,
           "stacksBb": {
-            "her": 108,
-            "player": 125
+            "her": 118,
+            "player": 121
           },
           "actions": [
             "Mallorca posts 10",
@@ -1757,16 +1601,33 @@
             "Mallorca calls 10",
             "player checks",
             "flop Ts 8c Tc",
-            "player raises to 80"
+            "player raises to 80",
+            "Mallorca raises to 160",
+            "player calls 80",
+            "turn Qd",
+            "player checks",
+            "Mallorca checks",
+            "river 3s",
+            "player checks",
+            "Mallorca checks",
+            "Mallorca shows Td 6c",
+            "player shows 4h 4s",
+            "Mallorca wins 360"
           ],
           "card": null,
-          "result": null,
-          "shown": null
+          "result": {
+            "won": true,
+            "potBb": 18
+          },
+          "shown": {
+            "her": ["Td", "6c"],
+            "player": ["4h", "4s"]
+          }
         },
         "heard": null,
         "session": {
-          "hands": 10,
-          "netBb": 3,
+          "hands": 11,
+          "netBb": 12,
           "playerBluffsShown": 1,
           "playerAllIns": 0,
           "signals": {
@@ -1804,9 +1665,9 @@
           ]
         },
         "handNumber": 11,
-        "street": "flop",
-        "actionStreet": "flop",
-        "endsHand": false
+        "street": "complete",
+        "actionStreet": "showdown",
+        "endsHand": true
       },
       "recent": [
         {
@@ -1858,152 +1719,7 @@
       },
       "plan": {
         "version": 2,
-        "act": "react",
-        "occasion": "you won a 16 bb pot",
-        "voice": {
-          "emotion": "joy",
-          "intensity": 0.76
-        },
-        "words": {
-          "min": 1,
-          "max": 3
-        },
-        "humour": null,
-        "claim": null,
-        "facts": {
-          "street": "complete",
-          "board": ["4h", "5c", "6c", "9h", "6d"],
-          "potBb": 16,
-          "stacksBb": {
-            "her": 147,
-            "player": 92
-          },
-          "actions": [
-            "Mallorca posts 10",
-            "player posts 20",
-            "Mallorca calls 10",
-            "player checks",
-            "flop 4h 5c 6c",
-            "player checks",
-            "Mallorca raises to 20",
-            "player calls 20",
-            "turn 9h",
-            "player raises to 120",
-            "Mallorca calls 120",
-            "river 6d",
-            "player checks",
-            "Mallorca checks",
-            "Mallorca shows Kc 4s",
-            "player shows Ad Ts",
-            "Mallorca wins 320"
-          ],
-          "card": null,
-          "result": {
-            "won": true,
-            "potBb": 16
-          },
-          "shown": {
-            "her": ["Kc", "4s"],
-            "player": ["Ad", "Ts"]
-          }
-        },
-        "heard": null,
-        "session": {
-          "hands": 13,
-          "netBb": 41,
-          "playerBluffsShown": 1,
-          "playerAllIns": 0,
-          "signals": {
-            "tease": 1,
-            "mockBluff": 1
-          },
-          "notable": [
-            {
-              "kind": "bigWin",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            },
-            {
-              "kind": "bigLoss",
-              "handNumber": 8,
-              "potBb": 42,
-              "won": false,
-              "bets": 4
-            },
-            {
-              "kind": "bluffCaught",
-              "handNumber": 10,
-              "potBb": 18,
-              "won": false,
-              "bets": 3
-            },
-            {
-              "kind": "fought",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            }
-          ]
-        },
-        "handNumber": 13,
-        "street": "complete",
-        "actionStreet": "showdown",
-        "endsHand": true
-      },
-      "recent": [
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "player",
-          "text": "Bluffing?"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Sure"
-        }
-      ],
-      "debug": false
-    },
-    {
-      "kind": "line",
-      "version": 2,
-      "sessionId": "seed-11",
-      "locale": "en",
-      "personality": {
-        "openness": 0.4,
-        "conscientiousness": 0.2,
-        "extraversion": 0.4,
-        "agreeableness": 0.5,
-        "neuroticism": 0.1
-      },
-      "plan": {
-        "version": 2,
-        "act": "press",
+        "act": "claim",
         "occasion": "you bet before the flop",
         "voice": {
           "emotion": "joy",
@@ -2014,7 +1730,10 @@
           "max": 4
         },
         "humour": null,
-        "claim": null,
+        "claim": {
+          "about": "strong",
+          "honest": false
+        },
         "facts": {
           "street": "preflop",
           "board": [],
@@ -2101,16 +1820,16 @@
           "text": "Here we go"
         },
         {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
           "speaker": "player",
           "text": "Bluffing?"
         },
         {
           "speaker": "mallorca",
           "text": "Sure"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
         }
       ],
       "debug": false
@@ -2129,27 +1848,24 @@
       },
       "plan": {
         "version": 2,
-        "act": "claim",
-        "occasion": "you stayed in on the river",
+        "act": "react",
+        "occasion": "you won a 18 bb pot",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.6
+          "intensity": 0.76
         },
         "words": {
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         "humour": null,
-        "claim": {
-          "about": "strong",
-          "honest": true
-        },
+        "claim": null,
         "facts": {
-          "street": "river",
+          "street": "complete",
           "board": ["2c", "2d", "5s", "Ad", "Tc"],
           "potBb": 18,
           "stacksBb": {
-            "her": 138,
+            "her": 156,
             "player": 91
           },
           "actions": [
@@ -2166,16 +1882,26 @@
             "Mallorca raises to 20",
             "player calls 20",
             "river Tc",
-            "Mallorca checks"
+            "Mallorca checks",
+            "player checks",
+            "Mallorca shows 3s 4h",
+            "player shows Ts Qd",
+            "Mallorca wins 360"
           ],
           "card": null,
-          "result": null,
-          "shown": null
+          "result": {
+            "won": true,
+            "potBb": 18
+          },
+          "shown": {
+            "her": ["3s", "4h"],
+            "player": ["Ts", "Qd"]
+          }
         },
         "heard": null,
         "session": {
-          "hands": 13,
-          "netBb": 41,
+          "hands": 14,
+          "netBb": 50,
           "playerBluffsShown": 1,
           "playerAllIns": 0,
           "signals": {
@@ -2214,11 +1940,15 @@
           ]
         },
         "handNumber": 14,
-        "street": "river",
-        "actionStreet": "river",
-        "endsHand": false
+        "street": "complete",
+        "actionStreet": "showdown",
+        "endsHand": true
       },
       "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
         {
           "speaker": "mallorca",
           "text": "Here we go"
@@ -2246,10 +1976,6 @@
         {
           "speaker": "mallorca",
           "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
         }
       ],
       "debug": false
@@ -2268,35 +1994,30 @@
       },
       "plan": {
         "version": 2,
-        "act": "press",
-        "occasion": "you bet on the flop",
+        "act": "claim",
+        "occasion": "you stayed in before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.67
+          "intensity": 0.69
         },
         "words": {
           "min": 2,
           "max": 4
         },
         "humour": null,
-        "claim": null,
+        "claim": {
+          "about": "medium",
+          "honest": true
+        },
         "facts": {
-          "street": "flop",
-          "board": ["Jd", "6s", "7c"],
-          "potBb": 14,
+          "street": "preflop",
+          "board": [],
+          "potBb": 2,
           "stacksBb": {
-            "her": 147,
-            "player": 95
+            "her": 155,
+            "player": 99
           },
-          "actions": [
-            "Mallorca posts 10",
-            "player posts 20",
-            "Mallorca calls 10",
-            "player checks",
-            "flop Jd 6s 7c",
-            "player raises to 80",
-            "Mallorca raises to 160"
-          ],
+          "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
           "card": null,
           "result": null,
           "shown": null
@@ -2343,11 +2064,15 @@
           ]
         },
         "handNumber": 15,
-        "street": "flop",
-        "actionStreet": "flop",
+        "street": "preflop",
+        "actionStreet": "preflop",
         "endsHand": false
       },
       "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
         {
           "speaker": "mallorca",
           "text": "Here we go"
@@ -2365,16 +2090,12 @@
           "text": "Here we go"
         },
         {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
           "speaker": "player",
           "text": "Nice hand"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -2397,37 +2118,176 @@
       },
       "plan": {
         "version": 2,
-        "act": "react",
-        "occasion": "you stayed in on the turn",
+        "act": "complain",
+        "occasion": "you lost a 18 bb pot",
         "voice": {
-          "emotion": "shame",
-          "intensity": 0.47
+          "emotion": "distress",
+          "intensity": 0.32
         },
         "words": {
-          "min": 1,
-          "max": 3
+          "min": 2,
+          "max": 4
         },
         "humour": null,
         "claim": null,
         "facts": {
-          "street": "turn",
-          "board": ["9c", "6c", "Ah", "5c"],
-          "potBb": 12,
+          "street": "complete",
+          "board": ["Jd", "6s", "7c", "5h", "Jc"],
+          "potBb": 18,
+          "stacksBb": {
+            "her": 147,
+            "player": 109
+          },
+          "actions": [
+            "Mallorca posts 10",
+            "player posts 20",
+            "Mallorca calls 10",
+            "player checks",
+            "flop Jd 6s 7c",
+            "player raises to 80",
+            "Mallorca raises to 160",
+            "player calls 80",
+            "turn 5h",
+            "player checks",
+            "Mallorca checks",
+            "river Jc",
+            "player checks",
+            "Mallorca checks",
+            "Mallorca shows Td Ah",
+            "player shows 5s 8c",
+            "player wins 360"
+          ],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 18
+          },
+          "shown": {
+            "her": ["Td", "Ah"],
+            "player": ["5s", "8c"]
+          }
+        },
+        "heard": null,
+        "session": {
+          "hands": 15,
+          "netBb": 41,
+          "playerBluffsShown": 1,
+          "playerAllIns": 0,
+          "signals": {
+            "tease": 2,
+            "mockBluff": 1
+          },
+          "notable": [
+            {
+              "kind": "bigWin",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            },
+            {
+              "kind": "bigLoss",
+              "handNumber": 8,
+              "potBb": 42,
+              "won": false,
+              "bets": 4
+            },
+            {
+              "kind": "bluffCaught",
+              "handNumber": 10,
+              "potBb": 18,
+              "won": false,
+              "bets": 3
+            },
+            {
+              "kind": "fought",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            }
+          ]
+        },
+        "handNumber": 15,
+        "street": "complete",
+        "actionStreet": "showdown",
+        "endsHand": true
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Bluffing?"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Nice hand"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        }
+      ],
+      "debug": false
+    },
+    {
+      "kind": "line",
+      "version": 2,
+      "sessionId": "seed-11",
+      "locale": "en",
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "press",
+        "occasion": "you bet before the flop",
+        "voice": {
+          "emotion": "shame",
+          "intensity": 0.48
+        },
+        "words": {
+          "min": 2,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "preflop",
+          "board": [],
+          "potBb": 9.5,
           "stacksBb": {
             "her": 141,
-            "player": 103
+            "player": 105.5
           },
           "actions": [
             "player posts 10",
             "Mallorca posts 20",
             "player raises to 70",
-            "Mallorca raises to 120",
-            "player calls 50",
-            "flop 9c 6c Ah",
-            "Mallorca checks",
-            "player checks",
-            "turn 5c",
-            "Mallorca checks"
+            "Mallorca raises to 120"
           ],
           "card": null,
           "result": null,
@@ -2475,8 +2335,8 @@
           ]
         },
         "handNumber": 16,
-        "street": "turn",
-        "actionStreet": "turn",
+        "street": "preflop",
+        "actionStreet": "preflop",
         "endsHand": false
       },
       "recent": [
@@ -2493,20 +2353,20 @@
           "text": "Here we go"
         },
         {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
           "speaker": "player",
           "text": "Nice hand"
         },
         {
           "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
           "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -2529,26 +2389,18 @@
       },
       "plan": {
         "version": 2,
-        "act": "claim",
+        "act": "react",
         "occasion": "the player raised on the turn",
         "voice": {
           "emotion": "fear",
           "intensity": 0.24
         },
         "words": {
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
-        "humour": {
-          "style": "affiliative",
-          "target": "play",
-          "intensity": "sharp",
-          "softened": false
-        },
-        "claim": {
-          "about": "weak",
-          "honest": true
-        },
+        "humour": null,
+        "claim": null,
         "facts": {
           "street": "turn",
           "board": ["Td", "Qh", "Kc", "4d"],
@@ -2629,20 +2481,20 @@
           "text": "Here we go"
         },
         {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
           "speaker": "player",
           "text": "Nice hand"
         },
         {
           "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
           "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -2670,33 +2522,42 @@
       "plan": {
         "version": 2,
         "act": "claim",
-        "occasion": "you bet before the flop",
+        "occasion": "the player raised on the flop",
         "voice": {
-          "emotion": "anger",
-          "intensity": 0.36
+          "emotion": "fear",
+          "intensity": 0.16
         },
         "words": {
           "min": 2,
           "max": 4
         },
-        "humour": null,
+        "humour": {
+          "style": "aggressive",
+          "target": "play",
+          "intensity": "soft",
+          "softened": true
+        },
         "claim": {
-          "about": "strong",
-          "honest": false
+          "about": "medium",
+          "honest": true
         },
         "facts": {
-          "street": "preflop",
-          "board": [],
-          "potBb": 3,
+          "street": "flop",
+          "board": ["2h", "3s", "Tc"],
+          "potBb": 10,
           "stacksBb": {
             "her": 158,
-            "player": 107
+            "player": 100
           },
           "actions": [
             "player posts 10",
             "Mallorca posts 20",
             "player calls 10",
-            "Mallorca raises to 40"
+            "Mallorca raises to 40",
+            "player calls 20",
+            "flop 2h 3s Tc",
+            "Mallorca checks",
+            "player raises to 120"
           ],
           "card": null,
           "result": null,
@@ -2744,19 +2605,11 @@
           ]
         },
         "handNumber": 18,
-        "street": "preflop",
-        "actionStreet": "preflop",
+        "street": "flop",
+        "actionStreet": "flop",
         "endsHand": false
       },
       "recent": [
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
         {
           "speaker": "mallorca",
           "text": "Here we go"
@@ -2767,7 +2620,143 @@
         },
         {
           "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
           "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        }
+      ],
+      "debug": false
+    },
+    {
+      "kind": "line",
+      "version": 2,
+      "sessionId": "seed-11",
+      "locale": "en",
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "react",
+        "occasion": "the player raised on the flop",
+        "voice": {
+          "emotion": "joy",
+          "intensity": 0.45
+        },
+        "words": {
+          "min": 1,
+          "max": 3
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "flop",
+          "board": ["4s", "9d", "3h"],
+          "potBb": 6,
+          "stacksBb": {
+            "her": 168,
+            "player": 95
+          },
+          "actions": [
+            "Mallorca posts 10",
+            "player posts 20",
+            "Mallorca calls 10",
+            "player checks",
+            "flop 4s 9d 3h",
+            "player raises to 80"
+          ],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 18,
+          "netBb": 63,
+          "playerBluffsShown": 2,
+          "playerAllIns": 0,
+          "signals": {
+            "tease": 2,
+            "mockBluff": 1
+          },
+          "notable": [
+            {
+              "kind": "bigWin",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            },
+            {
+              "kind": "bigLoss",
+              "handNumber": 8,
+              "potBb": 42,
+              "won": false,
+              "bets": 4
+            },
+            {
+              "kind": "bluffCaught",
+              "handNumber": 10,
+              "potBb": 18,
+              "won": false,
+              "bets": 3
+            },
+            {
+              "kind": "fought",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            }
+          ]
+        },
+        "handNumber": 19,
+        "street": "flop",
+        "actionStreet": "flop",
+        "endsHand": false
+      },
+      "recent": [
+        {
+          "speaker": "player",
+          "text": "Nice hand"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -2900,15 +2889,15 @@
         },
         {
           "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "player",
-          "text": "Nice hand"
+          "text": "Sure"
         },
         {
           "speaker": "mallorca",
-          "text": "Sure"
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -3030,15 +3019,15 @@
       "recent": [
         {
           "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "player",
-          "text": "Nice hand"
+          "text": "Sure"
         },
         {
           "speaker": "mallorca",
-          "text": "Sure"
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -3077,27 +3066,24 @@
       },
       "plan": {
         "version": 2,
-        "act": "claim",
-        "occasion": "the player raised on the turn",
+        "act": "react",
+        "occasion": "you won a 16 bb pot",
         "voice": {
-          "emotion": "fear",
-          "intensity": 0.2
+          "emotion": "joy",
+          "intensity": 0.7
         },
         "words": {
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         "humour": null,
-        "claim": {
-          "about": "weak",
-          "honest": true
-        },
+        "claim": null,
         "facts": {
-          "street": "turn",
-          "board": ["2d", "8c", "4c", "4s"],
-          "potBb": 10,
+          "street": "complete",
+          "board": ["2d", "8c", "4c", "4s", "2s"],
+          "potBb": 16,
           "stacksBb": {
-            "her": 179,
+            "her": 189,
             "player": 92
           },
           "actions": [
@@ -3110,16 +3096,29 @@
             "Mallorca raises to 20",
             "player calls 20",
             "turn 4s",
-            "player raises to 120"
+            "player raises to 120",
+            "Mallorca calls 120",
+            "river 2s",
+            "player checks",
+            "Mallorca checks",
+            "Mallorca shows Jc 6d",
+            "player shows 6h 7d",
+            "Mallorca wins 320"
           ],
           "card": null,
-          "result": null,
-          "shown": null
+          "result": {
+            "won": true,
+            "potBb": 16
+          },
+          "shown": {
+            "her": ["Jc", "6d"],
+            "player": ["6h", "7d"]
+          }
         },
         "heard": null,
         "session": {
-          "hands": 20,
-          "netBb": 75,
+          "hands": 21,
+          "netBb": 83,
           "playerBluffsShown": 2,
           "playerAllIns": 0,
           "signals": {
@@ -3158,18 +3157,18 @@
           ]
         },
         "handNumber": 21,
-        "street": "turn",
-        "actionStreet": "turn",
-        "endsHand": false
+        "street": "complete",
+        "actionStreet": "showdown",
+        "endsHand": true
       },
       "recent": [
         {
-          "speaker": "player",
-          "text": "Nice hand"
+          "speaker": "mallorca",
+          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
-          "text": "Sure"
+          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -3341,25 +3340,25 @@
       },
       "plan": {
         "version": 2,
-        "act": "deflect",
-        "occasion": "the player called your bet and you lost a 18 bb pot",
+        "act": "react",
+        "occasion": "you stayed in on the river",
         "voice": {
-          "emotion": "shame",
-          "intensity": 0.64
+          "emotion": "joy",
+          "intensity": 0.62
         },
         "words": {
           "min": 1,
-          "max": 4
+          "max": 3
         },
         "humour": null,
         "claim": null,
         "facts": {
-          "street": "complete",
+          "street": "river",
           "board": ["5c", "9h", "4s", "Jd", "5d"],
           "potBb": 18,
           "stacksBb": {
             "her": 180,
-            "player": 109
+            "player": 91
           },
           "actions": [
             "player posts 10",
@@ -3375,26 +3374,16 @@
             "Mallorca raises to 20",
             "player calls 20",
             "river 5d",
-            "Mallorca checks",
-            "player checks",
-            "Mallorca shows 7d 8h",
-            "player shows Kd Ac",
-            "player wins 360"
+            "Mallorca checks"
           ],
           "card": null,
-          "result": {
-            "won": false,
-            "potBb": 18
-          },
-          "shown": {
-            "her": ["7d", "8h"],
-            "player": ["Kd", "Ac"]
-          }
+          "result": null,
+          "shown": null
         },
         "heard": null,
         "session": {
-          "hands": 22,
-          "netBb": 74,
+          "hands": 21,
+          "netBb": 83,
           "playerBluffsShown": 2,
           "playerAllIns": 0,
           "signals": {
@@ -3418,7 +3407,7 @@
             },
             {
               "kind": "bluffCaught",
-              "handNumber": 22,
+              "handNumber": 10,
               "potBb": 18,
               "won": false,
               "bets": 3
@@ -3433,9 +3422,9 @@
           ]
         },
         "handNumber": 22,
-        "street": "complete",
-        "actionStreet": "showdown",
-        "endsHand": true
+        "street": "river",
+        "actionStreet": "river",
+        "endsHand": false
       },
       "recent": [
         {
@@ -3487,30 +3476,34 @@
       },
       "plan": {
         "version": 2,
-        "act": "claim",
-        "occasion": "you stayed in before the flop",
+        "act": "react",
+        "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "shame",
-          "intensity": 0.53
+          "intensity": 0.52
         },
         "words": {
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         "humour": null,
-        "claim": {
-          "about": "weak",
-          "honest": false
-        },
+        "claim": null,
         "facts": {
-          "street": "preflop",
-          "board": [],
-          "potBb": 2,
+          "street": "flop",
+          "board": ["4s", "6c", "3h"],
+          "potBb": 6,
           "stacksBb": {
             "her": 179,
-            "player": 108
+            "player": 104
           },
-          "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
+          "actions": [
+            "Mallorca posts 10",
+            "player posts 20",
+            "Mallorca calls 10",
+            "player checks",
+            "flop 4s 6c 3h",
+            "player raises to 80"
+          ],
           "card": null,
           "result": null,
           "shown": null
@@ -3557,8 +3550,8 @@
           ]
         },
         "handNumber": 23,
-        "street": "preflop",
-        "actionStreet": "preflop",
+        "street": "flop",
+        "actionStreet": "flop",
         "endsHand": false
       },
       "recent": [
@@ -3583,12 +3576,12 @@
           "text": "Here we go"
         },
         {
-          "speaker": "player",
-          "text": "Bluffing?"
-        },
-        {
           "speaker": "mallorca",
           "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Bluffing?"
         },
         {
           "speaker": "mallorca",
@@ -3724,12 +3717,12 @@
           "text": "Here we go"
         },
         {
-          "speaker": "player",
-          "text": "Bluffing?"
-        },
-        {
           "speaker": "mallorca",
           "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Bluffing?"
         },
         {
           "speaker": "mallorca",
@@ -3768,8 +3761,8 @@
         },
         "humour": null,
         "claim": {
-          "about": "strong",
-          "honest": true
+          "about": "weak",
+          "honest": false
         },
         "facts": {
           "street": "preflop",
@@ -3844,12 +3837,12 @@
           "text": "Here we go"
         },
         {
-          "speaker": "player",
-          "text": "Bluffing?"
-        },
-        {
           "speaker": "mallorca",
           "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Bluffing?"
         },
         {
           "speaker": "mallorca",
@@ -3978,12 +3971,12 @@
           "text": "Here we go"
         },
         {
-          "speaker": "player",
-          "text": "Bluffing?"
-        },
-        {
           "speaker": "mallorca",
           "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Bluffing?"
         },
         {
           "speaker": "mallorca",
@@ -4098,12 +4091,12 @@
           "text": "Here we go"
         },
         {
-          "speaker": "player",
-          "text": "Bluffing?"
-        },
-        {
           "speaker": "mallorca",
           "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Bluffing?"
         },
         {
           "speaker": "mallorca",
@@ -4143,10 +4136,10 @@
       "plan": {
         "version": 2,
         "act": "react",
-        "occasion": "the player raised on the turn",
+        "occasion": "the river came 5s",
         "voice": {
-          "emotion": "fear",
-          "intensity": 0.18
+          "emotion": "surprise",
+          "intensity": 0.43
         },
         "words": {
           "min": 1,
@@ -4155,11 +4148,11 @@
         "humour": null,
         "claim": null,
         "facts": {
-          "street": "turn",
-          "board": ["5d", "2s", "6s", "4s"],
-          "potBb": 10,
+          "street": "river",
+          "board": ["5d", "2s", "6s", "4s", "5s"],
+          "potBb": 16,
           "stacksBb": {
-            "her": 166,
+            "her": 160,
             "player": 113
           },
           "actions": [
@@ -4172,9 +4165,11 @@
             "Mallorca raises to 20",
             "player calls 20",
             "turn 4s",
-            "player raises to 120"
+            "player raises to 120",
+            "Mallorca calls 120",
+            "river 5s"
           ],
-          "card": null,
+          "card": "5s",
           "result": null,
           "shown": null
         },
@@ -4220,18 +4215,18 @@
           ]
         },
         "handNumber": 25,
-        "street": "turn",
-        "actionStreet": "turn",
+        "street": "river",
+        "actionStreet": "river",
         "endsHand": false
       },
       "recent": [
         {
-          "speaker": "player",
-          "text": "Bluffing?"
-        },
-        {
           "speaker": "mallorca",
           "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Bluffing?"
         },
         {
           "speaker": "mallorca",
@@ -4274,38 +4269,34 @@
       },
       "plan": {
         "version": 2,
-        "act": "press",
-        "occasion": "you bet on the turn",
+        "act": "claim",
+        "occasion": "you bet before the flop",
         "voice": {
           "emotion": "shame",
-          "intensity": 0.72
+          "intensity": 0.6
         },
         "words": {
           "min": 2,
           "max": 4
         },
         "humour": null,
-        "claim": null,
+        "claim": {
+          "about": "strong",
+          "honest": false
+        },
         "facts": {
-          "street": "turn",
-          "board": ["Td", "2d", "5c", "Ts"],
-          "potBb": 17,
+          "street": "preflop",
+          "board": [],
+          "potBb": 3,
           "stacksBb": {
-            "her": 151,
-            "player": 121
+            "her": 158,
+            "player": 128
           },
           "actions": [
             "player posts 10",
             "Mallorca posts 20",
             "player calls 10",
-            "Mallorca raises to 40",
-            "player calls 20",
-            "flop Td 2d 5c",
-            "Mallorca checks",
-            "player raises to 120",
-            "Mallorca calls 120",
-            "turn Ts",
-            "Mallorca raises to 20"
+            "Mallorca raises to 40"
           ],
           "card": null,
           "result": null,
@@ -4353,14 +4344,14 @@
           ]
         },
         "handNumber": 26,
-        "street": "turn",
-        "actionStreet": "turn",
+        "street": "preflop",
+        "actionStreet": "preflop",
         "endsHand": false
       },
       "recent": [
         {
-          "speaker": "mallorca",
-          "text": "Here we go"
+          "speaker": "player",
+          "text": "Bluffing?"
         },
         {
           "speaker": "mallorca",
@@ -4408,10 +4399,10 @@
       "plan": {
         "version": 2,
         "act": "react",
-        "occasion": "you won a 18 bb pot",
+        "occasion": "you stayed in on the river",
         "voice": {
-          "emotion": "joy",
-          "intensity": 0.68
+          "emotion": "shame",
+          "intensity": 0.71
         },
         "words": {
           "min": 1,
@@ -4420,46 +4411,37 @@
         "humour": null,
         "claim": null,
         "facts": {
-          "street": "complete",
-          "board": ["7h", "3c", "4s", "8h", "As"],
+          "street": "river",
+          "board": ["Td", "2d", "5c", "Ts", "3h"],
           "potBb": 18,
           "stacksBb": {
-            "her": 178,
-            "player": 111
+            "her": 151,
+            "player": 120
           },
           "actions": [
-            "Mallorca posts 10",
-            "player posts 20",
-            "Mallorca calls 10",
-            "player checks",
-            "flop 7h 3c 4s",
-            "player raises to 80",
-            "Mallorca raises to 160",
-            "player calls 80",
-            "turn 8h",
-            "player checks",
+            "player posts 10",
+            "Mallorca posts 20",
+            "player calls 10",
+            "Mallorca raises to 40",
+            "player calls 20",
+            "flop Td 2d 5c",
             "Mallorca checks",
-            "river As",
-            "player checks",
-            "Mallorca checks",
-            "Mallorca shows Kc Ah",
-            "player shows Jh 7c",
-            "Mallorca wins 360"
+            "player raises to 120",
+            "Mallorca calls 120",
+            "turn Ts",
+            "Mallorca raises to 20",
+            "player calls 20",
+            "river 3h",
+            "Mallorca checks"
           ],
           "card": null,
-          "result": {
-            "won": true,
-            "potBb": 18
-          },
-          "shown": {
-            "her": ["Kc", "Ah"],
-            "player": ["Jh", "7c"]
-          }
+          "result": null,
+          "shown": null
         },
         "heard": null,
         "session": {
-          "hands": 27,
-          "netBb": 72,
+          "hands": 25,
+          "netBb": 54,
           "playerBluffsShown": 2,
           "playerAllIns": 0,
           "signals": {
@@ -4497,10 +4479,10 @@
             }
           ]
         },
-        "handNumber": 27,
-        "street": "complete",
-        "actionStreet": "showdown",
-        "endsHand": true
+        "handNumber": 26,
+        "street": "river",
+        "actionStreet": "river",
+        "endsHand": false
       },
       "recent": [
         {
@@ -4553,6 +4535,142 @@
       "plan": {
         "version": 2,
         "act": "claim",
+        "occasion": "you stayed in on the turn",
+        "voice": {
+          "emotion": "shame",
+          "intensity": 0.55
+        },
+        "words": {
+          "min": 2,
+          "max": 4
+        },
+        "humour": null,
+        "claim": {
+          "about": "weak",
+          "honest": false
+        },
+        "facts": {
+          "street": "turn",
+          "board": ["7h", "3c", "4s", "8h"],
+          "potBb": 18,
+          "stacksBb": {
+            "her": 160,
+            "player": 111
+          },
+          "actions": [
+            "Mallorca posts 10",
+            "player posts 20",
+            "Mallorca calls 10",
+            "player checks",
+            "flop 7h 3c 4s",
+            "player raises to 80",
+            "Mallorca raises to 160",
+            "player calls 80",
+            "turn 8h",
+            "player checks",
+            "Mallorca checks"
+          ],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 26,
+          "netBb": 63,
+          "playerBluffsShown": 2,
+          "playerAllIns": 0,
+          "signals": {
+            "tease": 3,
+            "mockBluff": 2
+          },
+          "notable": [
+            {
+              "kind": "bigWin",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            },
+            {
+              "kind": "bigLoss",
+              "handNumber": 8,
+              "potBb": 42,
+              "won": false,
+              "bets": 4
+            },
+            {
+              "kind": "bluffCaught",
+              "handNumber": 24,
+              "potBb": 42,
+              "won": false,
+              "bets": 4
+            },
+            {
+              "kind": "fought",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            }
+          ]
+        },
+        "handNumber": 27,
+        "street": "river",
+        "actionStreet": "turn",
+        "endsHand": false
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        }
+      ],
+      "debug": false
+    },
+    {
+      "kind": "line",
+      "version": 2,
+      "sessionId": "seed-11",
+      "locale": "en",
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "press",
         "occasion": "you bet on the river",
         "voice": {
           "emotion": "joy",
@@ -4563,10 +4681,7 @@
           "max": 4
         },
         "humour": null,
-        "claim": {
-          "about": "strong",
-          "honest": true
-        },
+        "claim": null,
         "facts": {
           "street": "river",
           "board": ["Ad", "Jc", "7h", "Js", "5s"],
@@ -4690,27 +4805,38 @@
       },
       "plan": {
         "version": 2,
-        "act": "react",
-        "occasion": "you stayed in before the flop",
+        "act": "claim",
+        "occasion": "you bet on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.71
+          "intensity": 0.61
         },
         "words": {
-          "min": 1,
-          "max": 3
+          "min": 2,
+          "max": 4
         },
         "humour": null,
-        "claim": null,
+        "claim": {
+          "about": "strong",
+          "honest": true
+        },
         "facts": {
-          "street": "preflop",
-          "board": [],
-          "potBb": 2,
+          "street": "flop",
+          "board": ["3d", "5s", "Ts"],
+          "potBb": 3,
           "stacksBb": {
-            "her": 198,
+            "her": 197,
             "player": 99
           },
-          "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
+          "actions": [
+            "Mallorca posts 10",
+            "player posts 20",
+            "Mallorca calls 10",
+            "player checks",
+            "flop 3d 5s Ts",
+            "player checks",
+            "Mallorca raises to 20"
+          ],
           "card": null,
           "result": null,
           "shown": null
@@ -4757,8 +4883,8 @@
           ]
         },
         "handNumber": 29,
-        "street": "preflop",
-        "actionStreet": "preflop",
+        "street": "flop",
+        "actionStreet": "flop",
         "endsHand": false
       },
       "recent": [
@@ -4811,27 +4937,24 @@
       },
       "plan": {
         "version": 2,
-        "act": "claim",
-        "occasion": "the player raised on the turn",
+        "act": "react",
+        "occasion": "you won a 16 bb pot",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.59
+          "intensity": 0.75
         },
         "words": {
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         "humour": null,
-        "claim": {
-          "about": "weak",
-          "honest": false
-        },
+        "claim": null,
         "facts": {
-          "street": "turn",
-          "board": ["3d", "5s", "Ts", "Kd"],
-          "potBb": 10,
+          "street": "complete",
+          "board": ["3d", "5s", "Ts", "Kd", "4c"],
+          "potBb": 16,
           "stacksBb": {
-            "her": 197,
+            "her": 207,
             "player": 92
           },
           "actions": [
@@ -4844,16 +4967,29 @@
             "Mallorca raises to 20",
             "player calls 20",
             "turn Kd",
-            "player raises to 120"
+            "player raises to 120",
+            "Mallorca calls 120",
+            "river 4c",
+            "player checks",
+            "Mallorca checks",
+            "Mallorca shows 3h Td",
+            "player shows Ks Qc",
+            "Mallorca wins 320"
           ],
           "card": null,
-          "result": null,
-          "shown": null
+          "result": {
+            "won": true,
+            "potBb": 16
+          },
+          "shown": {
+            "her": ["3h", "Td"],
+            "player": ["Ks", "Qc"]
+          }
         },
         "heard": null,
         "session": {
-          "hands": 28,
-          "netBb": 93,
+          "hands": 29,
+          "netBb": 101,
           "playerBluffsShown": 2,
           "playerAllIns": 0,
           "signals": {
@@ -4892,9 +5028,9 @@
           ]
         },
         "handNumber": 29,
-        "street": "turn",
-        "actionStreet": "turn",
-        "endsHand": false
+        "street": "complete",
+        "actionStreet": "showdown",
+        "endsHand": true
       },
       "recent": [
         {
@@ -5491,34 +5627,33 @@
       },
       "plan": {
         "version": 2,
-        "act": "claim",
-        "occasion": "you bet before the flop",
+        "act": "react",
+        "occasion": "the flop came 5h Js 6c",
         "voice": {
-          "emotion": "shame",
-          "intensity": 0.62
+          "emotion": "surprise",
+          "intensity": 0.3
         },
         "words": {
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         "humour": null,
-        "claim": {
-          "about": "medium",
-          "honest": true
-        },
+        "claim": null,
         "facts": {
-          "street": "preflop",
-          "board": [],
-          "potBb": 9.5,
+          "street": "flop",
+          "board": ["5h", "Js", "6c"],
+          "potBb": 12,
           "stacksBb": {
             "her": 183,
-            "player": 114.5
+            "player": 112
           },
           "actions": [
             "player posts 10",
             "Mallorca posts 20",
             "player raises to 70",
-            "Mallorca raises to 120"
+            "Mallorca raises to 120",
+            "player calls 50",
+            "flop 5h Js 6c"
           ],
           "card": null,
           "result": null,
@@ -5566,8 +5701,8 @@
           ]
         },
         "handNumber": 32,
-        "street": "preflop",
-        "actionStreet": "preflop",
+        "street": "flop",
+        "actionStreet": "flop",
         "endsHand": false
       },
       "recent": [
@@ -5620,24 +5755,24 @@
       },
       "plan": {
         "version": 2,
-        "act": "react",
-        "occasion": "the player raised on the river",
+        "act": "tease",
+        "occasion": "the player bet the river and showed a bluff; you won a 42 bb pot",
         "voice": {
-          "emotion": "anger",
-          "intensity": 0.44
+          "emotion": "joy",
+          "intensity": 0.69
         },
         "words": {
-          "min": 1,
-          "max": 3
+          "min": 3,
+          "max": 4
         },
         "humour": null,
         "claim": null,
         "facts": {
-          "street": "river",
+          "street": "complete",
           "board": ["5h", "Js", "6c", "Th", "4c"],
-          "potBb": 28,
+          "potBb": 42,
           "stacksBb": {
-            "her": 182,
+            "her": 210,
             "player": 97
           },
           "actions": [
@@ -5654,17 +5789,27 @@
             "player checks",
             "river 4c",
             "Mallorca raises to 20",
-            "player raises to 300"
+            "player raises to 300",
+            "Mallorca calls 280",
+            "Mallorca shows 9d Jc",
+            "player shows Ac 9c",
+            "Mallorca wins 840"
           ],
           "card": null,
-          "result": null,
-          "shown": null
+          "result": {
+            "won": true,
+            "potBb": 42
+          },
+          "shown": {
+            "her": ["9d", "Jc"],
+            "player": ["Ac", "9c"]
+          }
         },
         "heard": null,
         "session": {
-          "hands": 31,
-          "netBb": 83,
-          "playerBluffsShown": 2,
+          "hands": 32,
+          "netBb": 104,
+          "playerBluffsShown": 3,
           "playerAllIns": 0,
           "signals": {
             "tease": 4,
@@ -5702,9 +5847,9 @@
           ]
         },
         "handNumber": 32,
-        "street": "river",
-        "actionStreet": "river",
-        "endsHand": false
+        "street": "complete",
+        "actionStreet": "showdown",
+        "endsHand": true
       },
       "recent": [
         {
@@ -5883,31 +6028,168 @@
       },
       "plan": {
         "version": 2,
-        "act": "press",
-        "occasion": "you bet before the flop",
+        "act": "react",
+        "occasion": "you stayed in on the turn",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.54
+          "intensity": 0.53
         },
         "words": {
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         "humour": null,
         "claim": null,
         "facts": {
-          "street": "preflop",
-          "board": [],
-          "potBb": 3,
+          "street": "turn",
+          "board": ["5c", "9c", "9s", "8c"],
+          "potBb": 16,
+          "stacksBb": {
+            "her": 202,
+            "player": 92
+          },
+          "actions": [
+            "Mallorca posts 10",
+            "player posts 20",
+            "Mallorca calls 10",
+            "player checks",
+            "flop 5c 9c 9s",
+            "player checks",
+            "Mallorca raises to 20",
+            "player calls 20",
+            "turn 8c",
+            "player raises to 120",
+            "Mallorca calls 120"
+          ],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 32,
+          "netBb": 104,
+          "playerBluffsShown": 3,
+          "playerAllIns": 0,
+          "signals": {
+            "tease": 4,
+            "mockBluff": 2
+          },
+          "notable": [
+            {
+              "kind": "bigWin",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            },
+            {
+              "kind": "bigLoss",
+              "handNumber": 8,
+              "potBb": 42,
+              "won": false,
+              "bets": 4
+            },
+            {
+              "kind": "bluffCaught",
+              "handNumber": 30,
+              "potBb": 18,
+              "won": false,
+              "bets": 3
+            },
+            {
+              "kind": "fought",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            }
+          ]
+        },
+        "handNumber": 33,
+        "street": "river",
+        "actionStreet": "turn",
+        "endsHand": false
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        }
+      ],
+      "debug": false
+    },
+    {
+      "kind": "line",
+      "version": 2,
+      "sessionId": "seed-11",
+      "locale": "en",
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "react",
+        "occasion": "the player raised on the flop",
+        "voice": {
+          "emotion": "fear",
+          "intensity": 0.17
+        },
+        "words": {
+          "min": 1,
+          "max": 3
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "flop",
+          "board": ["5d", "Qd", "6h"],
+          "potBb": 10,
           "stacksBb": {
             "her": 216,
-            "player": 99
+            "player": 92
           },
           "actions": [
             "player posts 10",
             "Mallorca posts 20",
             "player calls 10",
-            "Mallorca raises to 40"
+            "Mallorca raises to 40",
+            "player calls 20",
+            "flop 5d Qd 6h",
+            "Mallorca checks",
+            "player raises to 120"
           ],
           "card": null,
           "result": null,
@@ -5955,8 +6237,8 @@
           ]
         },
         "handNumber": 34,
-        "street": "preflop",
-        "actionStreet": "preflop",
+        "street": "flop",
+        "actionStreet": "flop",
         "endsHand": false
       },
       "recent": [
@@ -6009,176 +6291,35 @@
       },
       "plan": {
         "version": 2,
-        "act": "react",
-        "occasion": "you won a 18 bb pot",
+        "act": "press",
+        "occasion": "you bet on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.76
-        },
-        "words": {
-          "min": 1,
-          "max": 3
-        },
-        "humour": null,
-        "claim": null,
-        "facts": {
-          "street": "complete",
-          "board": ["5d", "Qd", "6h", "7d", "Th"],
-          "potBb": 18,
-          "stacksBb": {
-            "her": 227,
-            "player": 91
-          },
-          "actions": [
-            "player posts 10",
-            "Mallorca posts 20",
-            "player calls 10",
-            "Mallorca raises to 40",
-            "player calls 20",
-            "flop 5d Qd 6h",
-            "Mallorca checks",
-            "player raises to 120",
-            "Mallorca calls 120",
-            "turn 7d",
-            "Mallorca raises to 20",
-            "player calls 20",
-            "river Th",
-            "Mallorca checks",
-            "player checks",
-            "Mallorca shows Kd Ac",
-            "player shows Jd 3c",
-            "Mallorca wins 360"
-          ],
-          "card": null,
-          "result": {
-            "won": true,
-            "potBb": 18
-          },
-          "shown": {
-            "her": ["Kd", "Ac"],
-            "player": ["Jd", "3c"]
-          }
-        },
-        "heard": null,
-        "session": {
-          "hands": 34,
-          "netBb": 121,
-          "playerBluffsShown": 3,
-          "playerAllIns": 0,
-          "signals": {
-            "tease": 4,
-            "mockBluff": 3
-          },
-          "notable": [
-            {
-              "kind": "bigWin",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            },
-            {
-              "kind": "bigLoss",
-              "handNumber": 8,
-              "potBb": 42,
-              "won": false,
-              "bets": 4
-            },
-            {
-              "kind": "bluffCaught",
-              "handNumber": 30,
-              "potBb": 18,
-              "won": false,
-              "bets": 3
-            },
-            {
-              "kind": "fought",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            }
-          ]
-        },
-        "handNumber": 34,
-        "street": "complete",
-        "actionStreet": "showdown",
-        "endsHand": true
-      },
-      "recent": [
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "player",
-          "text": "Bluffing?"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Sure"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        }
-      ],
-      "debug": false
-    },
-    {
-      "kind": "line",
-      "version": 2,
-      "sessionId": "seed-11",
-      "locale": "en",
-      "personality": {
-        "openness": 0.4,
-        "conscientiousness": 0.2,
-        "extraversion": 0.4,
-        "agreeableness": 0.5,
-        "neuroticism": 0.1
-      },
-      "plan": {
-        "version": 2,
-        "act": "claim",
-        "occasion": "you stayed in before the flop",
-        "voice": {
-          "emotion": "joy",
-          "intensity": 0.68
+          "intensity": 0.66
         },
         "words": {
           "min": 2,
           "max": 4
         },
         "humour": null,
-        "claim": {
-          "about": "medium",
-          "honest": true
-        },
+        "claim": null,
         "facts": {
-          "street": "preflop",
-          "board": [],
-          "potBb": 2,
+          "street": "flop",
+          "board": ["Qh", "Tc", "Kc"],
+          "potBb": 14,
           "stacksBb": {
-            "her": 226,
-            "player": 99
+            "her": 218,
+            "player": 95
           },
-          "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
+          "actions": [
+            "Mallorca posts 10",
+            "player posts 20",
+            "Mallorca calls 10",
+            "player checks",
+            "flop Qh Tc Kc",
+            "player raises to 80",
+            "Mallorca raises to 160"
+          ],
           "card": null,
           "result": null,
           "shown": null
@@ -6225,11 +6366,15 @@
           ]
         },
         "handNumber": 35,
-        "street": "preflop",
-        "actionStreet": "preflop",
+        "street": "flop",
+        "actionStreet": "flop",
         "endsHand": false
       },
       "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
         {
           "speaker": "mallorca",
           "text": "Here we go"
@@ -6253,10 +6398,6 @@
         {
           "speaker": "mallorca",
           "text": "Sure"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -6388,16 +6529,16 @@
           "text": "Here we go"
         },
         {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
           "speaker": "player",
           "text": "Bluffing?"
         },
         {
           "speaker": "mallorca",
           "text": "Sure"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -6505,16 +6646,16 @@
       },
       "recent": [
         {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
           "speaker": "player",
           "text": "Bluffing?"
         },
         {
           "speaker": "mallorca",
           "text": "Sure"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -6553,28 +6694,25 @@
       },
       "plan": {
         "version": 2,
-        "act": "claim",
-        "occasion": "you bet on the river",
+        "act": "react",
+        "occasion": "the player raised on the river",
         "voice": {
-          "emotion": "joy",
-          "intensity": 0.69
+          "emotion": "anger",
+          "intensity": 0.6
         },
         "words": {
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         "humour": null,
-        "claim": {
-          "about": "medium",
-          "honest": true
-        },
+        "claim": null,
         "facts": {
           "street": "river",
           "board": ["Kd", "Qc", "5d", "2s", "5s"],
-          "potBb": 13,
+          "potBb": 28,
           "stacksBb": {
             "her": 229,
-            "player": 94
+            "player": 79
           },
           "actions": [
             "player posts 10",
@@ -6589,7 +6727,8 @@
             "Mallorca checks",
             "player checks",
             "river 5s",
-            "Mallorca raises to 20"
+            "Mallorca raises to 20",
+            "player raises to 300"
           ],
           "card": null,
           "result": null,
@@ -6643,12 +6782,12 @@
       },
       "recent": [
         {
-          "speaker": "mallorca",
-          "text": "Sure"
+          "speaker": "player",
+          "text": "Bluffing?"
         },
         {
           "speaker": "mallorca",
-          "text": "Here we go"
+          "text": "Sure"
         },
         {
           "speaker": "mallorca",
@@ -6692,10 +6831,10 @@
       "plan": {
         "version": 2,
         "act": "claim",
-        "occasion": "you bet on the flop",
+        "occasion": "you stayed in before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.56
+          "intensity": 0.73
         },
         "words": {
           "min": 2,
@@ -6707,12 +6846,136 @@
           "honest": true
         },
         "facts": {
-          "street": "flop",
-          "board": ["7d", "8h", "Qh"],
-          "potBb": 3,
+          "street": "preflop",
+          "board": [],
+          "potBb": 2,
           "stacksBb": {
-            "her": 255,
+            "her": 256,
             "player": 99
+          },
+          "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 36,
+          "netBb": 151,
+          "playerBluffsShown": 4,
+          "playerAllIns": 0,
+          "signals": {
+            "tease": 5,
+            "mockBluff": 3
+          },
+          "notable": [
+            {
+              "kind": "bigWin",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            },
+            {
+              "kind": "bigLoss",
+              "handNumber": 8,
+              "potBb": 42,
+              "won": false,
+              "bets": 4
+            },
+            {
+              "kind": "bluffCaught",
+              "handNumber": 30,
+              "potBb": 18,
+              "won": false,
+              "bets": 3
+            },
+            {
+              "kind": "fought",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            }
+          ]
+        },
+        "handNumber": 37,
+        "street": "preflop",
+        "actionStreet": "preflop",
+        "endsHand": false
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Nice hand"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        }
+      ],
+      "debug": false
+    },
+    {
+      "kind": "line",
+      "version": 2,
+      "sessionId": "seed-11",
+      "locale": "en",
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "you stayed in on the turn",
+        "voice": {
+          "emotion": "joy",
+          "intensity": 0.69
+        },
+        "words": {
+          "min": 2,
+          "max": 4
+        },
+        "humour": null,
+        "claim": {
+          "about": "weak",
+          "honest": true
+        },
+        "facts": {
+          "street": "turn",
+          "board": ["7d", "8h", "Qh", "4h"],
+          "potBb": 16,
+          "stacksBb": {
+            "her": 249,
+            "player": 92
           },
           "actions": [
             "Mallorca posts 10",
@@ -6721,7 +6984,11 @@
             "player checks",
             "flop 7d 8h Qh",
             "player checks",
-            "Mallorca raises to 20"
+            "Mallorca raises to 20",
+            "player calls 20",
+            "turn 4h",
+            "player raises to 120",
+            "Mallorca calls 120"
           ],
           "card": null,
           "result": null,
@@ -6769,154 +7036,9 @@
           ]
         },
         "handNumber": 37,
-        "street": "flop",
-        "actionStreet": "flop",
+        "street": "river",
+        "actionStreet": "turn",
         "endsHand": false
-      },
-      "recent": [
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "player",
-          "text": "Nice hand"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Sure"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        }
-      ],
-      "debug": false
-    },
-    {
-      "kind": "line",
-      "version": 2,
-      "sessionId": "seed-11",
-      "locale": "en",
-      "personality": {
-        "openness": 0.4,
-        "conscientiousness": 0.2,
-        "extraversion": 0.4,
-        "agreeableness": 0.5,
-        "neuroticism": 0.1
-      },
-      "plan": {
-        "version": 2,
-        "act": "complain",
-        "occasion": "you lost a 16 bb pot",
-        "voice": {
-          "emotion": "distress",
-          "intensity": 0.29
-        },
-        "words": {
-          "min": 2,
-          "max": 4
-        },
-        "humour": null,
-        "claim": null,
-        "facts": {
-          "street": "complete",
-          "board": ["7d", "8h", "Qh", "4h", "3c"],
-          "potBb": 16,
-          "stacksBb": {
-            "her": 249,
-            "player": 108
-          },
-          "actions": [
-            "Mallorca posts 10",
-            "player posts 20",
-            "Mallorca calls 10",
-            "player checks",
-            "flop 7d 8h Qh",
-            "player checks",
-            "Mallorca raises to 20",
-            "player calls 20",
-            "turn 4h",
-            "player raises to 120",
-            "Mallorca calls 120",
-            "river 3c",
-            "player checks",
-            "Mallorca checks",
-            "Mallorca shows 2c Th",
-            "player shows 9h 4c",
-            "player wins 320"
-          ],
-          "card": null,
-          "result": {
-            "won": false,
-            "potBb": 16
-          },
-          "shown": {
-            "her": ["2c", "Th"],
-            "player": ["9h", "4c"]
-          }
-        },
-        "heard": null,
-        "session": {
-          "hands": 37,
-          "netBb": 143,
-          "playerBluffsShown": 4,
-          "playerAllIns": 0,
-          "signals": {
-            "tease": 5,
-            "mockBluff": 3
-          },
-          "notable": [
-            {
-              "kind": "bigWin",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            },
-            {
-              "kind": "bigLoss",
-              "handNumber": 8,
-              "potBb": 42,
-              "won": false,
-              "bets": 4
-            },
-            {
-              "kind": "bluffCaught",
-              "handNumber": 30,
-              "potBb": 18,
-              "won": false,
-              "bets": 3
-            },
-            {
-              "kind": "fought",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            }
-          ]
-        },
-        "handNumber": 37,
-        "street": "complete",
-        "actionStreet": "showdown",
-        "endsHand": true
       },
       "recent": [
         {
@@ -7101,27 +7223,38 @@
       },
       "plan": {
         "version": 2,
-        "act": "react",
-        "occasion": "you stayed in before the flop",
+        "act": "claim",
+        "occasion": "you bet on the flop",
         "voice": {
-          "emotion": "anger",
-          "intensity": 0.46
+          "emotion": "fear",
+          "intensity": 0.17
         },
         "words": {
-          "min": 1,
-          "max": 3
+          "min": 2,
+          "max": 4
         },
         "humour": null,
-        "claim": null,
+        "claim": {
+          "about": "strong",
+          "honest": false
+        },
         "facts": {
-          "street": "preflop",
-          "board": [],
-          "potBb": 2,
+          "street": "flop",
+          "board": ["3d", "Ks", "3c"],
+          "potBb": 14,
           "stacksBb": {
-            "her": 257,
-            "player": 99
+            "her": 249,
+            "player": 95
           },
-          "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
+          "actions": [
+            "Mallorca posts 10",
+            "player posts 20",
+            "Mallorca calls 10",
+            "player checks",
+            "flop 3d Ks 3c",
+            "player raises to 80",
+            "Mallorca raises to 160"
+          ],
           "card": null,
           "result": null,
           "shown": null
@@ -7168,8 +7301,8 @@
           ]
         },
         "handNumber": 39,
-        "street": "preflop",
-        "actionStreet": "preflop",
+        "street": "flop",
+        "actionStreet": "flop",
         "endsHand": false
       },
       "recent": [
@@ -7222,25 +7355,25 @@
       },
       "plan": {
         "version": 2,
-        "act": "react",
-        "occasion": "you stayed in on the turn",
+        "act": "complain",
+        "occasion": "you lost a 18 bb pot",
         "voice": {
-          "emotion": "anger",
-          "intensity": 0.45
+          "emotion": "distress",
+          "intensity": 0.36
         },
         "words": {
-          "min": 1,
-          "max": 3
+          "min": 2,
+          "max": 4
         },
         "humour": null,
         "claim": null,
         "facts": {
-          "street": "river",
+          "street": "complete",
           "board": ["3d", "Ks", "3c", "7h", "Js"],
           "potBb": 18,
           "stacksBb": {
             "her": 249,
-            "player": 91
+            "player": 109
           },
           "actions": [
             "Mallorca posts 10",
@@ -7254,16 +7387,27 @@
             "turn 7h",
             "player checks",
             "Mallorca checks",
-            "river Js"
+            "river Js",
+            "player checks",
+            "Mallorca checks",
+            "Mallorca shows Th 5s",
+            "player shows 7d Kc",
+            "player wins 360"
           ],
           "card": null,
-          "result": null,
-          "shown": null
+          "result": {
+            "won": false,
+            "potBb": 18
+          },
+          "shown": {
+            "her": ["Th", "5s"],
+            "player": ["7d", "Kc"]
+          }
         },
         "heard": null,
         "session": {
-          "hands": 38,
-          "netBb": 152,
+          "hands": 39,
+          "netBb": 143,
           "playerBluffsShown": 4,
           "playerAllIns": 0,
           "signals": {
@@ -7302,9 +7446,9 @@
           ]
         },
         "handNumber": 39,
-        "street": "river",
-        "actionStreet": "turn",
-        "endsHand": false
+        "street": "complete",
+        "actionStreet": "showdown",
+        "endsHand": true
       },
       "recent": [
         {
@@ -7356,61 +7500,39 @@
       },
       "plan": {
         "version": 2,
-        "act": "tease",
-        "occasion": "the player bet the river and showed a bluff; you won a 42 bb pot",
+        "act": "claim",
+        "occasion": "the player raised before the flop",
         "voice": {
-          "emotion": "joy",
-          "intensity": 0.73
+          "emotion": "anger",
+          "intensity": 0.35
         },
         "words": {
-          "min": 3,
+          "min": 2,
           "max": 4
         },
         "humour": null,
-        "claim": null,
+        "claim": {
+          "about": "weak",
+          "honest": false
+        },
         "facts": {
-          "street": "complete",
-          "board": ["Ts", "8h", "7d", "8c", "Kh"],
-          "potBb": 42,
+          "street": "preflop",
+          "board": [],
+          "potBb": 4.5,
           "stacksBb": {
-            "her": 270,
-            "player": 88
+            "her": 248,
+            "player": 105.5
           },
-          "actions": [
-            "player posts 10",
-            "Mallorca posts 20",
-            "player raises to 70",
-            "Mallorca raises to 120",
-            "player calls 50",
-            "flop Ts 8h 7d",
-            "Mallorca checks",
-            "player checks",
-            "turn 8c",
-            "Mallorca checks",
-            "player checks",
-            "river Kh",
-            "Mallorca raises to 20",
-            "player raises to 300",
-            "Mallorca calls 280",
-            "Mallorca shows 9d Ad",
-            "player shows 2h Js",
-            "Mallorca wins 840"
-          ],
+          "actions": ["player posts 10", "Mallorca posts 20", "player raises to 70"],
           "card": null,
-          "result": {
-            "won": true,
-            "potBb": 42
-          },
-          "shown": {
-            "her": ["9d", "Ad"],
-            "player": ["2h", "Js"]
-          }
+          "result": null,
+          "shown": null
         },
         "heard": null,
         "session": {
-          "hands": 40,
-          "netBb": 164,
-          "playerBluffsShown": 5,
+          "hands": 39,
+          "netBb": 143,
+          "playerBluffsShown": 4,
           "playerAllIns": 0,
           "signals": {
             "tease": 5,
@@ -7448,9 +7570,9 @@
           ]
         },
         "handNumber": 40,
-        "street": "complete",
-        "actionStreet": "showdown",
-        "endsHand": true
+        "street": "preflop",
+        "actionStreet": "preflop",
+        "endsHand": false
       },
       "recent": [
         {
@@ -7889,20 +8011,20 @@
           "text": "Here we go"
         },
         {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
           "speaker": "player",
           "text": "Bluffing?"
         },
         {
           "speaker": "mallorca",
           "text": "Sure"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -8022,7 +8144,7 @@
       "recent": [
         {
           "speaker": "mallorca",
-          "text": "Sure"
+          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -8182,16 +8304,16 @@
           "text": "Here we go"
         },
         {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
           "speaker": "player",
           "text": "Nice hand"
         },
         {
           "speaker": "mallorca",
           "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -8607,16 +8729,16 @@
           "text": "Here we go"
         },
         {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
           "speaker": "player",
           "text": "Bluffing?"
         },
         {
           "speaker": "mallorca",
           "text": "Sure"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
