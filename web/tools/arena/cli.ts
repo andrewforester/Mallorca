@@ -29,7 +29,7 @@ const { values } = parseArgs({
   },
 });
 
-const names = [...Object.keys(BOTS), 'cfr:<play file>'];
+const names = [...Object.keys(BOTS), 'cfr:<play file>', 'style:<profile>', 'persona:<profile>'];
 for (const name of [values.a, values.b]) {
   if (!isBotName(name)) {
     console.error(`unknown bot "${name}", choose from: ${names.join(', ')}`);

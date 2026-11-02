@@ -1,30 +1,21 @@
-import { readFile } from 'node:fs/promises';
 import { basename, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import type { Action, SeatIndex } from '../../src/engine/index.ts';
+import type { Action } from '../../src/engine/index.ts';
 import { checkOrCall } from '../../src/engine/index.ts';
-import type { BotBias, Brain } from '../../src/brains/index.ts';
+import type { BotBias } from '../../src/brains/index.ts';
 import { createMathBrain } from '../../src/brains/index.ts';
-import type { Rng } from '../../src/cards/index.ts';
-import type { CfrModel, ShippedStrategyKey } from '../../src/cfr/index.ts';
-import { SHIPPED_STRATEGIES, createCfrBrain, loadCfrModel } from '../../src/cfr/index.ts';
+import { SHIPPED_STRATEGIES } from '../../src/cfr/index.ts';
 import { strengthOf } from '../../src/persona/index.ts';
-import type { ArenaBot } from './arenaBot.ts';
+import { fromBrain } from './arenaBot.ts';
+import type { BotFactory } from './arenaBot.ts';
+import { SHIPPED, cfrBrainOf, prepareModel } from './cfrModels.ts';
 import { createExploiter } from './exploiter.ts';
 import { createReader } from './reader.ts';
 import { createTalkingBot } from './talking.ts';
+import { profileFactory, profileOfName } from './profileBots.ts';
 
-export type { ArenaBot } from './arenaBot.ts';
-
-export type BotFactory = (rng: Rng, seat: SeatIndex) => ArenaBot;
-
-export function fromBrain(brain: Brain): ArenaBot {
-  return {
-    observe: (o) => brain.observe(o),
-    decide: (legal) => brain.decide(legal).action,
-    dispose: () => brain.dispose?.(),
-  };
-}
+export type { ArenaBot, BotFactory } from './arenaBot.ts';
+export { fromBrain } from './arenaBot.ts';
 
 const math: BotFactory = () => fromBrain(createMathBrain());
 
@@ -59,18 +50,11 @@ const random: BotFactory = (rng) => ({
 });
 
 const CFR_FILE = 'cfr:';
-const SHIPPED: ShippedStrategyKey = 'cfr';
-const cfrModels = new Map<string, CfrModel>();
-const read = (url: URL) => readFile(url);
 
 function cfrBot(key: string, bias?: BotBias): BotFactory {
   return (rng) => {
-    const model = cfrModels.get(key);
-    if (model === undefined) {
-      throw new Error('The cfr bot needs prepareBots before it plays');
-    }
-    const brain = createCfrBrain(model, rng);
-    if (bias) brain.setBias?.(bias);
+    const brain = cfrBrainOf(key, rng);
+    if (bias) brain.setBias(bias);
     return fromBrain(brain);
   };
 }
@@ -160,12 +144,15 @@ export function biasOfName(name: string): BotBias | null {
 }
 
 export function isBotName(name: string): boolean {
+  if (profileOfName(name) !== null) return true;
   const { base, axes } = splitBias(name);
   if (axes !== null) return biasOfName(name) !== null;
   return Object.hasOwn(BOTS, base) || cfrFile(base) !== null;
 }
 
 export function botFactory(name: string): BotFactory {
+  const profile = profileOfName(name);
+  if (profile !== null) return profileFactory(profile);
   const { base } = splitBias(name);
   const bias = biasOfName(name);
   if (bias !== null) return cfrBot(base, bias);
@@ -186,6 +173,8 @@ function baseLabel(name: string): string {
 }
 
 export function botLabel(name: string): string {
+  const profile = profileOfName(name);
+  if (profile !== null) return profile.label;
   const { base, axes } = splitBias(name);
   if (axes === null) return baseLabel(name);
   const suffix = axes
@@ -201,10 +190,15 @@ function strategyUrl(name: string): URL | null {
   return file === null ? null : pathToFileURL(resolve(file));
 }
 
+function modelKey(name: string): string {
+  if (profileOfName(name) !== null) return SHIPPED;
+  const base = splitBias(name).base;
+  return cfrFile(base) === null && base.startsWith(SHIPPED) ? SHIPPED : base;
+}
+
 export async function prepareBots(names: readonly string[]): Promise<void> {
-  for (const name of names.map((n) => splitBias(n).base)) {
-    const key = cfrFile(name) === null && name.startsWith(SHIPPED) ? SHIPPED : name;
+  for (const key of names.map(modelKey)) {
     const url = strategyUrl(key);
-    if (url !== null && !cfrModels.has(key)) cfrModels.set(key, await loadCfrModel(url, read));
+    if (url !== null) await prepareModel(key, url);
   }
 }

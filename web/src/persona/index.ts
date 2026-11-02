@@ -18,7 +18,7 @@ export type { Signal } from './signals.ts';
 export { SIGNALS } from './signals.ts';
 export type { StrengthClass } from './strength.ts';
 export { classOf, strengthOf } from './strength.ts';
-export { wordsOf } from './view.ts';
+export { toBotBias, wordsOf } from './view.ts';
 export {
   BIAS_KEYS,
   EMOTIONS,
