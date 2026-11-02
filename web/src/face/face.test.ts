@@ -124,6 +124,15 @@ describe('poker face', () => {
 });
 
 describe('frame', () => {
+  it('shows through the mask it is given', () => {
+    const s = badBeat(HOT);
+    const own = faceFrame(s, null, MALLORCA_LOOK);
+    const given = faceFrame(s, null, MALLORCA_LOOK, 0.95);
+    expect(given.mask).toBe(0.95);
+    expect(own.mask).not.toBe(0.95);
+    expect(given.shown).not.toEqual(own.shown);
+  });
+
   it('is calm and neutral without feelings', () => {
     const frame = faceFrame(createEngine(MALLORCA).snapshot(), null, MALLORCA_LOOK);
     expect(frame.idle.nervous).toBeCloseTo(0);
