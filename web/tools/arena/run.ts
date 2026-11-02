@@ -22,6 +22,7 @@ export interface ArenaOptions {
   saveHands?: string;
   reportDir?: string;
   stats?: boolean;
+  session?: number;
 }
 
 export interface Report {
@@ -30,6 +31,7 @@ export interface Report {
   pairs: number;
   hands: number;
   seed: number;
+  session: number;
   bbPer100: number;
   ci95: number | null;
   durationMs: number;
@@ -61,7 +63,13 @@ function chunks(count: number, parts: number): number[][] {
 
 function runInProcess(input: WorkerInput): WorkerResult[] {
   return input.indices.map((index) => {
-    const { net, hands } = playPair(botFactory(input.a), botFactory(input.b), input.seed, index);
+    const { net, hands } = playPair(
+      botFactory(input.a),
+      botFactory(input.b),
+      input.seed,
+      index,
+      input.session,
+    );
     return input.withHands ? { index, net, hands } : { index, net };
   });
 }
@@ -81,14 +89,15 @@ export function runInWorker(input: WorkerInput): Promise<WorkerResult[]> {
 function writeHands(
   path: string,
   results: WorkerResult[],
-  run: { labels: [string, string]; seed: number; started: number },
+  run: { labels: [string, string]; seed: number; started: number; session: number },
 ): void {
   const lines: string[] = [];
   for (const result of results) {
-    (result.hands ?? []).forEach((events, k) => {
+    (result.hands ?? []).forEach((events, i) => {
       const [a, b] = run.labels;
-      const names: [string, string] = k === 0 ? [a, b] : [b, a];
-      const playedAt = new Date(run.started + (result.index * 2 + k) * 1000).toISOString();
+      const names: [string, string] = sideOf(i, run.session) === 0 ? [a, b] : [b, a];
+      const order = result.index * 2 * run.session + i;
+      const playedAt = new Date(run.started + order * 1000).toISOString();
       const record = handRecord(events, [], {
         sessionId: `arena-${run.seed}`,
         mode: CASH,
@@ -104,9 +113,13 @@ function writeHands(
   writeFileSync(path, lines.join('\n') + '\n');
 }
 
-function styleOfA(results: WorkerResult[]): StyleStats {
+function sideOf(hand: number, session: number): 0 | 1 {
+  return Math.floor(hand / session) % 2 === 0 ? 0 : 1;
+}
+
+function styleOfA(results: WorkerResult[], session: number): StyleStats {
   const hands = results.flatMap((result) => result.hands ?? []);
-  return styleStats(hands, (index) => (index % 2 === 0 ? 0 : 1));
+  return styleStats(hands, (index) => sideOf(index, session));
 }
 
 export async function runArena(options: ArenaOptions): Promise<Report> {
@@ -114,10 +127,11 @@ export async function runArena(options: ArenaOptions): Promise<Report> {
   botFactory(options.b);
   const started = Date.now();
   const { a, b } = options;
+  const session = options.session ?? 1;
   const labels: [string, string] = [botLabel(a), botLabel(b)];
   const withHands = options.saveHands !== undefined || options.stats === true;
   const inputs: WorkerInput[] = chunks(options.pairs, Math.max(1, options.workers)).map(
-    (indices) => ({ a, b, seed: options.seed, indices, withHands }),
+    (indices) => ({ a, b, seed: options.seed, indices, withHands, session }),
   );
   if (options.workers <= 1) {
     await prepareBots([a, b]);
@@ -128,9 +142,10 @@ export async function runArena(options: ArenaOptions): Promise<Report> {
   const stats = summarize(
     results.map((r) => r.net),
     BIG_BLIND,
+    2 * session,
   );
   if (options.saveHands !== undefined) {
-    writeHands(options.saveHands, results, { labels, seed: options.seed, started });
+    writeHands(options.saveHands, results, { labels, seed: options.seed, started, session });
   }
   return {
     a: labels[0],
@@ -138,6 +153,7 @@ export async function runArena(options: ArenaOptions): Promise<Report> {
     pairs: stats.pairs,
     hands: stats.hands,
     seed: options.seed,
+    session,
     bbPer100: stats.bbPer100,
     ci95: Number.isFinite(stats.ci95) ? stats.ci95 : null,
     durationMs: Date.now() - started,
@@ -147,6 +163,6 @@ export async function runArena(options: ArenaOptions): Promise<Report> {
       options.saveHands === undefined
         ? null
         : relative(options.reportDir ?? process.cwd(), options.saveHands),
-    ...(options.stats === true ? { styleStats: styleOfA(results) } : {}),
+    ...(options.stats === true ? { styleStats: styleOfA(results, session) } : {}),
   };
 }

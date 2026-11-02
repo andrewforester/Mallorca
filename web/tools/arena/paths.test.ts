@@ -42,4 +42,10 @@ describe('runName', () => {
       'cfr-math-2000-s2-20261030-091507',
     );
   });
+
+  it('adds the session length when hands come in sessions', () => {
+    expect(runName('cfr', 'math', 200, 2, new Date('2026-10-30T09:15:07Z'), 200)).toBe(
+      'cfr-math-200x200-s2-20261030-091507',
+    );
+  });
 });

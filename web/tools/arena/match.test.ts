@@ -3,7 +3,7 @@ import { mulberry32 } from '../../src/cards/index.ts';
 import { CASH, createTable, rulesOf } from '../../src/engine/index.ts';
 import type { EngineEvent, SeatIndex } from '../../src/engine/index.ts';
 import { BOTS } from './bots.ts';
-import type { BotName } from './bots.ts';
+import type { BotFactory, BotName } from './bots.ts';
 import type { ArenaBot } from './arenaBot.ts';
 import { playPair } from './match.ts';
 
@@ -18,7 +18,7 @@ describe('playPair', () => {
   }, 120_000);
 
   it('the min-bettor bets the minimum into no bet and calls a bet', () => {
-    const bot = BOTS['min-bettor'](mulberry32(1));
+    const bot = BOTS['min-bettor'](mulberry32(1), 0);
     const raise = { min: 20, max: 400 };
     expect(bot.decide({ fold: false, check: true, call: null, raise })).toEqual({
       kind: 'raise',
@@ -131,5 +131,61 @@ describe('playPair', () => {
         stacks: [stack, stack],
       });
     }
+  });
+
+  const started = (hand: EngineEvent[]) => {
+    const e = hand[0];
+    if (e?.type !== 'handStarted') throw new Error('no handStarted');
+    return e;
+  };
+
+  it('a session makes each bot once per side and plays its hands in a row', () => {
+    const made: string[] = [];
+    const counting =
+      (name: string): BotFactory =>
+      (rng, seat) => {
+        made.push(`${name}${seat}`);
+        return BOTS['always-call'](rng, seat);
+      };
+    const { hands } = playPair(counting('a'), counting('b'), 2, 1, 3);
+    expect(hands).toHaveLength(6);
+    expect(made).toEqual(['a0', 'b1', 'b0', 'a1']);
+  });
+
+  it('a mirrored session plays the same decks with the seats swapped', () => {
+    const { hands } = playPair(BOTS['always-call'], BOTS['always-raise'], 5, 2, 3);
+    for (let j = 0; j < 3; j++) {
+      expect(hole(hands[j]!, 0)).toBeDefined();
+      expect(hole(hands[3 + j]!, 0)).toEqual(hole(hands[j]!, 0));
+      expect(hole(hands[3 + j]!, 1)).toEqual(hole(hands[j]!, 1));
+    }
+    expect(hole(hands[0]!, 0)).not.toEqual(hole(hands[1]!, 0));
+  });
+
+  it('a session moves the button every hand and numbers hands by deck and side', () => {
+    const { hands } = playPair(BOTS['always-call'], BOTS['always-call'], 5, 2, 3);
+    expect(hands.map((h) => started(h).button)).toEqual([0, 1, 0, 0, 1, 0]);
+    expect(hands.map((h) => started(h).handNumber)).toEqual([13, 15, 17, 14, 16, 18]);
+  });
+
+  it('a session nets bot A over all its hands', () => {
+    const { net, hands } = playPair(BOTS.random, BOTS['always-raise'], 3, 0, 4);
+    const end = (hand: EngineEvent[]) => {
+      const e = hand.find((x) => x.type === 'handEnded');
+      if (e?.type !== 'handEnded') throw new Error('no handEnded');
+      return e.stacks;
+    };
+    const recomputed = hands.reduce((sum, h, i) => sum + end(h)[i < 4 ? 0 : 1] - 2000, 0);
+    expect(net).toBe(recomputed);
+  });
+
+  it('passes every step of the engine to a bot that listens', () => {
+    const seen: EngineEvent[] = [];
+    const listener: BotFactory = (rng, seat) => ({
+      ...BOTS['always-call'](rng, seat),
+      events: (events) => seen.push(...events),
+    });
+    const { hands } = playPair(listener, BOTS['always-raise'], 1, 0, 2);
+    expect(seen).toEqual([...hands[0]!, ...hands[1]!, ...hands[2]!, ...hands[3]!]);
   });
 });

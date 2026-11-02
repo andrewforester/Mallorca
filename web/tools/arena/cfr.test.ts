@@ -9,7 +9,7 @@ describe('the cfr bot in the arena', () => {
   it('cannot play before it is prepared', async () => {
     vi.resetModules();
     const fresh = await import('./bots.ts');
-    expect(() => fresh.BOTS.cfr({ next: () => 0 })).toThrow(/prepareBots/);
+    expect(() => fresh.BOTS.cfr({ next: () => 0 }, 0)).toThrow(/prepareBots/);
   });
 
   it('plays reproducible pairs against the math bot', async () => {

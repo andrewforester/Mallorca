@@ -17,10 +17,10 @@ function stacksOf(record: HandLike, type: string): [number, number] {
   return stacks;
 }
 
-export function netsOfRecords(records: HandLike[]): Map<number, number> {
+export function netsOfRecords(records: HandLike[], session = 1): Map<number, number> {
   const nets = new Map<number, number>();
   for (const record of records) {
-    const index = (record.handNumber - 1) >> 1;
+    const index = Math.floor(((record.handNumber - 1) >> 1) / session);
     const seat = ((record.handNumber - 1) & 1) as 0 | 1;
     const net = stacksOf(record, 'handEnded')[seat] - stacksOf(record, 'handStarted')[seat];
     nets.set(index, (nets.get(index) ?? 0) + net);
@@ -32,6 +32,7 @@ export function pairedDifference(
   a: Map<number, number>,
   b: Map<number, number>,
   bigBlind: number,
+  handsPerPair = 2,
 ): Paired {
   if (a.size !== b.size) {
     throw new Error(`the runs have ${a.size} and ${b.size} pairs`);
@@ -41,7 +42,7 @@ export function pairedDifference(
     if (other === undefined) {
       throw new Error(`pair ${index} is missing from the second run`);
     }
-    return ((other - net) / 2 / bigBlind) * 100;
+    return ((other - net) / handsPerPair / bigBlind) * 100;
   });
   const n = differences.length;
   const mean = differences.reduce((sum, d) => sum + d, 0) / n;

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { basename, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import type { Action } from '../../src/engine/index.ts';
+import type { Action, SeatIndex } from '../../src/engine/index.ts';
 import { checkOrCall } from '../../src/engine/index.ts';
 import type { BotBias, Brain } from '../../src/brains/index.ts';
 import { createMathBrain } from '../../src/brains/index.ts';
@@ -16,7 +16,7 @@ import { createTalkingBot } from './talking.ts';
 
 export type { ArenaBot } from './arenaBot.ts';
 
-export type BotFactory = (rng: Rng) => ArenaBot;
+export type BotFactory = (rng: Rng, seat: SeatIndex) => ArenaBot;
 
 export function fromBrain(brain: Brain): ArenaBot {
   return {
@@ -82,13 +82,13 @@ const biased = (bias: Omit<BotBias, 'sizing' | 'stickiness'>): BotFactory =>
 
 const talking =
   (mask: number): BotFactory =>
-  (rng) =>
-    createTalkingBot(cfr(rng), mask, rng);
+  (rng, seat) =>
+    createTalkingBot(cfr(rng, seat), mask, rng);
 
-const reader: BotFactory = (rng) => createReader(math(rng));
+const reader: BotFactory = (rng, seat) => createReader(math(rng, seat));
 
-const tiltExploiter: BotFactory = (rng) =>
-  createExploiter(math(rng), (hole, board) => strengthOf(hole, board, rng));
+const tiltExploiter: BotFactory = (rng, seat) =>
+  createExploiter(math(rng, seat), (hole, board) => strengthOf(hole, board, rng));
 
 export const BOTS: Record<
   | 'math'

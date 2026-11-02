@@ -24,6 +24,28 @@ describe('netsOfRecords', () => {
   });
 });
 
+describe('netsOfRecords of sessions', () => {
+  it('sums bot A over both sessions of a pair', () => {
+    const nets = netsOfRecords(
+      [
+        record(1, [2000, 2000], [2100, 1900]),
+        record(3, [2000, 2000], [2010, 1990]),
+        record(2, [2000, 2000], [2040, 1960]),
+        record(4, [2000, 2000], [2000, 2000]),
+        record(5, [2000, 2000], [1980, 2020]),
+        record(7, [2000, 2000], [2000, 2000]),
+        record(6, [2000, 2000], [1990, 2010]),
+        record(8, [2000, 2000], [2000, 2000]),
+      ],
+      2,
+    );
+    expect([...nets]).toEqual([
+      [0, 70],
+      [1, -10],
+    ]);
+  });
+});
+
 describe('pairedDifference', () => {
   it('gives the mean of b minus a per pair in bb/100 and 1.96 sd over root pairs', () => {
     const a = new Map([
@@ -69,5 +91,19 @@ describe('pairedDifference', () => {
         20,
       ),
     ).toThrow(/pairs/);
+  });
+});
+
+describe('pairedDifference of sessions', () => {
+  it('counts every hand of a session pair', () => {
+    const a = new Map([
+      [0, 0],
+      [1, 0],
+    ]);
+    const b = new Map([
+      [0, 400],
+      [1, 0],
+    ]);
+    expect(pairedDifference(a, b, 20, 400).mean).toBe(2.5);
   });
 });
