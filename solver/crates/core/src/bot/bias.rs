@@ -31,8 +31,9 @@ pub struct Situation {
     pub bluffing: bool,
 }
 
-pub const LOOSE_SHIFT: f64 = 0.2;
-pub const STICKY_SHIFT: f64 = 0.15;
+pub const LOOSE_SHIFT: f64 = 0.35;
+pub const AGGRESSIVE_SHIFT: f64 = 0.2;
+pub const STICKY_SHIFT: f64 = 0.2;
 
 fn factor(kind: ActionKind, bias: &Bias, situation: &Situation) -> f64 {
     match kind {
@@ -52,7 +53,7 @@ pub fn reweight(row: &[f64], kinds: &[ActionKind], bias: &Bias, situation: &Situ
 
 pub fn shift(bias: &Bias, street: Street, kinds: &[ActionKind]) -> f64 {
     if !kinds.contains(&ActionKind::Fold) {
-        return 0.0;
+        return AGGRESSIVE_SHIFT * bias.aggression.ln();
     }
     if street == Street::Preflop {
         LOOSE_SHIFT * (1.0 / bias.tightness).ln()
@@ -241,6 +242,21 @@ mod tests {
         assert_eq!(shift(&sticky, Street::Turn, &open), 0.0);
         assert_eq!(shift(&Bias::NEUTRAL, Street::Preflop, &facing), 0.0);
         assert_eq!(shift(&Bias::NEUTRAL, Street::Flop, &facing), 0.0);
+    }
+
+    #[test]
+    fn aggression_shifts_strength_only_where_there_is_no_bet() {
+        let facing = [Fold, Call, RaiseTo(60)];
+        let open = [Check, RaiseTo(60)];
+        let hot = bias(2.0, 1.0, 1.0);
+        let cold = bias(0.5, 1.0, 1.0);
+        let expected = AGGRESSIVE_SHIFT * 2f64.ln();
+        for street in [Street::Preflop, Street::Flop, Street::River] {
+            assert!((shift(&hot, street, &open) - expected).abs() < 1e-12);
+            assert!((shift(&cold, street, &open) + expected).abs() < 1e-12);
+            assert_eq!(shift(&hot, street, &facing), 0.0);
+        }
+        assert_eq!(shift(&Bias::NEUTRAL, Street::Turn, &open), 0.0);
     }
 
     #[test]

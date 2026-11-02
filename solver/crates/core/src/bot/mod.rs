@@ -13,7 +13,9 @@ use crate::cards::Card;
 use crate::strategy::{StrategyError, StrategyFile};
 use crate::tree::{ActionKind, Node, NodeId, Street};
 use bias::choose;
-pub use bias::{reweight, sample_weighted, shift, Bias, Situation, LOOSE_SHIFT, STICKY_SHIFT};
+pub use bias::{
+    reweight, sample_weighted, shift, Bias, Situation, AGGRESSIVE_SHIFT, LOOSE_SHIFT, STICKY_SHIFT,
+};
 pub use decision::DecisionView;
 use order::Order;
 use translate::{fraction, nearest, pseudo_harmonic, scaled_raise};

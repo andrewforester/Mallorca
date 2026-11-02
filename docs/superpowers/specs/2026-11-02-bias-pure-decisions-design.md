@@ -6,17 +6,19 @@ every axis visibly change how the bot plays, while a neutral bias plays the blue
 
 ## Success
 
-Measured in the arena with `--stats`, bot A against `cfr`:
+The edges of each axis (0.5 and 2, the clamp of the emotion model) make a different kind of player, measured in the
+arena with `--stats`, bot A against `cfr` (`vpip` 73.7%, `foldToBet` 45.6%, `aggressionFactor` 2.09, `betSize` 0.80):
 
-| Axis at its edge     | Statistic                        | Bar                               |
-| -------------------- | -------------------------------- | --------------------------------- |
-| `tightness=0.67`     | `vpip`                           | at least 5 points above `cfr`     |
-| `stickiness=1.5`     | `foldToBet`                      | at least 5 points below `cfr`     |
-| `sizing=1.5`         | `betSize`                        | at least 1.3 times that of `cfr`  |
-| aggression and bluff | `betFrequency`, `raiseFrequency` | unchanged mechanism, re-measured  |
+| Axis         | Statistic          | At 0.5                       | At 2                     |
+| ------------ | ------------------ | ---------------------------- | ------------------------ |
+| `tightness`  | `vpip`             | a calling station, about 85% | a nit, about 55%         |
+| `stickiness` | `foldToBet`        | about 60%                    | about 25 to 30%          |
+| `aggression` | `aggressionFactor` | about 1                      | about 4                  |
+| `sizing`     | `betSize`          | clearly smaller              | about 1.5 times or more  |
 
-A neutral bias plays exactly the blueprint: golden and arena reference runs unchanged. The cost of each edge against
-`cfr` and the gain of `tilt-exploiter` are recorded in `web/tools/arena/README.md`.
+`bluff` keeps its factor; its nature is studied separately. A neutral bias plays exactly the blueprint: golden and
+arena reference runs unchanged. The cost of each edge against `cfr` and the gain of `tilt-exploiter` are recorded in
+`web/tools/arena/README.md`.
 
 ## Strength order of the buckets
 
@@ -38,13 +40,13 @@ the row `(1 − t) · p(lo) + t · p(hi)` at the same node, `t` the position of 
 the boundary of a range takes part of its stronger neighbour's continue, with that neighbour's mix of calls and raises;
 junk far from the boundary stays a fold, since its neighbours fold too. At `δ = 0` the row is the bot's own.
 
-- `tightness` acts before the flop at nodes with a fold: `δ = c_loose · ln(1 / tightness)`.
-- `stickiness` acts after the flop at nodes with a fold: `δ = c_sticky · ln(stickiness)`.
-- At nodes without a fold neither acts: there the shift would make the bot raise more, which is aggression.
+- `tightness` acts before the flop at nodes with a fold: `δ = 0.35 · ln(1 / tightness)`.
+- `stickiness` acts after the flop at nodes with a fold: `δ = 0.2 · ln(stickiness)`.
+- `aggression` acts at nodes without a fold, on every street: `δ = 0.2 · ln(aggression)`, so an aggressive bot bets
+  where a slightly stronger hand would; its factor between calls and raises stays.
 - The former factor on fold for these two axes is removed, so each axis means one thing.
-- `c_loose` and `c_sticky` are set from a first arena measurement to meet the bars above.
 
-`biased` does the shift and then the existing factors of aggression and bluff, so the decision, the coach's view
+`biased` does the shift and then the factors of aggression and bluff, so the decision, the coach's view
 (`explain`) and the bot's own range (`range.rs`) all see the same probabilities. The spot carries its node id to read
 the neighbour rows.
 
