@@ -292,3 +292,41 @@ describe('a persona at the table', () => {
     }
   });
 });
+
+describe('moments', () => {
+  it('gives the river its impulses and the ids of the entries it made', () => {
+    const played = deal('9h 8h', 'As Ad', 'Kh 2h 3c 4s Qd');
+    played.act(call, 1000);
+    played.act(check, 1500);
+    played.act(check, 2000);
+    played.act(check, 2500);
+    played.act(check, 3000);
+    const moments = played.act(check, 3500);
+    const river = moments.find((m) => m.event.type === 'streetDealt');
+    if (river === undefined) {
+      throw new Error('no river');
+    }
+    expect(river.impulses.length).toBeGreaterThan(0);
+    const entries = played.persona
+      .journal()
+      .filter((e) => river.journalIds.includes(e.id))
+      .reverse();
+    expect(entries.flatMap((e) => e.impulses)).toEqual(river.impulses);
+  });
+
+  it('gives a moment that appraised nothing no impulses and no ids', () => {
+    const played = deal('9h 8h', 'As Ad', 'Kh 2h 3c 4s Qd');
+    const blind = played.moments.find((m) => m.event.type === 'blindPosted');
+    expect(blind?.impulses).toEqual([]);
+    expect(blind?.journalIds).toEqual([]);
+  });
+
+  it('numbers the ids of one step in event order', () => {
+    const played = deal('9h 8h', 'As Ad', 'Kh 2h 3c 4s Qd');
+    const before = played.persona.lastJournalId();
+    const moments = played.act(raiseTo(60), 1000);
+    const ids = moments.flatMap((m) => m.journalIds);
+    expect(ids).toEqual(played.persona.journalSince(before).map((e) => e.id));
+    expect(ids).toEqual([...ids].sort((a, b) => a - b));
+  });
+});

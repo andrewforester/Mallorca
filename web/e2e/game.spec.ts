@@ -19,6 +19,7 @@ test('the production build has no emotion debug panel', async ({ page }) => {
   await expect(byId(page, 'fold')).toBeVisible();
   await expect(byId(page, 'emotion-debug-toggle')).toHaveCount(0);
   await expect(byId(page, 'emotion-debug')).toHaveCount(0);
+  await expect(byId(page, 'conversation-debug')).toHaveCount(0);
 });
 
 test('a passive hand ends with the chips conserved', async ({ page }) => {

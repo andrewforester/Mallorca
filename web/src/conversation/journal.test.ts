@@ -4,42 +4,35 @@ import { PERSONALITIES } from '../emotion/index.ts';
 import { applyAction } from '../engine/hand.ts';
 import { call, deckOf, raiseTo, startHand } from '../engine/testDeck.ts';
 import type { Action, Step } from '../engine/types.ts';
-import { BASE_HABITS } from './habits.ts';
-import type { Habits, Situation } from './habits.ts';
+import { wordsFor } from './plan.ts';
+import type { Planned } from './planner.ts';
+import { RULES } from './rules.ts';
+import type { Rule } from './rules.ts';
 import { JOURNAL_SIZE } from '../persona/index.ts';
 import { toBotBias } from '../persona/view.ts';
 import { MALLORCA } from '../emotion/index.ts';
 import { traitsOf } from '../emotion/personality.ts';
 import { createSpeaker } from './testSpeaker.ts';
 import type { Speaker } from './testSpeaker.ts';
-import type { LineIntent } from './conversation.ts';
 
-const habits = (speak: number): Habits => {
-  const row = {
-    strong: { speak },
-    medium: { speak },
-    weak: { speak },
-  };
-  const situations = Object.keys(BASE_HABITS) as Situation[];
-  return Object.fromEntries(situations.map((s) => [s, row])) as Habits;
-};
+const rules = (speak: number): Rule[] => RULES.map((r) => ({ ...r, chance: speak }));
 
 const newConversation = (speak = 0): Speaker =>
-  createSpeaker({ seat: 1, rng: mulberry32(3), habits: habits(speak) });
+  createSpeaker({ seat: 1, rng: mulberry32(3), rules: rules(speak) });
 
 function play(
   conversation: Speaker,
   actions: Action[],
   her = 'As Ah',
   player = 'Js Ts',
-): LineIntent[] {
+): Planned[] {
   let step: Step = startHand([2000, 2000], deckOf(her, player, 'Kc 9d 2s 3h Qh'), 0);
-  const intents: (LineIntent | null)[] = [conversation.observe(step.events, 0)];
+  const planned: Planned[] = [conversation.observe(step.events, 0)];
   actions.forEach((action, i) => {
     step = applyAction(step.hand, step.seats, action);
-    intents.push(conversation.observe(step.events, (i + 1) * 1000));
+    planned.push(conversation.observe(step.events, (i + 1) * 1000));
   });
-  return intents.filter((x): x is LineIntent => x !== null);
+  return planned.filter((p) => p.plan !== null);
 }
 
 const badBeat = [raiseTo(60), raiseTo(2000), call];
@@ -95,7 +88,8 @@ describe('the personality of her feeling', () => {
     play(lola, badBeat);
     expect(lola.bias().tightness).toBeLessThan(calm.bias().tightness);
     expect(lola.feeling().traits).not.toEqual(calm.feeling().traits);
-    expect(lola.character().talkativeness).toBeGreaterThan(calm.character().talkativeness);
+    const words = (s: Speaker) => wordsFor('answer', s.view().personality.bigFive.extraversion, 0);
+    expect(words(lola).max).toBeGreaterThan(words(calm).max);
   });
 
   it('starts over on resetFeeling, back to her natural style', () => {

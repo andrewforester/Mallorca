@@ -5,16 +5,16 @@ import { CASH } from '../engine/index.ts';
 import type { LegalActions } from '../engine/index.ts';
 import type {
   ConversationClient,
-  LinePayload,
-  ReplyPayload,
+  PlanLinePayload,
+  PlanReplyPayload,
   SummaryPayload,
 } from './conversationClient.ts';
 import { createSession } from './session.ts';
 import { scriptedBot } from './testBot.ts';
 
 interface Sent {
-  lines: LinePayload[];
-  replies: ReplyPayload[];
+  lines: PlanLinePayload[];
+  replies: PlanReplyPayload[];
   summaries: SummaryPayload[];
   biases: (BotBias | undefined)[];
 }
@@ -33,13 +33,14 @@ const rounded = (bias: BotBias): BotBias => ({
 function capture(sent: Sent): ConversationClient {
   return {
     enabled: true,
-    line: (request) => {
+    planLine: (request) => {
       sent.lines.push(request);
-      return Promise.resolve('Here we go');
+      const text = 'Here we go';
+      return Promise.resolve({ text, attempts: [{ text, rejected: [] }], prompt: null });
     },
-    reply: (request) => {
+    planReply: (request) => {
       sent.replies.push(request);
-      return Promise.resolve({ text: 'Sure', signals: ['tease'] });
+      return Promise.resolve({ text: 'Sure', signals: ['tease'], attempts: [], prompt: null });
     },
     summary: (request) => {
       sent.summaries.push(request);

@@ -13,11 +13,13 @@ function solverBot(): BotClient {
   return { ...inProcessBot(), select: (opponent) => Promise.resolve(opponent) };
 }
 
-function client(): ConversationClient & { reply: ReturnType<typeof vi.fn> } {
+function client(): ConversationClient & { planReply: ReturnType<typeof vi.fn> } {
   return {
     enabled: true,
-    line: vi.fn(() => Promise.resolve(null)),
-    reply: vi.fn(() => Promise.resolve({ text: 'Is that so?', signals: [] })),
+    planLine: vi.fn(() => Promise.resolve(null)),
+    planReply: vi.fn(() =>
+      Promise.resolve({ text: 'Is that so?', signals: [], attempts: [], prompt: null }),
+    ),
     summary: vi.fn(() => Promise.resolve()),
   };
 }
@@ -60,7 +62,7 @@ describe('App table talk', () => {
         'Is that so?',
       ),
     );
-    expect(conversation.reply).toHaveBeenCalledTimes(1);
+    expect(conversation.planReply).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('bubble-player')).not.toBeNull();
     session.getState().dispose();
   });

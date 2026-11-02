@@ -2,7 +2,13 @@ import { createClient } from '@supabase/supabase-js';
 import { SIGNALS } from '../persona/index.ts';
 import type { Signal } from '../persona/index.ts';
 import { CONVERSATION_TIMEOUT_MS, silentConversationClient } from './conversationClient.ts';
-import type { ConversationClient, ConversationReply } from './conversationClient.ts';
+import type {
+  Attempt,
+  ConversationClient,
+  LineAnswer,
+  PromptEcho,
+  ReplyAnswer,
+} from './conversationClient.ts';
 
 export interface RemoteOptions {
   url: string;
@@ -26,9 +32,34 @@ function parseSignals(value: unknown): Signal[] {
   return value.filter((item): item is Signal => (SIGNALS as readonly unknown[]).includes(item));
 }
 
-function parseReply(body: unknown): ConversationReply | null {
-  if (!isRecord(body) || typeof body.text !== 'string' || body.text.trim() === '') return null;
-  return { text: body.text, signals: parseSignals(body.signals) };
+function parseAttempt(value: unknown): Attempt[] {
+  if (!isRecord(value) || typeof value.text !== 'string' || !Array.isArray(value.rejected)) {
+    return [];
+  }
+  const rejected = value.rejected.filter((r): r is string => typeof r === 'string');
+  return [{ text: value.text, rejected }];
+}
+
+function parsePrompt(value: unknown): PromptEcho | null {
+  if (!isRecord(value) || typeof value.system !== 'string' || typeof value.state !== 'string') {
+    return null;
+  }
+  return { system: value.system, state: value.state };
+}
+
+function parseAnswer(body: unknown): LineAnswer | null {
+  if (!isRecord(body)) return null;
+  const { text } = body;
+  const spoken = typeof text === 'string' && text.trim() !== '';
+  if (!spoken && text !== null) return null;
+  const attempts = Array.isArray(body.attempts) ? body.attempts.flatMap(parseAttempt) : [];
+  return { text: spoken ? text : null, attempts, prompt: parsePrompt(body.prompt) };
+}
+
+function parsePlanReply(body: unknown): ReplyAnswer | null {
+  const answer = parseAnswer(body);
+  if (answer === null || answer.text === null || !isRecord(body)) return null;
+  return { ...answer, signals: parseSignals(body.signals) };
 }
 
 function aborted(signal: AbortSignal): Promise<null> {
@@ -92,8 +123,8 @@ function connected(options: RemoteOptions, tokens: TokenCache): ConversationClie
   const { fresh } = tokens;
   return {
     enabled: true,
-    line: async (request) => parseReply(await post(options, fresh, request))?.text ?? null,
-    reply: async (request) => parseReply(await post(options, fresh, request)),
+    planLine: async (request) => parseAnswer(await post(options, fresh, request)),
+    planReply: async (request) => parsePlanReply(await post(options, fresh, request)),
     summary: async (request, send) => {
       if (send?.keepalive === true) return beacon(options, tokens.latest(), request);
       await post(options, fresh, request);

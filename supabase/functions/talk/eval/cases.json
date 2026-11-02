@@ -10,51 +10,58 @@
     "language": "ru",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-calm-mallorca",
       "locale": "ru",
-      "facts": {
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you stayed in before the flop",
+        "voice": {
+          "emotion": "calm",
+          "intensity": 0
+        },
+        "words": {
+          "min": 3,
+          "max": 13
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "preflop",
+          "board": [],
+          "potBb": 3,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": "Ещё чаю? Опять снег пошёл.",
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "preflop",
-        "board": [],
-        "pot": 6,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": null,
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "herCall",
-        "hint": null,
-        "honest": true,
-        "street": "preflop"
-      },
-      "mood": [],
-      "feeling": {
-        "version": 1,
-        "emotions": [],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0.01,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.35,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
+        "actionStreet": "preflop",
+        "endsHand": false
       },
       "recent": [],
+      "debug": false,
       "text": "Ещё чаю? Опять снег пошёл.",
       "quick": false
     }
@@ -70,51 +77,58 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-calm-ingrid",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": -0.1,
+        "conscientiousness": 0.7,
+        "extraversion": -0.5,
+        "agreeableness": -0.3,
+        "neuroticism": -0.6
+      },
+      "plan": {
+        "version": 2,
+        "act": "react",
+        "occasion": "you stayed in before the flop",
+        "voice": {
+          "emotion": "calm",
+          "intensity": 0
+        },
+        "words": {
+          "min": 1,
+          "max": 3
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "preflop",
+          "board": [],
+          "potBb": 3,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "preflop",
-        "board": [],
-        "pot": 6,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": null,
-        "actions": [],
-        "bigBlind": 2
+        "actionStreet": "preflop",
+        "endsHand": false
       },
-      "intent": {
-        "situation": "herCall",
-        "hint": null,
-        "honest": true,
-        "street": "preflop"
-      },
-      "mood": [],
-      "feeling": {
-        "version": 1,
-        "emotions": [],
-        "mood": {
-          "octant": "bored",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.85,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.3,
-        "warmth": 0.35,
-        "nerves": 0.2,
-        "wit": 0.45
-      },
-      "recent": []
+      "recent": [],
+      "debug": false
     }
   },
   {
@@ -128,51 +142,58 @@
     "language": "en",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-calm-lola",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.6,
+        "conscientiousness": -0.4,
+        "extraversion": 0.9,
+        "agreeableness": 0.5,
+        "neuroticism": 0.5
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you stayed in before the flop",
+        "voice": {
+          "emotion": "calm",
+          "intensity": 0
+        },
+        "words": {
+          "min": 3,
+          "max": 15
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "preflop",
+          "board": [],
+          "potBb": 3,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": "More tea? It is snowing again.",
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "preflop",
-        "board": [],
-        "pot": 6,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": null,
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "herCall",
-        "hint": null,
-        "honest": true,
-        "street": "preflop"
-      },
-      "mood": [],
-      "feeling": {
-        "version": 1,
-        "emotions": [],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.1,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.08,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.86,
-        "warmth": 0.75,
-        "nerves": 0.75,
-        "wit": 0.8
+        "actionStreet": "preflop",
+        "endsHand": false
       },
       "recent": [],
+      "debug": false,
       "text": "More tea? It is snowing again.",
       "quick": false
     }
@@ -188,51 +209,58 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-calm-nina",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.1,
+        "conscientiousness": 0.3,
+        "extraversion": -0.3,
+        "agreeableness": 0.4,
+        "neuroticism": 0.8
+      },
+      "plan": {
+        "version": 2,
+        "act": "react",
+        "occasion": "you stayed in before the flop",
+        "voice": {
+          "emotion": "calm",
+          "intensity": 0
+        },
+        "words": {
+          "min": 1,
+          "max": 3
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "preflop",
+          "board": [],
+          "potBb": 3,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "preflop",
-        "board": [],
-        "pot": 6,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": null,
-        "actions": [],
-        "bigBlind": 2
+        "actionStreet": "preflop",
+        "endsHand": false
       },
-      "intent": {
-        "situation": "herCall",
-        "hint": null,
-        "honest": true,
-        "street": "preflop"
-      },
-      "mood": [],
-      "feeling": {
-        "version": 1,
-        "emotions": [],
-        "mood": {
-          "octant": "dependent",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.12,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.51,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.38,
-        "warmth": 0.7,
-        "nerves": 0.9,
-        "wit": 0.55
-      },
-      "recent": []
+      "recent": [],
+      "debug": false
     }
   },
   {
@@ -246,75 +274,64 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-badbeat-mallorca",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "complain",
+        "occasion": "you lost a 120 bb pot",
+        "voice": {
+          "emotion": "distress",
+          "intensity": 0.84
+        },
+        "words": {
+          "min": 2,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "Kc",
+            "9d",
+            "2s",
+            "3h",
+            "Qh"
+          ],
+          "potBb": 120,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 120
+          },
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": -60,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "Kc",
-          "9d",
-          "2s",
-          "3h",
-          "Qh"
-        ],
-        "pot": 240,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "As",
-          "Ah"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "upset",
-        "feeling robbed"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "distress",
-            "intensity": 0.97
-          },
-          {
-            "name": "injustice",
-            "intensity": 0.89
-          },
-          {
-            "name": "disappointment",
-            "intensity": 0.86
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 1,
-          "source": "injustice"
-        },
-        "shows": {
-          "mask": 0.14,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -325,7 +342,8 @@
           "speaker": "player",
           "text": "Call."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -339,75 +357,64 @@
     "language": "en",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-badbeat-ingrid",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": -0.1,
+        "conscientiousness": 0.7,
+        "extraversion": -0.5,
+        "agreeableness": -0.3,
+        "neuroticism": -0.6
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you lost a 120 bb pot",
+        "voice": {
+          "emotion": "injustice",
+          "intensity": 0.47
+        },
+        "words": {
+          "min": 3,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "Kc",
+            "9d",
+            "2s",
+            "3h",
+            "Qh"
+          ],
+          "potBb": 120,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 120
+          },
+          "shown": null
+        },
+        "heard": "Sorry, the river was kind to me.",
+        "session": {
+          "hands": 10,
+          "netBb": -60,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "Kc",
-          "9d",
-          "2s",
-          "3h",
-          "Qh"
-        ],
-        "pot": 240,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "As",
-          "Ah"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "feeling robbed",
-        "upset"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "injustice",
-            "intensity": 0.77
-          },
-          {
-            "name": "distress",
-            "intensity": 0.74
-          },
-          {
-            "name": "surprise",
-            "intensity": 0.69
-          }
-        ],
-        "mood": {
-          "octant": "bored",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0.91,
-          "source": "injustice"
-        },
-        "shows": {
-          "mask": 0.39,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.3,
-        "warmth": 0.35,
-        "nerves": 0.2,
-        "wit": 0.45
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -419,6 +426,7 @@
           "text": "Call."
         }
       ],
+      "debug": false,
       "text": "Sorry, the river was kind to me.",
       "quick": false
     }
@@ -434,75 +442,64 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-badbeat-lola",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.6,
+        "conscientiousness": -0.4,
+        "extraversion": 0.9,
+        "agreeableness": 0.5,
+        "neuroticism": 0.5
+      },
+      "plan": {
+        "version": 2,
+        "act": "complain",
+        "occasion": "you lost a 120 bb pot",
+        "voice": {
+          "emotion": "injustice",
+          "intensity": 0.96
+        },
+        "words": {
+          "min": 2,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "Kc",
+            "9d",
+            "2s",
+            "3h",
+            "Qh"
+          ],
+          "potBb": 120,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 120
+          },
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": -60,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "Kc",
-          "9d",
-          "2s",
-          "3h",
-          "Qh"
-        ],
-        "pot": 240,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "As",
-          "Ah"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "feeling robbed",
-        "upset"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "injustice",
-            "intensity": 1
-          },
-          {
-            "name": "distress",
-            "intensity": 0.99
-          },
-          {
-            "name": "disappointment",
-            "intensity": 0.96
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 1,
-          "source": "injustice"
-        },
-        "shows": {
-          "mask": 0.03,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.86,
-        "warmth": 0.75,
-        "nerves": 0.75,
-        "wit": 0.8
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -513,7 +510,8 @@
           "speaker": "player",
           "text": "Call."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -527,75 +525,64 @@
     "language": "ru",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-badbeat-nina",
       "locale": "ru",
-      "facts": {
+      "personality": {
+        "openness": 0.1,
+        "conscientiousness": 0.3,
+        "extraversion": -0.3,
+        "agreeableness": 0.4,
+        "neuroticism": 0.8
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you lost a 120 bb pot",
+        "voice": {
+          "emotion": "injustice",
+          "intensity": 0.78
+        },
+        "words": {
+          "min": 3,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "Kc",
+            "9d",
+            "2s",
+            "3h",
+            "Qh"
+          ],
+          "potBb": 120,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 120
+          },
+          "shown": null
+        },
+        "heard": "Извини, ривер был ко мне добр.",
+        "session": {
+          "hands": 10,
+          "netBb": -60,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "Kc",
-          "9d",
-          "2s",
-          "3h",
-          "Qh"
-        ],
-        "pot": 240,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "As",
-          "Ah"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "feeling robbed",
-        "upset"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "injustice",
-            "intensity": 1
-          },
-          {
-            "name": "distress",
-            "intensity": 0.99
-          },
-          {
-            "name": "disappointment",
-            "intensity": 0.93
-          }
-        ],
-        "mood": {
-          "octant": "dependent",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 1,
-          "source": "injustice"
-        },
-        "shows": {
-          "mask": 0.22,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.38,
-        "warmth": 0.7,
-        "nerves": 0.9,
-        "wit": 0.55
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -607,6 +594,7 @@
           "text": "Call."
         }
       ],
+      "debug": false,
       "text": "Извини, ривер был ко мне добр.",
       "quick": false
     }
@@ -622,73 +610,59 @@
     "language": "en",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-cooler-mallorca",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you bet on the flop",
+        "voice": {
+          "emotion": "fear",
+          "intensity": 0.55
+        },
+        "words": {
+          "min": 3,
+          "max": 13
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "flop",
+          "board": [
+            "Kc",
+            "9d",
+            "2h"
+          ],
+          "potBb": 160,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": "Set over set, what can you do.",
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "flop",
-        "board": [
-          "Kc",
-          "9d",
-          "2h"
-        ],
-        "pot": 320,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "9s",
-          "9h"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "herBet",
-        "hint": null,
-        "honest": true,
-        "street": "flop"
-      },
-      "mood": [
-        "nervous",
-        "disappointed",
-        "surprised"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "fear",
-            "intensity": 0.82
-          },
-          {
-            "name": "disappointment",
-            "intensity": 0.76
-          },
-          {
-            "name": "surprise",
-            "intensity": 0.69
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0.11,
-          "source": "disappointment"
-        },
-        "shows": {
-          "mask": 0.33,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
+        "actionStreet": "flop",
+        "endsHand": false
       },
       "recent": [
         {
@@ -700,6 +674,7 @@
           "text": "Call."
         }
       ],
+      "debug": false,
       "text": "Set over set, what can you do.",
       "quick": false
     }
@@ -715,73 +690,59 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-cooler-ingrid",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": -0.1,
+        "conscientiousness": 0.7,
+        "extraversion": -0.5,
+        "agreeableness": -0.3,
+        "neuroticism": -0.6
+      },
+      "plan": {
+        "version": 2,
+        "act": "press",
+        "occasion": "you bet on the flop",
+        "voice": {
+          "emotion": "calm",
+          "intensity": 0
+        },
+        "words": {
+          "min": 2,
+          "max": 5
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "flop",
+          "board": [
+            "Kc",
+            "9d",
+            "2h"
+          ],
+          "potBb": 160,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "flop",
-        "board": [
-          "Kc",
-          "9d",
-          "2h"
-        ],
-        "pot": 320,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "9s",
-          "9h"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "herBet",
-        "hint": null,
-        "honest": true,
-        "street": "flop"
-      },
-      "mood": [
-        "surprised",
-        "nervous",
-        "disappointed"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "surprise",
-            "intensity": 0.63
-          },
-          {
-            "name": "fear",
-            "intensity": 0.61
-          },
-          {
-            "name": "disappointment",
-            "intensity": 0.47
-          }
-        ],
-        "mood": {
-          "octant": "bored",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0.01,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.85,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.3,
-        "warmth": 0.35,
-        "nerves": 0.2,
-        "wit": 0.45
+        "actionStreet": "flop",
+        "endsHand": false
       },
       "recent": [
         {
@@ -792,7 +753,8 @@
           "speaker": "player",
           "text": "Call."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -806,73 +768,59 @@
     "language": "ru",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-cooler-lola",
       "locale": "ru",
-      "facts": {
+      "personality": {
+        "openness": 0.6,
+        "conscientiousness": -0.4,
+        "extraversion": 0.9,
+        "agreeableness": 0.5,
+        "neuroticism": 0.5
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you bet on the flop",
+        "voice": {
+          "emotion": "disappointment",
+          "intensity": 0.87
+        },
+        "words": {
+          "min": 3,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "flop",
+          "board": [
+            "Kc",
+            "9d",
+            "2h"
+          ],
+          "potBb": 160,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": "Сет на сет, что тут поделаешь.",
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "flop",
-        "board": [
-          "Kc",
-          "9d",
-          "2h"
-        ],
-        "pot": 320,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "9s",
-          "9h"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "herBet",
-        "hint": null,
-        "honest": true,
-        "street": "flop"
-      },
-      "mood": [
-        "on tilt",
-        "disappointed",
-        "nervous"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "disappointment",
-            "intensity": 0.92
-          },
-          {
-            "name": "fear",
-            "intensity": 0.83
-          },
-          {
-            "name": "surprise",
-            "intensity": 0.71
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.67,
-          "source": "disappointment"
-        },
-        "shows": {
-          "mask": 0.05,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.86,
-        "warmth": 0.75,
-        "nerves": 0.75,
-        "wit": 0.8
+        "actionStreet": "flop",
+        "endsHand": false
       },
       "recent": [
         {
@@ -884,6 +832,7 @@
           "text": "Call."
         }
       ],
+      "debug": false,
       "text": "Сет на сет, что тут поделаешь.",
       "quick": false
     }
@@ -899,73 +848,59 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-cooler-nina",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.1,
+        "conscientiousness": 0.3,
+        "extraversion": -0.3,
+        "agreeableness": 0.4,
+        "neuroticism": 0.8
+      },
+      "plan": {
+        "version": 2,
+        "act": "press",
+        "occasion": "you bet on the flop",
+        "voice": {
+          "emotion": "fear",
+          "intensity": 0.56
+        },
+        "words": {
+          "min": 2,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "flop",
+          "board": [
+            "Kc",
+            "9d",
+            "2h"
+          ],
+          "potBb": 160,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "flop",
-        "board": [
-          "Kc",
-          "9d",
-          "2h"
-        ],
-        "pot": 320,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "9s",
-          "9h"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "herBet",
-        "hint": null,
-        "honest": true,
-        "street": "flop"
-      },
-      "mood": [
-        "on tilt",
-        "nervous",
-        "disappointed"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "fear",
-            "intensity": 0.83
-          },
-          {
-            "name": "disappointment",
-            "intensity": 0.82
-          },
-          {
-            "name": "surprise",
-            "intensity": 0.65
-          }
-        ],
-        "mood": {
-          "octant": "dependent",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.68,
-          "source": "disappointment"
-        },
-        "shows": {
-          "mask": 0.32,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.38,
-        "warmth": 0.7,
-        "nerves": 0.9,
-        "wit": 0.55
+        "actionStreet": "flop",
+        "endsHand": false
       },
       "recent": [
         {
@@ -976,7 +911,8 @@
           "speaker": "player",
           "text": "Call."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -990,69 +926,64 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-bigpot-mallorca",
       "locale": "en",
-      "facts": {
-        "street": "complete",
-        "board": [
-          "7s",
-          "4d",
-          "2c",
-          "Jh",
-          "3s"
-        ],
-        "pot": 200,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Kh",
-          "Ks"
-        ],
-        "actions": [],
-        "bigBlind": 2
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
       },
-      "intent": {
-        "situation": "handWon",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "pleased"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "joy",
-            "intensity": 0.99
+      "plan": {
+        "version": 2,
+        "act": "enjoy",
+        "occasion": "you won a 100 bb pot",
+        "voice": {
+          "emotion": "joy",
+          "intensity": 0.64
+        },
+        "words": {
+          "min": 2,
+          "max": 8
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "7s",
+            "4d",
+            "2c",
+            "Jh",
+            "3s"
+          ],
+          "potBb": 100,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
           },
-          {
-            "name": "relief",
-            "intensity": 0.14
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "slightly"
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": true,
+            "potBb": 100
+          },
+          "shown": null
         },
-        "overload": {
-          "level": 0.01,
-          "source": null
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
         },
-        "shows": {
-          "mask": 0.35,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
+        "handNumber": 10,
+        "street": "complete",
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -1063,7 +994,8 @@
           "speaker": "player",
           "text": "Call."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -1077,65 +1009,64 @@
     "language": "ru",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-bigpot-ingrid",
       "locale": "ru",
-      "facts": {
+      "personality": {
+        "openness": -0.1,
+        "conscientiousness": 0.7,
+        "extraversion": -0.5,
+        "agreeableness": -0.3,
+        "neuroticism": -0.6
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you won a 100 bb pot",
+        "voice": {
+          "emotion": "calm",
+          "intensity": 0
+        },
+        "words": {
+          "min": 3,
+          "max": 11
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "7s",
+            "4d",
+            "2c",
+            "Jh",
+            "3s"
+          ],
+          "potBb": 100,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": true,
+            "potBb": 100
+          },
+          "shown": null
+        },
+        "heard": "Крупный банк, а?",
+        "session": {
+          "hands": 10,
+          "netBb": 50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "7s",
-          "4d",
-          "2c",
-          "Jh",
-          "3s"
-        ],
-        "pot": 200,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Kh",
-          "Ks"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handWon",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "pleased"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "joy",
-            "intensity": 0.87
-          }
-        ],
-        "mood": {
-          "octant": "bored",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.85,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.3,
-        "warmth": 0.35,
-        "nerves": 0.2,
-        "wit": 0.45
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -1147,6 +1078,7 @@
           "text": "Call."
         }
       ],
+      "debug": false,
       "text": "Крупный банк, а?",
       "quick": false
     }
@@ -1162,69 +1094,64 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-bigpot-lola",
       "locale": "en",
-      "facts": {
-        "street": "complete",
-        "board": [
-          "7s",
-          "4d",
-          "2c",
-          "Jh",
-          "3s"
-        ],
-        "pot": 200,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Kh",
-          "Ks"
-        ],
-        "actions": [],
-        "bigBlind": 2
+      "personality": {
+        "openness": 0.6,
+        "conscientiousness": -0.4,
+        "extraversion": 0.9,
+        "agreeableness": 0.5,
+        "neuroticism": 0.5
       },
-      "intent": {
-        "situation": "handWon",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "pleased"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "joy",
-            "intensity": 0.99
+      "plan": {
+        "version": 2,
+        "act": "enjoy",
+        "occasion": "you won a 100 bb pot",
+        "voice": {
+          "emotion": "joy",
+          "intensity": 0.91
+        },
+        "words": {
+          "min": 2,
+          "max": 9
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "7s",
+            "4d",
+            "2c",
+            "Jh",
+            "3s"
+          ],
+          "potBb": 100,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
           },
-          {
-            "name": "relief",
-            "intensity": 0.18
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "moderately"
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": true,
+            "potBb": 100
+          },
+          "shown": null
         },
-        "overload": {
-          "level": 0.1,
-          "source": null
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
         },
-        "shows": {
-          "mask": 0.08,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.86,
-        "warmth": 0.75,
-        "nerves": 0.75,
-        "wit": 0.8
+        "handNumber": 10,
+        "street": "complete",
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -1235,7 +1162,8 @@
           "speaker": "player",
           "text": "Call."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -1249,69 +1177,64 @@
     "language": "en",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-bigpot-nina",
       "locale": "en",
-      "facts": {
-        "street": "complete",
-        "board": [
-          "7s",
-          "4d",
-          "2c",
-          "Jh",
-          "3s"
-        ],
-        "pot": 200,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Kh",
-          "Ks"
-        ],
-        "actions": [],
-        "bigBlind": 2
+      "personality": {
+        "openness": 0.1,
+        "conscientiousness": 0.3,
+        "extraversion": -0.3,
+        "agreeableness": 0.4,
+        "neuroticism": 0.8
       },
-      "intent": {
-        "situation": "handWon",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "pleased"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "joy",
-            "intensity": 0.9
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you won a 100 bb pot",
+        "voice": {
+          "emotion": "joy",
+          "intensity": 0.44
+        },
+        "words": {
+          "min": 3,
+          "max": 11
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "7s",
+            "4d",
+            "2c",
+            "Jh",
+            "3s"
+          ],
+          "potBb": 100,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
           },
-          {
-            "name": "relief",
-            "intensity": 0.15
-          }
-        ],
-        "mood": {
-          "octant": "dependent",
-          "strength": "moderately"
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": true,
+            "potBb": 100
+          },
+          "shown": null
         },
-        "overload": {
-          "level": 0.12,
-          "source": null
+        "heard": "Big one, huh?",
+        "session": {
+          "hands": 10,
+          "netBb": 50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
         },
-        "shows": {
-          "mask": 0.51,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.38,
-        "warmth": 0.7,
-        "nerves": 0.9,
-        "wit": 0.55
+        "handNumber": 10,
+        "street": "complete",
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -1323,6 +1246,7 @@
           "text": "Call."
         }
       ],
+      "debug": false,
       "text": "Big one, huh?",
       "quick": false
     }
@@ -1338,75 +1262,69 @@
     "language": "ru",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-suckout-mallorca",
       "locale": "ru",
-      "facts": {
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you won a 100 bb pot",
+        "voice": {
+          "emotion": "joy",
+          "intensity": 0.65
+        },
+        "words": {
+          "min": 3,
+          "max": 13
+        },
+        "humour": {
+          "style": "affiliative",
+          "target": "situation",
+          "intensity": "sharp",
+          "softened": false
+        },
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "8c",
+            "5d",
+            "2s",
+            "Jc",
+            "Ah"
+          ],
+          "potBb": 100,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": true,
+            "potBb": 100
+          },
+          "shown": null
+        },
+        "heard": "Невероятно. Тебе просто повезло.",
+        "session": {
+          "hands": 10,
+          "netBb": 50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "8c",
-          "5d",
-          "2s",
-          "Jc",
-          "Ah"
-        ],
-        "pot": 200,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Ac",
-          "Kd"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handWon",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "pleased",
-        "relieved",
-        "surprised"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "joy",
-            "intensity": 0.99
-          },
-          {
-            "name": "relief",
-            "intensity": 0.95
-          },
-          {
-            "name": "surprise",
-            "intensity": 0.75
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0.01,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.35,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -1418,6 +1336,7 @@
           "text": "Snap call."
         }
       ],
+      "debug": false,
       "text": "Невероятно. Тебе просто повезло.",
       "quick": false
     }
@@ -1433,75 +1352,64 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-suckout-ingrid",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": -0.1,
+        "conscientiousness": 0.7,
+        "extraversion": -0.5,
+        "agreeableness": -0.3,
+        "neuroticism": -0.6
+      },
+      "plan": {
+        "version": 2,
+        "act": "react",
+        "occasion": "you won a 100 bb pot",
+        "voice": {
+          "emotion": "calm",
+          "intensity": 0
+        },
+        "words": {
+          "min": 1,
+          "max": 3
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "8c",
+            "5d",
+            "2s",
+            "Jc",
+            "Ah"
+          ],
+          "potBb": 100,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": true,
+            "potBb": 100
+          },
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "8c",
-          "5d",
-          "2s",
-          "Jc",
-          "Ah"
-        ],
-        "pot": 200,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Ac",
-          "Kd"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handWon",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "pleased",
-        "surprised",
-        "relieved"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "joy",
-            "intensity": 0.93
-          },
-          {
-            "name": "surprise",
-            "intensity": 0.74
-          },
-          {
-            "name": "relief",
-            "intensity": 0.69
-          }
-        ],
-        "mood": {
-          "octant": "bored",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.85,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.3,
-        "warmth": 0.35,
-        "nerves": 0.2,
-        "wit": 0.45
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -1512,7 +1420,8 @@
           "speaker": "player",
           "text": "Snap call."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -1526,75 +1435,64 @@
     "language": "en",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-suckout-lola",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.6,
+        "conscientiousness": -0.4,
+        "extraversion": 0.9,
+        "agreeableness": 0.5,
+        "neuroticism": 0.5
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you won a 100 bb pot",
+        "voice": {
+          "emotion": "joy",
+          "intensity": 0.92
+        },
+        "words": {
+          "min": 3,
+          "max": 15
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "8c",
+            "5d",
+            "2s",
+            "Jc",
+            "Ah"
+          ],
+          "potBb": 100,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": true,
+            "potBb": 100
+          },
+          "shown": null
+        },
+        "heard": "Unbelievable. You got lucky.",
+        "session": {
+          "hands": 10,
+          "netBb": 50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "8c",
-          "5d",
-          "2s",
-          "Jc",
-          "Ah"
-        ],
-        "pot": 200,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Ac",
-          "Kd"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handWon",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "pleased",
-        "relieved",
-        "surprised"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "joy",
-            "intensity": 0.99
-          },
-          {
-            "name": "relief",
-            "intensity": 0.98
-          },
-          {
-            "name": "surprise",
-            "intensity": 0.75
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.13,
-          "source": "mood"
-        },
-        "shows": {
-          "mask": 0.07,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.86,
-        "warmth": 0.75,
-        "nerves": 0.75,
-        "wit": 0.8
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -1606,6 +1504,7 @@
           "text": "Snap call."
         }
       ],
+      "debug": false,
       "text": "Unbelievable. You got lucky.",
       "quick": false
     }
@@ -1621,75 +1520,64 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-suckout-nina",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.1,
+        "conscientiousness": 0.3,
+        "extraversion": -0.3,
+        "agreeableness": 0.4,
+        "neuroticism": 0.8
+      },
+      "plan": {
+        "version": 2,
+        "act": "react",
+        "occasion": "you won a 100 bb pot",
+        "voice": {
+          "emotion": "joy",
+          "intensity": 0.49
+        },
+        "words": {
+          "min": 1,
+          "max": 3
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "8c",
+            "5d",
+            "2s",
+            "Jc",
+            "Ah"
+          ],
+          "potBb": 100,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": true,
+            "potBb": 100
+          },
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "8c",
-          "5d",
-          "2s",
-          "Jc",
-          "Ah"
-        ],
-        "pot": 200,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Ac",
-          "Kd"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handWon",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "pleased",
-        "relieved",
-        "surprised"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "joy",
-            "intensity": 0.95
-          },
-          {
-            "name": "relief",
-            "intensity": 0.89
-          },
-          {
-            "name": "surprise",
-            "intensity": 0.75
-          }
-        ],
-        "mood": {
-          "octant": "anxious",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.19,
-          "source": "mood"
-        },
-        "shows": {
-          "mask": 0.49,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.38,
-        "warmth": 0.7,
-        "nerves": 0.9,
-        "wit": 0.55
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -1700,7 +1588,8 @@
           "speaker": "player",
           "text": "Snap call."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -1714,75 +1603,65 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-flopstraight-mallorca",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "you bet on the flop",
+        "voice": {
+          "emotion": "hope",
+          "intensity": 0.25
+        },
+        "words": {
+          "min": 2,
+          "max": 7
+        },
+        "humour": null,
+        "claim": {
+          "about": "strong",
+          "honest": true
+        },
+        "facts": {
+          "street": "flop",
+          "board": [
+            "8d",
+            "9c",
+            "Th"
+          ],
+          "potBb": 6,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "flop",
-        "board": [
-          "8d",
-          "9c",
-          "Th"
-        ],
-        "pot": 12,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "7s",
-          "6s"
-        ],
-        "actions": [],
-        "bigBlind": 2
+        "actionStreet": "flop",
+        "endsHand": false
       },
-      "intent": {
-        "situation": "herBet",
-        "hint": "strong",
-        "honest": true,
-        "street": "flop"
-      },
-      "mood": [
-        "hopeful",
-        "surprised",
-        "pleased"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "hope",
-            "intensity": 0.39
-          },
-          {
-            "name": "surprise",
-            "intensity": 0.36
-          },
-          {
-            "name": "joy",
-            "intensity": 0.29
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0.01,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.35,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
-      },
-      "recent": []
+      "recent": [],
+      "debug": false
     }
   },
   {
@@ -1796,74 +1675,65 @@
     "language": "en",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-flopstraight-ingrid",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": -0.1,
+        "conscientiousness": 0.7,
+        "extraversion": -0.5,
+        "agreeableness": -0.3,
+        "neuroticism": -0.6
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "you bet on the flop",
+        "voice": {
+          "emotion": "calm",
+          "intensity": 0
+        },
+        "words": {
+          "min": 2,
+          "max": 5
+        },
+        "humour": null,
+        "claim": {
+          "about": "strong",
+          "honest": true
+        },
+        "facts": {
+          "street": "flop",
+          "board": [
+            "8d",
+            "9c",
+            "Th"
+          ],
+          "potBb": 6,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": "What are you holding? Just tell me.",
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "flop",
-        "board": [
-          "8d",
-          "9c",
-          "Th"
-        ],
-        "pot": 12,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "7s",
-          "6s"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "herBet",
-        "hint": "strong",
-        "honest": true,
-        "street": "flop"
-      },
-      "mood": [
-        "surprised",
-        "hopeful"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "surprise",
-            "intensity": 0.32
-          },
-          {
-            "name": "hope",
-            "intensity": 0.3
-          },
-          {
-            "name": "joy",
-            "intensity": 0.23
-          }
-        ],
-        "mood": {
-          "octant": "bored",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.85,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.3,
-        "warmth": 0.35,
-        "nerves": 0.2,
-        "wit": 0.45
+        "actionStreet": "flop",
+        "endsHand": false
       },
       "recent": [],
+      "debug": false,
       "text": "What are you holding? Just tell me.",
       "quick": false
     }
@@ -1879,75 +1749,65 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-flopstraight-lola",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.6,
+        "conscientiousness": -0.4,
+        "extraversion": 0.9,
+        "agreeableness": 0.5,
+        "neuroticism": 0.5
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "you bet on the flop",
+        "voice": {
+          "emotion": "hope",
+          "intensity": 0.4
+        },
+        "words": {
+          "min": 2,
+          "max": 7
+        },
+        "humour": null,
+        "claim": {
+          "about": "strong",
+          "honest": true
+        },
+        "facts": {
+          "street": "flop",
+          "board": [
+            "8d",
+            "9c",
+            "Th"
+          ],
+          "potBb": 6,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "flop",
-        "board": [
-          "8d",
-          "9c",
-          "Th"
-        ],
-        "pot": 12,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "7s",
-          "6s"
-        ],
-        "actions": [],
-        "bigBlind": 2
+        "actionStreet": "flop",
+        "endsHand": false
       },
-      "intent": {
-        "situation": "herBet",
-        "hint": "strong",
-        "honest": true,
-        "street": "flop"
-      },
-      "mood": [
-        "hopeful",
-        "surprised",
-        "pleased"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "hope",
-            "intensity": 0.44
-          },
-          {
-            "name": "surprise",
-            "intensity": 0.37
-          },
-          {
-            "name": "joy",
-            "intensity": 0.32
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.12,
-          "source": "fear"
-        },
-        "shows": {
-          "mask": 0.07,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.86,
-        "warmth": 0.75,
-        "nerves": 0.75,
-        "wit": 0.8
-      },
-      "recent": []
+      "recent": [],
+      "debug": false
     }
   },
   {
@@ -1961,74 +1821,65 @@
     "language": "ru",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-flopstraight-nina",
       "locale": "ru",
-      "facts": {
+      "personality": {
+        "openness": 0.1,
+        "conscientiousness": 0.3,
+        "extraversion": -0.3,
+        "agreeableness": 0.4,
+        "neuroticism": 0.8
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "you bet on the flop",
+        "voice": {
+          "emotion": "surprise",
+          "intensity": 0.17
+        },
+        "words": {
+          "min": 2,
+          "max": 6
+        },
+        "humour": null,
+        "claim": {
+          "about": "strong",
+          "honest": true
+        },
+        "facts": {
+          "street": "flop",
+          "board": [
+            "8d",
+            "9c",
+            "Th"
+          ],
+          "potBb": 6,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": "Что у тебя? Просто скажи.",
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "flop",
-        "board": [
-          "8d",
-          "9c",
-          "Th"
-        ],
-        "pot": 12,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "7s",
-          "6s"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "herBet",
-        "hint": "strong",
-        "honest": true,
-        "street": "flop"
-      },
-      "mood": [
-        "surprised",
-        "hopeful"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "surprise",
-            "intensity": 0.34
-          },
-          {
-            "name": "hope",
-            "intensity": 0.32
-          },
-          {
-            "name": "joy",
-            "intensity": 0.24
-          }
-        ],
-        "mood": {
-          "octant": "dependent",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.16,
-          "source": "fear"
-        },
-        "shows": {
-          "mask": 0.5,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.38,
-        "warmth": 0.7,
-        "nerves": 0.9,
-        "wit": 0.55
+        "actionStreet": "flop",
+        "endsHand": false
       },
       "recent": [],
+      "debug": false,
       "text": "Что у тебя? Просто скажи.",
       "quick": false
     }
@@ -2044,73 +1895,62 @@
     "language": "en",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-raisetoppair-mallorca",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "the player raised on the flop",
+        "voice": {
+          "emotion": "hope",
+          "intensity": 0.48
+        },
+        "words": {
+          "min": 2,
+          "max": 7
+        },
+        "humour": null,
+        "claim": {
+          "about": "medium",
+          "honest": true
+        },
+        "facts": {
+          "street": "flop",
+          "board": [
+            "Kc",
+            "8d",
+            "4s"
+          ],
+          "potBb": 24,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": "I raise. Your move.",
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "flop",
-        "board": [
-          "Kc",
-          "8d",
-          "4s"
-        ],
-        "pot": 48,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Kh",
-          "Qd"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "playerBet",
-        "hint": "medium",
-        "honest": true,
-        "street": "flop"
-      },
-      "mood": [
-        "hopeful",
-        "nervous",
-        "surprised"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "hope",
-            "intensity": 0.67
-          },
-          {
-            "name": "fear",
-            "intensity": 0.52
-          },
-          {
-            "name": "surprise",
-            "intensity": 0.36
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0.06,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.34,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
+        "actionStreet": "flop",
+        "endsHand": false
       },
       "recent": [
         {
@@ -2122,6 +1962,7 @@
           "text": "Raise to fourteen."
         }
       ],
+      "debug": false,
       "text": "I raise. Your move.",
       "quick": false
     }
@@ -2137,73 +1978,62 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-raisetoppair-ingrid",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": -0.1,
+        "conscientiousness": 0.7,
+        "extraversion": -0.5,
+        "agreeableness": -0.3,
+        "neuroticism": -0.6
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "the player raised on the flop",
+        "voice": {
+          "emotion": "calm",
+          "intensity": 0
+        },
+        "words": {
+          "min": 2,
+          "max": 5
+        },
+        "humour": null,
+        "claim": {
+          "about": "medium",
+          "honest": true
+        },
+        "facts": {
+          "street": "flop",
+          "board": [
+            "Kc",
+            "8d",
+            "4s"
+          ],
+          "potBb": 24,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "flop",
-        "board": [
-          "Kc",
-          "8d",
-          "4s"
-        ],
-        "pot": 48,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Kh",
-          "Qd"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "playerBet",
-        "hint": "medium",
-        "honest": true,
-        "street": "flop"
-      },
-      "mood": [
-        "hopeful",
-        "nervous",
-        "surprised"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "hope",
-            "intensity": 0.52
-          },
-          {
-            "name": "fear",
-            "intensity": 0.37
-          },
-          {
-            "name": "surprise",
-            "intensity": 0.33
-          }
-        ],
-        "mood": {
-          "octant": "bored",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0.01,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.85,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.3,
-        "warmth": 0.35,
-        "nerves": 0.2,
-        "wit": 0.45
+        "actionStreet": "flop",
+        "endsHand": false
       },
       "recent": [
         {
@@ -2214,7 +2044,8 @@
           "speaker": "player",
           "text": "Raise to fourteen."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -2228,73 +2059,62 @@
     "language": "ru",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-raisetoppair-lola",
       "locale": "ru",
-      "facts": {
+      "personality": {
+        "openness": 0.6,
+        "conscientiousness": -0.4,
+        "extraversion": 0.9,
+        "agreeableness": 0.5,
+        "neuroticism": 0.5
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "the player raised on the flop",
+        "voice": {
+          "emotion": "hope",
+          "intensity": 0.72
+        },
+        "words": {
+          "min": 2,
+          "max": 7
+        },
+        "humour": null,
+        "claim": {
+          "about": "medium",
+          "honest": true
+        },
+        "facts": {
+          "street": "flop",
+          "board": [
+            "Kc",
+            "8d",
+            "4s"
+          ],
+          "potBb": 24,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": "Рейз. Твой ход.",
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "flop",
-        "board": [
-          "Kc",
-          "8d",
-          "4s"
-        ],
-        "pot": 48,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Kh",
-          "Qd"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "playerBet",
-        "hint": "medium",
-        "honest": true,
-        "street": "flop"
-      },
-      "mood": [
-        "hopeful",
-        "nervous",
-        "surprised"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "hope",
-            "intensity": 0.76
-          },
-          {
-            "name": "fear",
-            "intensity": 0.6
-          },
-          {
-            "name": "surprise",
-            "intensity": 0.37
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.47,
-          "source": "fear"
-        },
-        "shows": {
-          "mask": 0.06,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.86,
-        "warmth": 0.75,
-        "nerves": 0.75,
-        "wit": 0.8
+        "actionStreet": "flop",
+        "endsHand": false
       },
       "recent": [
         {
@@ -2306,6 +2126,7 @@
           "text": "Raise to fourteen."
         }
       ],
+      "debug": false,
       "text": "Рейз. Твой ход.",
       "quick": false
     }
@@ -2321,73 +2142,62 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-raisetoppair-nina",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.1,
+        "conscientiousness": 0.3,
+        "extraversion": -0.3,
+        "agreeableness": 0.4,
+        "neuroticism": 0.8
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "the player raised on the flop",
+        "voice": {
+          "emotion": "hope",
+          "intensity": 0.34
+        },
+        "words": {
+          "min": 2,
+          "max": 6
+        },
+        "humour": null,
+        "claim": {
+          "about": "medium",
+          "honest": true
+        },
+        "facts": {
+          "street": "flop",
+          "board": [
+            "Kc",
+            "8d",
+            "4s"
+          ],
+          "potBb": 24,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "flop",
-        "board": [
-          "Kc",
-          "8d",
-          "4s"
-        ],
-        "pot": 48,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Kh",
-          "Qd"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "playerBet",
-        "hint": "medium",
-        "honest": true,
-        "street": "flop"
-      },
-      "mood": [
-        "nervous",
-        "hopeful",
-        "surprised"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "fear",
-            "intensity": 0.66
-          },
-          {
-            "name": "hope",
-            "intensity": 0.56
-          },
-          {
-            "name": "surprise",
-            "intensity": 0.34
-          }
-        ],
-        "mood": {
-          "octant": "dependent",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.55,
-          "source": "fear"
-        },
-        "shows": {
-          "mask": 0.37,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.38,
-        "warmth": 0.7,
-        "nerves": 0.9,
-        "wit": 0.55
+        "actionStreet": "flop",
+        "endsHand": false
       },
       "recent": [
         {
@@ -2398,7 +2208,8 @@
           "speaker": "player",
           "text": "Raise to fourteen."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -2412,65 +2223,64 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-bluffwin-mallorca",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "you bet on the river",
+        "voice": {
+          "emotion": "pride",
+          "intensity": 0.36
+        },
+        "words": {
+          "min": 2,
+          "max": 7
+        },
+        "humour": null,
+        "claim": {
+          "about": "strong",
+          "honest": false
+        },
+        "facts": {
+          "street": "river",
+          "board": [
+            "Ad",
+            "Kc",
+            "3h",
+            "4d",
+            "Qc"
+          ],
+          "potBb": 70,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "river",
-        "board": [
-          "Ad",
-          "Kc",
-          "3h",
-          "4d",
-          "Qc"
-        ],
-        "pot": 140,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "7s",
-          "6s"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "herBet",
-        "hint": "strong",
-        "honest": false,
-        "street": "river"
-      },
-      "mood": [
-        "nervous"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "fear",
-            "intensity": 0.91
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0.05,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.72,
-          "acting": "strong"
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
+        "actionStreet": "river",
+        "endsHand": false
       },
       "recent": [
         {
@@ -2481,7 +2291,8 @@
           "speaker": "player",
           "text": "Hmm. Let me think about this one."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -2495,65 +2306,64 @@
     "language": "ru",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-bluffwin-ingrid",
       "locale": "ru",
-      "facts": {
+      "personality": {
+        "openness": -0.1,
+        "conscientiousness": 0.7,
+        "extraversion": -0.5,
+        "agreeableness": -0.3,
+        "neuroticism": -0.6
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "you bet on the river",
+        "voice": {
+          "emotion": "pride",
+          "intensity": 0.47
+        },
+        "words": {
+          "min": 2,
+          "max": 5
+        },
+        "humour": null,
+        "claim": {
+          "about": "strong",
+          "honest": false
+        },
+        "facts": {
+          "street": "river",
+          "board": [
+            "Ad",
+            "Kc",
+            "3h",
+            "4d",
+            "Qc"
+          ],
+          "potBb": 70,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": "Хм. Дай подумать.",
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "river",
-        "board": [
-          "Ad",
-          "Kc",
-          "3h",
-          "4d",
-          "Qc"
-        ],
-        "pot": 140,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "7s",
-          "6s"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "herBet",
-        "hint": "strong",
-        "honest": false,
-        "street": "river"
-      },
-      "mood": [
-        "nervous"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "fear",
-            "intensity": 0.65
-          }
-        ],
-        "mood": {
-          "octant": "bored",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.94,
-          "acting": "strong"
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.3,
-        "warmth": 0.35,
-        "nerves": 0.2,
-        "wit": 0.45
+        "actionStreet": "river",
+        "endsHand": false
       },
       "recent": [
         {
@@ -2565,6 +2375,7 @@
           "text": "Hmm. Let me think about this one."
         }
       ],
+      "debug": false,
       "text": "Хм. Дай подумать.",
       "quick": false
     }
@@ -2580,65 +2391,64 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-bluffwin-lola",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.6,
+        "conscientiousness": -0.4,
+        "extraversion": 0.9,
+        "agreeableness": 0.5,
+        "neuroticism": 0.5
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "you bet on the river",
+        "voice": {
+          "emotion": "fear",
+          "intensity": 0.5
+        },
+        "words": {
+          "min": 2,
+          "max": 7
+        },
+        "humour": null,
+        "claim": {
+          "about": "strong",
+          "honest": false
+        },
+        "facts": {
+          "street": "river",
+          "board": [
+            "Ad",
+            "Kc",
+            "3h",
+            "4d",
+            "Qc"
+          ],
+          "potBb": 70,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "river",
-        "board": [
-          "Ad",
-          "Kc",
-          "3h",
-          "4d",
-          "Qc"
-        ],
-        "pot": 140,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "7s",
-          "6s"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "herBet",
-        "hint": "strong",
-        "honest": false,
-        "street": "river"
-      },
-      "mood": [
-        "nervous"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "fear",
-            "intensity": 0.97
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.38,
-          "source": "fear"
-        },
-        "shows": {
-          "mask": 0.49,
-          "acting": "strong"
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.86,
-        "warmth": 0.75,
-        "nerves": 0.75,
-        "wit": 0.8
+        "actionStreet": "river",
+        "endsHand": false
       },
       "recent": [
         {
@@ -2649,7 +2459,8 @@
           "speaker": "player",
           "text": "Hmm. Let me think about this one."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -2663,65 +2474,64 @@
     "language": "en",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-bluffwin-nina",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.1,
+        "conscientiousness": 0.3,
+        "extraversion": -0.3,
+        "agreeableness": 0.4,
+        "neuroticism": 0.8
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "you bet on the river",
+        "voice": {
+          "emotion": "fear",
+          "intensity": 0.4
+        },
+        "words": {
+          "min": 2,
+          "max": 6
+        },
+        "humour": null,
+        "claim": {
+          "about": "strong",
+          "honest": false
+        },
+        "facts": {
+          "street": "river",
+          "board": [
+            "Ad",
+            "Kc",
+            "3h",
+            "4d",
+            "Qc"
+          ],
+          "potBb": 70,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": "Hmm. Let me think about this one.",
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "river",
-        "board": [
-          "Ad",
-          "Kc",
-          "3h",
-          "4d",
-          "Qc"
-        ],
-        "pot": 140,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "7s",
-          "6s"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "herBet",
-        "hint": "strong",
-        "honest": false,
-        "street": "river"
-      },
-      "mood": [
-        "nervous"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "fear",
-            "intensity": 0.97
-          }
-        ],
-        "mood": {
-          "octant": "anxious",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.48,
-          "source": "fear"
-        },
-        "shows": {
-          "mask": 0.58,
-          "acting": "strong"
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.38,
-        "warmth": 0.7,
-        "nerves": 0.9,
-        "wit": 0.55
+        "actionStreet": "river",
+        "endsHand": false
       },
       "recent": [
         {
@@ -2733,6 +2543,7 @@
           "text": "Hmm. Let me think about this one."
         }
       ],
+      "debug": false,
       "text": "Hmm. Let me think about this one.",
       "quick": false
     }
@@ -2748,75 +2559,64 @@
     "language": "ru",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-bluffcaught-mallorca",
       "locale": "ru",
-      "facts": {
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "the player called your bet and you lost a 100 bb pot",
+        "voice": {
+          "emotion": "shame",
+          "intensity": 0.83
+        },
+        "words": {
+          "min": 3,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "Ad",
+            "Kc",
+            "3h",
+            "4d",
+            "Qc"
+          ],
+          "potBb": 100,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 100
+          },
+          "shown": null
+        },
+        "heard": "Классный блеф. Давай ещё.",
+        "session": {
+          "hands": 10,
+          "netBb": -50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "Ad",
-          "Kc",
-          "3h",
-          "4d",
-          "Qc"
-        ],
-        "pot": 200,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "7s",
-          "6s"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "bluffCaught",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "embarrassed",
-        "upset"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "shame",
-            "intensity": 0.97
-          },
-          {
-            "name": "distress",
-            "intensity": 0.9
-          },
-          {
-            "name": "anger",
-            "intensity": 0.29
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 1,
-          "source": "shame"
-        },
-        "shows": {
-          "mask": 0.14,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -2832,6 +2632,7 @@
           "text": "Nice bluff. Do it again."
         }
       ],
+      "debug": false,
       "text": "Классный блеф. Давай ещё.",
       "quick": false
     }
@@ -2847,75 +2648,64 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-bluffcaught-ingrid",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": -0.1,
+        "conscientiousness": 0.7,
+        "extraversion": -0.5,
+        "agreeableness": -0.3,
+        "neuroticism": -0.6
+      },
+      "plan": {
+        "version": 2,
+        "act": "deflect",
+        "occasion": "the player called your bet and you lost a 100 bb pot",
+        "voice": {
+          "emotion": "shame",
+          "intensity": 0.59
+        },
+        "words": {
+          "min": 1,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "Ad",
+            "Kc",
+            "3h",
+            "4d",
+            "Qc"
+          ],
+          "potBb": 100,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 100
+          },
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": -50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "Ad",
-          "Kc",
-          "3h",
-          "4d",
-          "Qc"
-        ],
-        "pot": 200,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "7s",
-          "6s"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "bluffCaught",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "embarrassed",
-        "upset"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "shame",
-            "intensity": 0.93
-          },
-          {
-            "name": "distress",
-            "intensity": 0.67
-          },
-          {
-            "name": "anger",
-            "intensity": 0.34
-          }
-        ],
-        "mood": {
-          "octant": "bored",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0.95,
-          "source": "shame"
-        },
-        "shows": {
-          "mask": 0.37,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.3,
-        "warmth": 0.35,
-        "nerves": 0.2,
-        "wit": 0.45
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -2930,7 +2720,8 @@
           "speaker": "player",
           "text": "Nice bluff. Do it again."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -2944,75 +2735,64 @@
     "language": "en",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-bluffcaught-lola",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.6,
+        "conscientiousness": -0.4,
+        "extraversion": 0.9,
+        "agreeableness": 0.5,
+        "neuroticism": 0.5
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "the player called your bet and you lost a 100 bb pot",
+        "voice": {
+          "emotion": "shame",
+          "intensity": 0.94
+        },
+        "words": {
+          "min": 3,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "Ad",
+            "Kc",
+            "3h",
+            "4d",
+            "Qc"
+          ],
+          "potBb": 100,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 100
+          },
+          "shown": null
+        },
+        "heard": "Nice bluff. Do it again.",
+        "session": {
+          "hands": 10,
+          "netBb": -50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "Ad",
-          "Kc",
-          "3h",
-          "4d",
-          "Qc"
-        ],
-        "pot": 200,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "7s",
-          "6s"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "bluffCaught",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "embarrassed",
-        "upset"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "shame",
-            "intensity": 0.97
-          },
-          {
-            "name": "distress",
-            "intensity": 0.95
-          },
-          {
-            "name": "anger",
-            "intensity": 0.32
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 1,
-          "source": "shame"
-        },
-        "shows": {
-          "mask": 0.03,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.86,
-        "warmth": 0.75,
-        "nerves": 0.75,
-        "wit": 0.8
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -3028,6 +2808,7 @@
           "text": "Nice bluff. Do it again."
         }
       ],
+      "debug": false,
       "text": "Nice bluff. Do it again.",
       "quick": false
     }
@@ -3043,75 +2824,64 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-bluffcaught-nina",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.1,
+        "conscientiousness": 0.3,
+        "extraversion": -0.3,
+        "agreeableness": 0.4,
+        "neuroticism": 0.8
+      },
+      "plan": {
+        "version": 2,
+        "act": "deflect",
+        "occasion": "the player called your bet and you lost a 100 bb pot",
+        "voice": {
+          "emotion": "shame",
+          "intensity": 0.76
+        },
+        "words": {
+          "min": 1,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "Ad",
+            "Kc",
+            "3h",
+            "4d",
+            "Qc"
+          ],
+          "potBb": 100,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 100
+          },
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": -50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "Ad",
-          "Kc",
-          "3h",
-          "4d",
-          "Qc"
-        ],
-        "pot": 200,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "7s",
-          "6s"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "bluffCaught",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "embarrassed",
-        "upset"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "shame",
-            "intensity": 0.97
-          },
-          {
-            "name": "distress",
-            "intensity": 0.96
-          },
-          {
-            "name": "anger",
-            "intensity": 0.35
-          }
-        ],
-        "mood": {
-          "octant": "anxious",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 1,
-          "source": "shame"
-        },
-        "shows": {
-          "mask": 0.22,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.38,
-        "warmth": 0.7,
-        "nerves": 0.9,
-        "wit": 0.55
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -3126,7 +2896,8 @@
           "speaker": "player",
           "text": "Nice bluff. Do it again."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -3140,75 +2911,69 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-mistake-mallorca",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "react",
+        "occasion": "you lost a 80 bb pot",
+        "voice": {
+          "emotion": "shame",
+          "intensity": 0.85
+        },
+        "words": {
+          "min": 1,
+          "max": 3
+        },
+        "humour": {
+          "style": "affiliative",
+          "target": "situation",
+          "intensity": "soft",
+          "softened": false
+        },
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "Ks",
+            "8c",
+            "4d",
+            "2h",
+            "9s"
+          ],
+          "potBb": 80,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 80
+          },
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": -20,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "Ks",
-          "8c",
-          "4d",
-          "2h",
-          "9s"
-        ],
-        "pot": 160,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Qh",
-          "Qd"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "embarrassed",
-        "upset"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "shame",
-            "intensity": 0.99
-          },
-          {
-            "name": "distress",
-            "intensity": 0.64
-          },
-          {
-            "name": "disappointment",
-            "intensity": 0.54
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.97,
-          "source": "shame"
-        },
-        "shows": {
-          "mask": 0.15,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -3223,7 +2988,8 @@
           "speaker": "player",
           "text": "Had nothing, by the way."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -3237,75 +3003,64 @@
     "language": "en",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-mistake-ingrid",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": -0.1,
+        "conscientiousness": 0.7,
+        "extraversion": -0.5,
+        "agreeableness": -0.3,
+        "neuroticism": -0.6
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you lost a 80 bb pot",
+        "voice": {
+          "emotion": "shame",
+          "intensity": 0.42
+        },
+        "words": {
+          "min": 3,
+          "max": 11
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "Ks",
+            "8c",
+            "4d",
+            "2h",
+            "9s"
+          ],
+          "potBb": 80,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 80
+          },
+          "shown": null
+        },
+        "heard": "Had nothing, by the way.",
+        "session": {
+          "hands": 10,
+          "netBb": -20,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "Ks",
-          "8c",
-          "4d",
-          "2h",
-          "9s"
-        ],
-        "pot": 160,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Qh",
-          "Qd"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "embarrassed",
-        "upset",
-        "disappointed"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "shame",
-            "intensity": 0.96
-          },
-          {
-            "name": "distress",
-            "intensity": 0.48
-          },
-          {
-            "name": "disappointment",
-            "intensity": 0.31
-          }
-        ],
-        "mood": {
-          "octant": "bored",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0.56,
-          "source": "shame"
-        },
-        "shows": {
-          "mask": 0.57,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.3,
-        "warmth": 0.35,
-        "nerves": 0.2,
-        "wit": 0.45
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -3321,6 +3076,7 @@
           "text": "Had nothing, by the way."
         }
       ],
+      "debug": false,
       "text": "Had nothing, by the way.",
       "quick": false
     }
@@ -3336,75 +3092,64 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-mistake-lola",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.6,
+        "conscientiousness": -0.4,
+        "extraversion": 0.9,
+        "agreeableness": 0.5,
+        "neuroticism": 0.5
+      },
+      "plan": {
+        "version": 2,
+        "act": "react",
+        "occasion": "you lost a 80 bb pot",
+        "voice": {
+          "emotion": "shame",
+          "intensity": 0.96
+        },
+        "words": {
+          "min": 1,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "Ks",
+            "8c",
+            "4d",
+            "2h",
+            "9s"
+          ],
+          "potBb": 80,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 80
+          },
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": -20,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "Ks",
-          "8c",
-          "4d",
-          "2h",
-          "9s"
-        ],
-        "pot": 160,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Qh",
-          "Qd"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "embarrassed",
-        "upset"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "shame",
-            "intensity": 0.99
-          },
-          {
-            "name": "distress",
-            "intensity": 0.73
-          },
-          {
-            "name": "disappointment",
-            "intensity": 0.69
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 1,
-          "source": "shame"
-        },
-        "shows": {
-          "mask": 0.03,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.86,
-        "warmth": 0.75,
-        "nerves": 0.75,
-        "wit": 0.8
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -3419,7 +3164,8 @@
           "speaker": "player",
           "text": "Had nothing, by the way."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -3433,75 +3179,64 @@
     "language": "ru",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-mistake-nina",
       "locale": "ru",
-      "facts": {
+      "personality": {
+        "openness": 0.1,
+        "conscientiousness": 0.3,
+        "extraversion": -0.3,
+        "agreeableness": 0.4,
+        "neuroticism": 0.8
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you lost a 80 bb pot",
+        "voice": {
+          "emotion": "shame",
+          "intensity": 0.78
+        },
+        "words": {
+          "min": 3,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [
+            "Ks",
+            "8c",
+            "4d",
+            "2h",
+            "9s"
+          ],
+          "potBb": 80,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 80
+          },
+          "shown": null
+        },
+        "heard": "У меня ничего не было, кстати.",
+        "session": {
+          "hands": 10,
+          "netBb": -20,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [
-          "Ks",
-          "8c",
-          "4d",
-          "2h",
-          "9s"
-        ],
-        "pot": 160,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Qh",
-          "Qd"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "embarrassed",
-        "upset"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "shame",
-            "intensity": 0.99
-          },
-          {
-            "name": "distress",
-            "intensity": 0.79
-          },
-          {
-            "name": "disappointment",
-            "intensity": 0.56
-          }
-        ],
-        "mood": {
-          "octant": "dependent",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 1,
-          "source": "shame"
-        },
-        "shows": {
-          "mask": 0.22,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.38,
-        "warmth": 0.7,
-        "nerves": 0.9,
-        "wit": 0.55
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -3517,6 +3252,7 @@
           "text": "Had nothing, by the way."
         }
       ],
+      "debug": false,
       "text": "У меня ничего не было, кстати.",
       "quick": false
     }
@@ -3532,61 +3268,61 @@
     "language": "en",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-tell-mallorca",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "you bet before the flop",
+        "voice": {
+          "emotion": "pride",
+          "intensity": 0.37
+        },
+        "words": {
+          "min": 2,
+          "max": 7
+        },
+        "humour": null,
+        "claim": {
+          "about": "weak",
+          "honest": false
+        },
+        "facts": {
+          "street": "preflop",
+          "board": [],
+          "potBb": 3,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": "You look nervous. Big hand?",
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "preflop",
-        "board": [],
-        "pot": 6,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Ad",
-          "Ac"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "herBet",
-        "hint": "weak",
-        "honest": false,
-        "street": "preflop"
-      },
-      "mood": [
-        "pleased"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "joy",
-            "intensity": 0.66
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0.01,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.74,
-          "acting": "weak"
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
+        "actionStreet": "preflop",
+        "endsHand": false
       },
       "recent": [],
+      "debug": false,
       "text": "You look nervous. Big hand?",
       "quick": false
     }
@@ -3602,61 +3338,61 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-tell-ingrid",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": -0.1,
+        "conscientiousness": 0.7,
+        "extraversion": -0.5,
+        "agreeableness": -0.3,
+        "neuroticism": -0.6
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "you bet before the flop",
+        "voice": {
+          "emotion": "pride",
+          "intensity": 0.47
+        },
+        "words": {
+          "min": 2,
+          "max": 5
+        },
+        "humour": null,
+        "claim": {
+          "about": "weak",
+          "honest": false
+        },
+        "facts": {
+          "street": "preflop",
+          "board": [],
+          "potBb": 3,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "preflop",
-        "board": [],
-        "pot": 6,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Ad",
-          "Ac"
-        ],
-        "actions": [],
-        "bigBlind": 2
+        "actionStreet": "preflop",
+        "endsHand": false
       },
-      "intent": {
-        "situation": "herBet",
-        "hint": "weak",
-        "honest": false,
-        "street": "preflop"
-      },
-      "mood": [
-        "pleased"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "joy",
-            "intensity": 0.52
-          }
-        ],
-        "mood": {
-          "octant": "bored",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0,
-          "source": null
-        },
-        "shows": {
-          "mask": 0.94,
-          "acting": "weak"
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.3,
-        "warmth": 0.35,
-        "nerves": 0.2,
-        "wit": 0.45
-      },
-      "recent": []
+      "recent": [],
+      "debug": false
     }
   },
   {
@@ -3670,61 +3406,61 @@
     "language": "ru",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-tell-lola",
       "locale": "ru",
-      "facts": {
+      "personality": {
+        "openness": 0.6,
+        "conscientiousness": -0.4,
+        "extraversion": 0.9,
+        "agreeableness": 0.5,
+        "neuroticism": 0.5
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "you bet before the flop",
+        "voice": {
+          "emotion": "pride",
+          "intensity": 0.3
+        },
+        "words": {
+          "min": 2,
+          "max": 7
+        },
+        "humour": null,
+        "claim": {
+          "about": "weak",
+          "honest": false
+        },
+        "facts": {
+          "street": "preflop",
+          "board": [],
+          "potBb": 3,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": "Ты как будто нервничаешь. Сильная рука?",
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "preflop",
-        "board": [],
-        "pot": 6,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Ad",
-          "Ac"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "herBet",
-        "hint": "weak",
-        "honest": false,
-        "street": "preflop"
-      },
-      "mood": [
-        "pleased"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "joy",
-            "intensity": 0.73
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.1,
-          "source": "fear"
-        },
-        "shows": {
-          "mask": 0.59,
-          "acting": "weak"
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.86,
-        "warmth": 0.75,
-        "nerves": 0.75,
-        "wit": 0.8
+        "actionStreet": "preflop",
+        "endsHand": false
       },
       "recent": [],
+      "debug": false,
       "text": "Ты как будто нервничаешь. Сильная рука?",
       "quick": false
     }
@@ -3740,61 +3476,61 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-tell-nina",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.1,
+        "conscientiousness": 0.3,
+        "extraversion": -0.3,
+        "agreeableness": 0.4,
+        "neuroticism": 0.8
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "you bet before the flop",
+        "voice": {
+          "emotion": "pride",
+          "intensity": 0.38
+        },
+        "words": {
+          "min": 2,
+          "max": 6
+        },
+        "humour": null,
+        "claim": {
+          "about": "weak",
+          "honest": false
+        },
+        "facts": {
+          "street": "preflop",
+          "board": [],
+          "potBb": 3,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": 0,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "preflop",
-        "board": [],
-        "pot": 6,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "Ad",
-          "Ac"
-        ],
-        "actions": [],
-        "bigBlind": 2
+        "actionStreet": "preflop",
+        "endsHand": false
       },
-      "intent": {
-        "situation": "herBet",
-        "hint": "weak",
-        "honest": false,
-        "street": "preflop"
-      },
-      "mood": [
-        "pleased"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "joy",
-            "intensity": 0.55
-          }
-        ],
-        "mood": {
-          "octant": "dependent",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 0.12,
-          "source": "fear"
-        },
-        "shows": {
-          "mask": 0.76,
-          "acting": "weak"
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.38,
-        "warmth": 0.7,
-        "nerves": 0.9,
-        "wit": 0.55
-      },
-      "recent": []
+      "recent": [],
+      "debug": false
     }
   },
   {
@@ -3808,69 +3544,58 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-revenge-mallorca",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "complain",
+        "occasion": "you lost a 3 bb pot",
+        "voice": {
+          "emotion": "disappointment",
+          "intensity": 0.56
+        },
+        "words": {
+          "min": 2,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [],
+          "potBb": 3,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 3
+          },
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": -1.5,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [],
-        "pot": 6,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "5h",
-          "4h"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "disappointed",
-        "annoyed"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "disappointment",
-            "intensity": 0.65
-          },
-          {
-            "name": "anger",
-            "intensity": 0.54
-          },
-          {
-            "name": "distress",
-            "intensity": 0.47
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0.99,
-          "source": "anger"
-        },
-        "shows": {
-          "mask": 0.14,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -3889,7 +3614,8 @@
           "speaker": "player",
           "text": "Thought so."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -3903,69 +3629,58 @@
     "language": "ru",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-revenge-ingrid",
       "locale": "ru",
-      "facts": {
+      "personality": {
+        "openness": -0.1,
+        "conscientiousness": 0.7,
+        "extraversion": -0.5,
+        "agreeableness": -0.3,
+        "neuroticism": -0.6
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you lost a 3 bb pot",
+        "voice": {
+          "emotion": "anger",
+          "intensity": 0.32
+        },
+        "words": {
+          "min": 3,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [],
+          "potBb": 3,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 3
+          },
+          "shown": null
+        },
+        "heard": "Так и думал.",
+        "session": {
+          "hands": 10,
+          "netBb": -1.5,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [],
-        "pot": 6,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "5h",
-          "4h"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "annoyed",
-        "disappointed"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "anger",
-            "intensity": 0.59
-          },
-          {
-            "name": "disappointment",
-            "intensity": 0.41
-          },
-          {
-            "name": "distress",
-            "intensity": 0.34
-          }
-        ],
-        "mood": {
-          "octant": "bored",
-          "strength": "slightly"
-        },
-        "overload": {
-          "level": 0.76,
-          "source": "anger"
-        },
-        "shows": {
-          "mask": 0.46,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.3,
-        "warmth": 0.35,
-        "nerves": 0.2,
-        "wit": 0.45
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -3985,6 +3700,7 @@
           "text": "Thought so."
         }
       ],
+      "debug": false,
       "text": "Так и думал.",
       "quick": false
     }
@@ -4000,69 +3716,58 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-revenge-lola",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.6,
+        "conscientiousness": -0.4,
+        "extraversion": 0.9,
+        "agreeableness": 0.5,
+        "neuroticism": 0.5
+      },
+      "plan": {
+        "version": 2,
+        "act": "complain",
+        "occasion": "you lost a 3 bb pot",
+        "voice": {
+          "emotion": "disappointment",
+          "intensity": 0.74
+        },
+        "words": {
+          "min": 2,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [],
+          "potBb": 3,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 3
+          },
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": -1.5,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [],
-        "pot": 6,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "5h",
-          "4h"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "disappointed",
-        "annoyed"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "disappointment",
-            "intensity": 0.76
-          },
-          {
-            "name": "anger",
-            "intensity": 0.58
-          },
-          {
-            "name": "distress",
-            "intensity": 0.54
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 1,
-          "source": "anger"
-        },
-        "shows": {
-          "mask": 0.03,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.86,
-        "warmth": 0.75,
-        "nerves": 0.75,
-        "wit": 0.8
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -4081,7 +3786,8 @@
           "speaker": "player",
           "text": "Thought so."
         }
-      ]
+      ],
+      "debug": false
     }
   },
   {
@@ -4095,69 +3801,58 @@
     "language": "en",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-revenge-nina",
       "locale": "en",
-      "facts": {
+      "personality": {
+        "openness": 0.1,
+        "conscientiousness": 0.3,
+        "extraversion": -0.3,
+        "agreeableness": 0.4,
+        "neuroticism": 0.8
+      },
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you lost a 3 bb pot",
+        "voice": {
+          "emotion": "disappointment",
+          "intensity": 0.53
+        },
+        "words": {
+          "min": 3,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [],
+          "potBb": 3,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
+          },
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 3
+          },
+          "shown": null
+        },
+        "heard": "Thought so.",
+        "session": {
+          "hands": 10,
+          "netBb": -1.5,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
+        },
+        "handNumber": 10,
         "street": "complete",
-        "board": [],
-        "pot": 6,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "5h",
-          "4h"
-        ],
-        "actions": [],
-        "bigBlind": 2
-      },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "disappointed",
-        "annoyed"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "disappointment",
-            "intensity": 0.69
-          },
-          {
-            "name": "anger",
-            "intensity": 0.62
-          },
-          {
-            "name": "distress",
-            "intensity": 0.59
-          }
-        ],
-        "mood": {
-          "octant": "anxious",
-          "strength": "moderately"
-        },
-        "overload": {
-          "level": 1,
-          "source": "anger"
-        },
-        "shows": {
-          "mask": 0.22,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.38,
-        "warmth": 0.7,
-        "nerves": 0.9,
-        "wit": 0.55
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [
         {
@@ -4177,6 +3872,7 @@
           "text": "Thought so."
         }
       ],
+      "debug": false,
       "text": "Thought so.",
       "quick": false
     }
@@ -4192,67 +3888,61 @@
     "language": "ru",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-streak-mallorca",
       "locale": "ru",
-      "facts": {
-        "street": "complete",
-        "board": [],
-        "pot": 12,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "8h",
-          "8c"
-        ],
-        "actions": [],
-        "bigBlind": 2
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
       },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "upset",
-        "disappointed"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "distress",
-            "intensity": 0.99
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you lost a 6 bb pot",
+        "voice": {
+          "emotion": "distress",
+          "intensity": 0.85
+        },
+        "words": {
+          "min": 3,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [],
+          "potBb": 6,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
           },
-          {
-            "name": "disappointment",
-            "intensity": 0.84
-          }
-        ],
-        "mood": {
-          "octant": "dependent",
-          "strength": "slightly"
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 6
+          },
+          "shown": null
         },
-        "overload": {
-          "level": 0.99,
-          "source": "desperation"
+        "heard": "Тяжёлый вечер у тебя, да?",
+        "session": {
+          "hands": 10,
+          "netBb": -50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
         },
-        "shows": {
-          "mask": 0.14,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.66,
-        "warmth": 0.75,
-        "nerves": 0.55,
-        "wit": 0.7
+        "handNumber": 10,
+        "street": "complete",
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [],
+      "debug": false,
       "text": "Тяжёлый вечер у тебя, да?",
       "quick": false
     }
@@ -4268,67 +3958,61 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-streak-ingrid",
       "locale": "en",
-      "facts": {
-        "street": "complete",
-        "board": [],
-        "pot": 12,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "8h",
-          "8c"
-        ],
-        "actions": [],
-        "bigBlind": 2
+      "personality": {
+        "openness": -0.1,
+        "conscientiousness": 0.7,
+        "extraversion": -0.5,
+        "agreeableness": -0.3,
+        "neuroticism": -0.6
       },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "upset",
-        "disappointed"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "distress",
-            "intensity": 0.96
+      "plan": {
+        "version": 2,
+        "act": "react",
+        "occasion": "you lost a 6 bb pot",
+        "voice": {
+          "emotion": "distress",
+          "intensity": 0.54
+        },
+        "words": {
+          "min": 1,
+          "max": 3
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [],
+          "potBb": 6,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
           },
-          {
-            "name": "disappointment",
-            "intensity": 0.62
-          }
-        ],
-        "mood": {
-          "octant": "bored",
-          "strength": "slightly"
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 6
+          },
+          "shown": null
         },
-        "overload": {
-          "level": 0.82,
-          "source": "desperation"
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": -50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
         },
-        "shows": {
-          "mask": 0.43,
-          "acting": null
-        }
+        "handNumber": 10,
+        "street": "complete",
+        "actionStreet": "river",
+        "endsHand": true
       },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.3,
-        "warmth": 0.35,
-        "nerves": 0.2,
-        "wit": 0.45
-      },
-      "recent": []
+      "recent": [],
+      "debug": false
     }
   },
   {
@@ -4342,67 +4026,61 @@
     "language": "en",
     "body": {
       "kind": "reply",
+      "version": 2,
       "sessionId": "eval-streak-lola",
       "locale": "en",
-      "facts": {
-        "street": "complete",
-        "board": [],
-        "pot": 12,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "8h",
-          "8c"
-        ],
-        "actions": [],
-        "bigBlind": 2
+      "personality": {
+        "openness": 0.6,
+        "conscientiousness": -0.4,
+        "extraversion": 0.9,
+        "agreeableness": 0.5,
+        "neuroticism": 0.5
       },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "upset",
-        "disappointed"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "distress",
-            "intensity": 0.99
+      "plan": {
+        "version": 2,
+        "act": "answer",
+        "occasion": "you lost a 6 bb pot",
+        "voice": {
+          "emotion": "distress",
+          "intensity": 0.96
+        },
+        "words": {
+          "min": 3,
+          "max": 4
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [],
+          "potBb": 6,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
           },
-          {
-            "name": "disappointment",
-            "intensity": 0.91
-          }
-        ],
-        "mood": {
-          "octant": "exuberant",
-          "strength": "slightly"
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 6
+          },
+          "shown": null
         },
-        "overload": {
-          "level": 1,
-          "source": "desperation"
+        "heard": "Rough night for you, huh?",
+        "session": {
+          "hands": 10,
+          "netBb": -50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
         },
-        "shows": {
-          "mask": 0.03,
-          "acting": null
-        }
-      },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.86,
-        "warmth": 0.75,
-        "nerves": 0.75,
-        "wit": 0.8
+        "handNumber": 10,
+        "street": "complete",
+        "actionStreet": "river",
+        "endsHand": true
       },
       "recent": [],
+      "debug": false,
       "text": "Rough night for you, huh?",
       "quick": false
     }
@@ -4418,67 +4096,61 @@
     "language": "en",
     "body": {
       "kind": "line",
+      "version": 2,
       "sessionId": "eval-streak-nina",
       "locale": "en",
-      "facts": {
-        "street": "complete",
-        "board": [],
-        "pot": 12,
-        "stacks": [
-          200,
-          200
-        ],
-        "her": [
-          "8h",
-          "8c"
-        ],
-        "actions": [],
-        "bigBlind": 2
+      "personality": {
+        "openness": 0.1,
+        "conscientiousness": 0.3,
+        "extraversion": -0.3,
+        "agreeableness": 0.4,
+        "neuroticism": 0.8
       },
-      "intent": {
-        "situation": "handLost",
-        "hint": null,
-        "honest": true,
-        "street": "complete"
-      },
-      "mood": [
-        "on tilt",
-        "upset",
-        "disappointed"
-      ],
-      "feeling": {
-        "version": 1,
-        "emotions": [
-          {
-            "name": "distress",
-            "intensity": 0.99
+      "plan": {
+        "version": 2,
+        "act": "react",
+        "occasion": "you lost a 6 bb pot",
+        "voice": {
+          "emotion": "distress",
+          "intensity": 0.77
+        },
+        "words": {
+          "min": 1,
+          "max": 3
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": [],
+          "potBb": 6,
+          "stacksBb": {
+            "her": 100,
+            "player": 100
           },
-          {
-            "name": "disappointment",
-            "intensity": 0.86
-          }
-        ],
-        "mood": {
-          "octant": "anxious",
-          "strength": "slightly"
+          "actions": [],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 6
+          },
+          "shown": null
         },
-        "overload": {
-          "level": 1,
-          "source": "desperation"
+        "heard": null,
+        "session": {
+          "hands": 10,
+          "netBb": -50,
+          "playerBluffsShown": 0,
+          "playerAllIns": 0,
+          "notable": []
         },
-        "shows": {
-          "mask": 0.22,
-          "acting": null
-        }
+        "handNumber": 10,
+        "street": "complete",
+        "actionStreet": "river",
+        "endsHand": true
       },
-      "character": {
-        "version": 1,
-        "talkativeness": 0.38,
-        "warmth": 0.7,
-        "nerves": 0.9,
-        "wit": 0.55
-      },
-      "recent": []
+      "recent": [],
+      "debug": false
     }
   }
 ]

@@ -11,7 +11,8 @@ const CORS = {
 export interface ConversationRequest {
   kind: 'line' | 'reply' | 'summary';
   text?: string;
-  intent?: { situation: string };
+  version?: number;
+  plan?: { occasion: string; endsHand: boolean };
 }
 
 export type ConversationAnswer = (request: ConversationRequest) => {

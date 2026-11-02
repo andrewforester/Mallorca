@@ -1,10 +1,10 @@
 import type { Card, Rng } from '../../src/cards/index.ts';
-import { BASE_HABITS, habitsAt } from '../../src/conversation/index.ts';
+import { ruleFor, speakChanceOf } from '../../src/conversation/index.ts';
 import { strengthOf } from '../../src/persona/index.ts';
 import type { ArenaBot } from './arenaBot.ts';
 
 export function createTalkingBot(inner: ArenaBot, mask: number, rng: Rng): ArenaBot {
-  const habits = habitsAt(BASE_HABITS, mask);
+  const bet = ruleFor('herBet');
   let hole: [Card, Card] | null = null;
   let board: Card[] = [];
   let spoke = false;
@@ -24,7 +24,7 @@ export function createTalkingBot(inner: ArenaBot, mask: number, rng: Rng): Arena
       const action = inner.decide(legal);
       spoke = false;
       if (action.kind === 'raise' && hole !== null) {
-        const chance = habits.herBet[strengthOf(hole, board, rng)].speak;
+        const chance = speakChanceOf(bet, strengthOf(hole, board, rng), mask);
         spoke = rng.next() < chance;
       }
       return action;

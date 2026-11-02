@@ -148,4 +148,47 @@ describe('EmotionDebug', () => {
     expect(items.length).toBeGreaterThan(0);
     expect(items[0]?.textContent).toContain(COPY.event.deal);
   });
+
+  it('switches between her feelings and her conversation and remembers the tab', async () => {
+    const session = await seated();
+    const panel = await opened(session);
+    expect(within(panel).queryByTestId('conversation-debug')).toBeNull();
+    fireEvent.click(within(panel).getByRole('tab', { name: 'Conversation' }));
+    expect(within(panel).getByTestId('conversation-debug')).toBeTruthy();
+    expect(
+      within(panel).getByRole('tab', { name: 'Conversation' }).getAttribute('aria-selected'),
+    ).toBe('true');
+    expect(localStorage.getItem('mallorca.debugTab')).toBe('conversation');
+    fireEvent.click(within(panel).getByRole('tab', { name: 'Feelings' }));
+    expect(within(panel).queryByTestId('conversation-debug')).toBeNull();
+  });
+
+  it('links a journal entry to the line it fed', async () => {
+    const session = await seated();
+    const panel = await opened(session);
+    const entries = within(panel).getByTestId('debug-journal').querySelectorAll('li');
+    expect([...entries].every((li) => li.id.startsWith('journal-'))).toBe(true);
+  });
+
+  it('opens the conversation tab from a journal link and the feelings tab back', async () => {
+    const session = await seated();
+    for (
+      let i = 0;
+      i < 60 && !session.getState().debug?.conversation.entries.some((e) => e.plan);
+      i += 1
+    ) {
+      await act(async () => {
+        await session.getState().act({ kind: 'passive' });
+      });
+    }
+    const panel = await opened(session);
+    const link = within(panel).getAllByRole('link', { name: 'Line' })[0] as HTMLElement;
+    fireEvent.click(link);
+    expect(within(panel).getByTestId('conversation-debug')).toBeTruthy();
+    const back = within(panel)
+      .getAllByRole('link')
+      .find((a) => a.getAttribute('href')?.startsWith('#journal-'));
+    fireEvent.click(back as HTMLElement);
+    expect(within(panel).queryByTestId('conversation-debug')).toBeNull();
+  });
 });

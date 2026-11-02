@@ -1,0 +1,88 @@
+{
+  "kind": "reply",
+  "version": 2,
+  "sessionId": "s-123",
+  "locale": "ru-RU",
+  "personality": {
+    "openness": 0.4,
+    "conscientiousness": 0.2,
+    "extraversion": 0.4,
+    "agreeableness": 0.5,
+    "neuroticism": 0.1
+  },
+  "plan": {
+    "version": 2,
+    "act": "answer",
+    "occasion": "the player said something",
+    "voice": {
+      "emotion": "injustice",
+      "intensity": 0.55
+    },
+    "words": {
+      "min": 2,
+      "max": 7
+    },
+    "humour": null,
+    "claim": {
+      "about": "strong",
+      "honest": false
+    },
+    "facts": {
+      "street": "river",
+      "board": [
+        "Kd",
+        "7s",
+        "2c",
+        "9h",
+        "Ah"
+      ],
+      "potBb": 38,
+      "stacksBb": {
+        "her": 81,
+        "player": 119
+      },
+      "actions": [
+        "player posts 10",
+        "Mallorca posts 20",
+        "player raises to 60",
+        "Mallorca calls 40"
+      ],
+      "card": "Ah",
+      "result": null,
+      "shown": null
+    },
+    "heard": "Ты блефуешь?",
+    "session": {
+      "hands": 17,
+      "netBb": -12,
+      "playerBluffsShown": 1,
+      "playerAllIns": 0,
+      "notable": [
+        {
+          "kind": "bigLoss",
+          "handNumber": 17,
+          "potBb": 38,
+          "won": false,
+          "bets": 2
+        }
+      ]
+    },
+    "handNumber": 17,
+    "street": "river",
+    "actionStreet": "river",
+    "endsHand": false
+  },
+  "recent": [
+    {
+      "speaker": "player",
+      "text": "Твой ход."
+    },
+    {
+      "speaker": "mallorca",
+      "text": "Посмотрим."
+    }
+  ],
+  "debug": false,
+  "text": "Ты блефуешь?",
+  "quick": false
+}

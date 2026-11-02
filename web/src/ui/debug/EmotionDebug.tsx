@@ -7,9 +7,50 @@ import { JournalSection } from './JournalSection.tsx';
 import { PersonalitySection } from './PersonalitySection.tsx';
 import { StateSection } from './StateSection.tsx';
 import { BiasSection } from './BiasSection.tsx';
+import { ConversationDebug } from './ConversationDebug.tsx';
+import { TALK } from './conversationCopy.ts';
 import './debug.css';
 
 const KEY = 'mallorca.debugPanel';
+const TAB_KEY = 'mallorca.debugTab';
+
+type Tab = 'feelings' | 'conversation';
+
+function readTab(): Tab {
+  try {
+    return localStorage.getItem(TAB_KEY) === 'conversation' ? 'conversation' : 'feelings';
+  } catch {
+    return 'feelings';
+  }
+}
+
+function writeTab(tab: Tab): void {
+  try {
+    localStorage.setItem(TAB_KEY, tab);
+  } catch {
+    return;
+  }
+}
+
+function Tabs({ tab, choose }: { tab: Tab; choose: (tab: Tab) => void }) {
+  const tabs: Tab[] = ['feelings', 'conversation'];
+  return (
+    <div class="debug-tabs" role="tablist">
+      {tabs.map((t) => (
+        <button
+          key={t}
+          type="button"
+          role="tab"
+          class="debug-tab"
+          aria-selected={tab === t}
+          onClick={() => choose(t)}
+        >
+          {TALK.tabs[t]}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function readOpen(): boolean {
   try {
@@ -39,6 +80,7 @@ function useDebug(session: Session): DebugState | null {
 export function EmotionDebug({ session }: { session: Session }) {
   const debug = useDebug(session);
   const [open, setOpen] = useState(readOpen);
+  const [tab, setTab] = useState(readTab);
   if (debug === null) {
     return null;
   }
@@ -46,6 +88,17 @@ export function EmotionDebug({ session }: { session: Session }) {
   const flip = () => {
     writeOpen(!open);
     setOpen(!open);
+  };
+  const choose = (next: Tab) => {
+    writeTab(next);
+    setTab(next);
+  };
+  const follow = (event: MouseEvent) => {
+    const href = (event.target as Element | null)?.closest('a')?.getAttribute('href') ?? '';
+    if (href.startsWith('#trace-') || href.startsWith('#journal-')) {
+      choose(href.startsWith('#trace-') ? 'conversation' : 'feelings');
+      requestAnimationFrame(() => document.getElementById(href.slice(1))?.scrollIntoView?.());
+    }
   };
   return (
     <>
@@ -65,12 +118,20 @@ export function EmotionDebug({ session }: { session: Session }) {
           class="debug-panel"
           data-testid="emotion-debug"
           aria-label={COPY.title}
+          onClick={follow}
         >
-          <PersonalitySection view={view} session={session} />
-          <StateSection view={view} />
-          <BiasSection view={view} />
-          <DecisionSection view={view} />
-          <JournalSection view={view} />
+          <Tabs tab={tab} choose={choose} />
+          {tab === 'conversation' ? (
+            <ConversationDebug trace={view.conversation} />
+          ) : (
+            <>
+              <PersonalitySection view={view} session={session} />
+              <StateSection view={view} />
+              <BiasSection view={view} />
+              <DecisionSection view={view} />
+              <JournalSection view={view} />
+            </>
+          )}
         </aside>
       )}
     </>

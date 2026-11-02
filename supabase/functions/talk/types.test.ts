@@ -1,5 +1,6 @@
 import { assert, assertEquals } from "../_shared/testing.ts";
 import { fixture } from "./fixtures/fixtures.ts";
+import { isPlanRequest } from "./planTypes.ts";
 import { parseRequest } from "./types.ts";
 
 const without = (body: Record<string, unknown>, key: string): Record<string, unknown> => {
@@ -17,7 +18,7 @@ Deno.test("accepts the line fixture", () => {
 
 Deno.test("accepts the reply fixture and trims its text", () => {
   const req = parseRequest(fixture("reply"));
-  assert(req !== null && req.kind === "reply");
+  assert(req !== null && req.kind === "reply" && !isPlanRequest(req));
   assertEquals(req.text, "Ты блефуешь, я вижу по глазам.");
   assertEquals(req.facts.her, ["7c", "6c"]);
 });
@@ -148,7 +149,7 @@ Deno.test("an intent needs the street of the action", () => {
   assertEquals(parseRequest({ ...line, intent: without(intent, "street") }), null);
   assertEquals(parseRequest({ ...line, intent: { ...intent, street: "fifth" } }), null);
   const req = parseRequest({ ...line, intent: { ...intent, street: "flop" } });
-  assert(req !== null && req.kind === "line");
+  assert(req !== null && req.kind === "line" && !isPlanRequest(req));
   assertEquals(req.intent.street, "flop");
 });
 
@@ -165,7 +166,7 @@ Deno.test("a reply may be marked quick, and is not quick by default", () => {
 
 Deno.test("an old game without a feeling or a character still parses", () => {
   const req = parseRequest(without(without(fixture("line"), "feeling"), "character"));
-  assert(req !== null && req.kind === "line");
+  assert(req !== null && req.kind === "line" && !isPlanRequest(req));
   assertEquals(req.feeling, null);
   assertEquals(req.character, null);
 });
@@ -173,7 +174,7 @@ Deno.test("an old game without a feeling or a character still parses", () => {
 Deno.test("a feeling or character of an unknown version is ignored, not rejected", () => {
   const line = fixture("line");
   const req = parseRequest({ ...line, feeling: { version: 2 }, character: { version: 9 } });
-  assert(req !== null && req.kind === "line");
+  assert(req !== null && req.kind === "line" && !isPlanRequest(req));
   assertEquals(req.feeling, null);
   assertEquals(req.character, null);
 });
@@ -206,7 +207,7 @@ Deno.test("rejects a malformed character of version 1", () => {
 
 Deno.test("a reply carries the feeling and character too", () => {
   const req = parseRequest(fixture("reply"));
-  assert(req !== null && req.kind === "reply");
+  assert(req !== null && req.kind === "reply" && !isPlanRequest(req));
   assertEquals(req.feeling?.emotions[0]?.name, "pride");
   assertEquals(req.character?.warmth, 0.75);
 });
