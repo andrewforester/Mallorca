@@ -37,7 +37,7 @@ pub(super) fn explain(model: &Model, hand: &Hand, legal: &Legal, s: &Sampled<'_>
         .spot
         .actions
         .iter()
-        .map(|&(kind, _)| to_real(s.spot, hand, kind, legal))
+        .map(|&(kind, _)| to_real(s.spot, hand, kind, legal, s.bias.sizing))
         .collect();
     DecisionView {
         moves,

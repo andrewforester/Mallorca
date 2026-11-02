@@ -27,61 +27,38 @@ impl Default for Bias {
     }
 }
 
-pub struct Situation<'a> {
+pub struct Situation {
     pub bluffing: bool,
-    pub preflop: bool,
-    pub raise_ratios: &'a [f64],
 }
 
-fn is_raise(kind: ActionKind) -> bool {
-    matches!(kind, ActionKind::RaiseTo(_) | ActionKind::AllIn)
-}
+pub const LOOSE_SHIFT: f64 = 0.2;
+pub const STICKY_SHIFT: f64 = 0.15;
 
-fn factor(kind: ActionKind, bias: &Bias, situation: &Situation<'_>) -> f64 {
+fn factor(kind: ActionKind, bias: &Bias, situation: &Situation) -> f64 {
     match kind {
-        ActionKind::Fold if situation.preflop => bias.tightness,
-        ActionKind::Fold => 1.0 / bias.stickiness,
+        ActionKind::Fold => 1.0,
         ActionKind::Check | ActionKind::Call => 1.0 / bias.aggression,
         _ if situation.bluffing => bias.aggression * bias.bluff,
         _ => bias.aggression,
     }
 }
 
-pub fn size_position(pot_fraction: f64) -> f64 {
-    pot_fraction.log2().clamp(-1.0, 1.0)
-}
-
-fn resize(weights: &mut [f64], kinds: &[ActionKind], ratios: &[f64], sizing: f64) {
-    if sizing == 1.0 {
-        return;
-    }
-    let raises: Vec<usize> = (0..kinds.len()).filter(|&i| is_raise(kinds[i])).collect();
-    let before: f64 = raises.iter().map(|&i| weights[i]).sum();
-    for &i in &raises {
-        let ratio = ratios.get(i).copied().unwrap_or(1.0);
-        weights[i] *= sizing.powf(size_position(ratio));
-    }
-    let after: f64 = raises.iter().map(|&i| weights[i]).sum();
-    if after > 0.0 {
-        for &i in &raises {
-            weights[i] *= before / after;
-        }
-    }
-}
-
-pub fn reweight(
-    probabilities: &[u8],
-    kinds: &[ActionKind],
-    bias: &Bias,
-    situation: &Situation<'_>,
-) -> Vec<f64> {
-    let mut weights: Vec<f64> = probabilities
-        .iter()
+pub fn reweight(row: &[f64], kinds: &[ActionKind], bias: &Bias, situation: &Situation) -> Vec<f64> {
+    row.iter()
         .zip(kinds)
-        .map(|(&p, &kind)| f64::from(p) * factor(kind, bias, situation))
-        .collect();
-    resize(&mut weights, kinds, situation.raise_ratios, bias.sizing);
-    weights
+        .map(|(&p, &kind)| p * factor(kind, bias, situation))
+        .collect()
+}
+
+pub fn shift(bias: &Bias, street: Street, kinds: &[ActionKind]) -> f64 {
+    if !kinds.contains(&ActionKind::Fold) {
+        return 0.0;
+    }
+    if street == Street::Preflop {
+        LOOSE_SHIFT * (1.0 / bias.tightness).ln()
+    } else {
+        STICKY_SHIFT * bias.stickiness.ln()
+    }
 }
 
 pub fn sample_weighted(weights: &[f64], draw: f64) -> usize {
@@ -100,17 +77,30 @@ pub fn sample_weighted(weights: &[f64], draw: f64) -> usize {
         .unwrap_or(weights.len() - 1)
 }
 
-fn raise_ratios(model: &Model, spot: &Spot<'_>) -> Vec<f64> {
-    let pot = f64::from(spot.committed[0].saturating_add(spot.committed[1])).max(1.0);
-    let mine = spot.street_bets[spot.seat];
-    let behind = model.file.stack.saturating_sub(spot.committed[spot.seat]);
-    spot.actions
+pub(super) fn shifted_row(
+    model: &Model,
+    spot: &Spot<'_>,
+    probabilities: &[u8],
+    bucket: u16,
+    delta: f64,
+) -> Vec<f64> {
+    if delta == 0.0 {
+        return probabilities.iter().map(|&p| f64::from(p)).collect();
+    }
+    let order = model.order(spot.street);
+    let q = (order.percentile(bucket) + delta).clamp(0.0, 1.0);
+    let (lo, hi, t) = order.around(q);
+    let row = |b: u16| {
+        model
+            .file
+            .try_probabilities(spot.id, b)
+            .filter(|r| r.len() == probabilities.len())
+            .unwrap_or(probabilities)
+    };
+    row(lo)
         .iter()
-        .map(|&(kind, _)| match kind {
-            ActionKind::RaiseTo(to) => f64::from(to.saturating_sub(mine)) / pot,
-            ActionKind::AllIn => f64::from(behind) / pot,
-            _ => 0.0,
-        })
+        .zip(row(hi))
+        .map(|(&a, &b)| (1.0 - t) * f64::from(a) + t * f64::from(b))
         .collect()
 }
 
@@ -122,16 +112,15 @@ pub(super) fn biased(
     bias: &Bias,
 ) -> Vec<f64> {
     let kinds: Vec<ActionKind> = spot.actions.iter().map(|a| a.0).collect();
+    let delta = shift(bias, spot.street, &kinds);
+    let row = shifted_row(model, spot, probabilities, bucket, delta);
     let late = matches!(spot.street, Street::Turn | Street::River);
     let buckets = model.file.tree.buckets()[spot.street.as_index()];
-    let low = late && f64::from(bucket) < 0.35 * f64::from(buckets);
-    let ratios = raise_ratios(model, spot);
+    let low = f64::from(bucket) < 0.35 * f64::from(buckets);
     let situation = Situation {
         bluffing: low && late,
-        preflop: spot.street == Street::Preflop,
-        raise_ratios: &ratios,
     };
-    reweight(probabilities, &kinds, bias, &situation)
+    reweight(&row, &kinds, bias, &situation)
 }
 
 pub(super) fn choose(
@@ -167,29 +156,17 @@ mod tests {
         }
     }
 
-    fn at(low_bucket: bool, late_street: bool) -> Situation<'static> {
-        Situation {
-            bluffing: low_bucket && late_street,
-            preflop: true,
-            raise_ratios: &[],
-        }
-    }
-
-    fn postflop(raise_ratios: &[f64]) -> Situation<'_> {
-        Situation {
-            bluffing: false,
-            preflop: false,
-            raise_ratios,
-        }
+    fn at(bluffing: bool) -> Situation {
+        Situation { bluffing }
     }
 
     #[test]
     fn neutral_bias_keeps_weights() {
         let w = reweight(
-            &[100, 55, 100],
+            &[100.0, 55.0, 100.0],
             &[Fold, Call, RaiseTo(60)],
             &Bias::NEUTRAL,
-            &at(false, false),
+            &at(false),
         );
         assert_eq!(w, vec![100.0, 55.0, 100.0]);
         assert_eq!(Bias::default(), Bias::NEUTRAL);
@@ -197,125 +174,73 @@ mod tests {
 
     #[test]
     fn aggression_moves_mass_to_raises() {
-        let p = [50, 80, 70, 55];
+        let p = [50.0, 80.0, 70.0, 55.0];
         let kinds = [Fold, Call, RaiseTo(60), AllIn];
-        let neutral = shares(&reweight(&p, &kinds, &Bias::NEUTRAL, &at(false, false)));
-        let hot = shares(&reweight(
-            &p,
-            &kinds,
-            &bias(1.25, 1.0, 1.0),
-            &at(false, false),
-        ));
-        let cold = shares(&reweight(
-            &p,
-            &kinds,
-            &bias(0.8, 1.0, 1.0),
-            &at(false, false),
-        ));
+        let neutral = shares(&reweight(&p, &kinds, &Bias::NEUTRAL, &at(false)));
+        let hot = shares(&reweight(&p, &kinds, &bias(1.25, 1.0, 1.0), &at(false)));
+        let cold = shares(&reweight(&p, &kinds, &bias(0.8, 1.0, 1.0), &at(false)));
         assert!(hot[2] > neutral[2] && hot[3] > neutral[3], "{hot:?}");
         assert!(hot[1] < neutral[1], "{hot:?}");
         assert!(cold[2] < neutral[2] && cold[3] < neutral[3], "{cold:?}");
         assert!(cold[1] > neutral[1], "{cold:?}");
         let w = reweight(
-            &[100, 100],
+            &[100.0, 100.0],
             &[Check, RaiseTo(30)],
             &bias(1.25, 1.0, 1.0),
-            &at(false, false),
+            &at(false),
         );
         assert_eq!(w, vec![80.0, 125.0]);
     }
 
     #[test]
-    fn tightness_scales_fold() {
-        let w = reweight(
-            &[100, 55, 100],
-            &[Fold, Call, RaiseTo(60)],
-            &bias(1.0, 1.0, 1.2),
-            &at(false, false),
-        );
-        assert_eq!(w, vec![120.0, 55.0, 100.0]);
-    }
-
-    #[test]
-    fn bluff_only_low_buckets_late() {
-        let p = [100, 100, 50];
+    fn bluff_acts_only_when_bluffing() {
+        let p = [100.0, 100.0, 50.0];
         let kinds = [Check, RaiseTo(30), AllIn];
         let bluffer = bias(1.0, 1.3, 1.0);
-        let neutral = shares(&reweight(&p, &kinds, &Bias::NEUTRAL, &at(true, true)));
-        for (low, late) in [(false, false), (true, false), (false, true)] {
-            let w = shares(&reweight(&p, &kinds, &bluffer, &at(low, late)));
-            assert_eq!(w, neutral, "{low} {late}");
-        }
-        let w = shares(&reweight(&p, &kinds, &bluffer, &at(true, true)));
+        let neutral = shares(&reweight(&p, &kinds, &Bias::NEUTRAL, &at(true)));
+        let w = shares(&reweight(&p, &kinds, &bluffer, &at(false)));
+        assert_eq!(w, neutral);
+        let w = shares(&reweight(&p, &kinds, &bluffer, &at(true)));
         assert!(w[1] > neutral[1] && w[2] > neutral[2], "{w:?}");
         assert!(w[0] < neutral[0], "{w:?}");
     }
 
     #[test]
-    fn sizing_moves_raise_mass_to_larger_sizes_and_keeps_the_raise_total() {
-        let p = [100, 60, 30, 10];
-        let kinds = [Check, RaiseTo(100), RaiseTo(200), AllIn];
-        let ratios = [0.0, 0.5, 1.0, 9.0];
-        let neutral = reweight(&p, &kinds, &Bias::NEUTRAL, &postflop(&ratios));
-        let big = Bias {
-            sizing: 1.3,
-            ..Bias::NEUTRAL
-        };
-        let w = reweight(&p, &kinds, &big, &postflop(&ratios));
-        assert_eq!(w[0], neutral[0]);
-        let total: f64 = w[1..].iter().sum();
-        assert!((total - 100.0).abs() < 1e-9, "{w:?}");
-        assert!(w[1] < neutral[1] && w[3] > neutral[3], "{w:?}");
-        let ratio_small = w[1] / w[2];
-        let ratio_big = w[3] / w[2];
-        assert!((ratio_small - 60.0 / 30.0 / 1.3).abs() < 1e-9, "{w:?}");
-        assert!((ratio_big - 10.0 / 30.0 * 1.3).abs() < 1e-9, "{w:?}");
-        let small = Bias {
-            sizing: 0.7,
-            ..Bias::NEUTRAL
-        };
-        let w = reweight(&p, &kinds, &small, &postflop(&ratios));
-        assert!(w[1] > neutral[1] && w[3] < neutral[3], "{w:?}");
-    }
-
-    #[test]
-    fn sizing_does_not_change_a_single_raise() {
-        let big = Bias {
-            sizing: 1.5,
-            ..Bias::NEUTRAL
-        };
+    fn folds_are_not_scaled_by_any_axis() {
         let w = reweight(
-            &[70, 30],
-            &[Check, RaiseTo(150)],
-            &big,
-            &postflop(&[0.0, 0.75]),
+            &[80.0, 60.0, 20.0],
+            &[Fold, Call, RaiseTo(300)],
+            &Bias {
+                tightness: 0.5,
+                stickiness: 2.0,
+                sizing: 2.0,
+                ..Bias::NEUTRAL
+            },
+            &at(false),
         );
-        assert_eq!(w, vec![70.0, 30.0]);
+        assert_eq!(w, vec![80.0, 60.0, 20.0]);
     }
 
     #[test]
-    fn size_position_is_the_log_of_the_pot_fraction() {
-        assert_eq!(size_position(0.5), -1.0);
-        assert_eq!(size_position(1.0), 0.0);
-        assert_eq!(size_position(2.0), 1.0);
-        assert_eq!(size_position(0.1), -1.0);
-        assert_eq!(size_position(20.0), 1.0);
-        assert!((size_position(0.75) - 0.75f64.log2()).abs() < 1e-12);
-    }
-
-    #[test]
-    fn stickiness_scales_folds_after_the_flop_and_tightness_before_it() {
+    fn tightness_shifts_preflop_and_stickiness_after_the_flop_only_facing_a_bet() {
+        let facing = [Fold, Call, RaiseTo(60)];
+        let open = [Check, RaiseTo(60)];
+        let loose = bias(1.0, 1.0, 0.5);
         let sticky = Bias {
-            tightness: 1.2,
-            stickiness: 1.6,
+            stickiness: 2.0,
             ..Bias::NEUTRAL
         };
-        let p = [80, 60, 20];
-        let kinds = [Fold, Call, RaiseTo(300)];
-        let after = reweight(&p, &kinds, &sticky, &postflop(&[0.0, 0.0, 1.0]));
-        assert_eq!(after, vec![50.0, 60.0, 20.0]);
-        let before = reweight(&p, &kinds, &sticky, &at(false, false));
-        assert_eq!(before, vec![96.0, 60.0, 20.0]);
+        let expected = LOOSE_SHIFT * 2f64.ln();
+        assert!((shift(&loose, Street::Preflop, &facing) - expected).abs() < 1e-12);
+        assert!((shift(&bias(1.0, 1.0, 2.0), Street::Preflop, &facing) + expected).abs() < 1e-12);
+        assert_eq!(shift(&loose, Street::Flop, &facing), 0.0);
+        assert_eq!(shift(&loose, Street::Preflop, &open), 0.0);
+        let expected = STICKY_SHIFT * 2f64.ln();
+        assert!((shift(&sticky, Street::River, &facing) - expected).abs() < 1e-12);
+        assert_eq!(shift(&sticky, Street::Preflop, &facing), 0.0);
+        assert_eq!(shift(&sticky, Street::Turn, &open), 0.0);
+        assert_eq!(shift(&Bias::NEUTRAL, Street::Preflop, &facing), 0.0);
+        assert_eq!(shift(&Bias::NEUTRAL, Street::Flop, &facing), 0.0);
     }
 
     #[test]

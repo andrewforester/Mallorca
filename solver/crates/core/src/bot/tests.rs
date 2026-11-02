@@ -474,7 +474,39 @@ fn sizing_bets_bigger_as_often_on_an_open_flop() {
     );
 }
 
+fn ordered_model() -> &'static Model {
+    static M: OnceLock<Model> = OnceLock::new();
+    M.get_or_init(|| {
+        let mut file = trained().clone();
+        let buckets = file.tree.buckets()[Street::Flop.as_index()];
+        for id in 0..file.tree.nodes().len() as NodeId {
+            let Node::Decision {
+                street: Street::Flop,
+                actions,
+                ..
+            } = file.tree.node(id)
+            else {
+                continue;
+            };
+            let Some(fold) = actions.iter().position(|a| a.0 == ActionKind::Fold) else {
+                continue;
+            };
+            let n = actions.len();
+            let mut rows: Vec<Vec<u8>> = (0..buckets)
+                .map(|b| file.probabilities(id, b).to_vec())
+                .collect();
+            rows.sort_by(|a, b| b[fold].cmp(&a[fold]));
+            for (b, row) in rows.iter().enumerate() {
+                let at = file.tree.offset(id, b as u16) as usize;
+                file.probabilities[at..at + n].copy_from_slice(row);
+            }
+        }
+        Model::new(file).unwrap()
+    })
+}
+
 fn flop_folds(bias: Bias) -> usize {
+    let model = ordered_model();
     let mut rng = Rng::new(13);
     let legal = Legal {
         fold: true,
@@ -488,13 +520,13 @@ fn flop_folds(bias: Bias) -> usize {
         rng.shuffle(&mut deck);
         let mut bot = Bot::new();
         bot.set_bias(bias);
-        bot.hand_started(model(), true, [400, 400], [10, 20]);
+        bot.hand_started(model, true, [400, 400], [10, 20]);
         bot.hole_cards([deck[0], deck[1]]);
-        bot.acted(model(), true, Move::Call, 0.0);
-        bot.acted(model(), false, Move::Check, 0.0);
-        bot.street(model(), &deck[2..5]);
-        bot.acted(model(), false, Move::RaiseTo(40), 0.0);
-        if bot.decide(model(), &legal, rng.next_f64()) == Move::Fold {
+        bot.acted(model, true, Move::Call, 0.0);
+        bot.acted(model, false, Move::Check, 0.0);
+        bot.street(model, &deck[2..5]);
+        bot.acted(model, false, Move::RaiseTo(40), 0.0);
+        if bot.decide(model, &legal, rng.next_f64()) == Move::Fold {
             folds += 1;
         }
     }
@@ -816,6 +848,7 @@ fn a_board_that_repeats_a_card_plays_passive() {
 #[test]
 fn spot_arithmetic_saturates_on_a_malformed_tree() {
     let spot = Spot {
+        id: 0,
         seat: 0,
         street: Street::Flop,
         committed: [u32::MAX, u32::MAX],
@@ -1339,4 +1372,67 @@ fn a_new_hand_or_a_passive_play_clears_the_explanation() {
     let mut bot = started(true, [400, 400], [10, 20], [48, 48]);
     bot.decide(model(), &facing_blind(20, 400), 0.5);
     assert!(bot.last_decision().is_none());
+}
+
+#[test]
+fn sizing_scales_the_bet_itself() {
+    let neutral = flop_bets(Bias::NEUTRAL);
+    let big = flop_bets(Bias {
+        sizing: 1.5,
+        ..Bias::NEUTRAL
+    });
+    let mut made = 0;
+    for (&n, &b) in neutral.iter().zip(&big) {
+        if n == 0 {
+            assert_eq!(b, 0);
+            continue;
+        }
+        made += 1;
+        let expected = (1.5 * f64::from(n)).min(360.0);
+        assert!((f64::from(b) - expected).abs() <= 1.5, "{n} -> {b}");
+    }
+    assert!(made > 100, "{made} bets");
+}
+
+fn root_continue(bucket: u16, bias: &Bias) -> f64 {
+    let root = model().file.tree.root();
+    let spot = model().spot(root).unwrap();
+    let probabilities = model().file.probabilities(root, bucket);
+    let w = biased(model(), &spot, probabilities, bucket, bias);
+    let fold = spot
+        .actions
+        .iter()
+        .position(|a| a.0 == ActionKind::Fold)
+        .unwrap();
+    1.0 - w[fold] / w.iter().sum::<f64>()
+}
+
+fn vpip(bias: &Bias) -> f64 {
+    let indexer = &crate::iso::street_indexers()[0];
+    (0..169u16)
+        .map(|b| f64::from(indexer.class_weight(0, u64::from(b))) * root_continue(b, bias))
+        .sum::<f64>()
+        / 1326.0
+}
+
+#[test]
+fn a_loose_bias_enters_with_hands_the_blueprint_always_folds() {
+    let loose = Bias {
+        tightness: 0.67,
+        ..Bias::NEUTRAL
+    };
+    let tight = Bias {
+        tightness: 1.5,
+        ..Bias::NEUTRAL
+    };
+    let pure: Vec<u16> = (0..169)
+        .filter(|&b| root_continue(b, &Bias::NEUTRAL) == 0.0)
+        .collect();
+    assert!(!pure.is_empty(), "the fixture folds no hand purely");
+    assert!(pure.iter().any(|&b| root_continue(b, &loose) > 0.0));
+    let (neutral, loose, tight) = (vpip(&Bias::NEUTRAL), vpip(&loose), vpip(&tight));
+    assert!(
+        loose > neutral && neutral > tight,
+        "{loose} {neutral} {tight}"
+    );
 }
