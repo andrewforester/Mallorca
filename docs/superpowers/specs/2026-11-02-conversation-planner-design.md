@@ -243,8 +243,16 @@ interface UtterancePlan {
   in big blinds), and the shown cards of both players after a showdown. Her cards are absent until they are shown.
 - **`heard`**: the player's text for `answer`, else null.
 - **`session`** (`SessionLine`): hands played, her net in big blinds, the player's shown bluffs and all-ins, and up to
-  three notable hands of the session (the biggest pot she won and the biggest she lost, each of 20 bb or more, and
-  her last caught bluff), from `SessionSummary`, which gains `notable`.
+  four notable hands of the session, from `SessionSummary`, which gains `notable`:
+  - the biggest pot she won and the biggest she lost, each of 20 bb or more;
+  - her last caught bluff;
+  - the most fought hand: a hand with at least 4 bets and raises by both players (blinds left out), or a street
+    with a raise and a reraise; the most bets and raises wins, then the bigger pot. Each one says who won it and the
+    pot.
+
+  `HandSummary` gains `bets` (the bets and raises of the hand) and `reraised` (a street with two raises or more),
+  counted by `conversation` from the hand's `acted` events.
+
 - `handNumber`, `street`, `actionStreet` and `endsHand` keep today's staleness rules in `game`.
 
 `LineIntent`, `feelingFor`, `moodWords`, `character` and `state.ts` go from `conversation`: the server gets the plan
@@ -404,7 +412,7 @@ TDD: a test fails first, then the code.
   - plan: with mask 1 no felt emotion is heard; a bluff is heard as pride; the occasion's emotion wins over a stronger
     unrelated one at the threshold; the budget of each act, scaled by extraversion, capped at overload 0.6; humour
     only where allowed; her cards absent from `facts` until a showdown and present after it; the session line's
-    notable hands.
+    notable hands, a hand of 4 bets and raises or with a reraise as the most fought, and the tie broken by the pot.
   - a seeded session gives the same trace twice.
 - Server (Deno): version 2 validation and version 1 still served; the qualifier at 0.19, 0.2, 0.45, 0.75 and the
   pole by sign; the state block holds the plan and no hidden emotion; each filter check; one retry naming the
