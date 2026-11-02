@@ -20,6 +20,7 @@ const COLD: Personality = {
   },
   suppression: 0.9,
   experience: 0.9,
+  control: 0.9,
 };
 
 const HOT: Personality = {
@@ -32,6 +33,7 @@ const HOT: Personality = {
   },
   suppression: 0.05,
   experience: 0.3,
+  control: 0.3,
 };
 
 const LOUD: FaceLook = { ...MALLORCA_LOOK, mouth: 1.35, leak: 1.35 };

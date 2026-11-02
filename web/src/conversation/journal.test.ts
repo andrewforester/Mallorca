@@ -7,6 +7,9 @@ import type { Action, Step } from '../engine/types.ts';
 import { BASE_HABITS } from './habits.ts';
 import type { Habits, Situation } from './habits.ts';
 import { JOURNAL_SIZE } from '../persona/index.ts';
+import { toBotBias } from '../persona/view.ts';
+import { MALLORCA } from '../emotion/index.ts';
+import { traitsOf } from '../emotion/personality.ts';
 import { createSpeaker } from './testSpeaker.ts';
 import type { Speaker } from './testSpeaker.ts';
 import type { LineIntent } from './conversation.ts';
@@ -95,19 +98,13 @@ describe('the personality of her feeling', () => {
     expect(lola.character().talkativeness).toBeGreaterThan(calm.character().talkativeness);
   });
 
-  it('starts over on resetFeeling', () => {
+  it('starts over on resetFeeling, back to her natural style', () => {
     const conversation = newConversation();
     play(conversation, badBeat);
     expect(conversation.feeling().sessionNetBb).toBe(-100);
     conversation.resetFeeling();
     expect(conversation.feeling().sessionNetBb).toBe(0);
     expect(conversation.journal()).toEqual([]);
-    expect(conversation.bias()).toEqual({
-      aggression: 1,
-      bluff: 1,
-      tightness: 1,
-      sizing: 1,
-      stickiness: 1,
-    });
+    expect(conversation.bias()).toEqual(toBotBias(traitsOf(MALLORCA).baseline));
   });
 });

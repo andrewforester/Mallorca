@@ -13,3 +13,4 @@ export { MALLORCA, PERSONALITIES } from './profiles.ts';
 export type { PersonalityKey } from './profiles.ts';
 export { BIAS_KEYS, NEUTRAL_PLAY_BIAS } from './bias.ts';
 export type { BiasKey, PlayBias } from './bias.ts';
+export { STYLE_COEFFICIENTS, styleOf } from './style.ts';

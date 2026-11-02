@@ -31,6 +31,7 @@ describe('toDebugView', () => {
     expect(view.bigFive).toEqual(PERSONALITIES.lola.bigFive);
     expect(view.suppression).toBe(PERSONALITIES.lola.suppression);
     expect(view.experience).toBe(PERSONALITIES.lola.experience);
+    expect(view.control).toBe(PERSONALITIES.lola.control);
     expect(view.traits?.gains.map(([e]) => e)).toEqual([...EMOTIONS]);
   });
 

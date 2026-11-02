@@ -42,7 +42,12 @@ function slidersOf(view: DebugView): Slider[] {
 }
 
 function current(view: DebugView): Personality {
-  return { bigFive: view.bigFive, suppression: view.suppression, experience: view.experience };
+  return {
+    bigFive: view.bigFive,
+    suppression: view.suppression,
+    experience: view.experience,
+    control: view.control,
+  };
 }
 
 function Traits({ view }: { view: DebugView }) {

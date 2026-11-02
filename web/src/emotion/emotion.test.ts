@@ -15,6 +15,7 @@ const average: Personality = {
   bigFive: { openness: 0, conscientiousness: 0, extraversion: 0, agreeableness: 0, neuroticism: 0 },
   suppression: 0.3,
   experience: 0.5,
+  control: 0.5,
 };
 
 const FAST_MOOD = { changeTimeS: 20, returnTimeS: 40 };
@@ -29,6 +30,7 @@ const hot: Personality = {
   },
   suppression: 0.08,
   experience: 0.2,
+  control: 0.2,
 };
 
 const cold: Personality = {
@@ -41,6 +43,7 @@ const cold: Personality = {
   },
   suppression: 0.85,
   experience: 0.9,
+  control: 0.9,
 };
 
 const withEmotions = (values: Partial<Emotions>): Emotions => ({ ...noEmotions(), ...values });
@@ -351,8 +354,8 @@ describe('bias', () => {
     expect(biasOf(angry, 0.8, { ...ones, aggression: 1.8 }).aggression).toBe(BIAS_RANGE[1]);
   });
 
-  it('starts every personality from a neutral baseline', () => {
-    expect(Object.values(traitsOf(MALLORCA).baseline)).toEqual(BIAS_KEYS.map(() => 1));
+  it('starts a neutral character from a neutral baseline', () => {
+    expect(Object.values(traitsOf(average).baseline)).toEqual(BIAS_KEYS.map(() => 1));
   });
 
   it('holds the bias near neutral with little leakage', () => {
@@ -433,10 +436,10 @@ describe('engine', () => {
     expect(engine.snapshot().emotions.hope).toBe(0);
   });
 
-  it('plays the blueprint while calm, whatever her default mood', () => {
+  it('plays her natural style while calm, whatever her default mood', () => {
     for (const personality of [MALLORCA, hot, cold]) {
-      const bias = createEngine(personality).snapshot().bias;
-      expect(Object.values(bias).every((v) => Math.abs(v - 1) < 1e-12)).toBe(true);
+      const { bias, traits } = createEngine(personality).snapshot();
+      expect(BIAS_KEYS.every((k) => Math.abs(bias[k] - traits.baseline[k]) < 1e-12)).toBe(true);
     }
   });
 

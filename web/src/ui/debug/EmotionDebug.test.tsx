@@ -94,7 +94,10 @@ describe('EmotionDebug', () => {
     await opened(session);
     fireEvent.input(screen.getByLabelText(COPY.bigFive.neuroticism), { target: { value: '0.9' } });
     expect(setPersonality).toHaveBeenCalledWith(
-      expect.objectContaining({ bigFive: expect.objectContaining({ neuroticism: 0.9 }) }),
+      expect.objectContaining({
+        bigFive: expect.objectContaining({ neuroticism: 0.9 }),
+        control: expect.any(Number),
+      }),
     );
   });
 

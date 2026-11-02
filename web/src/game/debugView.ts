@@ -31,6 +31,7 @@ export interface DebugView {
   bigFive: BigFive;
   suppression: number;
   experience: number;
+  control: number;
   traits: DebugTraits | null;
   emotions: [Emotion, number][];
   mood: Pad | null;
@@ -102,12 +103,13 @@ function feelingOf(s: Snapshot): FeelingPart {
 
 export function toDebugView(debug: DebugState): DebugView {
   const { snapshot, personality } = debug;
-  const { bigFive, suppression, experience } = personalityOf(personality);
+  const { bigFive, suppression, experience, control } = personalityOf(personality);
   return {
     personality,
     bigFive,
     suppression,
     experience,
+    control,
     ...(snapshot === null ? CALM : feelingOf(snapshot)),
     sentBias: debug.sentBias,
     decision: debug.decision,
