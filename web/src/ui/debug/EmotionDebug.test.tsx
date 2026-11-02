@@ -133,4 +133,25 @@ describe('EmotionDebug', () => {
     expect(items.length).toBeGreaterThan(0);
     expect(items[0]?.textContent).toContain(COPY.event.deal);
   });
+
+  it('switches between her feelings and her conversation and remembers the tab', async () => {
+    const session = await seated();
+    const panel = await opened(session);
+    expect(within(panel).queryByTestId('conversation-debug')).toBeNull();
+    fireEvent.click(within(panel).getByRole('tab', { name: 'Conversation' }));
+    expect(within(panel).getByTestId('conversation-debug')).toBeTruthy();
+    expect(
+      within(panel).getByRole('tab', { name: 'Conversation' }).getAttribute('aria-selected'),
+    ).toBe('true');
+    expect(localStorage.getItem('mallorca.debugTab')).toBe('conversation');
+    fireEvent.click(within(panel).getByRole('tab', { name: 'Feelings' }));
+    expect(within(panel).queryByTestId('conversation-debug')).toBeNull();
+  });
+
+  it('links a journal entry to the line it fed', async () => {
+    const session = await seated();
+    const panel = await opened(session);
+    const entries = within(panel).getByTestId('debug-journal').querySelectorAll('li');
+    expect([...entries].every((li) => li.id.startsWith('journal-'))).toBe(true);
+  });
 });

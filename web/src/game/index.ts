@@ -59,6 +59,7 @@ export type {
 } from './debug.ts';
 export type { DebugLoad, DebugTraits, DebugView } from './debugView.ts';
 export { toDebugView } from './debugView.ts';
+export type { ConversationTrace, Fate, TraceEntry, TraceTotals } from './conversationTrace.ts';
 export { EMOTIONS, LOAD_SOURCES, PERSONALITIES, BIAS_KEYS } from '../persona/index.ts';
 export type {
   BigFive,

@@ -115,6 +115,10 @@ async function captureView(browser: Browser, view: View): Promise<Shot[]> {
   await snap(page, `${label}: Lola's decision`, shots);
   await show(page, 'debug-journal');
   await snap(page, `${label}: journal`, shots);
+  await page.getByRole('tab', { name: 'Conversation' }).click();
+  await byId(page, 'conversation-debug').scrollIntoViewIfNeeded();
+  await snap(page, `${label}: conversation`, shots);
+  await page.getByRole('tab', { name: 'Feelings' }).click();
   await context.close();
   return shots;
 }

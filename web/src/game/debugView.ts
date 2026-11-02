@@ -9,6 +9,7 @@ import type {
   BiasKey,
 } from '../persona/index.ts';
 import { personalityOf } from './debug.ts';
+import type { ConversationTrace } from './conversationTrace.ts';
 import type { DebugDecision, DebugEntry, DebugState, PersonalityChoice } from './debug.ts';
 
 export interface DebugTraits {
@@ -43,6 +44,7 @@ export interface DebugView {
   sentBias: Bias | null;
   decision: DebugDecision | null;
   journal: DebugEntry[];
+  conversation: ConversationTrace;
 }
 
 function traitsOf(s: Snapshot): DebugTraits {
@@ -112,5 +114,6 @@ export function toDebugView(debug: DebugState): DebugView {
     sentBias: debug.sentBias,
     decision: debug.decision,
     journal: debug.journal,
+    conversation: debug.conversation,
   };
 }
