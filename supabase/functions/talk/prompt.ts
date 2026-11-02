@@ -117,7 +117,7 @@ const WHERE: Record<Street, string> = {
   complete: "at the end of the hand",
 };
 
-const OPENING = "[You sit down at the table with the player.]";
+export const OPENING = "[You sit down at the table with the player.]";
 
 function direction(intent: LineRequest["intent"]): string {
   if (intent.hint === null) return "small talk, no hint about your hand.";
@@ -176,7 +176,7 @@ function contextText(
   return strict ? [...lines, "", STRICT_RULE].join("\n") : lines.join("\n");
 }
 
-function pushTurn(messages: Message[], role: Message["role"], content: string): void {
+export function pushTurn(messages: Message[], role: Message["role"], content: string): void {
   const last = messages[messages.length - 1];
   if (last !== undefined && last.role === role) last.content = `${last.content}\n${content}`;
   else messages.push({ role, content });
