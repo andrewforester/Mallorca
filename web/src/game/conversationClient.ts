@@ -66,9 +66,11 @@ export interface ReplyPayload extends HandPayload {
   quick: boolean;
 }
 
+export type SummaryBody = Omit<SessionSummary, 'notable'>;
+
 export interface SummaryPayload extends Envelope {
   kind: 'summary';
-  summary: SessionSummary;
+  summary: SummaryBody;
 }
 
 export interface HandInput {
@@ -171,6 +173,12 @@ export function toSummaryPayload(input: {
     kind: 'summary',
     sessionId: toSessionId(input.sessionId),
     locale: toLocale(input.locale),
-    summary: { ...input.summary, netBb: 0 - input.summary.netBb },
+    summary: {
+      hands: input.summary.hands,
+      netBb: 0 - input.summary.netBb,
+      playerBluffsShown: input.summary.playerBluffsShown,
+      playerAllIns: input.summary.playerAllIns,
+      signals: input.summary.signals,
+    },
   };
 }

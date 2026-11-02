@@ -406,6 +406,7 @@ describe('summary', () => {
       playerBluffsShown: 1,
       playerAllIns: 1,
       signals: { tease: 2, friendly: 1 },
+      notable: [{ kind: 'bigLoss', handNumber: 1, potBb: 200, won: false, bets: 0 }],
     });
   });
 });

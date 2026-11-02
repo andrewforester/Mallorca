@@ -218,7 +218,13 @@ class TableConversation implements Conversation {
     const weak = moment.strength === 'weak';
     const bluffCaught = !won && hand.showdown !== null && weak && hand.herLateBet;
     this.session = withHand(this.session, {
+      handNumber: hand.handNumber,
       netBb: (hand.stacks[this.seat] - hand.startStack) / hand.bigBlind,
+      potBb: hand.pot / hand.bigBlind,
+      won,
+      bluffCaught,
+      bets: 0,
+      reraised: false,
       playerBluffShown: moment.playerBluffShown,
       playerAllIn: hand.playerAllIn,
     });

@@ -96,7 +96,14 @@ describe('payload builders', () => {
     expect(payload.sessionId).toHaveLength(64);
     expect(payload.locale).toBe('en-US');
     expect(toLinePayload({ ...base, locale: 'not a locale!' }).locale).toBe('en');
-    const summary = { hands: 0, netBb: 0, playerBluffsShown: 0, playerAllIns: 0, signals: {} };
+    const summary = {
+      hands: 0,
+      netBb: 0,
+      playerBluffsShown: 0,
+      playerAllIns: 0,
+      signals: {},
+      notable: [],
+    };
     expect(toSummaryPayload({ sessionId: 'x'.repeat(80), locale: 'x', summary }).locale).toBe('en');
   });
 
@@ -132,6 +139,7 @@ describe('payload builders', () => {
       playerBluffsShown: 1,
       playerAllIns: 0,
       signals: { tease: 4, compliment: 1, mockBluff: 2 },
+      notable: [],
     };
     const payload = toSummaryPayload({ sessionId: 's1', locale: 'en', summary });
     expect(shapeOf(payload)).toEqual(shapeOf(fixture('summary')));
@@ -154,7 +162,14 @@ describe('payload builders', () => {
   });
 
   it("sends the player's net, the opposite of hers", () => {
-    const summary = { hands: 2, netBb: 7.5, playerBluffsShown: 0, playerAllIns: 0, signals: {} };
+    const summary = {
+      hands: 2,
+      netBb: 7.5,
+      playerBluffsShown: 0,
+      playerAllIns: 0,
+      signals: {},
+      notable: [],
+    };
     expect(toSummaryPayload({ sessionId: 's', locale: 'en', summary }).summary.netBb).toBe(-7.5);
     const even = toSummaryPayload({
       sessionId: 's',
@@ -162,6 +177,21 @@ describe('payload builders', () => {
       summary: { ...summary, netBb: 0 },
     });
     expect(Object.is(even.summary.netBb, 0)).toBe(true);
+  });
+
+  it('sends the summary without her notable hands', () => {
+    const summary = {
+      hands: 3,
+      netBb: 1,
+      playerBluffsShown: 0,
+      playerAllIns: 0,
+      signals: {},
+      notable: [{ kind: 'bigWin' as const, handNumber: 2, potBb: 30, won: true, bets: 2 }],
+    };
+    const sent = toSummaryPayload({ sessionId: 's', locale: 'en', summary }).summary;
+    expect(Object.keys(sent).sort()).toEqual(
+      ['hands', 'netBb', 'playerAllIns', 'playerBluffsShown', 'signals'].sort(),
+    );
   });
 
   it('keeps a hidden hand null and a null hint', () => {
@@ -257,7 +287,14 @@ describe('silentConversationClient', () => {
         toSummaryPayload({
           sessionId: 's',
           locale: 'en',
-          summary: { hands: 0, netBb: 0, playerBluffsShown: 0, playerAllIns: 0, signals: {} },
+          summary: {
+            hands: 0,
+            netBb: 0,
+            playerBluffsShown: 0,
+            playerAllIns: 0,
+            signals: {},
+            notable: [],
+          },
         }),
       ),
     ).resolves.toBeUndefined();
@@ -355,7 +392,14 @@ describe('remoteConversationClient', () => {
       anonKey: 'anon',
       fetch: fakeFetch(() => json({}, 500)),
     });
-    const summary = { hands: 1, netBb: 0, playerBluffsShown: 0, playerAllIns: 0, signals: {} };
+    const summary = {
+      hands: 1,
+      netBb: 0,
+      playerBluffsShown: 0,
+      playerAllIns: 0,
+      signals: {},
+      notable: [],
+    };
     await expect(
       client.summary(toSummaryPayload({ sessionId: 's', locale: 'en', summary })),
     ).resolves.toBeUndefined();
@@ -369,7 +413,14 @@ describe('remoteConversationClient', () => {
       fetch: fakeFetch(() => json({ facts: [] }), calls),
     });
     const before = calls.length;
-    const summary = { hands: 1, netBb: 2, playerBluffsShown: 0, playerAllIns: 0, signals: {} };
+    const summary = {
+      hands: 1,
+      netBb: 2,
+      playerBluffsShown: 0,
+      playerAllIns: 0,
+      signals: {},
+      notable: [],
+    };
     void client.summary(toSummaryPayload({ sessionId: 's', locale: 'en', summary }), {
       keepalive: true,
     });
