@@ -21,8 +21,9 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 | `web/tools/arena/external/`                                         | Matches against external bots over their APIs, see "arena"                         |
 | `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                              |
 | `web/prototypes/emotion-lab/`                                       | Emotion sandbox: the `emotion` engine with a face and a voice, see `docs/emotion`  |
-| `web/public/avatar/`                                                | Her 3D model `mallorca.glb`, its still `portrait.webp` and `LICENSE.md` (MIT)      |
+| `web/public/avatar/`                                                | Her MetaHuman face `her/`, its still `portrait.webp`, the fallback `mallorca.glb`, `LICENSE.md` |
 | `web/tools/avatar/`                                                 | Blender script that converts the Rocketbox source into `mallorca.glb`, see README  |
+| `web/tools/avatar/metahuman/`                                       | Workstation, Unreal scripts, export to `public/avatar/her/` and the RigLogic wasm, see README |
 | `docs/emotion/`                                                     | Emotion model document, its screenshots and generated tables                       |
 | `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`               |
 | `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`               |
@@ -855,8 +856,15 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   unless stored `off`, the menu checkbox `face`) it shows the still `portrait.webp` at once and, when `canRender()`
   finds hardware WebGL (a software renderer such as SwiftShader or llvmpipe counts as weak) on a device that is not
   weak (more than 2 cores and more than 2 GB when the browser tells), imports `ui/avatar/live.ts` on demand, so
-  three.js and `mallorca.glb` are a separate chunk and a request made only then. The `Avatar` renders the model over
-  52 ARKit blendshapes and 15 Oculus visemes; `Motion` (`motion.ts`, no WebGL) eases toward `faceNow()` (read about
+  three.js, RigLogic and her assets are a separate chunk and requests made only then. `mountFace` takes a
+  `FaceRenderer` (`canvas`, `load`, `resize`, `render(pose)`, `dispose`); `FaceSeat` tries `RigAvatar` first and the
+  Rocketbox `Avatar` (`mallorca.glb`, 52 ARKit blendshapes and 15 Oculus visemes) when it fails (`firstOf`).
+  `RigAvatar` (`ui/avatar/rig/`) is her MetaHuman from `public/avatar/her/`: `controlsOf` maps the pose's ARKit and
+  viseme weights through `mapping.json` to raw MetaHuman controls clamped to [0, 1] and the eye angles to eyeLook;
+  RigLogic (`riglogic.wasm`, `createRig`) gives joint deltas, blendshape weights and wrinkle map weights; `RigState`
+  sets the bones (neck joints only from `Pose.neck`) and turns `head`, `neck_01`/`neck_02`, `spine_05` and the
+  clavicles by the pose in world axes; blendshapes and the head's normals are updated on the CPU, hair cards follow
+  their head vertex, and the skin shader blends the wrinkle normal maps by mask. `Motion` (`motion.ts`, no WebGL) eases toward `faceNow()` (read about
   ten times a second), plays new `FaceCue`s once (pulses, gaze with a glance back), blinks, saccades and glances
   away from `idle`, poses the head from the shown PAD and breathes; `thinking` turns her gaze away to think. It
   pauses while the document is hidden, calms the idle motion under `prefers-reduced-motion`, and falls back to the
