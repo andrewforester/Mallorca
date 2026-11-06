@@ -800,11 +800,11 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   of `npm run build` and fails when any file in `dist` contains
   `emotion-debug` (the panel and its copy), `sentBias` (the session's debug state) or `engineBias`
   (`toDebugView`), so none of them reaches production.
-- The hand log is a drawer grouped by street (`groupHand` of `game`), opened by the status bar toggle
-  `hand-log-toggle` (`aria-expanded`). Opening moves focus to `hand-log-close`; closing, by the close button,
-  Escape, the toggle or the scrim, returns focus to the toggle. On portrait screens it is a full-height sheet over
-  a scrim that closes on tap; in landscape it is a floating panel and the scrim does not take pointer events, so
-  the player can act while it is open.
+- The hand log is a layer of the table grouped by street (`groupHand` of `game`), opened by the header toggle
+  `hand-log-toggle` (`aria-expanded`) and passed to `Table` as `log` (class `table-log-open`). Opening moves focus
+  to `hand-log-close`; closing, by the close button, Escape or the toggle, returns focus to the toggle. On phones it
+  takes the place of the board and the player's row under her face and plate, and the face shrinks; on wide
+  screens it takes the left column in place of the chat. There is no scrim: the actions stay in play.
 - Every colour, font, radius, spacing and shadow is a CSS token on `:root` in `ui/styles/tokens.css`, with a dark
   theme under `prefers-color-scheme: dark`. The visual design is the redesign epic #89 with its spec in
   `docs/design/redesign/spec.md`.
@@ -861,7 +861,7 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   `data-amount` = total and `data-collected`), `result`, `next-hand`, `next-hand-wait`, `fold`, `passive`, `raise`, `raise-amount`,
   `preset-half`, `preset-pot` (or `preset-min`), `preset-allin`, `raise-size`, `raise-less`, `raise-more`,
   `raise-back`, `raise-confirm`, `hand-log-toggle`, `simple-table`, `auto-next`,
-  `sound`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`, `coach-mode`, `start-coach`, `coach-toggle`,
+  `sound`, `hand-log`, `hand-log-close`, `coach`, `coach-mode`, `start-coach`, `coach-toggle`,
   `coach-close`, `coach-scrim`, `coach-status`, `coach-hint`, `coach-tab-hint`, `coach-tab-range`, `coach-tab-numbers`,
   `coach-strategy`, `coach-range`, `coach-numbers`, `coach-composition`, `coach-outs`, `coach-blockers`, `coach-tab-session`, `coach-review`, `coach-leaks`, `live-region`, `tournament-over`, `leave-tonight`,
   `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and `export-text` (the session
@@ -971,9 +971,9 @@ clamps above; her words reach her feeling only as the signals the player's reply
   table, the cash table, the session summary and a cash status bar with long values fit the viewport without
   horizontal scroll, and every control stays visible on the simple table and on short landscape screens.
   `table.spec.ts`: on the human's first turn the dealer button, both bets, the pot and the board are inside the
-  viewport on every project, the hand log drawer opens inside the viewport with its close button, without
-  horizontal scroll, and Escape hides it, the floating log stops above the action bar on a 1280 × 720 screen, and
-  it is a full-height sheet on a 900 × 500 screen.
+  viewport on every project, the hand log opens inside the viewport with its close button, without
+  horizontal scroll, and Escape hides it; at 1280 × 720 and 900 × 500 it takes the left column beside her face and
+  Raise stays clickable; on phones it replaces the board under her face and the actions stay.
 - `scene.spec.ts`: the table is the dark room colour and loads no photo of a room, the showdown result covers
   neither shown hand nor the board, the simple table flattens her frame and is remembered across a reload,
   and the deal animation follows `prefers-reduced-motion`. `face.spec.ts`: headless Chromium renders WebGL in software, so

@@ -17,6 +17,34 @@ describe('Table layout', () => {
   });
 });
 
+describe('Table hand log layer', () => {
+  it('opens the hand log in the left area in place of the chat panel', () => {
+    const { container } = render(
+      <Table
+        vm={talking()}
+        phase="humanToAct"
+        humanSeat={0}
+        onAct={vi.fn()}
+        onNextHand={vi.fn()}
+        log={<section data-testid="log-stub" />}
+      />,
+    );
+    const left = container.querySelector('.table-left');
+    expect(left?.contains(screen.getByTestId('log-stub'))).toBe(true);
+    expect(screen.queryByTestId('chat-panel')).toBeNull();
+    expect(container.querySelector('.table-layout')?.classList.contains('table-log-open')).toBe(
+      true,
+    );
+    expect(screen.getByTestId('fold')).not.toBeNull();
+  });
+
+  it('keeps the chat panel while the log is closed', () => {
+    const { container } = table(talking());
+    expect(screen.getByTestId('chat-panel')).not.toBeNull();
+    expect(container.querySelector('.table-log-open')).toBeNull();
+  });
+});
+
 describe('Table result and announcements', () => {
   it('shows the won amount and hides the pot while a result is shown', () => {
     table(fixtureResult(), 'handOver');

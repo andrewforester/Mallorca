@@ -178,17 +178,19 @@ export function App(props: AppProps) {
           onSay={(text) => session.getState().say(text)}
           onQuick={(id, text) => session.getState().quick(id, text)}
           coach={coach.panel}
+          log={
+            drawer.open ? (
+              <HandLogDrawer
+                entries={state.log}
+                names={[vm.seats[0].name, vm.seats[1].name]}
+                humanSeat={humanSeat}
+                onClose={drawer.close}
+              />
+            ) : undefined
+          }
           face={faceSlot(session, vm, preferences)}
         />
         {coach.sheet}
-        {drawer.open && (
-          <HandLogDrawer
-            entries={state.log}
-            names={[vm.seats[0].name, vm.seats[1].name]}
-            humanSeat={humanSeat}
-            onClose={drawer.close}
-          />
-        )}
         <GameOver props={props} vm={vm} phase={state.phase} sessionId={state.sessionId} />
         {props.debugPanel !== undefined && <props.debugPanel session={session} />}
       </div>
