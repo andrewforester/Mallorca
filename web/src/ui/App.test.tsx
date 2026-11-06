@@ -124,8 +124,11 @@ describe('App sound', () => {
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function foldFirstHand(session: ReturnType<typeof setup>['session']) {
-  fireEvent.click(screen.getByTestId('start-tournament'));
+async function foldFirstHand(
+  session: ReturnType<typeof setup>['session'],
+  start = 'start-tournament',
+) {
+  fireEvent.click(screen.getByTestId(start));
   await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
   fireEvent.click(screen.getByTestId('fold'));
   await waitFor(() => expect(screen.queryByTestId('next-hand')).not.toBeNull());
@@ -181,6 +184,47 @@ describe('App auto next hand', () => {
     expect(session.getState().phase).toBe('handOver');
     expect(screen.getByTestId('hand-number').textContent).toBe('Hand 1');
     fireEvent.click(screen.getByTestId('hand-log-close'));
+    await waitFor(() => expect(screen.getByTestId('hand-number').textContent).toBe('Hand 2'), {
+      timeout: 2500,
+    });
+    session.getState().dispose();
+  });
+
+  it('moves to the next hand by itself in a cash game as well', async () => {
+    localStorage.clear();
+    const { session } = setup(CASH);
+    await foldFirstHand(session, 'start-cash');
+    await waitFor(() => expect(screen.getByTestId('hand-number').textContent).toBe('Hand 2'), {
+      timeout: 2500,
+    });
+    session.getState().dispose();
+  });
+
+  it('keeps the result on the table after Wait until Next hand is clicked', async () => {
+    localStorage.clear();
+    const { session } = setup(CASH);
+    await foldFirstHand(session, 'start-cash');
+    fireEvent.click(screen.getByTestId('next-hand-wait'));
+    expect(screen.queryByTestId('next-hand-wait')).toBeNull();
+    await pause(1300);
+    expect(screen.getByTestId('hand-number').textContent).toBe('Hand 1');
+    expect((screen.getByTestId('leave') as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(screen.getByTestId('next-hand'));
+    await waitFor(() => expect(screen.getByTestId('hand-number').textContent).toBe('Hand 2'));
+    session.getState().dispose();
+  });
+
+  it('pauses while the menu is open', async () => {
+    localStorage.clear();
+    const { session } = setup(CASH);
+    await foldFirstHand(session, 'start-cash');
+    const menu = document.querySelector('details.menu') as HTMLDetailsElement;
+    menu.open = true;
+    fireEvent(menu, new Event('toggle'));
+    await pause(1300);
+    expect(screen.getByTestId('hand-number').textContent).toBe('Hand 1');
+    menu.open = false;
+    fireEvent(menu, new Event('toggle'));
     await waitFor(() => expect(screen.getByTestId('hand-number').textContent).toBe('Hand 2'), {
       timeout: 2500,
     });

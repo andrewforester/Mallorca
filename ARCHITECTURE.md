@@ -738,11 +738,12 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   `mallorca.autoNext` and `mallorca.sound`, on unless stored as `off`) and falls back to the default when storage
   throws. `usePreferences()` holds them as state with a toggle each; `Settings` renders the three menu checkboxes
   `simple-table`, `auto-next` and `sound` inside `HistoryMenu`.
-- Auto next hand: in a tournament `nextHandDelay(vm)` (`ui/autoNext.ts`) is 1000 ms after a hand won without a
-  showdown and 2000 ms after a showdown, and null in cash, before a result and after the tournament ends.
+- Auto next hand: in a tournament and in cash `nextHandDelay(vm)` (`ui/autoNext.ts`) is 1000 ms after a hand won
+  without a showdown and 2000 ms after a showdown, and null before a result and after the tournament ends.
   `useAutoNext(session, vm, enabled)` calls `nextHand` after that delay while the phase is still `handOver`; it is
-  enabled when `main.tsx` allows it, the `mallorca.autoNext` preference is on and the hand log drawer is closed.
-  The delay drives the countdown style of the next hand button.
+  enabled when `main.tsx` allows it, the `mallorca.autoNext` preference is on, the hand log drawer and the menu are
+  closed, and Wait (`next-hand-wait`) was not pressed for this hand. While it runs the action panel says "Next hand
+  in a moment" and the next hand button fills a bar, with no number.
 - The start screen offers the opponents of `opponentsFor` (buttons `opponent-<key>` with `aria-pressed`, `math`
   by default) and shows a loading line while a cfr opponent starts. `leave-tonight` in the tournament-over dialog
   mounts a new game whose start screen shows a farewell line.
@@ -850,7 +851,7 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   `start-loading`, `farewell`, `blinds`, `session-result`, `hand-number`, `leave`, `new-game`, `seat-<i>`, `stack-<i>`
   (with `data-stack`), `face-frame`, `table-board`, `action-panel`, `bet-<i>`, `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`,
   `bubble-aggressive` or `bubble-fold`), `thinking-<i>`, `card` (with `data-card`), `card-back`, `board`, `pot` (with
-  `data-amount` = total and `data-collected`), `result`, `next-hand`, `fold`, `passive`, `raise`, `raise-amount`,
+  `data-amount` = total and `data-collected`), `result`, `next-hand`, `next-hand-wait`, `fold`, `passive`, `raise`, `raise-amount`,
   `preset-half`, `preset-pot` (or `preset-min`), `preset-allin`, `raise-size`, `raise-less`, `raise-more`,
   `raise-back`, `raise-confirm`, `hand-log-toggle`, `sound-toggle`, `simple-table`, `auto-next`,
   `sound`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`, `coach-mode`, `start-coach`, `coach-toggle`,

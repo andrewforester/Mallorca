@@ -9,6 +9,7 @@ export interface HistoryMenuProps {
   store: HandStore;
   onNewGame: () => void;
   onOpen?: () => void;
+  onClose?: () => void;
   children?: ComponentChildren;
 }
 
@@ -35,7 +36,8 @@ function ExportButtons({ store }: { store: HandStore }) {
   );
 }
 
-export function HistoryMenu({ seed, store, onNewGame, onOpen, children }: HistoryMenuProps) {
+export function HistoryMenu(props: HistoryMenuProps) {
+  const { seed, store, onNewGame, onOpen, onClose, children } = props;
   const [confirmClear, setConfirmClear] = useState(false);
   const clear = () => {
     if (!confirmClear) {
@@ -53,6 +55,7 @@ export function HistoryMenu({ seed, store, onNewGame, onOpen, children }: Histor
           onOpen?.();
         } else {
           setConfirmClear(false);
+          onClose?.();
         }
       }}
     >
