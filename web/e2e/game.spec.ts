@@ -174,3 +174,17 @@ test('hand history is exported, persists across a reload and is cleared', async 
   await byId(page, 'clear-history').click();
   expect(await downloadJson(page, 'export-all-json')).toEqual([]);
 });
+
+test('a cash hand moves on by itself and Wait keeps the result', async ({ page }) => {
+  await page.goto('/?seed=42&botDelay=0');
+  await byId(page, 'start-cash').click();
+  await expect(byId(page, 'passive')).toBeEnabled();
+  await byId(page, 'fold').click();
+  await expect(byId(page, 'hand-number')).toHaveText('Hand 2', { timeout: 5000 });
+  await expect(byId(page, 'passive')).toBeEnabled();
+  await byId(page, 'fold').click();
+  await byId(page, 'next-hand-wait').click();
+  await page.waitForTimeout(2500);
+  await expect(byId(page, 'hand-number')).toHaveText('Hand 2');
+  await expect(byId(page, 'leave')).toBeEnabled();
+});

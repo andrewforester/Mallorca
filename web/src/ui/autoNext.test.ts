@@ -25,10 +25,12 @@ describe('nextHandDelay', () => {
     expect(nextHandDelay(vm)).toBeNull();
   });
 
-  it('leaves the cash table between hands for the player to decide', () => {
+  it('moves on in a cash game too, with the same waits', () => {
     const vm = fixtureResult();
     vm.mode = 'cash';
-    expect(nextHandDelay(vm)).toBeNull();
+    expect(nextHandDelay(vm)).toBe(2000);
+    vm.result = { winner: 1, category: null, amount: 30 };
+    expect(nextHandDelay(vm)).toBe(1000);
   });
 
   it('has nothing to wait for while a hand is in progress', () => {

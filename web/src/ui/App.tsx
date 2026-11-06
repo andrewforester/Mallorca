@@ -99,6 +99,19 @@ function useLogDrawer(phase: Phase) {
   return { open: open && !ended, toggle, close, flip, dismiss };
 }
 
+function useAdvance(
+  props: AppProps,
+  handOver: ViewModel | null,
+  { on, logOpen }: { on: boolean; logOpen: boolean },
+) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [waited, wait] = useState<number | null>(null);
+  const enabled =
+    (props.autoNext ?? true) && on && !logOpen && !menuOpen && waited !== handOver?.handNumber;
+  const autoNextMs = useAutoNext(props.session, handOver, enabled);
+  return { pause: { setMenuOpen, wait }, autoNextMs };
+}
+
 type UnlockingPreferences = Preferences & { unlock: () => void };
 
 function useUnlockingPreferences(player: SoundPlayer): UnlockingPreferences {
@@ -132,12 +145,10 @@ export function App(props: AppProps) {
   const coach = useCoach(session, state, preferences);
   useFaceSwitch(session, preferences.face);
   const vm = state.phase === 'idle' ? null : toViewModel(state, humanSeat);
-  const handOver = state.phase === 'handOver' ? vm : null;
-  const autoNextMs = useAutoNext(
-    session,
-    handOver,
-    (props.autoNext ?? true) && preferences.autoNext && !drawer.open,
-  );
+  const { pause, autoNextMs } = useAdvance(props, state.phase === 'handOver' ? vm : null, {
+    on: preferences.autoNext,
+    logOpen: drawer.open,
+  });
   if (vm === null) {
     return <Start app={props} seed={state.seed} preferences={preferences} />;
   }
@@ -152,6 +163,7 @@ export function App(props: AppProps) {
           drawer={drawer}
           preferences={preferences}
           coach={coach}
+          onMenu={pause.setMenuOpen}
         />
         <Table
           vm={vm}
@@ -160,6 +172,7 @@ export function App(props: AppProps) {
           autoNextMs={autoNextMs}
           onAct={act}
           onNextHand={() => void session.getState().nextHand()}
+          onWait={() => pause.wait(vm.handNumber)}
           onSay={(text) => session.getState().say(text)}
           onQuick={(id, text) => session.getState().quick(id, text)}
           coach={coach.panel}
@@ -212,9 +225,10 @@ interface HeaderProps {
   drawer: ReturnType<typeof useLogDrawer>;
   preferences: Preferences;
   coach: CoachView;
+  onMenu: (open: boolean) => void;
 }
 
-function Header({ app, vm, seed, drawer, preferences, coach }: HeaderProps) {
+function Header({ app, vm, seed, drawer, preferences, coach, onMenu }: HeaderProps) {
   const phase = app.session.getState().phase;
   return (
     <StatusBar
@@ -228,7 +242,16 @@ function Header({ app, vm, seed, drawer, preferences, coach }: HeaderProps) {
       onToggleSound={preferences.toggleSound}
       coach={coach.toggle}
     >
-      <HistoryMenu seed={seed} store={app.store} onNewGame={app.onNewGame} onOpen={drawer.dismiss}>
+      <HistoryMenu
+        seed={seed}
+        store={app.store}
+        onNewGame={app.onNewGame}
+        onOpen={() => {
+          drawer.dismiss();
+          onMenu(true);
+        }}
+        onClose={() => onMenu(false)}
+      >
         <Settings preferences={preferences} {...conversationActions(app.session, vm)} />
       </HistoryMenu>
     </StatusBar>

@@ -15,6 +15,19 @@
   min-height: var(--action-height);
 }
 
+.result-actions-auto {
+  grid-template-columns: 1fr 1.4fr;
+  gap: var(--space-2);
+}
+
+.result-soon {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 15px;
+  text-align: center;
+}
+
 .action-bar {
   display: flex;
   flex-direction: column;

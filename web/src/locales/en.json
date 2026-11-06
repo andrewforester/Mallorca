@@ -81,7 +81,9 @@
     "youWin": "You win {{amount}}",
     "youWinWith": "You win {{amount}} with {{hand}}",
     "split": "Split pot {{amount}} each",
-    "next": "Next hand"
+    "next": "Next hand",
+    "soon": "Next hand in a moment",
+    "wait": "Wait"
   },
   "log": {
     "title": "Hand log",

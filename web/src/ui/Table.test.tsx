@@ -148,11 +148,14 @@ describe('Table result and announcements', () => {
     const button = screen.getByTestId('next-hand');
     expect(button.classList.contains('next-hand-auto')).toBe(true);
     expect(button.getAttribute('style')).toContain('--auto-next-ms: 2000ms');
+    expect(screen.getByTestId('action-panel').textContent).toContain('Next hand in a moment');
+    expect(screen.getByTestId('next-hand-wait').textContent).toBe('Wait');
   });
 
   it('shows a plain Next hand when auto next hand is off', () => {
     table(fixtureResult(), 'handOver');
     expect(screen.getByTestId('next-hand').classList.contains('next-hand-auto')).toBe(false);
+    expect(screen.queryByTestId('next-hand-wait')).toBeNull();
   });
 
   it('announces the bot thinking state', () => {

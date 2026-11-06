@@ -20,6 +20,7 @@ export interface TableProps {
   autoNextMs?: number | null;
   onAct: (intent: Intent) => void;
   onNextHand: () => void;
+  onWait?: () => void;
   coach?: ComponentChildren;
   onSay?: (text: string) => void;
   onQuick?: (id: QuickPhrase, text: string) => void;
@@ -130,12 +131,19 @@ function useSeatActions(vm: ViewModel): HeldActions {
 interface NextHandProps {
   autoNextMs: number | null;
   onNextHand: () => void;
+  onWait?: () => void;
 }
 
-function NextHand({ autoNextMs, onNextHand }: NextHandProps) {
+function NextHand({ autoNextMs, onNextHand, onWait }: NextHandProps) {
   const auto = autoNextMs !== null;
   return (
-    <div class="result-actions">
+    <div class={auto ? 'result-actions result-actions-auto' : 'result-actions'}>
+      {auto && <p class="result-soon">{t('result.soon')}</p>}
+      {auto && onWait !== undefined && (
+        <button type="button" class="button" data-testid="next-hand-wait" onClick={onWait}>
+          {t('result.wait')}
+        </button>
+      )}
       <button
         type="button"
         class={`button button-passive${auto ? ' next-hand-auto' : ''}`}
@@ -261,7 +269,13 @@ function layoutClass(vm: ViewModel, humanSeat: SeatIndex, text: string | null): 
 
 function Actions({ props, over }: { props: TableProps; over: boolean }) {
   if (over) {
-    return <NextHand autoNextMs={props.autoNextMs ?? null} onNextHand={props.onNextHand} />;
+    return (
+      <NextHand
+        autoNextMs={props.autoNextMs ?? null}
+        onNextHand={props.onNextHand}
+        onWait={props.onWait ?? ignore}
+      />
+    );
   }
   const raise = props.vm.controls.raise;
   const barKey = raise === null ? 'none' : `${raise.min}:${raise.max}`;
