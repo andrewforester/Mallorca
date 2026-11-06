@@ -684,3 +684,12 @@ describe('session opponent', () => {
     expect(session.getState().phase).toBe('humanToAct');
   });
 });
+
+describe('session prepare', () => {
+  it('asks the bot to warm the chosen opponent before the start', () => {
+    const bot = { ...callingBot(), warm: vi.fn() };
+    const session = open(bot);
+    session.getState().prepare('cfr');
+    expect(bot.warm).toHaveBeenCalledWith('cfr');
+  });
+});

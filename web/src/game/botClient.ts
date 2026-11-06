@@ -12,6 +12,7 @@ export interface BotClient {
   select?(opponent: Opponent, seed: number): Promise<Opponent>;
   coach?(observations: Observation[], legal: LegalActions, pot: number): Promise<CoachFacts>;
   opponentRange?(): Promise<Float32Array | null>;
+  warm?(opponent: Opponent): void;
   dispose?(): void;
 }
 
@@ -135,6 +136,7 @@ export function withFallback(primary: BotClient, timeoutMs = BOT_TIMEOUT_MS): Bo
     },
     coach: (...args) => timedCoach(usedFallback ? undefined : active.coach?.(...args), timeoutMs),
     opponentRange: () => timedRange(usedFallback ? undefined : active.opponentRange?.(), timeoutMs),
+    warm: (opponent) => active.warm?.(opponent),
     select: (opponent, seed) =>
       selectOrFallBack(active.select?.(opponent, seed), () => {
         if (!usedFallback) {
@@ -204,12 +206,8 @@ function rawWorkerBot(): BotClient {
     pending.clear();
   };
   worker.onmessage = replyRouter(pending);
-  worker.onerror = () => {
-    failAll('The bot worker failed');
-  };
-  const send = (request: WorkerRequest) => {
-    worker.postMessage(request);
-  };
+  worker.onerror = () => failAll('The bot worker failed');
+  const send = (request: WorkerRequest) => worker.postMessage(request);
   const ask = asker(pending, send);
   return {
     observe(observations) {
@@ -248,6 +246,7 @@ function rawWorkerBot(): BotClient {
     reset() {
       send({ kind: 'reset' });
     },
+    warm: (opponent) => send({ kind: 'warm', opponent }),
     dispose() {
       failAll('The bot worker was stopped');
       worker.terminate();
@@ -257,4 +256,13 @@ function rawWorkerBot(): BotClient {
 
 export function workerBot(): BotClient {
   return withFallback(rawWorkerBot());
+}
+
+export function sharedWorkerBot(): () => BotClient {
+  let worker: BotClient | null = null;
+  return () => {
+    worker ??= rawWorkerBot();
+    const shared = worker;
+    return withFallback({ ...shared, dispose: () => shared.reset() });
+  };
 }

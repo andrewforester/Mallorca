@@ -14,6 +14,7 @@ export interface StartScreenProps {
   coach?: boolean;
   onToggleCoach?: () => void;
   face?: boolean;
+  onChoose?: (opponent: Opponent) => void;
 }
 
 function OpponentChoice({
@@ -112,6 +113,7 @@ export function StartScreen({
   coach = false,
   onToggleCoach,
   face = true,
+  onChoose,
 }: StartScreenProps) {
   const [opponent, setOpponent] = useState<Opponent>('math');
   const [starting, setStarting] = useState(false);
@@ -130,7 +132,10 @@ export function StartScreen({
           <Tagline farewell={farewell} />
           <OpponentChoice
             value={opponent}
-            onChange={setOpponent}
+            onChange={(next) => {
+              setOpponent(next);
+              onChoose?.(next);
+            }}
             opponents={opponentsFor(finePointer)}
           />
           <CoachChoice coach={coach} onToggle={onToggleCoach} />
