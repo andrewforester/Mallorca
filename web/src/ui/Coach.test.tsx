@@ -36,6 +36,12 @@ describe('Coach', () => {
     expect(grid.querySelectorAll('.coach-cell-hero')).toHaveLength(1);
   });
 
+  it('names the tabs in her words and the session words', () => {
+    render(<Coach state={readyCoach()} />);
+    expect(screen.getByTestId('coach-tab-range').textContent).toBe('Her range');
+    expect(screen.getByTestId('coach-tab-session').textContent).toBe('This session');
+  });
+
   it('switches to the range tab and explains a missing range', () => {
     render(<Coach state={readyCoach()} />);
     fireEvent.click(screen.getByTestId('coach-tab-range'));
@@ -72,7 +78,7 @@ describe('Coach', () => {
   it('has a line for every state without facts', () => {
     for (const [status, text] of [
       ['idle', 'your turn'],
-      ['waiting', 'thinking'],
+      ['waiting', 'The coach is counting'],
       ['unavailable', 'not available'],
     ] as const) {
       render(<Coach state={{ status, facts: null, review: [], log: [] }} />);
@@ -154,6 +160,22 @@ describe('Coach review and leaks', () => {
     grade: 'rare' as const,
     spot: 'open' as const,
   };
+
+  it('marks each graded move with a shape as well as a word', () => {
+    const graded = (grade: 'strategy' | 'rare' | 'off') => ({ ...decision, grade });
+    const review = [graded('strategy'), graded('rare'), graded('off')];
+    render(<Coach state={{ status: 'idle', facts: null, review, log: [] }} />);
+    const marks = [...document.querySelectorAll('.coach-verdict-mark')].map(
+      (node) => node.textContent,
+    );
+    expect(marks).toEqual(['●', '◐', '○']);
+    for (const mark of document.querySelectorAll('.coach-verdict-mark')) {
+      expect(mark.getAttribute('aria-hidden')).toBe('true');
+    }
+    const text = screen.getByTestId('coach-review').textContent ?? '';
+    expect(text).toContain('In the strategy');
+    expect(text).toContain('Off the strategy');
+  });
 
   it('reviews the hand between turns', () => {
     render(<Coach state={{ status: 'idle', facts: null, review: [decision], log: [decision] }} />);

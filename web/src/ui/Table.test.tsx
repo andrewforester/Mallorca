@@ -17,8 +17,8 @@ describe('Table layout', () => {
   });
 });
 
-describe('Table hand log layer', () => {
-  it('opens the hand log in the left area in place of the chat panel', () => {
+describe('Table layer', () => {
+  it('opens a layer such as the hand log or the coach in the left area in place of the chat panel', () => {
     const { container } = render(
       <Table
         vm={talking()}
@@ -26,22 +26,22 @@ describe('Table hand log layer', () => {
         humanSeat={0}
         onAct={vi.fn()}
         onNextHand={vi.fn()}
-        log={<section data-testid="log-stub" />}
+        layer={<section data-testid="log-stub" />}
       />,
     );
     const left = container.querySelector('.table-left');
     expect(left?.contains(screen.getByTestId('log-stub'))).toBe(true);
     expect(screen.queryByTestId('chat-panel')).toBeNull();
-    expect(container.querySelector('.table-layout')?.classList.contains('table-log-open')).toBe(
+    expect(container.querySelector('.table-layout')?.classList.contains('table-layer-open')).toBe(
       true,
     );
     expect(screen.getByTestId('fold')).not.toBeNull();
   });
 
-  it('keeps the chat panel while the log is closed', () => {
+  it('keeps the chat panel while no layer is open', () => {
     const { container } = table(talking());
     expect(screen.getByTestId('chat-panel')).not.toBeNull();
-    expect(container.querySelector('.table-log-open')).toBeNull();
+    expect(container.querySelector('.table-layer-open')).toBeNull();
   });
 });
 

@@ -61,6 +61,17 @@ async function capture(browser: Browser, sheet: Sheet): Promise<Shot[]> {
   await snap(page, 'hand log', shots);
   await byId(page, 'hand-log-close').click();
 
+  const coached = await open('seed=42&botDelay=0&autoNext=off');
+  await byId(coached, 'start-coach').check();
+  await byId(coached, 'start-tournament').click();
+  await byId(coached, 'passive').and(coached.locator(':enabled')).waitFor();
+  const coachToggle = byId(coached, 'coach-toggle');
+  if (await coachToggle.isVisible()) {
+    await coachToggle.click();
+  }
+  await byId(coached, 'coach-hint').waitFor({ timeout: 30000 });
+  await snap(coached, 'coach', shots);
+
   const slow = await open(`seed=42&botDelay=${THINKING_DELAY_MS}&autoNext=off`);
   await byId(slow, 'start-tournament').click();
   await byId(slow, 'passive').and(slow.locator(':enabled')).waitFor();

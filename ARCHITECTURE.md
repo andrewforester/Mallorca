@@ -774,9 +774,10 @@ text)` (the caller's localized label) append the player's line at once, plan an 
 - Coach mode: the `mallorca.coach` preference (off unless stored `on`), switched by the start screen checkbox
   `start-coach` and the menu checkbox `coach-mode`; `useCoach` calls `setCoach` from it. On wide screens `Coach` fills
   the `coach` slot of the table; on narrow ones the status bar button `coach-toggle` (`aria-expanded`) opens it in
-  `CoachSheet`, a bottom sheet over a scrim closed by its button, Escape or the scrim (`useWide`, `(min-aspect-ratio: 1/1) and
-(min-height: 561px)` like the floating hand log, decides, so the panel exists once and a short landscape screen
-  gets the sheet). `Coach` shows the hint line (shares of 0.5 % and more, a mixed-strategy line when
+  `CoachSheet`, a layer of the table like the hand log (no scrim, closed by Hide or Escape; `useWide`,
+  `(min-aspect-ratio: 1/1) and (min-height: 561px)`, decides, so the panel exists once and a short landscape screen
+  gets the layer). The coach is drawn in its cold slate material (`--color-coach*`); a graded move carries a shape
+  and a word: ● In the strategy, ◐ Rare in the strategy, ○ Off the strategy. `Coach` shows the hint line (shares of 0.5 % and more, a mixed-strategy line when
   two moves reach 10 %, an approximate line), then tabs: the strategy grid (each cell striped by its moves' shares,
   the player's cell outlined), the bot range grid (shaded by weight relative to the heaviest cell) or the math-bot
   line with the composition (`coach-composition`) under it, the numbers with the outs (`coach-outs`)
@@ -801,7 +802,8 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   `emotion-debug` (the panel and its copy), `sentBias` (the session's debug state) or `engineBias`
   (`toDebugView`), so none of them reaches production.
 - The hand log is a layer of the table grouped by street (`groupHand` of `game`), opened by the header toggle
-  `hand-log-toggle` (`aria-expanded`) and passed to `Table` as `log` (class `table-log-open`). Opening moves focus
+  `hand-log-toggle` (`aria-expanded`) and passed to `Table` as `layer` (class `table-layer-open`), which the
+  phone coach sheet also uses when the log is closed. Opening moves focus
   to `hand-log-close`; closing, by the close button, Escape or the toggle, returns focus to the toggle. On phones it
   takes the place of the board and the player's row under her face and plate, and the face shrinks; on wide
   screens it takes the left column in place of the chat. There is no scrim: the actions stay in play.
@@ -862,7 +864,7 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   `preset-half`, `preset-pot` (or `preset-min`), `preset-allin`, `raise-size`, `raise-less`, `raise-more`,
   `raise-back`, `raise-confirm`, `hand-log-toggle`, `simple-table`, `auto-next`,
   `sound`, `hand-log`, `hand-log-close`, `coach`, `coach-mode`, `start-coach`, `coach-toggle`,
-  `coach-close`, `coach-scrim`, `coach-status`, `coach-hint`, `coach-tab-hint`, `coach-tab-range`, `coach-tab-numbers`,
+  `coach-close`, `coach-status`, `coach-hint`, `coach-tab-hint`, `coach-tab-range`, `coach-tab-numbers`,
   `coach-strategy`, `coach-range`, `coach-numbers`, `coach-composition`, `coach-outs`, `coach-blockers`, `coach-tab-session`, `coach-review`, `coach-leaks`, `live-region`, `tournament-over`, `leave-tonight`,
   `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and `export-text` (the session
   dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu). Table talk adds
