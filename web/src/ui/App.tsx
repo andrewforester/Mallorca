@@ -1,4 +1,4 @@
-import type { ComponentType } from 'preact';
+import type { ComponentChildren, ComponentType } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { toViewModel } from '../game/index.ts';
 import type {
@@ -8,6 +8,7 @@ import type {
   QuickPhrase,
   Session,
   SeatIndex,
+  SessionState,
   ViewModel,
 } from '../game/index.ts';
 import { ChatSheet } from './ChatSheet.tsx';
@@ -101,6 +102,28 @@ function useLogDrawer(phase: Phase) {
   return { open: open && !ended, toggle, close, flip, dismiss };
 }
 
+interface LayerProps {
+  state: SessionState;
+  vm: ViewModel;
+  humanSeat: SeatIndex;
+  drawer: ReturnType<typeof useLogDrawer>;
+  coach: CoachView;
+}
+
+function layerOf({ state, vm, humanSeat, drawer, coach }: LayerProps): ComponentChildren {
+  if (!drawer.open) {
+    return coach.sheet ?? undefined;
+  }
+  return (
+    <HandLogDrawer
+      entries={state.log}
+      names={[vm.seats[0].name, vm.seats[1].name]}
+      humanSeat={humanSeat}
+      onClose={drawer.close}
+    />
+  );
+}
+
 function useAdvance(
   props: AppProps,
   handOver: ViewModel | null,
@@ -178,19 +201,9 @@ export function App(props: AppProps) {
           onSay={(text) => session.getState().say(text)}
           onQuick={(id, text) => session.getState().quick(id, text)}
           coach={coach.panel}
-          log={
-            drawer.open ? (
-              <HandLogDrawer
-                entries={state.log}
-                names={[vm.seats[0].name, vm.seats[1].name]}
-                humanSeat={humanSeat}
-                onClose={drawer.close}
-              />
-            ) : undefined
-          }
+          layer={layerOf({ state, vm, humanSeat, drawer, coach })}
           face={faceSlot(session, vm, preferences)}
         />
-        {coach.sheet}
         <GameOver props={props} vm={vm} phase={state.phase} sessionId={state.sessionId} />
         {props.debugPanel !== undefined && <props.debugPanel session={session} />}
       </div>

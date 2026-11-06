@@ -21,7 +21,7 @@ export interface TableProps {
   onNextHand: () => void;
   onWait?: () => void;
   coach?: ComponentChildren;
-  log?: ComponentChildren;
+  layer?: ComponentChildren;
   onSay?: (text: string) => void;
   onQuick?: (id: QuickPhrase, text: string) => void;
   face?: (thinking: boolean) => ComponentChildren;
@@ -172,11 +172,11 @@ function herLine(vm: ViewModel, chat: ChatProps | null): string {
   return chat === null ? '' : (vm.conversation.herBubble?.text ?? '');
 }
 
-function TableLeft({ chat, log }: { chat: ChatProps | null; log: ComponentChildren }) {
+function TableLeft({ chat, layer }: { chat: ChatProps | null; layer: ComponentChildren }) {
   return (
     <div class="table-left">
-      {log}
-      {log === undefined && chat !== null && (
+      {layer}
+      {layer === undefined && chat !== null && (
         <section
           class="side-panel glass"
           data-testid="chat-panel"
@@ -262,7 +262,7 @@ function layoutClass(props: TableProps, text: string | null): string {
     'table-layout',
     text === null ? '' : 'table-result',
     text !== null && shown ? 'table-showdown' : '',
-    props.log === undefined ? '' : 'table-log-open',
+    props.layer === undefined ? '' : 'table-layer-open',
   ]
     .filter(Boolean)
     .join(' ');
@@ -297,7 +297,7 @@ export function Table(props: TableProps) {
   return (
     <div class={layoutClass(props, text)}>
       <Announcements text={announcement} her={herLine(vm, chat)} />
-      <TableLeft chat={chat} log={props.log} />
+      <TableLeft chat={chat} layer={props.layer} />
       <div class="table-centre">
         <FaceFrame name={vm.seats[botSeat].name} face={props.face?.(thinking)} />
         <HerSeat {...seats} />

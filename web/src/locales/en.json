@@ -139,18 +139,18 @@
     "close": "Close the coach",
     "mode": "Coach mode",
     "idle": "The coach speaks on your turn.",
-    "waiting": "The coach is thinking.",
+    "waiting": "The coach is counting",
     "unavailable": "The coach is not available right now.",
     "hintHeading": "Strategy with your hand",
     "share": "{{move}} {{percent}}%",
     "mixed": "A mixed strategy: play each action about this often.",
-    "approximate": "Approximate: this spot is off the strategy tree.",
+    "approximate": "Approximate spot. This line is outside the solver tree, so the numbers are estimates.",
     "noHint": "The strategy has no advice for this spot.",
     "tabs": {
       "hint": "Strategy",
-      "range": "Bot range",
+      "range": "Her range",
       "numbers": "Numbers",
-      "session": "Session"
+      "session": "This session"
     },
     "move": {
       "fold": "Fold",
@@ -161,15 +161,15 @@
       "allIn": "All-in {{amount}}"
     },
     "strategyCaption": "What the strategy plays from your seat with every hand",
-    "rangeCaption": "How likely the bot holds each hand after its actions",
+    "rangeCaption": "How likely she holds each hand after her actions",
     "noRange": "The math bot does not play from the strategy, so it has no range to show.",
     "combos": "{{combos}} combos in the range",
     "equity": "Your equity",
     "versus": {
-      "range": "against the bot range",
+      "range": "against her range",
       "random": "against a random hand"
     },
-    "required": "Equity to call",
+    "required": "Equity needed to call",
     "mdf": "Minimum defence",
     "bluffs": "Bluffs this bet can hold",
     "percent": "{{value}}%",
@@ -197,7 +197,7 @@
       "raise": "Raise to {{amount}}"
     },
     "grade": {
-      "strategy": "Strategy move",
+      "strategy": "In the strategy",
       "rare": "Rare in the strategy",
       "off": "Off the strategy",
       "none": "Not graded"
@@ -214,7 +214,13 @@
       "riverFold": "Fold to a river bet"
     },
     "leakLine": "You {{player}}%, strategy {{strategy}}%, {{spots}} spots",
-    "noLeaks": "Leaks appear after {{count}} spots of one kind."
+    "noLeaks": "Leaks appear after {{count}} spots of one kind.",
+    "hide": "Hide",
+    "mark": {
+      "strategy": "●",
+      "rare": "◐",
+      "off": "○"
+    }
   },
   "over": {
     "title": "Good game",

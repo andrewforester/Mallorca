@@ -18,7 +18,7 @@
 }
 
 @media not (min-aspect-ratio: 1/1) {
-  .table-log-open {
+  .table-layer-open {
     grid-template-areas:
       'centre'
       'left'
@@ -27,14 +27,14 @@
     --face-basis: 210px;
   }
 
-  .table-log-open .table-left {
+  .table-layer-open .table-left {
     display: flex;
     flex-direction: column;
     min-height: 0;
   }
 
-  .table-log-open .table-board,
-  .table-log-open .seat-bottom {
+  .table-layer-open .table-board,
+  .table-layer-open .seat-bottom {
     display: none;
   }
 }

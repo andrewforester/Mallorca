@@ -17,13 +17,18 @@
 .coach-panel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
   min-height: 0;
   overflow-y: auto;
-  padding: var(--space-3);
-  border-radius: var(--radius-medium);
-  color: var(--color-text);
-  font-size: var(--font-size-small);
+  padding: 14px 16px;
+  border: 1px solid var(--color-coach-border);
+  border-radius: 16px;
+  background: var(--color-coach-surface);
+  color: #e3eff4;
+  font-size: 14px;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .coach-hint {
@@ -34,9 +39,10 @@
 
 .coach-heading {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--font-size-base);
-  font-weight: 400;
+  color: var(--color-coach);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .coach-shares,
@@ -64,30 +70,34 @@
 .coach-note,
 .coach-status {
   margin: 0;
-  color: var(--color-muted);
+  color: #b4ccd6;
+}
+
+.coach-status {
+  color: var(--color-coach);
 }
 
 .coach-tabs {
   display: flex;
-  gap: var(--space-1);
+  border-bottom: 1px solid #26363c;
 }
 
 .coach-tab {
   flex: 1;
-  min-height: 32px;
-  padding: 0 var(--space-2);
-  border: 1px solid var(--color-glass-border);
-  border-radius: var(--radius-pill);
+  min-height: var(--tap-size);
+  padding: 0 var(--space-1);
+  border: none;
+  border-bottom: 2px solid transparent;
   background: transparent;
-  color: var(--color-muted);
+  color: var(--color-coach);
   font: inherit;
+  font-size: 13.5px;
   cursor: pointer;
 }
 
 .coach-tab[aria-selected='true'] {
-  border-color: var(--color-accent);
-  background: var(--color-accent);
-  color: var(--color-accent-text);
+  border-bottom-color: var(--color-coach);
+  color: var(--color-text);
 }
 
 .coach-tabpanel {
@@ -99,7 +109,7 @@
 .coach-grid {
   display: grid;
   grid-template-columns: repeat(13, minmax(0, 1fr));
-  gap: 1px;
+  gap: 2px;
 }
 
 .coach-cell {
@@ -108,8 +118,8 @@
   justify-content: center;
   aspect-ratio: 1;
   overflow: hidden;
-  border-radius: 2px;
-  background: var(--color-surface-alt);
+  border-radius: 3px;
+  background: #26363c;
   color: var(--color-text);
   font-family: var(--font-numeric);
   font-size: var(--coach-cell-font);
@@ -118,11 +128,7 @@
 }
 
 .coach-grid-range .coach-cell {
-  background: color-mix(
-    in srgb,
-    var(--color-coach-range) calc(var(--weight, 0) * 100%),
-    var(--color-surface-alt)
-  );
+  background: color-mix(in srgb, var(--color-coach-range) calc(var(--weight, 0) * 100%), #26363c);
 }
 
 .coach-cell-dead {
@@ -130,26 +136,28 @@
 }
 
 .coach-cell-hero {
-  outline: 2px solid var(--color-highlight);
+  outline: 2px solid var(--color-text);
   outline-offset: -2px;
 }
 
 .coach-numbers {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
   margin: 0;
 }
 
 .coach-number {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
+  min-height: var(--tap-size);
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid #26363c;
 }
 
 .coach-number dt {
-  color: var(--color-muted);
+  color: #cfe3ec;
 }
 
 .coach-number dd {
@@ -160,44 +168,33 @@
 }
 
 .coach-value {
+  color: var(--color-text);
   font-family: var(--font-numeric);
-  font-size: var(--font-size-base);
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .coach-detail {
-  color: var(--color-muted);
-}
-
-.coach-scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  background: var(--color-overlay);
+  color: #b4ccd6;
+  font-size: 12.5px;
 }
 
 .coach-sheet {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 21;
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
-  max-height: var(--sheet-max-height);
-  padding: var(--space-3) var(--space-4) var(--space-4);
-  border-top: 1px solid var(--color-glass-border);
-  border-radius: var(--radius-large) var(--radius-large) 0 0;
-  background: var(--color-surface);
-  box-shadow: var(--shadow-panel);
+  min-height: 0;
+  padding: 10px 16px 0;
+  border-top: 1px solid var(--color-coach-border);
+  background: var(--color-coach-surface);
   color: var(--color-text);
 }
 
 .coach-sheet .coach-panel {
-  padding: 0;
-  background: transparent;
+  flex: 1 1 auto;
+  padding: 0 0 14px;
   border: 0;
-  box-shadow: none;
-  backdrop-filter: none;
+  border-radius: 0;
 }
 
 .coach-sheet-head {
@@ -208,9 +205,26 @@
 
 .coach-sheet-heading {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--font-size-large);
-  font-weight: 400;
+  color: var(--color-coach);
+  font-family: var(--font-numeric);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.coach-hide {
+  min-width: var(--tap-size);
+  min-height: var(--tap-size);
+  padding: 0 var(--space-2);
+  border: none;
+  background: transparent;
+  color: var(--color-coach);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.coach-hide:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 .coach-composition {
@@ -227,7 +241,7 @@
 }
 
 .coach-class-name {
-  color: var(--color-muted);
+  color: #cfe3ec;
 }
 
 .coach-class-bar {
@@ -236,7 +250,7 @@
   background: linear-gradient(
     to right,
     var(--color-coach-range) calc(var(--share, 0) * 100%),
-    var(--color-surface-alt) calc(var(--share, 0) * 100%)
+    #26363c calc(var(--share, 0) * 100%)
   );
 }
 
@@ -283,20 +297,31 @@
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: var(--space-1) var(--space-2);
-  padding-left: var(--space-2);
-  border-left: 3px solid var(--color-coach-fold);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-medium);
 }
 
-.coach-grade-strategy {
-  border-left-color: var(--color-coach-passive);
+.coach-review-grade {
+  display: inline-flex;
+  gap: 6px;
+  font-size: 12.5px;
 }
 
-.coach-grade-rare {
-  border-left-color: var(--color-coach-small);
+.coach-grade-strategy .coach-review-grade {
+  color: var(--color-coach);
+}
+
+.coach-grade-rare .coach-review-grade {
+  color: #cfe3ec;
 }
 
 .coach-grade-off {
-  border-left-color: var(--color-coach-all-in);
+  border-color: #5a4330;
+}
+
+.coach-grade-off .coach-review-grade {
+  color: var(--color-accent);
 }
 
 .coach-review-street {
@@ -312,7 +337,8 @@
   flex-wrap: wrap;
   grid-column: 1 / -1;
   gap: var(--space-1) var(--space-3);
-  color: var(--color-muted);
+  color: #b4ccd6;
+  font-size: 12.5px;
   font-family: var(--font-numeric);
 }
 
