@@ -1,24 +1,12 @@
-.hand-log-scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  background: var(--color-overlay);
-}
-
 .hand-log-drawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 21;
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: var(--space-3);
-  width: min(var(--drawer-width), 100vw);
-  padding: var(--space-4);
-  background: var(--color-surface);
-  border-left: 1px solid var(--color-glass-border);
-  box-shadow: var(--shadow-panel);
+  min-height: 0;
+  padding: 14px 16px;
+  border-top: 1px solid var(--color-hairline);
+  background: #231b19;
   color: var(--color-text);
 }
 
@@ -119,19 +107,10 @@
   color: var(--color-accent);
 }
 
-@media (min-aspect-ratio: 1/1) and (min-height: 561px) {
-  .hand-log-scrim {
-    background: transparent;
-    pointer-events: none;
-  }
-
+@media (min-aspect-ratio: 1/1) {
   .hand-log-drawer {
-    top: var(--drawer-top);
-    right: var(--space-5);
-    bottom: auto;
-    width: var(--drawer-width-wide);
-    max-height: calc(100dvh - var(--drawer-top) - var(--action-bar-reserve));
-    border: 1px solid var(--color-glass-border);
-    border-radius: var(--radius-medium);
+    margin-top: 20px;
+    border: 1px solid var(--color-hairline);
+    border-radius: 16px;
   }
 }

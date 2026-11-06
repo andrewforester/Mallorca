@@ -21,6 +21,7 @@ export interface TableProps {
   onNextHand: () => void;
   onWait?: () => void;
   coach?: ComponentChildren;
+  log?: ComponentChildren;
   onSay?: (text: string) => void;
   onQuick?: (id: QuickPhrase, text: string) => void;
   face?: (thinking: boolean) => ComponentChildren;
@@ -171,10 +172,11 @@ function herLine(vm: ViewModel, chat: ChatProps | null): string {
   return chat === null ? '' : (vm.conversation.herBubble?.text ?? '');
 }
 
-function TableLeft({ chat }: { chat: ChatProps | null }) {
+function TableLeft({ chat, log }: { chat: ChatProps | null; log: ComponentChildren }) {
   return (
     <div class="table-left">
-      {chat !== null && (
+      {log}
+      {log === undefined && chat !== null && (
         <section
           class="side-panel glass"
           data-testid="chat-panel"
@@ -252,13 +254,15 @@ function YourSeat({ vm, humanSeat, held, chat, bets }: SeatsProps) {
   );
 }
 
-function layoutClass(vm: ViewModel, humanSeat: SeatIndex, text: string | null): string {
+function layoutClass(props: TableProps, text: string | null): string {
+  const { vm, humanSeat } = props;
   const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
   const shown = vm.seats[botSeat].cards.some((card) => card !== 'back');
   return [
     'table-layout',
     text === null ? '' : 'table-result',
     text !== null && shown ? 'table-showdown' : '',
+    props.log === undefined ? '' : 'table-log-open',
   ]
     .filter(Boolean)
     .join(' ');
@@ -291,9 +295,9 @@ export function Table(props: TableProps) {
   const announcement = text ?? (thinking ? t('seat.thinking') : '');
   const seats = { vm, humanSeat, held, thinking, chat, bets };
   return (
-    <div class={layoutClass(vm, humanSeat, text)}>
+    <div class={layoutClass(props, text)}>
       <Announcements text={announcement} her={herLine(vm, chat)} />
-      <TableLeft chat={chat} />
+      <TableLeft chat={chat} log={props.log} />
       <div class="table-centre">
         <FaceFrame name={vm.seats[botSeat].name} face={props.face?.(thinking)} />
         <HerSeat {...seats} />

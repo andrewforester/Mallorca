@@ -29,10 +29,10 @@ function setup(onClose = vi.fn(), entries = [...OLD, ...HAND]) {
 }
 
 describe('HandLogDrawer', () => {
-  it('is a labelled dialog titled with the hand number', () => {
+  it('is a labelled section titled with the hand number', () => {
     setup();
     const drawer = screen.getByTestId('hand-log');
-    expect(drawer.getAttribute('role')).toBe('dialog');
+    expect(drawer.tagName).toBe('SECTION');
     expect(drawer.getAttribute('aria-label')).toBe('Hand log');
     expect(screen.getByRole('heading', { name: 'Hand 2' })).toBeTruthy();
   });
@@ -72,18 +72,23 @@ describe('HandLogDrawer', () => {
     expect(document.querySelectorAll('.log-token').length).toBe(6);
   });
 
-  it('closes on Escape, scrim click and the close button', () => {
+  it('is a named region with no scrim, so the table stays in play', () => {
+    setup();
+    const log = screen.getByRole('region', { name: 'Hand log' });
+    expect(log.getAttribute('data-testid')).toBe('hand-log');
+    expect(screen.queryByTestId('hand-log-scrim')).toBeNull();
+  });
+
+  it('closes on Escape and the close button', () => {
     const onClose = setup();
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(onClose).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByTestId('hand-log-scrim'));
-    expect(onClose).toHaveBeenCalledTimes(2);
     const close = screen.getByTestId('hand-log-close');
     expect(close.getAttribute('aria-label')).toBe('Close hand log');
     expect(close.textContent).toBe('');
     expect(close.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
     fireEvent.click(close);
-    expect(onClose).toHaveBeenCalledTimes(3);
+    expect(onClose).toHaveBeenCalledTimes(2);
   });
 
   it('scrolls the body to the newest line when entries arrive', () => {

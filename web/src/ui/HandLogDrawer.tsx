@@ -84,42 +84,38 @@ export function HandLogDrawer({ entries, names, humanSeat, onClose }: HandLogDra
     return () => document.removeEventListener('keydown', listener);
   }, [onClose]);
   return (
-    <>
-      <div class="hand-log-scrim" data-testid="hand-log-scrim" onClick={onClose} />
-      <div
-        id="hand-log"
-        class="hand-log-drawer"
-        data-testid="hand-log"
-        role="dialog"
-        aria-label={t('log.title')}
-      >
-        <header class="hand-log-head">
-          <h2 class="hand-log-heading">{t('log.hand', { number: handNumber(entries) })}</h2>
-          <button
-            type="button"
-            class="hand-log-close"
-            ref={closeButton}
-            data-testid="hand-log-close"
-            aria-label={t('log.close')}
-            onClick={onClose}
-          >
-            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-              <path
-                d="M6 6l12 12M18 6L6 18"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-            </svg>
-          </button>
-        </header>
-        <div class="hand-log-body" ref={body}>
-          {groupHand(entries).map((group) => (
-            <Street key={group.street} group={group} names={names} humanSeat={humanSeat} />
-          ))}
-        </div>
+    <section
+      id="hand-log"
+      class="hand-log-drawer"
+      data-testid="hand-log"
+      aria-label={t('log.title')}
+    >
+      <header class="hand-log-head">
+        <h2 class="hand-log-heading">{t('log.hand', { number: handNumber(entries) })}</h2>
+        <button
+          type="button"
+          class="hand-log-close"
+          ref={closeButton}
+          data-testid="hand-log-close"
+          aria-label={t('log.close')}
+          onClick={onClose}
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path
+              d="M6 6l12 12M18 6L6 18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+      </header>
+      <div class="hand-log-body" ref={body}>
+        {groupHand(entries).map((group) => (
+          <Street key={group.street} group={group} names={names} humanSeat={humanSeat} />
+        ))}
       </div>
-    </>
+    </section>
   );
 }
