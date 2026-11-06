@@ -5,7 +5,6 @@ import { BoardRow } from './BoardRow.tsx';
 import { Bubble } from './Bubble.tsx';
 import { Chat } from './Chat.tsx';
 import type { ChatProps } from './Chat.tsx';
-import { ChatSheet } from './ChatSheet.tsx';
 import { t } from './i18n.ts';
 import { handName } from './phrases.ts';
 import { Seat } from './Seat.tsx';
@@ -106,15 +105,13 @@ function TableBoard({
 interface FaceFrameProps {
   name: string;
   face: ComponentChildren;
-  children?: ComponentChildren;
 }
 
-function FaceFrame({ name, face, children }: FaceFrameProps) {
+function FaceFrame({ name, face }: FaceFrameProps) {
   const off = face === undefined || face === null;
   return (
     <div class={off ? 'face-frame face-frame-off' : 'face-frame'} data-testid="face-frame">
       {off ? <span class="face-frame-name">{name}</span> : face}
-      {children}
     </div>
   );
 }
@@ -298,9 +295,7 @@ export function Table(props: TableProps) {
       <Announcements text={announcement} her={herLine(vm, chat)} />
       <TableLeft chat={chat} />
       <div class="table-centre">
-        <FaceFrame name={vm.seats[botSeat].name} face={props.face?.(thinking)}>
-          {chat !== null && <ChatSheet {...chat} />}
-        </FaceFrame>
+        <FaceFrame name={vm.seats[botSeat].name} face={props.face?.(thinking)} />
         <HerSeat {...seats} />
         <TableBoard vm={vm} humanSeat={humanSeat} text={text} />
         <YourSeat {...seats} />

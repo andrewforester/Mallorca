@@ -223,11 +223,11 @@ describe('Table talk', () => {
     expect(screen.getByTestId('coach')).not.toBeNull();
   });
 
-  it('shows her bubble at her seat, mine at mine, and the chat entry on her face frame', () => {
+  it('shows her bubble at her seat, mine at mine, and the chat panel, with the Talk button left to the header', () => {
     table(talking());
     expect(within(screen.getByTestId('seat-1')).getByTestId('bubble-mallorca')).not.toBeNull();
     expect(within(screen.getByTestId('seat-0')).getByTestId('bubble-player')).not.toBeNull();
-    expect(within(screen.getByTestId('face-frame')).getByTestId('chat-open')).not.toBeNull();
+    expect(screen.queryByTestId('chat-open')).toBeNull();
     expect(within(screen.getByTestId('chat-panel')).getByTestId('chat-input')).not.toBeNull();
     expect(screen.getByTestId('coach')).not.toBeNull();
   });

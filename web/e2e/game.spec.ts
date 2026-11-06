@@ -5,6 +5,7 @@ import {
   expect,
   FAST_URL,
   goAllIn,
+  leaveTable,
   playToTheEnd,
   stackOf,
   test,
@@ -129,7 +130,7 @@ test('a cash game is played for a hand, left, and the session summary shows one 
     await byId(page, 'passive').click();
   }
   await expect(byId(page, 'leave')).toBeEnabled();
-  await byId(page, 'leave').click();
+  await leaveTable(page);
   await expect(byId(page, 'session-over')).toBeVisible();
   await expect(byId(page, 'session-summary')).toContainText('over 1 hand');
   await byId(page, 'play-again').click();
@@ -161,7 +162,7 @@ test('hand history is exported, persists across a reload and is cleared', async 
   await playHandToEnd(page);
   await byId(page, 'next-hand').click();
   await playHandToEnd(page);
-  await byId(page, 'leave').click();
+  await leaveTable(page);
   await expect(byId(page, 'session-over')).toBeVisible();
   expect(await downloadJson(page, 'export-json')).toHaveLength(2);
   await page.reload();

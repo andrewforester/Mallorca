@@ -5,45 +5,12 @@ import { signed } from './signed.ts';
 
 export interface StatusBarProps {
   vm: ViewModel;
-  canLeave: boolean;
-  onLeave: () => void;
   logOpen: boolean;
   logToggle: Ref<HTMLButtonElement>;
   onToggleLog: () => void;
-  sound: boolean;
-  onToggleSound: () => void;
   coach?: { open: boolean; onToggle: () => void } | null;
+  talk?: ComponentChildren;
   children: ComponentChildren;
-}
-
-function SoundToggle({ sound, onToggle }: { sound: boolean; onToggle: () => void }) {
-  return (
-    <button
-      type="button"
-      class="log-toggle glass pill sound-toggle"
-      data-testid="sound-toggle"
-      aria-label={t('status.sound')}
-      aria-pressed={sound}
-      onClick={onToggle}
-    >
-      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-        <path
-          d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linejoin="round"
-        />
-        <path
-          d={sound ? 'M15.5 9a4 4 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11' : 'M16 9.5l5 5M21 9.5l-5 5'}
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-        />
-      </svg>
-    </button>
-  );
 }
 
 interface LogToggleProps {
@@ -56,7 +23,7 @@ function LogToggle({ open, toggle, onToggle }: LogToggleProps) {
   return (
     <button
       type="button"
-      class="log-toggle glass pill"
+      class="status-button log-toggle"
       data-testid="hand-log-toggle"
       aria-label={t('log.open')}
       aria-expanded={open}
@@ -64,15 +31,7 @@ function LogToggle({ open, toggle, onToggle }: LogToggleProps) {
       ref={toggle}
       onClick={onToggle}
     >
-      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-        <path
-          d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-        />
-      </svg>
+      {t('status.log')}
     </button>
   );
 }
@@ -81,40 +40,27 @@ function CoachToggle({ open, onToggle }: { open: boolean; onToggle: () => void }
   return (
     <button
       type="button"
-      class="log-toggle glass pill coach-toggle"
+      class="status-button coach-toggle"
       data-testid="coach-toggle"
       aria-expanded={open}
       aria-controls="coach-sheet"
       aria-label={t('coach.open')}
       onClick={onToggle}
     >
-      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-        <path
-          d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3z"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-      </svg>
+      {t('status.coach')}
     </button>
   );
 }
 
 export function StatusBar({
   vm,
-  canLeave,
-  onLeave,
   logOpen,
   logToggle,
   onToggleLog,
-  sound,
-  onToggleSound,
   coach = null,
+  talk,
   children,
 }: StatusBarProps) {
-  const cash = vm.mode === 'cash';
   const net = signed(vm.session.netBb);
   return (
     <header class="status-bar">
@@ -122,28 +68,19 @@ export function StatusBar({
         <span data-testid="blinds">
           {t('status.blinds', { small: vm.blinds.small, big: vm.blinds.big })}
         </span>
-        {cash && (
+        {vm.mode === 'cash' && (
           <span data-testid="session-result">
             {t('status.result', { sign: net.sign, bb: net.value })}
           </span>
         )}
         <span data-testid="hand-number">{t('status.hand', { number: vm.handNumber })}</span>
       </div>
-      {cash && (
-        <button
-          type="button"
-          class="button button-small leave"
-          data-testid="leave"
-          disabled={!canLeave}
-          onClick={onLeave}
-        >
-          {t('status.leave')}
-        </button>
-      )}
-      {coach !== null && <CoachToggle open={coach.open} onToggle={coach.onToggle} />}
-      <SoundToggle sound={sound} onToggle={onToggleSound} />
-      <LogToggle open={logOpen} toggle={logToggle} onToggle={onToggleLog} />
-      {children}
+      <div class="status-actions">
+        {talk}
+        <LogToggle open={logOpen} toggle={logToggle} onToggle={onToggleLog} />
+        {coach !== null && <CoachToggle open={coach.open} onToggle={coach.onToggle} />}
+        {children}
+      </div>
     </header>
   );
 }

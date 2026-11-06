@@ -75,7 +75,9 @@ describe('App table talk', () => {
     expect(screen.queryByTestId('chat-open')).toBeNull();
     fireEvent.click(screen.getByTestId('table-conversation'));
     expect(session.getState().conversation.on).toBe(true);
-    expect(screen.getByTestId('chat-open')).not.toBeNull();
+    const talk = screen.getByTestId('chat-open');
+    expect(document.querySelector('.status-bar')?.contains(talk)).toBe(true);
+    expect(talk.textContent).toBe('Talk');
     session.getState().dispose();
   });
 

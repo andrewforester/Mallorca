@@ -59,25 +59,6 @@
   background-color: var(--color-surface-alt);
 }
 
-.chat-open {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 3;
-  display: grid;
-  place-items: center;
-  width: var(--chat-button-size);
-  height: var(--chat-button-size);
-  padding: 0;
-  border-radius: 50%;
-  color: var(--color-text);
-  cursor: pointer;
-}
-
-.chat-open[aria-expanded='true'] {
-  border-color: var(--color-accent);
-}
-
 .chat-open:focus-visible,
 .chat-input:focus-visible {
   outline: 2px solid var(--color-accent);
@@ -256,7 +237,7 @@
 
 @media (min-aspect-ratio: 1/1) and (max-height: 560px) {
   .chat-open {
-    display: grid;
+    display: inline-flex;
   }
 
   .side-panel {

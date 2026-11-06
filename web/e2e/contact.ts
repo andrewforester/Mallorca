@@ -76,7 +76,6 @@ async function capture(browser: Browser, sheet: Sheet): Promise<Shot[]> {
   await snap(cash, 'cash hand over', shots);
   await cash.locator('summary.menu-summary').click();
   await snap(cash, 'menu open', shots);
-  await cash.locator('summary.menu-summary').click();
   await byId(cash, 'leave').click();
   await byId(cash, 'session-over').waitFor();
   await snap(cash, 'session over', shots);

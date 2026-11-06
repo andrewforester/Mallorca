@@ -736,8 +736,16 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   hidden; on wide screens the columns are `minmax(0, 1fr) min(680px, 50vw) minmax(0, 1fr)`.
 - Preferences: `ui/preferences.ts` reads and writes `localStorage` (`mallorca.tableStyle` `room` or `simple`,
   `mallorca.autoNext` and `mallorca.sound`, on unless stored as `off`) and falls back to the default when storage
-  throws. `usePreferences()` holds them as state with a toggle each; `Settings` renders the three menu checkboxes
-  `simple-table`, `auto-next` and `sound` inside `HistoryMenu`.
+  throws. `usePreferences()` holds them as state with a toggle each; `Settings` renders them as switch rows
+  (checkboxes with `role="switch"`) inside `HistoryMenu`: Sound, Her face, Her voice, Table talk, Coach mode, Auto
+  next hand and Simple table.
+- Header (`StatusBar`): the blinds, the running result in cash and the hand number on the left; on the right the
+  text buttons Talk (`chat-open`, only while table talk is on), Log (`hand-log-toggle`), Coach (`coach-toggle`, only
+  while the coach sheet is used) and the menu (`summary.menu-summary`, ≡ on phones, Menu on wide screens). The
+  buttons wrap as one group under the values when the line is too narrow.
+- Menu (`HistoryMenu`, a `details`): a bottom sheet over a scrim on phones and a 340 px popover under the header on
+  wide screens; the scrim closes it. It holds the switch rows, Leave table in cash (`leave`, enabled only between
+  hands, closes the menu), the seed, New game, the exports and Clear history.
 - Auto next hand: in a tournament and in cash `nextHandDelay(vm)` (`ui/autoNext.ts`) is 1000 ms after a hand won
   without a showdown and 2000 ms after a showdown, and null before a result and after the tournament ends.
   `useAutoNext(session, vm, enabled)` calls `nextHand` after that delay while the phase is still `handOver`; it is
@@ -754,11 +762,11 @@ text)` (the caller's localized label) append the player's line at once, plan an 
 - Table talk shows only while `conversation.available` and `conversation.on`: `Bubble` types a line at about 40 characters per
   second and removes it after 7 s (full text at once under `prefers-reduced-motion`), her bubble at her plaque and the
   player's at theirs. On wide screens the chat sits in the left column of the table; on phones and short screens a
-  chat button on her face frame opens `ChatSheet`, a sheet portalled to `body`. The hand log stays in its drawer. The menu
+  Talk button in the header opens `ChatSheet`, a sheet portalled to `body`. The hand log stays in its drawer. The menu
   holds Table talk, kept in `localStorage` (`mallorca.talk`) and passed to `createSession` as `conversationOn`; a
   stored `mallorca.tells` of older builds is ignored. Keyboard shortcuts ignore keys typed in a text field.
-- The start screen offers a cash game (100 bb) and a tournament. In cash the status bar shows the blinds, the
-  running result in bb and a leave button, enabled only between hands; the session-over dialog shows the result in
+- The start screen offers a cash game (100 bb) and a tournament. In cash the header shows the blinds and the
+  running result in bb, and the menu a leave button, enabled only between hands; the session-over dialog shows the result in
   bb, bb/100 and the hands, with play again and the export of the session. `signed` formats a bb value as sign
   and one-decimal absolute value.
 - Layout: portrait for phones (her face at the top, the human's cards and controls at the bottom), three columns for
@@ -821,8 +829,7 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   update, 120 ms apart; it starts from the log at mount and ignores a shrinking log, so nothing old is replayed.
   `main.tsx` creates one player and passes it to every `App`; no `AudioContext` exists before `unlock()`, which
   `App` calls on the click of a start button. The `mallorca.sound` preference (`readSound`, `writeSound`; on unless
-  stored as `off`) is switched by the status bar button `sound-toggle` (`aria-pressed`) and the menu checkbox
-  `sound`; off silences every cue.
+  stored as `off`) is switched by the menu switch `sound`; off silences every cue.
 - Live face (`ui/avatar/`): `FaceSeat` fills her face frame, the portrait cropped to her head and shoulders.
   Nothing covers her face: her action tag lives on her plate, the result under the board, her line in the bottom
   left corner of the frame and her shown cards in the bottom right. With the face preference on (`mallorca.face`, on
@@ -853,7 +860,7 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   `bubble-aggressive` or `bubble-fold`), `thinking-<i>`, `card` (with `data-card`), `card-back`, `board`, `pot` (with
   `data-amount` = total and `data-collected`), `result`, `next-hand`, `next-hand-wait`, `fold`, `passive`, `raise`, `raise-amount`,
   `preset-half`, `preset-pot` (or `preset-min`), `preset-allin`, `raise-size`, `raise-less`, `raise-more`,
-  `raise-back`, `raise-confirm`, `hand-log-toggle`, `sound-toggle`, `simple-table`, `auto-next`,
+  `raise-back`, `raise-confirm`, `hand-log-toggle`, `simple-table`, `auto-next`,
   `sound`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`, `coach-mode`, `start-coach`, `coach-toggle`,
   `coach-close`, `coach-scrim`, `coach-status`, `coach-hint`, `coach-tab-hint`, `coach-tab-range`, `coach-tab-numbers`,
   `coach-strategy`, `coach-range`, `coach-numbers`, `coach-composition`, `coach-outs`, `coach-blockers`, `coach-tab-session`, `coach-review`, `coach-leaks`, `live-region`, `tournament-over`, `leave-tonight`,

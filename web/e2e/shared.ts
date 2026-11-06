@@ -28,6 +28,17 @@ export async function waitForWaypoint(page: Page): Promise<Waypoint> {
   return 'act';
 }
 
+export async function openMenu(page: Page): Promise<void> {
+  if ((await page.locator('details.menu[open]').count()) === 0) {
+    await page.locator('summary.menu-summary').click();
+  }
+}
+
+export async function leaveTable(page: Page): Promise<void> {
+  await openMenu(page);
+  await byId(page, 'leave').click();
+}
+
 export const HOLD_FOR_ALL_IN_MS = 800;
 
 export async function goAllIn(page: Page): Promise<void> {

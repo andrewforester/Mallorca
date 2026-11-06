@@ -42,20 +42,18 @@ function setup(mode = TOURNAMENT, store = memoryStore(), autoNext?: boolean, pla
 }
 
 describe('App sound toggles', () => {
-  it('keeps the status bar button, the menu checkbox and storage in step', async () => {
+  it('keeps sound in the menu, not in the header, in step with storage', async () => {
     const { session } = setup();
     fireEvent.click(screen.getByTestId('start-tournament'));
     await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
-    const button = screen.getByTestId('sound-toggle');
+    expect(screen.queryByTestId('sound-toggle')).toBeNull();
     const box = screen.getByTestId('sound') as HTMLInputElement;
-    expect(button.getAttribute('aria-pressed')).toBe('true');
+    expect(document.querySelector('details.menu')?.contains(box)).toBe(true);
     expect(box.checked).toBe(true);
-    fireEvent.click(button);
-    expect(button.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(box);
     expect(box.checked).toBe(false);
     expect(readSound()).toBe(false);
     fireEvent.click(box);
-    expect(button.getAttribute('aria-pressed')).toBe('true');
     expect(readSound()).toBe(true);
     session.getState().dispose();
   });
@@ -96,11 +94,11 @@ describe('App sound', () => {
     fireEvent.click(screen.getByTestId('start-tournament'));
     await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
     expect(unlock).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByTestId('sound-toggle'));
+    fireEvent.click(screen.getByTestId('sound'));
     expect(unlock).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByTestId('sound-toggle'));
+    fireEvent.click(screen.getByTestId('sound'));
     expect(unlock).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByTestId('sound-toggle'));
+    fireEvent.click(screen.getByTestId('sound'));
     expect(unlock).toHaveBeenCalledTimes(2);
     fireEvent.click(screen.getByTestId('fold'));
     expect(unlock).toHaveBeenCalledTimes(3);
@@ -113,7 +111,7 @@ describe('App sound', () => {
     fireEvent.click(screen.getByTestId('start-tournament'));
     await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
     expect(plays).toContain('turn');
-    fireEvent.click(screen.getByTestId('sound-toggle'));
+    fireEvent.click(screen.getByTestId('sound'));
     const before = plays.length;
     fireEvent.click(screen.getByTestId('fold'));
     await waitFor(() => expect(screen.queryByTestId('next-hand')).not.toBeNull());
@@ -346,8 +344,14 @@ describe('App', () => {
     session.setState({ phase: 'handOver', session: { hands: 1, net: 250 } });
     await waitFor(() => expect(screen.getByTestId('session-result').textContent).toBe('+12.5 bb'));
     expect(screen.queryByTestId('blinds')).not.toBeNull();
+    expect(document.querySelector('details.menu')?.contains(screen.getByTestId('leave'))).toBe(
+      true,
+    );
     expect(screen.queryByTestId('leave')?.hasAttribute('disabled')).toBe(false);
+    const menu = document.querySelector('details.menu') as HTMLDetailsElement;
+    menu.open = true;
     fireEvent.click(screen.getByTestId('leave'));
+    expect(menu.open).toBe(false);
     await waitFor(() => expect(screen.queryByTestId('session-over')).not.toBeNull());
     expect(screen.getByTestId('session-over').textContent).toContain('+12.5 bb over 1 hand');
     fireEvent.click(screen.getByTestId('play-again'));
