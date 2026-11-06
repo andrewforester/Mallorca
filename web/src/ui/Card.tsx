@@ -11,19 +11,6 @@ export interface CardProps {
   highlight?: boolean;
 }
 
-function Index({ rank, suit }: { rank: string; suit: string }) {
-  return (
-    <>
-      <text class="card-rank" x="26" y="74">
-        {rank}
-      </text>
-      <text class="card-index-suit" x="26" y="118">
-        {suit}
-      </text>
-    </>
-  );
-}
-
 function CardBack({ className }: { className: string }) {
   const id = useId();
   return (
@@ -63,10 +50,10 @@ function CardBack({ className }: { className: string }) {
 function CardFace({ card, className }: { card: CardValue; className: string }) {
   const id = useId();
   const rank = RANKS[rankOf(card)] ?? String(rankOf(card));
-  const { glyph: suit, red } = suitFace(card);
+  const { glyph, suit } = suitFace(card);
   return (
     <svg
-      class={`${className}${red ? ' card-red' : ' card-black'}`}
+      class={`${className} card-${suit ?? 'spades'}`}
       viewBox="0 0 250 350"
       role="img"
       aria-label={formatCard(card)}
@@ -88,13 +75,12 @@ function CardFace({ card, className }: { card: CardValue; className: string }) {
         rx="18"
         fill={`url(#paper-${id})`}
       />
-      <Index rank={rank} suit={suit} />
-      <text class="card-suit" x="125" y="235" text-anchor="middle">
-        {suit}
+      <text class="card-rank" x="125" y="168" text-anchor="middle">
+        {rank}
       </text>
-      <g transform="rotate(180 125 175)">
-        <Index rank={rank} suit={suit} />
-      </g>
+      <text class="card-suit" x="125" y="282" text-anchor="middle">
+        {glyph}
+      </text>
     </svg>
   );
 }

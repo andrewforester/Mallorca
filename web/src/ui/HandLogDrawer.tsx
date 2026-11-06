@@ -13,9 +13,9 @@ export interface HandLogDrawerProps {
 }
 
 function LogCard({ text }: { text: string }) {
-  const { glyph, red } = suitFace(text);
+  const { glyph, suit } = suitFace(text);
   return (
-    <span class={`log-card${red ? ' log-card-red' : ''}`}>
+    <span class={`log-card log-card-${suit ?? 'spades'}`}>
       {text.slice(0, -1)}
       {glyph}
     </span>

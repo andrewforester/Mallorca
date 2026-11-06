@@ -30,18 +30,13 @@ button {
   min-height: var(--tap-size);
   min-width: var(--tap-size);
   padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--color-glass-border);
-  border-radius: var(--radius-pill);
-  background: var(--color-glass);
-  -webkit-backdrop-filter: blur(var(--blur-glass));
-  backdrop-filter: blur(var(--blur-glass));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 236, 200, 0.14),
-    var(--shadow-panel);
+  border: 1.5px solid var(--color-outline);
+  border-radius: var(--radius-button);
+  background: transparent;
   color: var(--color-text);
   cursor: pointer;
-  font-family: var(--font-display);
-  font-size: var(--font-size-large);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -53,19 +48,24 @@ button {
 
 .button-primary,
 .button-raise {
-  background: radial-gradient(120% 140% at 50% 0%, #f6d39a, #d79a52 70%);
-  border-color: rgba(255, 226, 170, 0.7);
-  box-shadow: var(--shadow-glow);
+  border-color: transparent;
+  background: var(--color-accent);
   color: var(--color-accent-text);
 }
 
-.button-fold {
-  color: var(--color-danger);
+.button-passive {
+  border-color: transparent;
+  background: var(--color-paper);
+  color: var(--color-paper-text);
 }
 
 .button-small {
   min-height: var(--tap-size);
   padding: var(--space-1) var(--space-3);
+  border-width: 1px;
+  border-color: rgba(243, 235, 225, 0.2);
+  border-radius: var(--radius-medium);
+  color: #e9dfd3;
   font-family: var(--font-body);
   font-size: var(--font-size-small);
   font-weight: 500;
@@ -75,7 +75,7 @@ button {
 .bet-range:focus-visible,
 .log-toggle:focus-visible,
 .menu-summary:focus-visible {
-  outline: 3px solid var(--color-accent);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
@@ -94,7 +94,7 @@ button {
   margin: 0;
   font-family: var(--font-display);
   font-size: clamp(2rem, 7vw, 3.25rem);
-  font-weight: 600;
+  font-weight: 400;
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6);
 }
 
@@ -102,9 +102,10 @@ button {
   max-width: 30rem;
   margin: 0;
   color: var(--color-text);
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  line-height: 1.5;
+  font-family: var(--font-voice);
+  font-size: 1.125rem;
+  font-style: italic;
+  line-height: 1.4;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.7);
 }
 
@@ -312,40 +313,15 @@ button {
   align-items: flex-end;
   gap: 2px;
   font-family: var(--font-numeric);
-  color: var(--color-felt-text);
+  color: #e9dfd3;
   text-align: right;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
   white-space: nowrap;
 }
 
-.pot .chip-stack {
-  width: calc(var(--chip-size-small) * 1.8);
-  height: calc(var(--chip-size-small) + var(--space-1));
-}
-
-.pot .chip {
-  width: var(--chip-size-small);
-  height: var(--chip-size-small);
-}
-
-.pot .chip:nth-child(1) {
-  top: var(--space-1);
-  left: 0;
-}
-
-.pot .chip:nth-child(2) {
-  top: var(--space-1);
-  left: calc(var(--chip-size-small) * 0.8);
-}
-
-.pot .chip:nth-child(3) {
-  top: 0;
-  left: calc(var(--chip-size-small) * 0.4);
-}
-
 .pot-amount {
-  font-size: var(--font-size-base);
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .pot-total {
@@ -391,26 +367,18 @@ button {
   background: var(--color-amount-bg);
   color: var(--color-felt-text);
   font-family: var(--font-numeric);
-  font-size: var(--font-size-small);
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-.chip-stack-small {
-  width: var(--chip-size-small);
-  height: calc(var(--chip-size-small) + var(--space-1));
-}
-
-.chip-stack-small .chip {
-  width: var(--chip-size-small);
-  height: var(--chip-size-small);
-}
-
-.chip-stack-small .chip:nth-child(1) {
-  top: var(--space-1);
-}
-
-.chip-stack-small .chip:nth-child(2) {
-  top: 0;
+.chip-dot {
+  display: inline-block;
+  flex: none;
+  width: var(--chip-dot-size);
+  height: var(--chip-dot-size);
+  border: 2px solid var(--color-paper);
+  border-radius: 50%;
+  background: var(--color-accent);
 }
 
 .result {
@@ -428,9 +396,9 @@ button {
   padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
   border-radius: var(--radius-large);
   transform: translate(-50%, -100%);
-  font-family: var(--font-display);
-  font-size: var(--font-size-large);
-  font-weight: 600;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
   text-align: center;
 }
 
@@ -438,13 +406,12 @@ button {
   position: absolute;
   left: 50%;
   top: 0;
-  width: 34px;
-  height: 34px;
+  display: flex;
   opacity: 0;
 }
 
-.result-chips .chip:nth-child(2) {
-  left: 12px;
+.result-chips .chip-dot {
+  --chip-dot-size: 16px;
 }
 
 .seat {
@@ -521,12 +488,12 @@ button {
 .bubble {
   position: relative;
   display: block;
-  padding: var(--space-1) var(--space-3);
+  padding: 6px 12px;
   border-radius: var(--radius-pill);
   box-shadow: var(--shadow-bubble);
   font-family: var(--font-body);
   font-size: var(--font-size-small);
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -542,8 +509,8 @@ button {
 }
 
 .bubble-passive {
-  background: var(--color-text);
-  color: var(--color-accent-text);
+  background: var(--color-paper);
+  color: var(--color-paper-text);
 }
 
 .bubble-aggressive {
@@ -577,14 +544,14 @@ button {
 }
 
 .seat-name {
-  font-family: var(--font-display);
-  font-size: var(--font-size-large);
-  font-weight: 600;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .seat-stack {
   font-family: var(--font-numeric);
-  font-size: var(--font-size-small);
+  font-size: 14px;
   color: var(--color-muted);
 }
 
@@ -595,11 +562,11 @@ button {
   width: var(--dealer-size);
   height: var(--dealer-size);
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #fff, var(--color-chip-ivory));
+  background: var(--color-paper);
   box-shadow: var(--shadow-dealer);
-  color: var(--color-accent-text);
-  font-size: var(--font-size-small);
-  font-weight: 700;
+  color: var(--color-paper-text);
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .seat-cards {
@@ -610,7 +577,7 @@ button {
 .card {
   width: var(--card-width);
   height: auto;
-  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.55));
+  filter: drop-shadow(0 6px 9px rgba(0, 0, 0, 0.35));
 }
 
 .card-body {
@@ -623,11 +590,11 @@ button {
 }
 
 .card-paper-shade {
-  stop-color: #ece5d4;
+  stop-color: var(--color-card-face);
 }
 
 .card-back .card-body {
-  fill: var(--color-card-face);
+  fill: var(--color-card-back);
 }
 
 .card-weave-ground {
@@ -636,86 +603,42 @@ button {
 
 .card-weave-line {
   stroke: var(--color-card-back-line);
-  stroke-width: 3;
+  stroke-width: 7;
 }
 
 .card-weave {
-  stroke: var(--color-card-face);
-  stroke-width: 3;
+  stroke: none;
 }
 
 .card-rank {
-  font-family: var(--font-display);
-  font-size: 68px;
+  font-family: var(--font-body);
+  font-size: 118px;
   font-weight: 600;
 }
 
-.card-index-suit {
-  font-size: 44px;
-}
-
 .card-suit {
-  font-size: 140px;
+  font-size: 104px;
 }
 
-.card-black {
-  fill: var(--color-card-black);
+.card-spades {
+  fill: var(--color-suit-spades);
 }
 
-.card-red {
-  fill: var(--color-card-red);
+.card-hearts {
+  fill: var(--color-suit-hearts);
 }
 
-.card-highlight {
-  filter: drop-shadow(0 0 10px var(--color-highlight)) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.55));
+.card-diamonds {
+  fill: var(--color-suit-diamonds);
 }
 
-.chip-stack {
-  position: relative;
-  display: inline-block;
-  width: 34px;
-  height: 42px;
+.card-clubs {
+  fill: var(--color-suit-clubs);
 }
 
-.chip {
-  --chip-color: var(--color-chip-terracotta);
-
-  position: absolute;
-  left: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle, var(--chip-color) 0 34%, transparent 35%),
-    radial-gradient(circle, var(--color-chip-ivory) 0 38%, transparent 39%),
-    repeating-conic-gradient(var(--chip-color) 0 22deg, var(--color-chip-ivory) 22deg 30deg);
-  box-shadow:
-    0 2px 0 rgba(0, 0, 0, 0.5),
-    inset 0 0 0 2px rgba(0, 0, 0, 0.25);
-}
-
-.chip:nth-child(1) {
-  top: 8px;
-}
-
-.chip:nth-child(2) {
-  top: 4px;
-}
-
-.chip:nth-child(3) {
-  top: 0;
-}
-
-.chip-terracotta {
-  --chip-color: var(--color-chip-terracotta);
-}
-
-.chip-teal {
-  --chip-color: var(--color-chip-teal);
-}
-
-.chip-honey {
-  --chip-color: var(--color-chip-honey);
+.card-highlight .card-body {
+  stroke: var(--color-highlight);
+  stroke-width: 14;
 }
 
 .action-bar {
@@ -731,14 +654,14 @@ button {
 
 .action-buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.3fr;
+  grid-template-columns: 1fr 1.2fr 1.4fr;
   gap: var(--space-2);
 }
 
 .action-buttons .button {
-  min-height: 52px;
+  min-height: var(--action-height);
   padding: var(--space-2) var(--space-2);
-  font-size: clamp(15px, 4.2vw, 20px);
+  font-size: clamp(14px, 4.1vw, 16px);
 }
 
 .bet-slider .button-small {
@@ -805,7 +728,7 @@ button {
   margin: 0;
   font-family: var(--font-display);
   font-size: var(--font-size-title);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .dialog-actions {
@@ -832,13 +755,14 @@ button {
   }
 
   .action-buttons .button {
-    font-size: var(--font-size-large);
+    min-height: 56px;
+    border-radius: 14px;
+    font-size: var(--font-size-base);
   }
 
   .action-buttons .button-raise {
     grid-column: 1 / -1;
     order: -1;
-    min-height: 56px;
   }
 
   .table-side {
@@ -1043,7 +967,11 @@ button {
 
 .scene-simple .button-primary,
 .scene-simple .button-raise {
-  background-color: transparent;
+  background-color: var(--color-accent);
+}
+
+.scene-simple .button-passive {
+  background-color: var(--color-paper);
 }
 
 .scene-simple .seat-top .card,
@@ -1209,7 +1137,7 @@ button {
   margin: 0;
   font-family: var(--font-display);
   font-size: var(--font-size-large);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .hand-log-close {
@@ -1257,17 +1185,25 @@ button {
 }
 
 .log-card {
-  padding: 0 var(--space-1);
-  border-radius: var(--radius-small);
-  background: var(--color-card-face);
-  color: var(--color-card-black);
   font-family: var(--font-numeric);
   font-size: var(--font-size-small);
-  font-weight: 600;
+  font-weight: 500;
 }
 
-.log-card-red {
-  color: var(--color-card-red);
+.log-card-spades {
+  color: var(--color-suit-spades-on-dark);
+}
+
+.log-card-hearts {
+  color: var(--color-suit-hearts-on-dark);
+}
+
+.log-card-diamonds {
+  color: var(--color-suit-diamonds-on-dark);
+}
+
+.log-card-clubs {
+  color: var(--color-suit-clubs-on-dark);
 }
 
 .hand-log-tokens {
@@ -1339,6 +1275,15 @@ button {
 }
 
 .conversation-bubble-mallorca {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 16px 16px 16px 4px;
+  background-color: var(--color-paper);
+  color: #2a2420;
+  font-family: var(--font-voice);
+  font-size: 17px;
+  font-style: italic;
+  line-height: 1.3;
   bottom: calc(100% + var(--space-3) + var(--action-bubble-height));
   left: 50%;
   max-width: min(16rem, calc(100vw - 2 * var(--space-4)));
@@ -1454,14 +1399,28 @@ button {
   flex-direction: column;
   align-self: flex-start;
   max-width: 88%;
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-medium);
-  background: rgba(255, 226, 180, 0.08);
+  padding: var(--space-2) var(--space-3);
+  border-radius: 14px 14px 14px 4px;
+  background: var(--color-paper);
+  color: #2a2420;
+}
+
+.chat-line-mallorca .chat-text {
+  font-family: var(--font-voice);
+  font-size: var(--font-size-base);
+  font-style: italic;
+  line-height: 1.3;
+}
+
+.chat-line-mallorca .chat-speaker {
+  color: #6e6359;
 }
 
 .chat-line-player {
   align-self: flex-end;
-  background: rgba(227, 176, 110, 0.18);
+  border-radius: 14px 14px 4px 14px;
+  background: var(--color-surface-alt);
+  color: var(--color-text);
 }
 
 .chat-speaker,
@@ -1646,7 +1605,7 @@ button {
   margin: 0;
   font-family: var(--font-display);
   font-size: var(--font-size-base);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .coach-shares,
@@ -1820,7 +1779,7 @@ button {
   margin: 0;
   font-family: var(--font-display);
   font-size: var(--font-size-large);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .coach-composition {

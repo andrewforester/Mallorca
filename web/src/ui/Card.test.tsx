@@ -16,19 +16,20 @@ describe('Card', () => {
     expect(container.textContent).toContain('10');
   });
 
-  it('colours hearts and diamonds red and clubs and spades black', () => {
+  it('gives each of the four suits its own colour class', () => {
     for (const card of [0, 1, 2, 3]) {
       render(<Card card={card} />);
     }
-    expect(screen.getByRole('img', { name: '2d' }).classList.contains('card-red')).toBe(true);
-    expect(screen.getByRole('img', { name: '2h' }).classList.contains('card-red')).toBe(true);
-    expect(screen.getByRole('img', { name: '2c' }).classList.contains('card-black')).toBe(true);
-    expect(screen.getByRole('img', { name: '2s' }).classList.contains('card-black')).toBe(true);
+    expect(screen.getByRole('img', { name: '2c' }).classList.contains('card-clubs')).toBe(true);
+    expect(screen.getByRole('img', { name: '2d' }).classList.contains('card-diamonds')).toBe(true);
+    expect(screen.getByRole('img', { name: '2h' }).classList.contains('card-hearts')).toBe(true);
+    expect(screen.getByRole('img', { name: '2s' }).classList.contains('card-spades')).toBe(true);
   });
 
-  it('draws the corner index twice on a face card', () => {
+  it('writes the rank once above the suit on a face card', () => {
     render(<Card card={51} />);
-    expect(screen.getAllByText('A').length).toBe(2);
+    expect(screen.getAllByText('A').length).toBe(1);
+    expect(screen.getAllByText('♠').length).toBe(1);
   });
 
   it('renders the back without rank text', () => {
