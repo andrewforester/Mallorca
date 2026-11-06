@@ -73,3 +73,10 @@ exceeds 15 MB.
   dropped. Hair cards and the helmet carry no blendshapes: `follow` names the head vertex each card vertex moves with.
 - `behavior.dna` for RigLogic, `masks.r8` (the wrinkle masks, 128 px each, channels in `export/mask_channels.json`),
   `mapping.json` (ARKit and viseme weights to MetaHuman controls, `export/controls.py`), the textures and `glasses/`.
+
+## RigLogic in the browser
+
+`riglogic/build.sh` builds `web/src/ui/avatar/rig/riglogic.wasm`: OpenRigLogic (MIT, https://github.com/EpicGames/OpenRigLogic,
+the UE 5.8.5 snapshot `d3d329b`) and `riglogic/rl.cpp`, a C wrapper over the DNA reader and RigLogic, linked by
+emscripten as a standalone module with no JavaScript glue. It needs `emcc`, CMake and Ninja; set `RL_WORK` to reuse a
+checkout and build folder. `web/src/ui/avatar/rig/riglogic.ts` instantiates it.
