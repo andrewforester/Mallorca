@@ -82,3 +82,9 @@ exceeds 15 MB.
 the UE 5.8.5 snapshot `d3d329b`) and `riglogic/rl.cpp`, a C wrapper over the DNA reader and RigLogic, linked by
 emscripten as a standalone module with no JavaScript glue. It needs `emcc`, CMake and Ninja; set `RL_WORK` to reuse a
 checkout and build folder. `web/src/ui/avatar/rig/riglogic.ts` instantiates it.
+
+## Frame rate
+
+`node tools/avatar/metahuman/fps.ts <url of a running build>` opens the game in Chromium with the GPU, waits for her
+live face and counts frames for 15 seconds on a desktop viewport and on a phone viewport with the CPU slowed four
+times (`FPS_SECONDS` changes the length). On an Apple M-series Mac both ran at 60 fps on 2026-11-06.
