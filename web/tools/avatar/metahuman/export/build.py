@@ -1,10 +1,13 @@
 import argparse
+import subprocess
 from pathlib import Path
 
 from glasses import glasses
 from groom import groom
 from head import head
 from pack import check, write
+
+WEB = Path(__file__).resolve().parents[4]
 
 
 def main():
@@ -22,6 +25,8 @@ def main():
     meshes += groom(a.creator, a.archetype, face, out)
     glasses(a.glasses, out / "glasses")
     write(header, meshes, out)
+    files = [str(f) for f in [*out.glob("*.json"), *out.glob("glasses/*.gltf")]]
+    subprocess.run(["npx", "prettier", "--write", "--log-level", "warn", *files], cwd=WEB, check=True)
     if a.check:
         check(meshes, out)
 

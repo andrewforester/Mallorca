@@ -1,150 +1,39 @@
 {
- "head_wm13_lips_DL": [
-  "head_wm13_msk_01.tga",
-  0
- ],
- "head_wm13_lips_DR": [
-  "head_wm13_msk_01.tga",
-  1
- ],
- "head_wm13_lips_UL": [
-  "head_wm13_msk_01.tga",
-  2
- ],
- "head_wm13_lips_UR": [
-  "head_wm13_msk_01.tga",
-  3
- ],
- "head_wm1_blink_L": [
-  "head_wm1_msk_01.tga",
-  0
- ],
- "head_wm1_blink_R": [
-  "head_wm1_msk_01.tga",
-  1
- ],
- "head_wm1_browsRaiseInner_L": [
-  "head_wm1_msk_01.tga",
-  2
- ],
- "head_wm1_browsRaiseInner_R": [
-  "head_wm1_msk_01.tga",
-  3
- ],
- "head_wm1_browsRaiseOuter_L": [
-  "head_wm1_msk_02.tga",
-  0
- ],
- "head_wm1_browsRaiseOuter_R": [
-  "head_wm1_msk_02.tga",
-  1
- ],
- "head_wm1_chinRaise_L": [
-  "head_wm1_msk_02.tga",
-  2
- ],
- "head_wm1_chinRaise_R": [
-  "head_wm1_msk_02.tga",
-  3
- ],
- "head_wm1_jawOpen": [
-  "head_wm1_msk_03.tga",
-  0
- ],
- "head_wm1_purse_DL": [
-  "head_wm1_msk_03.tga",
-  1
- ],
- "head_wm1_purse_DR": [
-  "head_wm1_msk_03.tga",
-  2
- ],
- "head_wm1_purse_UL": [
-  "head_wm1_msk_03.tga",
-  3
- ],
- "head_wm1_purse_UR": [
-  "head_wm1_msk_04.tga",
-  0
- ],
- "head_wm1_squintInner_L": [
-  "head_wm1_msk_04.tga",
-  1
- ],
- "head_wm1_squintInner_R": [
-  "head_wm1_msk_04.tga",
-  2
- ],
- "head_wm2_browsDown_L": [
-  "head_wm2_msk_01.tga",
-  0
- ],
- "head_wm2_browsDown_R": [
-  "head_wm2_msk_01.tga",
-  1
- ],
- "head_wm2_browsLateral_L": [
-  "head_wm2_msk_01.tga",
-  2
- ],
- "head_wm2_browsLateral_R": [
-  "head_wm2_msk_01.tga",
-  3
- ],
- "head_wm2_mouthStretch_L": [
-  "head_wm2_msk_02.tga",
-  0
- ],
- "head_wm2_mouthStretch_R": [
-  "head_wm2_msk_02.tga",
-  1
- ],
- "head_wm2_neckStretch_L": [
-  "head_wm2_msk_02.tga",
-  2
- ],
- "head_wm2_neckStretch_R": [
-  "head_wm2_msk_02.tga",
-  3
- ],
- "head_wm2_noseWrinkler_L": [
-  "head_wm2_msk_03.tga",
-  0
- ],
- "head_wm2_noseWrinkler_R": [
-  "head_wm2_msk_03.tga",
-  1
- ],
- "head_wm3_cheekRaiseInner_L": [
-  "head_wm3_msk_01.tga",
-  0
- ],
- "head_wm3_cheekRaiseInner_R": [
-  "head_wm3_msk_01.tga",
-  1
- ],
- "head_wm3_cheekRaiseOuter_L": [
-  "head_wm3_msk_01.tga",
-  2
- ],
- "head_wm3_cheekRaiseOuter_R": [
-  "head_wm3_msk_01.tga",
-  3
- ],
- "head_wm3_cheekRaiseUpper_L": [
-  "head_wm3_msk_02.tga",
-  0
- ],
- "head_wm3_cheekRaiseUpper_R": [
-  "head_wm3_msk_02.tga",
-  1
- ],
- "head_wm3_smile_L": [
-  "head_wm3_msk_02.tga",
-  2
- ],
- "head_wm3_smile_R": [
-  "head_wm3_msk_02.tga",
-  3
- ]
+  "head_wm13_lips_DL": ["head_wm13_msk_01.tga", 0],
+  "head_wm13_lips_DR": ["head_wm13_msk_01.tga", 1],
+  "head_wm13_lips_UL": ["head_wm13_msk_01.tga", 2],
+  "head_wm13_lips_UR": ["head_wm13_msk_01.tga", 3],
+  "head_wm1_blink_L": ["head_wm1_msk_01.tga", 0],
+  "head_wm1_blink_R": ["head_wm1_msk_01.tga", 1],
+  "head_wm1_browsRaiseInner_L": ["head_wm1_msk_01.tga", 2],
+  "head_wm1_browsRaiseInner_R": ["head_wm1_msk_01.tga", 3],
+  "head_wm1_browsRaiseOuter_L": ["head_wm1_msk_02.tga", 0],
+  "head_wm1_browsRaiseOuter_R": ["head_wm1_msk_02.tga", 1],
+  "head_wm1_chinRaise_L": ["head_wm1_msk_02.tga", 2],
+  "head_wm1_chinRaise_R": ["head_wm1_msk_02.tga", 3],
+  "head_wm1_jawOpen": ["head_wm1_msk_03.tga", 0],
+  "head_wm1_purse_DL": ["head_wm1_msk_03.tga", 1],
+  "head_wm1_purse_DR": ["head_wm1_msk_03.tga", 2],
+  "head_wm1_purse_UL": ["head_wm1_msk_03.tga", 3],
+  "head_wm1_purse_UR": ["head_wm1_msk_04.tga", 0],
+  "head_wm1_squintInner_L": ["head_wm1_msk_04.tga", 1],
+  "head_wm1_squintInner_R": ["head_wm1_msk_04.tga", 2],
+  "head_wm2_browsDown_L": ["head_wm2_msk_01.tga", 0],
+  "head_wm2_browsDown_R": ["head_wm2_msk_01.tga", 1],
+  "head_wm2_browsLateral_L": ["head_wm2_msk_01.tga", 2],
+  "head_wm2_browsLateral_R": ["head_wm2_msk_01.tga", 3],
+  "head_wm2_mouthStretch_L": ["head_wm2_msk_02.tga", 0],
+  "head_wm2_mouthStretch_R": ["head_wm2_msk_02.tga", 1],
+  "head_wm2_neckStretch_L": ["head_wm2_msk_02.tga", 2],
+  "head_wm2_neckStretch_R": ["head_wm2_msk_02.tga", 3],
+  "head_wm2_noseWrinkler_L": ["head_wm2_msk_03.tga", 0],
+  "head_wm2_noseWrinkler_R": ["head_wm2_msk_03.tga", 1],
+  "head_wm3_cheekRaiseInner_L": ["head_wm3_msk_01.tga", 0],
+  "head_wm3_cheekRaiseInner_R": ["head_wm3_msk_01.tga", 1],
+  "head_wm3_cheekRaiseOuter_L": ["head_wm3_msk_01.tga", 2],
+  "head_wm3_cheekRaiseOuter_R": ["head_wm3_msk_01.tga", 3],
+  "head_wm3_cheekRaiseUpper_L": ["head_wm3_msk_02.tga", 0],
+  "head_wm3_cheekRaiseUpper_R": ["head_wm3_msk_02.tga", 1],
+  "head_wm3_smile_L": ["head_wm3_msk_02.tga", 2],
+  "head_wm3_smile_R": ["head_wm3_msk_02.tga", 3]
 }
