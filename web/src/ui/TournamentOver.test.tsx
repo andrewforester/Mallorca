@@ -14,6 +14,9 @@ describe('TournamentOver', () => {
     expect(onPlayAgain).toHaveBeenCalledTimes(1);
     expect(onLeave).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('leave-tonight').textContent).toBe("That's enough for tonight");
+    expect(screen.getByTestId('play-again').className).toBe(
+      screen.getByTestId('leave-tonight').className,
+    );
   });
 
   it('names the outcome under the title', () => {

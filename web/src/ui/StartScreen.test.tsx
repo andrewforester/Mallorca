@@ -43,10 +43,30 @@ describe('StartScreen', () => {
     expect(screen.getByTestId('opponent-cfr')).toBeTruthy();
   });
 
-  it('shows the farewell line in place of the tagline', () => {
+  it('says good night with a title and a line in place of the tagline', () => {
     const { container } = render(<StartScreen seed={1} onStart={vi.fn()} farewell />);
-    expect(screen.getByTestId('farewell').textContent).toBe('Sleep well. The table will be here.');
+    const farewell = screen.getByTestId('farewell');
+    expect(farewell.querySelector('.tonight-farewell-title')?.textContent).toBe('Sleep well.');
+    expect(farewell.textContent).toContain('The table will be here.');
     expect(container.textContent).not.toContain(en.start.tagline);
+  });
+
+  it('is Tonight: her face in a frame with her greeting, the opponent and the coach', () => {
+    render(<StartScreen seed={1} onStart={vi.fn()} />);
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Tonight');
+    const frame = screen.getByTestId('tonight-face');
+    expect(frame.querySelector('img')?.getAttribute('alt')).toBe('Mallorca');
+    expect(frame.textContent).toContain("Hi. I'm Mallorca.");
+    expect((screen.getByTestId('start-coach') as HTMLInputElement).getAttribute('role')).toBe(
+      'switch',
+    );
+  });
+
+  it('frames her name instead of her face when the face is off', () => {
+    render(<StartScreen seed={1} onStart={vi.fn()} face={false} />);
+    const frame = screen.getByTestId('tonight-face');
+    expect(frame.querySelector('img')).toBeNull();
+    expect(frame.textContent).toContain('Mallorca');
   });
 
   it('shows the tagline by default', () => {

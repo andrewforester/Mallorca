@@ -353,7 +353,8 @@ describe('App', () => {
     fireEvent.click(screen.getByTestId('leave'));
     expect(menu.open).toBe(false);
     await waitFor(() => expect(screen.queryByTestId('session-over')).not.toBeNull());
-    expect(screen.getByTestId('session-over').textContent).toContain('+12.5 bb over 1 hand');
+    expect(screen.getByTestId('session-summary').textContent).toBe('+12.5 bb');
+    expect(screen.getByTestId('session-hands').textContent).toBe('1 hand');
     fireEvent.click(screen.getByTestId('play-again'));
     expect(onNewGame).toHaveBeenCalledOnce();
     session.getState().dispose();

@@ -752,9 +752,11 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   enabled when `main.tsx` allows it, the `mallorca.autoNext` preference is on, the hand log drawer and the menu are
   closed, and Wait (`next-hand-wait`) was not pressed for this hand. While it runs the action panel says "Next hand
   in a moment" and the next hand button fills a bar, with no number.
-- The start screen offers the opponents of `opponentsFor` (buttons `opponent-<key>` with `aria-pressed`, `math`
-  by default) and shows a loading line while a cfr opponent starts. `leave-tonight` in the tournament-over dialog
-  mounts a new game whose start screen shows a farewell line.
+- The start screen is Tonight: her face in a frame (`tonight-face`, her name when the face is off) with her greeting,
+  the opponents of `opponentsFor` as a segmented control (buttons `opponent-<key>` with `aria-pressed`, `math` by
+  default), the coach switch, the seed or a loading line while a cfr opponent starts, and the two start buttons.
+  `leave-tonight` in the session-over and tournament-over panels mounts a new game whose start screen says good
+  night (`farewell`: "Sleep well." and "The table will be here.").
 - Hooks: `useSweep(bets, collected)` keeps half of the newly collected chips on each seat for `SWEEP_MS`
   (300 ms) when a street closes, so the bets slide into the pot; new bets or a new hand show at once.
   `useHeldActions(actions, closing, board)` keeps the closing action tags, and hides the thinking bubble, for
@@ -769,8 +771,10 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   holds Table talk, kept in `localStorage` (`mallorca.talk`) and passed to `createSession` as `conversationOn`; a
   stored `mallorca.tells` of older builds is ignored. Keyboard shortcuts ignore keys typed in a text field.
 - The start screen offers a cash game (100 bb) and a tournament. In cash the header shows the blinds and the
-  running result in bb, and the menu a leave button, enabled only between hands; the session-over dialog shows the result in
-  bb, bb/100 and the hands, with play again and the export of the session. `signed` formats a bb value as sign
+  running result in bb, and the menu a leave button, enabled only between hands; the session-over panel shows the result in
+  bb large (`session-summary`), the hands (`session-hands`) and bb/100 (`session-rate`), the export of the session,
+  and Play again and That's enough for tonight with equal weight. The end panels rise from the bottom on phones
+  and sit low in the centre on wide screens, so her face stays in view. `signed` formats a bb value as sign
   and one-decimal absolute value.
 - Layout: portrait for phones (her face at the top, the human's cards and controls at the bottom), three columns for
   wide screens, switched by a `min-aspect-ratio: 1/1` media query. The layout has no side log.
@@ -869,7 +873,7 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   `sound`, `hand-log`, `hand-log-close`, `coach`, `coach-mode`, `start-coach`, `coach-toggle`,
   `coach-close`, `coach-status`, `coach-hint`, `coach-tab-hint`, `coach-tab-range`, `coach-tab-numbers`,
   `coach-strategy`, `coach-range`, `coach-numbers`, `coach-composition`, `coach-outs`, `coach-blockers`, `coach-tab-session`, `coach-review`, `coach-leaks`, `live-region`, `tournament-over`, `leave-tonight`,
-  `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and `export-text` (the session
+  `session-over`, `session-summary`, `session-hands`, `session-rate`, `tonight-face`, `play-again`, `export-json` and `export-text` (the session
   dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu). Table talk adds
   `bubble-mallorca`, `bubble-player`, `conversation-region`, `chat-panel`, `chat-open`, `chat-sheet`, `chat-close`,
   `chat-line`, `chat-input`, `chat-send`, `quick-<id>` and `table-conversation`. The face adds `face-seat` (with

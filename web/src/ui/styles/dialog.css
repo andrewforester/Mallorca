@@ -3,38 +3,84 @@
   inset: 0;
   z-index: 10;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: var(--space-4);
-  background: var(--color-overlay);
+  background: rgba(15, 11, 10, 0.45);
 }
 
 .dialog {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
-  max-width: 24rem;
-  padding: var(--space-5);
-  border: 1px solid var(--color-glass-border);
-  border-radius: var(--radius-large);
-  background: var(--color-glass-strong);
-  -webkit-backdrop-filter: blur(var(--blur-glass));
-  backdrop-filter: blur(var(--blur-glass));
-  box-shadow: var(--shadow-panel);
-  text-align: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 26px 24px calc(30px + env(safe-area-inset-bottom));
+  border-radius: var(--radius-large) var(--radius-large) 0 0;
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .dialog-title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: var(--font-size-title);
+  font-size: 34px;
   font-weight: 400;
+  line-height: 1.1;
 }
 
-.dialog-actions {
+.dialog-line {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 15px;
+}
+
+.end-number {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-numeric);
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.end-detail {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  color: var(--color-muted);
+  font-family: var(--font-numeric);
+  font-size: 14px;
+}
+
+.end-exports {
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+.end-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.end-actions .button {
+  min-height: 56px;
+  white-space: normal;
+}
+
+@media (min-aspect-ratio: 1/1) {
+  .overlay {
+    padding-bottom: 28px;
+  }
+
+  .dialog {
+    max-width: 520px;
+    padding: 28px;
+    border-radius: var(--radius-large);
+  }
+
+  .dialog-title {
+    font-size: 40px;
+  }
 }
