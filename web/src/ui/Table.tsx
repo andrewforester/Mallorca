@@ -22,6 +22,7 @@ export interface TableProps {
   onWait?: () => void;
   coach?: ComponentChildren;
   layer?: ComponentChildren;
+  layerKind?: 'log' | 'talk' | 'coach';
   onSay?: (text: string) => void;
   onQuick?: (id: QuickPhrase, text: string) => void;
   face?: (thinking: boolean) => ComponentChildren;
@@ -263,6 +264,7 @@ function layoutClass(props: TableProps, text: string | null): string {
     text === null ? '' : 'table-result',
     text !== null && shown ? 'table-showdown' : '',
     props.layer === undefined ? '' : 'table-layer-open',
+    props.layer === undefined ? '' : `table-layer-${props.layerKind ?? 'log'}`,
   ]
     .filter(Boolean)
     .join(' ');

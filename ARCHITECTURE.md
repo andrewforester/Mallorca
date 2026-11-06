@@ -720,7 +720,7 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   and hold no game rules.
 - Components: `App`, `Scene`, `StatusBar`, `HistoryMenu`, `Settings`, `StartScreen`, `Table`, `Seat`, `BetChips`,
   `DealerButton`, `ActionBubble`, `Card` (SVG), `BoardRow`, `Board`, `Pot`, `ActionBar`, `BetSlider`,
-  `HandLogDrawer`, `TournamentOver`, `SessionOver`, `Chat`, `ChatSheet`, `Bubble`, `FaceSeat`. `ui/suits.ts` `suitFace(card)`
+  `HandLogDrawer`, `TournamentOver`, `SessionOver`, `Chat`, `TalkButton` and `TalkLayer` (`ChatSheet.tsx`), `Bubble`, `FaceSeat`. `ui/suits.ts` `suitFace(card)`
   gives the glyph and the suit name (`clubs`, `diamonds`, `hearts`, `spades`) for a card value or its text, for the
   four suit colours of `Card` and the hand log.
 - `Scene` wraps the start screen and the table in the dark room colour, with no photo; `simple` (class
@@ -761,8 +761,11 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   `HOLD_MS` (900 ms) after the board grows; a new action or a new hand shows at once.
 - Table talk shows only while `conversation.available` and `conversation.on`: `Bubble` types a line at about 40 characters per
   second and removes it after 7 s (full text at once under `prefers-reduced-motion`), her bubble at her plaque and the
-  player's at theirs. On wide screens the chat sits in the left column of the table; on phones and short screens a
-  Talk button in the header opens `ChatSheet`, a sheet portalled to `body`. The hand log stays in its drawer. The menu
+  player's at theirs. On wide screens the chat sits in the left column of the table; on phones and short screens the
+  Talk button in the header (`TalkButton`) opens `TalkLayer`, a layer of the table (`layerKind` `talk`, class
+  `table-layer-talk`, from `ui/layers.tsx`): her face shrinks, the board and the player's cards stay as a strip, the
+  thread with the quick phrases and the field fills the rest, and her and the player's bubbles are not repeated;
+  Hide, Escape and Talk close it. One layer shows at a time: the hand log, then Talk, then the coach sheet. The hand log stays in its drawer. The menu
   holds Table talk, kept in `localStorage` (`mallorca.talk`) and passed to `createSession` as `conversationOn`; a
   stored `mallorca.tells` of older builds is ignored. Keyboard shortcuts ignore keys typed in a text field.
 - The start screen offers a cash game (100 bb) and a tournament. In cash the header shows the blinds and the

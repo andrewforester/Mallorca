@@ -1,5 +1,5 @@
-import type { ComponentChildren, ComponentType } from 'preact';
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import type { ComponentType } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
 import { toViewModel } from '../game/index.ts';
 import type {
   HandStore,
@@ -8,11 +8,11 @@ import type {
   QuickPhrase,
   Session,
   SeatIndex,
-  SessionState,
   ViewModel,
 } from '../game/index.ts';
-import { ChatSheet } from './ChatSheet.tsx';
-import { HandLogDrawer } from './HandLogDrawer.tsx';
+import { TalkButton } from './ChatSheet.tsx';
+import { tableLayer, useLogDrawer, useTalk } from './layers.tsx';
+import type { LogDrawer, Talk } from './layers.tsx';
 import { t } from './i18n.ts';
 import { HistoryMenu } from './HistoryMenu.tsx';
 import { Scene } from './Scene.tsx';
@@ -84,46 +84,6 @@ function faceSlot(session: Session, vm: ViewModel, preferences: Preferences) {
   );
 }
 
-function useLogDrawer(phase: Phase) {
-  const [open, setOpen] = useState(false);
-  const ended = phase === 'idle' || phase === 'sessionOver' || phase === 'tournamentOver';
-  useEffect(() => {
-    if (ended) {
-      setOpen(false);
-    }
-  }, [ended]);
-  const toggle = useRef<HTMLButtonElement>(null);
-  const close = useCallback(() => {
-    setOpen(false);
-    toggle.current?.focus();
-  }, []);
-  const flip = useCallback(() => (open ? close() : setOpen(true)), [open, close]);
-  const dismiss = useCallback(() => setOpen(false), []);
-  return { open: open && !ended, toggle, close, flip, dismiss };
-}
-
-interface LayerProps {
-  state: SessionState;
-  vm: ViewModel;
-  humanSeat: SeatIndex;
-  drawer: ReturnType<typeof useLogDrawer>;
-  coach: CoachView;
-}
-
-function layerOf({ state, vm, humanSeat, drawer, coach }: LayerProps): ComponentChildren {
-  if (!drawer.open) {
-    return coach.sheet ?? undefined;
-  }
-  return (
-    <HandLogDrawer
-      entries={state.log}
-      names={[vm.seats[0].name, vm.seats[1].name]}
-      humanSeat={humanSeat}
-      onClose={drawer.close}
-    />
-  );
-}
-
 function useAdvance(
   props: AppProps,
   handOver: ViewModel | null,
@@ -170,6 +130,7 @@ export function App(props: AppProps) {
   const coach = useCoach(session, state, preferences);
   useFaceSwitch(session, preferences.face);
   const vm = state.phase === 'idle' ? null : toViewModel(state, humanSeat);
+  const talk = useTalk(vm, drawer.dismiss);
   const { pause, autoNextMs } = useAdvance(props, state.phase === 'handOver' ? vm : null, {
     on: preferences.autoNext,
     logOpen: drawer.open,
@@ -178,6 +139,7 @@ export function App(props: AppProps) {
     return <Start app={props} seed={state.seed} preferences={preferences} />;
   }
   const act = actWith(session, preferences);
+  const layer = tableLayer({ session, state, vm, humanSeat, open: { drawer, talk, coach } });
   return (
     <Scene simple={preferences.simple}>
       <div class="app">
@@ -188,6 +150,7 @@ export function App(props: AppProps) {
           drawer={drawer}
           preferences={preferences}
           coach={coach}
+          talk={talk}
           onMenu={pause.setMenuOpen}
         />
         <Table
@@ -201,7 +164,8 @@ export function App(props: AppProps) {
           onSay={(text) => session.getState().say(text)}
           onQuick={(id, text) => session.getState().quick(id, text)}
           coach={coach.panel}
-          layer={layerOf({ state, vm, humanSeat, drawer, coach })}
+          layer={layer.layer}
+          layerKind={layer.kind}
           face={faceSlot(session, vm, preferences)}
         />
         <GameOver props={props} vm={vm} phase={state.phase} sessionId={state.sessionId} />
@@ -239,13 +203,14 @@ interface HeaderProps {
   app: AppProps;
   vm: ViewModel;
   seed: number;
-  drawer: ReturnType<typeof useLogDrawer>;
+  drawer: LogDrawer;
   preferences: Preferences;
   coach: CoachView;
+  talk: Talk;
   onMenu: (open: boolean) => void;
 }
 
-function Header({ app, vm, seed, drawer, preferences, coach, onMenu }: HeaderProps) {
+function Header({ app, vm, seed, drawer, preferences, coach, talk, onMenu }: HeaderProps) {
   const phase = app.session.getState().phase;
   return (
     <StatusBar
@@ -254,7 +219,11 @@ function Header({ app, vm, seed, drawer, preferences, coach, onMenu }: HeaderPro
       logToggle={drawer.toggle}
       onToggleLog={drawer.flip}
       coach={coach.toggle}
-      talk={<Talk session={app.session} vm={vm} />}
+      talk={
+        talk.available ? (
+          <TalkButton open={talk.open} onToggle={talk.toggle} button={talk.button} />
+        ) : null
+      }
     >
       <HistoryMenu
         seed={seed}
@@ -284,20 +253,6 @@ function Header({ app, vm, seed, drawer, preferences, coach, onMenu }: HeaderPro
         )}
       </HistoryMenu>
     </StatusBar>
-  );
-}
-
-function Talk({ session, vm }: { session: Session; vm: ViewModel }) {
-  const { conversation } = vm;
-  if (!conversation.available || !conversation.on) {
-    return null;
-  }
-  return (
-    <ChatSheet
-      lines={conversation.lines}
-      onSay={(text) => session.getState().say(text)}
-      onQuick={(id, text) => session.getState().quick(id, text)}
-    />
   );
 }
 
