@@ -109,8 +109,7 @@ function Felt({
           class={`result-chips result-chips-${chipsDirection(vm.result.winner, humanSeat)}`}
           aria-hidden="true"
         >
-          <span class="chip chip-terracotta" />
-          <span class="chip chip-honey" />
+          <span class="chip-dot" />
         </span>
       )}
     </div>

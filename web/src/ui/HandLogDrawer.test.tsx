@@ -52,8 +52,8 @@ describe('HandLogDrawer', () => {
     const chips = flop?.querySelectorAll('.log-card') ?? [];
     expect(chips.length).toBe(3);
     expect(chips[0]?.textContent).toBe('A♠');
-    expect(chips[2]?.classList.contains('log-card-red')).toBe(true);
-    expect(chips[0]?.classList.contains('log-card-red')).toBe(false);
+    expect(chips[0]?.classList.contains('log-card-spades')).toBe(true);
+    expect(chips[2]?.classList.contains('log-card-spades')).toBe(false);
     expect(flop?.textContent).toContain('Pot 120');
   });
 

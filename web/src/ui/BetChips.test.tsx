@@ -11,13 +11,14 @@ describe('BetChips', () => {
     expect(screen.queryByTestId('bet-1')).toBeNull();
   });
 
-  it('shows a decorative chip stack and the amount', () => {
+  it('shows one decorative chip and the amount', () => {
     render(<BetChips seat={1} amount={60} />);
     const bet = screen.getByTestId('bet-1');
     expect(within(bet).getByText('60')).not.toBeNull();
-    const stack = bet.querySelector('.chip-stack');
-    expect(stack?.getAttribute('aria-hidden')).toBe('true');
-    expect(stack?.querySelectorAll('.chip').length).toBe(2);
+    const dots = bet.querySelectorAll('.chip-dot');
+    expect(dots.length).toBe(1);
+    expect(dots[0]?.getAttribute('aria-hidden')).toBe('true');
+    expect(bet.querySelector('.chip-stack')).toBeNull();
     expect(screen.getByText('Bet 60')).not.toBeNull();
   });
 
