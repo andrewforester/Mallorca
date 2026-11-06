@@ -8,49 +8,61 @@ export interface SessionOverProps {
   store: HandStore;
   sessionId: string | null;
   onPlayAgain: () => void;
+  onLeave: () => void;
 }
 
-export function SessionOver({ session, store, sessionId, onPlayAgain }: SessionOverProps) {
+function Exports({ store, sessionId }: { store: HandStore; sessionId: string | null }) {
+  return (
+    <div class="end-exports">
+      <button
+        type="button"
+        class="button button-small"
+        data-testid="export-json"
+        onClick={() => void exportHistory(store, sessionId, 'json')}
+      >
+        {t('history.exportJson')}
+      </button>
+      <button
+        type="button"
+        class="button button-small"
+        data-testid="export-text"
+        onClick={() => void exportHistory(store, sessionId, 'text')}
+      >
+        {t('history.exportText')}
+      </button>
+    </div>
+  );
+}
+
+export function SessionOver(props: SessionOverProps) {
+  const { session, store, sessionId, onPlayAgain, onLeave } = props;
   const net = signed(session.netBb);
   const rate = session.bbPer100 === null ? null : signed(session.bbPer100);
   return (
     <div class="overlay" data-testid="session-over" role="dialog" aria-modal="true">
-      <div class="dialog">
+      <div class="dialog end-panel">
         <h2 class="dialog-title">{t('session.title')}</h2>
-        <p data-testid="session-summary">
-          {t('session.summary', { sign: net.sign, bb: net.value, count: session.hands })}
+        <p class="dialog-line">{t('session.thanks')}</p>
+        <p class="end-number" data-testid="session-summary">
+          {t('session.summary', { sign: net.sign, bb: net.value })}
         </p>
-        {rate !== null && (
-          <p data-testid="session-rate">
-            {t('session.rate', { rate: `${rate.sign}${rate.value}` })}
-          </p>
-        )}
-        <div class="dialog-actions">
-          <button
-            type="button"
-            class="button button-small"
-            data-testid="export-json"
-            onClick={() => void exportHistory(store, sessionId, 'json')}
-          >
-            {t('history.exportJson')}
+        <p class="end-detail">
+          <span data-testid="session-hands">{t('session.hands', { count: session.hands })}</span>
+          {rate !== null && (
+            <span data-testid="session-rate">
+              {t('session.rate', { rate: `${rate.sign}${rate.value}` })}
+            </span>
+          )}
+        </p>
+        <Exports store={store} sessionId={sessionId} />
+        <div class="end-actions">
+          <button type="button" class="button" data-testid="play-again" onClick={onPlayAgain}>
+            {t('session.again')}
           </button>
-          <button
-            type="button"
-            class="button button-small"
-            data-testid="export-text"
-            onClick={() => void exportHistory(store, sessionId, 'text')}
-          >
-            {t('history.exportText')}
+          <button type="button" class="button" data-testid="leave-tonight" onClick={onLeave}>
+            {t('session.leave')}
           </button>
         </div>
-        <button
-          type="button"
-          class="button button-primary"
-          data-testid="play-again"
-          onClick={onPlayAgain}
-        >
-          {t('session.again')}
-        </button>
       </div>
     </div>
   );

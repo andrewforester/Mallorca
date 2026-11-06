@@ -140,6 +140,7 @@ describe('copy', () => {
           store={memoryStore()}
           sessionId="x"
           onPlayAgain={vi.fn()}
+          onLeave={vi.fn()}
         />,
       ).container,
     );

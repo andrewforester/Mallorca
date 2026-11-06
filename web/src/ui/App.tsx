@@ -188,6 +188,7 @@ function Start({
     <StartScreen
       seed={seed}
       simple={preferences.simple}
+      face={preferences.face}
       farewell={app.farewell ?? false}
       coach={preferences.coach}
       onToggleCoach={preferences.toggleCoach}
@@ -271,6 +272,7 @@ function GameOver({ props, vm, phase, sessionId }: GameOverProps) {
         store={props.store}
         sessionId={sessionId}
         onPlayAgain={props.onNewGame}
+        onLeave={props.onLeaveTonight}
       />
     );
   }

@@ -41,40 +41,55 @@ function over(hands: number, netBb: number, bbPer100: number | null, sessionId =
       store={store}
       sessionId={sessionId}
       onPlayAgain={vi.fn()}
+      onLeave={vi.fn()}
     />,
   );
   return store;
 }
 
 describe('SessionOver', () => {
-  it('shows the result, the rate and the hand count', () => {
+  it('shows the result large, then the hands and the rate, and thanks for the company', () => {
     const onPlayAgain = vi.fn();
+    const onLeave = vi.fn();
     render(
       <SessionOver
         session={{ hands: 7, netBb: -4.5, bbPer100: -64.3 }}
         store={memoryStore()}
         sessionId="abc"
         onPlayAgain={onPlayAgain}
+        onLeave={onLeave}
       />,
     );
     const dialog = screen.getByTestId('session-over');
     expect(dialog.textContent).toContain('Session over');
-    expect(dialog.textContent).toContain('-4.5 bb over 7 hands');
-    expect(dialog.textContent).toContain('-64.3 bb/100');
+    expect(dialog.textContent).toContain('Thank you for the company.');
+    expect(screen.getByTestId('session-summary').textContent).toBe('-4.5 bb');
+    expect(screen.getByTestId('session-hands').textContent).toBe('7 hands');
+    expect(screen.getByTestId('session-rate').textContent).toBe('-64.3 bb/100');
     fireEvent.click(screen.getByTestId('play-again'));
+    fireEvent.click(screen.getByTestId('leave-tonight'));
     expect(onPlayAgain).toHaveBeenCalledOnce();
+    expect(onLeave).toHaveBeenCalledOnce();
+  });
+
+  it('gives Play again and the way out equal weight', () => {
+    over(1, 2, 200);
+    expect(screen.getByTestId('play-again').className).toBe(
+      screen.getByTestId('leave-tonight').className,
+    );
   });
 
   it('omits the rate with no hands', () => {
     over(0, 0, null);
-    const dialog = screen.getByTestId('session-over');
-    expect(dialog.textContent).toContain('0.0 bb over 0 hands');
-    expect(dialog.textContent).not.toContain('bb/100');
+    expect(screen.getByTestId('session-summary').textContent).toBe('0.0 bb');
+    expect(screen.getByTestId('session-hands').textContent).toBe('0 hands');
+    expect(screen.queryByTestId('session-rate')).toBeNull();
   });
 
   it('uses the singular for one hand', () => {
     over(1, 2, 200);
-    expect(screen.getByTestId('session-summary').textContent).toBe('+2.0 bb over 1 hand');
+    expect(screen.getByTestId('session-summary').textContent).toBe('+2.0 bb');
+    expect(screen.getByTestId('session-hands').textContent).toBe('1 hand');
   });
 
   it('exports the records of the session as json and as text', async () => {

@@ -3,18 +3,21 @@
     "title": "Mallorca"
   },
   "start": {
-    "heading": "Heads-up against Mallorca",
-    "tagline": "Heads-up no-limit hold'em. A cash game with 100 big blinds, or a tournament with rising blinds.",
+    "heading": "Tonight",
+    "tagline": "Heads-up hold'em, just the two of you. No money, no account needed.",
     "cash": "Cash game, 100 big blinds",
     "tournament": "Tournament",
-    "farewell": "Sleep well. The table will be here.",
+    "farewell": "The table will be here.",
     "opponent": "Opponent",
     "opponents": {
       "math": "Classic",
       "cfr": "Solver",
       "cfr-v2": "Solver v2"
     },
-    "loading": "Bringing the solver to the table"
+    "loading": "Bringing the solver to the table",
+    "greeting": "Hi. I'm Mallorca. I was hoping someone would come by. Do you play?",
+    "farewellTitle": "Sleep well.",
+    "coach": "Coach"
   },
   "status": {
     "blinds": "Blinds {{small}}/{{big}}",
@@ -239,10 +242,13 @@
   },
   "session": {
     "title": "Session over",
-    "summary_one": "{{sign}}{{bb}} bb over {{count}} hand",
-    "summary_other": "{{sign}}{{bb}} bb over {{count}} hands",
     "rate": "{{rate}} bb/100",
-    "again": "Play again"
+    "again": "Play again",
+    "summary": "{{sign}}{{bb}} bb",
+    "hands_one": "{{count}} hand",
+    "hands_other": "{{count}} hands",
+    "thanks": "Thank you for the company.",
+    "leave": "That's enough for tonight"
   },
   "hands": {
     "high-card": "High card",

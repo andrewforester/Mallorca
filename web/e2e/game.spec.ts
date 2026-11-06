@@ -87,7 +87,8 @@ test('leaving for tonight returns to a farewell start screen', async ({ page }) 
   await playToTheEnd(page);
   await byId(page, 'leave-tonight').click();
   await expect(byId(page, 'tournament-over')).toHaveCount(0);
-  await expect(byId(page, 'farewell')).toHaveText('Sleep well. The table will be here.');
+  await expect(byId(page, 'farewell')).toContainText('Sleep well.');
+  await expect(byId(page, 'farewell')).toContainText('The table will be here.');
   await byId(page, 'start-tournament').click();
   await expect(byId(page, 'hand-number')).toContainText('1');
   await page.reload();
@@ -132,7 +133,7 @@ test('a cash game is played for a hand, left, and the session summary shows one 
   await expect(byId(page, 'leave')).toBeEnabled();
   await leaveTable(page);
   await expect(byId(page, 'session-over')).toBeVisible();
-  await expect(byId(page, 'session-summary')).toContainText('over 1 hand');
+  await expect(byId(page, 'session-hands')).toHaveText('1 hand');
   await byId(page, 'play-again').click();
   await expect(byId(page, 'start-cash')).toBeVisible();
 });
