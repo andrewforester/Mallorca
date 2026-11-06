@@ -60,8 +60,10 @@ Face project open); they read and write under `C:\mallorca`.
 python export/build.py <creator export> <archetype head.dna> <round_spectacles 1k glTF folder> web/public/avatar/her --check
 ```
 
-The archetype is the head DNA of an untouched MetaHuman from the same Creator: the groom cards are modelled on it, and
-each card vertex follows its nearest archetype vertex onto her head. The glasses are Poly Haven's
+The archetype is `Engine/Plugins/MetaHuman/MetaHumanCoreTechLib/Content/ArchetypeDNA/SKM_Face.dna` of the same Unreal
+Engine install: the groom cards are modelled on that head, and each card vertex follows its nearest archetype vertex
+onto hers. The DNA files of MetaHuman-DNA-Calibration (Ada and others) are not used: their license limits what is made
+from them to Unreal Engine. The glasses are Poly Haven's
 [Round Spectacles](https://polyhaven.com/a/round_spectacles) (CC0), downloaded as glTF 1k. `--check` decodes the packed
 rig and fails when a position is off by more than 0.005 cm, a blendshape delta by more than 0.03 cm, or the folder
 exceeds 15 MB.

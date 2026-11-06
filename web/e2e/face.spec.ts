@@ -7,10 +7,12 @@ const NO_WEBGL = `
   };
 `;
 
-test('a software renderer gets the still portrait and never loads the model', async ({ page }) => {
+test('a software renderer gets the still portrait and never loads either model', async ({
+  page,
+}) => {
   const models: string[] = [];
   page.on('request', (request) => {
-    if (request.url().includes('mallorca.glb')) models.push(request.url());
+    if (/mallorca\.glb|avatar\/her\//.test(request.url())) models.push(request.url());
   });
   await page.goto(FAST_URL);
   await byId(page, 'start-cash').click();
@@ -28,7 +30,7 @@ test('a software renderer gets the still portrait and never loads the model', as
 test('falls back to the still portrait without WebGL', async ({ page }) => {
   const models: string[] = [];
   page.on('request', (request) => {
-    if (request.url().includes('mallorca.glb')) models.push(request.url());
+    if (/mallorca\.glb|avatar\/her\//.test(request.url())) models.push(request.url());
   });
   await page.addInitScript(NO_WEBGL);
   await page.goto(FAST_URL);
