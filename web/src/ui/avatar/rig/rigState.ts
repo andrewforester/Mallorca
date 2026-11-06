@@ -1,0 +1,92 @@
+import * as THREE from 'three';
+import type { Angles, Pose } from '../motion.ts';
+import type { RigHeader } from './assets.ts';
+import type { Mapping } from './controls.ts';
+import { controlsOf } from './controls.ts';
+import { jointTransform } from './joints.ts';
+import type { Rig } from './riglogic.ts';
+
+export interface RigData {
+  header: Pick<RigHeader, 'controls' | 'joints' | 'parents'>;
+  mapping: Mapping;
+}
+
+export interface RigFrame {
+  blends: Float32Array;
+  maps: Float32Array;
+}
+
+const CM = 0.01;
+const POSED = ['head', 'neck_01', 'neck_02', 'spine_05', 'clavicle_l', 'clavicle_r'] as const;
+type Posed = (typeof POSED)[number];
+
+const half = ([x, y, z]: Angles): Angles => [x / 2, y / 2, z / 2];
+
+function poseAngles(pose: Pose): Record<Posed, Angles> {
+  return {
+    head: pose.head,
+    neck_01: half(pose.neck),
+    neck_02: half(pose.neck),
+    spine_05: pose.spine,
+    clavicle_l: [0, 0, pose.shoulder],
+    clavicle_r: [0, 0, -pose.shoulder],
+  };
+}
+
+export class RigState {
+  readonly root = new THREE.Group();
+  readonly bones: THREE.Bone[];
+  private readonly rig: Rig;
+  private readonly neutral: Float32Array;
+  private readonly frozen: boolean[];
+  private readonly controls: Float32Array;
+  private readonly space: { mapping: Mapping; index: Map<string, number> };
+  private readonly rest = new Map<Posed, THREE.Quaternion>();
+  private readonly euler = new THREE.Euler(0, 0, 0, 'YXZ');
+  private readonly turn = new THREE.Quaternion();
+  private readonly local = new THREE.Quaternion();
+
+  constructor({ header, mapping }: RigData, rig: Rig) {
+    this.rig = rig;
+    this.root.scale.setScalar(CM);
+    this.neutral = rig.neutral();
+    this.controls = new Float32Array(rig.controlCount);
+    this.space = { mapping, index: new Map(header.controls.map((c, i) => [c, i])) };
+    this.frozen = header.joints.map((n) => /neck/i.test(n));
+    this.bones = header.joints.map((name) => Object.assign(new THREE.Bone(), { name }));
+    header.parents.forEach((p, j) => {
+      (p === j ? this.root : this.bones[p]!).add(this.bones[j]!);
+      jointTransform(this.neutral, null, j, this.bones[j]!);
+    });
+    this.root.updateMatrixWorld(true);
+    for (const name of POSED) {
+      const b = this.bones[header.joints.indexOf(name)];
+      if (b) this.rest.set(name, b.getWorldQuaternion(new THREE.Quaternion()));
+    }
+  }
+
+  bone(name: string): THREE.Bone | undefined {
+    return this.bones.find((b) => b.name === name);
+  }
+
+  update(pose: Pose): RigFrame {
+    controlsOf(pose.weights, pose.eyes, this.space, this.controls);
+    this.controls.forEach((v, i) => this.rig.set(i, v));
+    this.rig.calculate();
+    const joints = this.rig.joints();
+    this.bones.forEach((b, j) =>
+      jointTransform(this.neutral, this.frozen[j] ? null : joints, j, b),
+    );
+    this.applyPose(poseAngles(pose));
+    return { blends: this.rig.blends(), maps: this.rig.maps() };
+  }
+
+  private applyPose(angles: Record<Posed, Angles>): void {
+    for (const [name, rest] of this.rest) {
+      const [pitch, yaw, roll] = angles[name];
+      this.turn.setFromEuler(this.euler.set(pitch, yaw, roll, 'YXZ'));
+      this.local.copy(rest).invert().multiply(this.turn).multiply(rest);
+      this.bone(name)?.quaternion.multiply(this.local);
+    }
+  }
+}
