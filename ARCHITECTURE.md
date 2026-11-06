@@ -574,7 +574,12 @@ class, mask)` moves a per-class chance toward the mean of its classes by her mas
   `{ id, range }` with `opponentRange()` of the playing brain when it arrives, after every observation sent before
   it, or null for the math brain. A `warm` request (`{ opponent }`, no reply, never queued behind a `select`) starts
   loading a cfr opponent's model, so the start screen can begin the download as soon as the player picks the
-  solver (`prepare(opponent)` of the session). `sharedWorkerBot()` keeps one worker for the page: `main.tsx` takes a
+  solver (`prepare(opponent)` of the session). While a model downloads the worker posts `{ progress: { opponent,
+  received, total } }` (`readWithProgress` in `progressRead.ts`, at most one notice per percent); `onProgress` of the
+  client hands it to the session, whose `loading` holds it until the download is complete (`loadingOf`), and the
+  start screen shows "Bringing the solver to the table · N%" over a thin amber bar (`start-loading`, a
+  `progressbar`; without a known size the line has no number and the bar sweeps). A shared worker's client stops its
+  listeners when its game is disposed. `sharedWorkerBot()` keeps one worker for the page: `main.tsx` takes a
   client from it for every game, and disposing a game's client resets the worker instead of stopping it, so a
   loaded model survives Play again and a new evening. `vercel-output-config.json` serves `/assets/*` (hashed
   names, the models among them) with `Cache-Control: public, max-age=31536000, immutable`. Replacing a brain disposes it. `inProcessBot()` runs the math brain on the main thread and

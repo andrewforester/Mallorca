@@ -27,6 +27,38 @@ describe('StartScreen', () => {
     expect(onStart).toHaveBeenLastCalledWith(CASH, 'cfr');
   });
 
+  it('shows the download of the chosen solver as a line and a bar', () => {
+    render(
+      <StartScreen
+        seed={1}
+        onStart={vi.fn()}
+        progress={{ opponent: 'cfr', received: 42, total: 100 }}
+      />,
+    );
+    expect(screen.queryByTestId('start-loading')).toBeNull();
+    fireEvent.click(screen.getByTestId('opponent-cfr'));
+    expect(screen.getByTestId('start-loading').textContent).toBe(
+      'Bringing the solver to the table · 42%',
+    );
+    const bar = screen.getByRole('progressbar');
+    expect(bar.getAttribute('aria-valuenow')).toBe('42');
+  });
+
+  it('shows the line without a number when the size is unknown', () => {
+    render(
+      <StartScreen
+        seed={1}
+        onStart={vi.fn()}
+        progress={{ opponent: 'cfr', received: 42, total: 0 }}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('opponent-cfr'));
+    expect(screen.getByTestId('start-loading').textContent).toBe(
+      'Bringing the solver to the table',
+    );
+    expect(screen.getByRole('progressbar').hasAttribute('aria-valuenow')).toBe(false);
+  });
+
   it('tells which opponent was chosen as soon as it is chosen', () => {
     const onChoose = vi.fn();
     render(<StartScreen seed={42} onStart={vi.fn()} onChoose={onChoose} finePointer />);

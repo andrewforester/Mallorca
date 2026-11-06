@@ -693,3 +693,23 @@ describe('session prepare', () => {
     expect(bot.warm).toHaveBeenCalledWith('cfr');
   });
 });
+
+describe('session loading', () => {
+  it('shows the download of a model while it runs and clears it when it is done', () => {
+    let emit: (progress: { opponent: 'cfr'; received: number; total: number }) => void = () =>
+      undefined;
+    const bot = {
+      ...callingBot(),
+      onProgress: (listener: typeof emit) => {
+        emit = listener;
+        return () => undefined;
+      },
+    };
+    const session = open(bot);
+    expect(session.getState().loading).toBeNull();
+    emit({ opponent: 'cfr', received: 40, total: 100 });
+    expect(session.getState().loading).toEqual({ opponent: 'cfr', received: 40, total: 100 });
+    emit({ opponent: 'cfr', received: 100, total: 100 });
+    expect(session.getState().loading).toBeNull();
+  });
+});

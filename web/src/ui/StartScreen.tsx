@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 import { CASH, opponentsFor, TOURNAMENT } from '../game/index.ts';
-import type { Opponent, TableMode } from '../game/index.ts';
+import type { LoadProgress, Opponent, TableMode } from '../game/index.ts';
 import { t } from './i18n.ts';
 import { Scene } from './Scene.tsx';
 import { PORTRAIT_URL } from './avatar/FaceSeat.tsx';
@@ -15,6 +15,7 @@ export interface StartScreenProps {
   onToggleCoach?: () => void;
   face?: boolean;
   onChoose?: (opponent: Opponent) => void;
+  progress?: LoadProgress | null;
 }
 
 function OpponentChoice({
@@ -63,14 +64,43 @@ function CoachChoice({ coach, onToggle }: { coach: boolean; onToggle?: () => voi
   );
 }
 
-function SeedLine({ loading, seed }: { loading: boolean; seed: number }) {
-  return loading ? (
-    <p class="start-seed" role="status" data-testid="start-loading">
-      {t('start.loading')}
-    </p>
-  ) : (
-    <p class="start-seed">{t('status.seed', { seed })}</p>
+function LoadLine({ percent }: { percent: number | null }) {
+  return (
+    <div class="start-load">
+      <p class="start-seed" role="status" data-testid="start-loading">
+        {percent === null ? t('start.loading') : t('start.loadingPercent', { percent })}
+      </p>
+      <span
+        class={percent === null ? 'load-bar load-bar-unknown' : 'load-bar'}
+        role="progressbar"
+        aria-label={t('start.loading')}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent ?? undefined}
+        style={{ '--load': `${percent ?? 0}%` }}
+      />
+    </div>
   );
+}
+
+function SeedLine({ loading, seed }: { loading: number | null | false; seed: number }) {
+  return loading === false ? (
+    <p class="start-seed">{t('status.seed', { seed })}</p>
+  ) : (
+    <LoadLine percent={loading} />
+  );
+}
+
+function loadShown(
+  opponent: Opponent,
+  starting: boolean,
+  progress: LoadProgress | null,
+): number | null | false {
+  if (opponent === 'math') return false;
+  if (progress !== null && progress.opponent === opponent) {
+    return progress.total > 0 ? Math.floor((progress.received / progress.total) * 100) : null;
+  }
+  return starting ? null : false;
 }
 
 function TonightFace({ face, farewell }: { face: boolean; farewell: boolean }) {
@@ -114,6 +144,7 @@ export function StartScreen({
   onToggleCoach,
   face = true,
   onChoose,
+  progress = null,
 }: StartScreenProps) {
   const [opponent, setOpponent] = useState<Opponent>('math');
   const [starting, setStarting] = useState(false);
@@ -139,7 +170,7 @@ export function StartScreen({
             opponents={opponentsFor(finePointer)}
           />
           <CoachChoice coach={coach} onToggle={onToggleCoach} />
-          <SeedLine loading={starting && opponent !== 'math'} seed={seed} />
+          <SeedLine loading={loadShown(opponent, starting, progress)} seed={seed} />
           <div class="start-actions">
             <button
               type="button"

@@ -4,6 +4,7 @@ import { toViewModel } from '../game/index.ts';
 import type {
   HandStore,
   Intent,
+  LoadProgress,
   Phase,
   QuickPhrase,
   Session,
@@ -136,7 +137,9 @@ export function App(props: AppProps) {
     logOpen: drawer.open,
   });
   if (vm === null) {
-    return <Start app={props} seed={state.seed} preferences={preferences} />;
+    return (
+      <Start app={props} seed={state.seed} preferences={preferences} progress={state.loading} />
+    );
   }
   const act = actWith(session, preferences);
   const layer = tableLayer({ session, state, vm, humanSeat, open: { drawer, talk, coach } });
@@ -179,10 +182,12 @@ function Start({
   app,
   seed,
   preferences,
+  progress,
 }: {
   app: AppProps;
   seed: number;
   preferences: UnlockingPreferences;
+  progress: LoadProgress | null;
 }) {
   return (
     <StartScreen
@@ -190,6 +195,7 @@ function Start({
       simple={preferences.simple}
       face={preferences.face}
       onChoose={(opponent) => app.session.getState().prepare(opponent)}
+      progress={progress}
       farewell={app.farewell ?? false}
       coach={preferences.coach}
       onToggleCoach={preferences.toggleCoach}
