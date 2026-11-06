@@ -721,12 +721,19 @@ text)` (the caller's localized label) append the player's line at once, plan an 
 - Components: `App`, `Scene`, `StatusBar`, `HistoryMenu`, `Settings`, `StartScreen`, `Table`, `Seat`, `BetChips`,
   `DealerButton`, `ActionBubble`, `Card` (SVG), `BoardRow`, `Board`, `Pot`, `ActionBar`, `BetSlider`,
   `HandLogDrawer`, `TournamentOver`, `SessionOver`, `Chat`, `ChatSheet`, `Bubble`, `FaceSeat`. `ui/suits.ts` `suitFace(card)`
-  gives the glyph and whether the suit is red for a card value or its text, for `Card` and the hand log.
-- `Scene` wraps the start screen and the table: the attic photo (`ui/scene/*.webp`, a portrait and a landscape plate
-  over a blurred copy as the background) under a vignette, or with `simple` a flat felt without the photo (class
-  `scene-simple`); `dimmed` blurs the plate behind the start screen. `ui/scene.ts` holds the `PlateGeometry` of each
-  plate (`LANDSCAPE`, `PORTRAIT`, `SIMPLE_LANDSCAPE`, `SIMPLE_PORTRAIT`: focus point, felt tilt, seat, rail and board
-  heights, card size), which `geometryStyle` turns into the CSS variables the layout reads.
+  gives the glyph and the suit name (`clubs`, `diamonds`, `hearts`, `spades`) for a card value or its text, for the
+  four suit colours of `Card` and the hand log.
+- `Scene` wraps the start screen and the table in the dark room colour, with no photo; `simple` (class
+  `scene-simple`) flattens her face frame, `dimmed` marks the start screen.
+- Table layout (`Table`): a grid of three areas. The centre column stacks her face frame (`face-frame`, a lamp lit
+  gradient holding `FaceSeat`, or her name when the face is off, and the chat button), her plate (`seat-<bot>`: name,
+  dealer button, stack, card backs, bet and action tag; her shown cards sit in the bottom right corner of the frame),
+  the board area (`table-board`: board, pot, the result line and the chip that travels to the winner) and the
+  player's row (`seat-<human>`: cards, name, dealer button, stack, bet and action tag). The right area holds the
+  `coach` slot and the `action-panel` (the `ActionBar`, or Next hand once the hand is over); the left area holds the
+  chat panel on wide screens. The frame shrinks first when the screen is short and grows at a showdown
+  (`table-showdown`). On phones the areas stack (centre, then the action panel at the bottom) and the left area is
+  hidden; on wide screens the columns are `minmax(0, 1fr) min(680px, 50vw) minmax(0, 1fr)`.
 - Preferences: `ui/preferences.ts` reads and writes `localStorage` (`mallorca.tableStyle` `room` or `simple`,
   `mallorca.autoNext` and `mallorca.sound`, on unless stored as `off`) and falls back to the default when storage
   throws. `usePreferences()` holds them as state with a toggle each; `Settings` renders the three menu checkboxes
@@ -745,16 +752,16 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   `HOLD_MS` (900 ms) after the board grows; a new action or a new hand shows at once.
 - Table talk shows only while `conversation.available` and `conversation.on`: `Bubble` types a line at about 40 characters per
   second and removes it after 7 s (full text at once under `prefers-reduced-motion`), her bubble at her plaque and the
-  player's at theirs. On wide screens the chat sits in the right column of the table; on phones and short screens a
-  chat button at her plaque opens `ChatSheet`, a sheet portalled to `body`. The hand log stays in its drawer. The menu
+  player's at theirs. On wide screens the chat sits in the left column of the table; on phones and short screens a
+  chat button on her face frame opens `ChatSheet`, a sheet portalled to `body`. The hand log stays in its drawer. The menu
   holds Table talk, kept in `localStorage` (`mallorca.talk`) and passed to `createSession` as `conversationOn`; a
   stored `mallorca.tells` of older builds is ignored. Keyboard shortcuts ignore keys typed in a text field.
 - The start screen offers a cash game (100 bb) and a tournament. In cash the status bar shows the blinds, the
   running result in bb and a leave button, enabled only between hands; the session-over dialog shows the result in
   bb, bb/100 and the hands, with play again and the export of the session. `signed` formats a bb value as sign
   and one-decimal absolute value.
-- Layout: portrait for phones (bot at the top, the human's cards and controls at the bottom), landscape for wide
-  screens, switched by a `min-aspect-ratio: 1/1` media query. The layout has no side log.
+- Layout: portrait for phones (her face at the top, the human's cards and controls at the bottom), three columns for
+  wide screens, switched by a `min-aspect-ratio: 1/1` media query. The layout has no side log.
 - Coach mode: the `mallorca.coach` preference (off unless stored `on`), switched by the start screen checkbox
   `start-coach` and the menu checkbox `coach-mode`; `useCoach` calls `setCoach` from it. On wide screens `Coach` fills
   the `coach` slot of the table; on narrow ones the status bar button `coach-toggle` (`aria-expanded`) opens it in
@@ -815,9 +822,9 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   `App` calls on the click of a start button. The `mallorca.sound` preference (`readSound`, `writeSound`; on unless
   stored as `off`) is switched by the status bar button `sound-toggle` (`aria-pressed`) and the menu checkbox
   `sound`; off silences every cue.
-- Live face (`ui/avatar/`): `FaceSeat` seats her in the chair of the photo: its bottom edge is the far table rail
-  (`railY` of the `PlateGeometry`, `--rail-y`), so her body goes on below the rail and her plaque and cards lie in
-  front of her. Nothing covers her face: her action bubble moves to the left of the plaque, the hand result below the board (over the idle action bar on phones), and on phones her conversation bubble below her cards. With the face preference on (`mallorca.face`, on
+- Live face (`ui/avatar/`): `FaceSeat` fills her face frame, the portrait cropped to her head and shoulders.
+  Nothing covers her face: her action tag lives on her plate, the result under the board, her line in the bottom
+  left corner of the frame and her shown cards in the bottom right. With the face preference on (`mallorca.face`, on
   unless stored `off`, the menu checkbox `face`) it shows the still `portrait.webp` at once and, when `canRender()`
   finds hardware WebGL (a software renderer such as SwiftShader or llvmpipe counts as weak) on a device that is not
   weak (more than 2 cores and more than 2 GB when the browser tells), imports `ui/avatar/live.ts` on demand, so
@@ -826,7 +833,8 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   ten times a second), plays new `FaceCue`s once (pulses, gaze with a glance back), blinks, saccades and glances
   away from `idle`, poses the head from the shown PAD and breathes; `thinking` turns her gaze away to think. It
   pauses while the document is hidden, calms the idle motion under `prefers-reduced-motion`, and falls back to the
-  portrait when the model fails to load or WebGL is lost. Off, there is no `face-seat` and the plaque is as before.
+  portrait when the model fails to load or WebGL is lost. Off, there is no `face-seat` and the frame shrinks to
+  her name.
 - Voice (`ui/avatar/voice.ts`): the `mallorca.voice` preference (off unless stored `on`, the menu checkbox `voice`)
   speaks each new line of hers with the browser's `speechSynthesis`, an English voice from a preferred list, the
   `prosody` of `faceNow()`, and her lips follow `speechOf` resynced on every word boundary. Without
@@ -834,7 +842,7 @@ text)` (the caller's localized label) append the player's line at once, plan an 
 - Keyboard: `f` folds, `c` checks or calls, `r` raises, the arrow keys move the raise amount.
 - `data-testid` contract for e2e and contact sheets: `scene`, `start-cash`, `start-tournament`, `opponent-<key>`,
   `start-loading`, `farewell`, `blinds`, `session-result`, `hand-number`, `leave`, `new-game`, `seat-<i>`, `stack-<i>`
-  (with `data-stack`), `bet-<i>`, `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`,
+  (with `data-stack`), `face-frame`, `table-board`, `action-panel`, `bet-<i>`, `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`,
   `bubble-aggressive` or `bubble-fold`), `thinking-<i>`, `card` (with `data-card`), `card-back`, `board`, `pot` (with
   `data-amount` = total and `data-collected`), `result`, `next-hand`, `fold`, `passive`, `raise`, `raise-amount`,
   `preset-half`, `preset-pot`, `preset-allin`, `hand-log-toggle`, `sound-toggle`, `simple-table`, `auto-next`,
@@ -951,8 +959,8 @@ clamps above; her words reach her feeling only as the signals the player's reply
   viewport on every project, the hand log drawer opens inside the viewport with its close button, without
   horizontal scroll, and Escape hides it, the floating log stops above the action bar on a 1280 × 720 screen, and
   it is a full-height sheet on a 900 × 500 screen.
-- `scene.spec.ts`: the table stays playable on the felt colour when the plates fail to load, the showdown result
-  covers neither shown hand nor the board, the simple table is flat, loads no plate and is remembered across a reload,
+- `scene.spec.ts`: the table is the dark room colour and loads no photo of a room, the showdown result covers
+  neither shown hand nor the board, the simple table flattens her frame and is remembered across a reload,
   and the deal animation follows `prefers-reduced-motion`. `face.spec.ts`: headless Chromium renders WebGL in software, so
   her seat shows the portrait and never requests the model; without WebGL it is the portrait too; the face can be
   turned off and stays off across a reload. The live face is checked on the contact sheets, which `npm run contact`
