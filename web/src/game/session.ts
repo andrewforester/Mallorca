@@ -1,3 +1,4 @@
+import { loadingOf } from './loading.ts';
 import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
 import { mulberry32 } from '../cards/index.ts';
@@ -395,6 +396,7 @@ export function createSession(options: SessionOptions): Session {
       probe: null,
     };
     rt.probe = wireProbe(rt, options, (debug) => set({ debug }));
+    bot.onProgress?.((progress) => set({ loading: loadingOf(progress) }));
     const initial = freshTable(options, rt.mode);
     return {
       table: initial,
@@ -408,6 +410,7 @@ export function createSession(options: SessionOptions): Session {
       session: tally(rt, initial),
       sessionId: options.records?.sessionId ?? null,
       opponent: rt.opponent,
+      loading: null,
       conversation: initialConversation(options.conversationOn ?? true),
       coach: COACH_OFF,
       face: initialFace(options.faceOn ?? true),

@@ -73,3 +73,4 @@ export type {
   BiasKey,
   TableEvent,
 } from '../persona/index.ts';
+export type { LoadProgress } from './workerProtocol.ts';

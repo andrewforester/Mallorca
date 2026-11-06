@@ -17,7 +17,8 @@
     "loading": "Bringing the solver to the table",
     "greeting": "Hi. I'm Mallorca. I was hoping someone would come by. Do you play?",
     "farewellTitle": "Sleep well.",
-    "coach": "Coach"
+    "coach": "Coach",
+    "loadingPercent": "Bringing the solver to the table · {{percent}}%"
   },
   "status": {
     "blinds": "Blinds {{small}}/{{big}}",

@@ -1,3 +1,4 @@
+import type { LoadProgress } from './workerProtocol.ts';
 import type { StoreApi } from 'zustand/vanilla';
 import type { Decision } from '../brains/index.ts';
 import type { LogEntry, SeatIndex, Table, TableMode } from '../engine/index.ts';
@@ -40,6 +41,7 @@ export interface SessionState {
   session: SessionResult;
   sessionId: string | null;
   opponent: Opponent;
+  loading: LoadProgress | null;
   conversation: ConversationState;
   coach: CoachState;
   face: FaceState;

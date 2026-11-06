@@ -8,7 +8,7 @@ import {
   withFallback,
   workerBot,
 } from './botClient.ts';
-import type { WorkerReply, WorkerRequest } from './workerProtocol.ts';
+import type { WorkerMessage, WorkerReply, WorkerRequest } from './workerProtocol.ts';
 
 const legal = { fold: true, check: false, call: 10, raise: { min: 40, max: 2000 } };
 
@@ -96,6 +96,10 @@ class FakeWorker {
     this.onmessage?.({ data: reply } as MessageEvent<WorkerReply>);
   }
 
+  notify(message: WorkerMessage) {
+    this.onmessage?.({ data: message } as MessageEvent<WorkerReply>);
+  }
+
   decideIds() {
     return this.sent.flatMap((request) => (request.kind === 'decide' ? [request.id] : []));
   }
@@ -126,6 +130,26 @@ describe('workerBot', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it('hands the download progress of a model to its listeners until they stop', () => {
+    const bot = workerBot();
+    const seen: unknown[] = [];
+    const stop = bot.onProgress?.((progress) => seen.push(progress));
+    currentWorker().notify({ progress: { opponent: 'cfr-v2', received: 10, total: 100 } });
+    stop?.();
+    currentWorker().notify({ progress: { opponent: 'cfr-v2', received: 20, total: 100 } });
+    expect(seen).toEqual([{ opponent: 'cfr-v2', received: 10, total: 100 }]);
+  });
+
+  it('stops the listeners of a finished game on the shared worker', () => {
+    const next = sharedWorkerBot();
+    const first = next();
+    const seen: unknown[] = [];
+    first.onProgress?.((progress) => seen.push(progress));
+    first.dispose?.();
+    currentWorker().notify({ progress: { opponent: 'cfr', received: 1, total: 2 } });
+    expect(seen).toEqual([]);
   });
 
   it('asks the worker to warm the model of an opponent', () => {

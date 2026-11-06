@@ -3,7 +3,7 @@ import type { BotBias, Decision, Observation } from '../brains/index.ts';
 import type { CoachFacts } from '../coach/index.ts';
 import type { LegalActions } from '../engine/index.ts';
 import type { Opponent } from './opponent.ts';
-import type { WorkerReply, WorkerRequest } from './workerProtocol.ts';
+import type { LoadProgress, WorkerMessage, WorkerReply, WorkerRequest } from './workerProtocol.ts';
 
 export interface BotClient {
   observe(o: Observation[]): void;
@@ -13,6 +13,7 @@ export interface BotClient {
   coach?(observations: Observation[], legal: LegalActions, pot: number): Promise<CoachFacts>;
   opponentRange?(): Promise<Float32Array | null>;
   warm?(opponent: Opponent): void;
+  onProgress?(listener: (progress: LoadProgress) => void): () => void;
   dispose?(): void;
 }
 
@@ -137,6 +138,7 @@ export function withFallback(primary: BotClient, timeoutMs = BOT_TIMEOUT_MS): Bo
     coach: (...args) => timedCoach(usedFallback ? undefined : active.coach?.(...args), timeoutMs),
     opponentRange: () => timedRange(usedFallback ? undefined : active.opponentRange?.(), timeoutMs),
     warm: (opponent) => active.warm?.(opponent),
+    onProgress: (listener) => primary.onProgress?.(listener) ?? (() => undefined),
     select: (opponent, seed) =>
       selectOrFallBack(active.select?.(opponent, seed), () => {
         if (!usedFallback) {
@@ -160,9 +162,25 @@ type Ask = <T>(
   pick: (r: WorkerReply) => T | undefined,
 ) => Promise<T>;
 
-function replyRouter(pending: Map<number, Pending>) {
-  return (event: MessageEvent<WorkerReply>) => {
-    const reply = event.data;
+type Listeners = Set<(progress: LoadProgress) => void>;
+
+function subscribe(listeners: Listeners) {
+  return (listener: (progress: LoadProgress) => void) => {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+}
+
+function replyRouter(pending: Map<number, Pending>, listeners: Listeners) {
+  return (event: MessageEvent<WorkerMessage>) => {
+    const message = event.data;
+    if ('progress' in message) {
+      listeners.forEach((listener) => listener(message.progress));
+      return;
+    }
+    const reply: WorkerReply = message;
     const entry = pending.get(reply.id);
     if (entry === undefined) {
       return;
@@ -205,7 +223,8 @@ function rawWorkerBot(): BotClient {
     }
     pending.clear();
   };
-  worker.onmessage = replyRouter(pending);
+  const listeners: Listeners = new Set();
+  worker.onmessage = replyRouter(pending, listeners);
   worker.onerror = () => failAll('The bot worker failed');
   const send = (request: WorkerRequest) => worker.postMessage(request);
   const ask = asker(pending, send);
@@ -247,6 +266,7 @@ function rawWorkerBot(): BotClient {
       send({ kind: 'reset' });
     },
     warm: (opponent) => send({ kind: 'warm', opponent }),
+    onProgress: subscribe(listeners),
     dispose() {
       failAll('The bot worker was stopped');
       worker.terminate();
@@ -263,6 +283,18 @@ export function sharedWorkerBot(): () => BotClient {
   return () => {
     worker ??= rawWorkerBot();
     const shared = worker;
-    return withFallback({ ...shared, dispose: () => shared.reset() });
+    const stops: (() => void)[] = [];
+    return withFallback({
+      ...shared,
+      onProgress: (listener) => {
+        const stop = shared.onProgress?.(listener) ?? (() => undefined);
+        stops.push(stop);
+        return stop;
+      },
+      dispose: () => {
+        stops.splice(0).forEach((stop) => stop());
+        shared.reset();
+      },
+    });
   };
 }

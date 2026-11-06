@@ -12,6 +12,14 @@ export type WorkerRequest =
   | { kind: 'coach'; id: number; observations: Observation[]; legal: LegalActions; pot: number }
   | { kind: 'opponentRange'; id: number };
 
+export interface LoadProgress {
+  opponent: Opponent;
+  received: number;
+  total: number;
+}
+
+export type WorkerMessage = WorkerReply | { progress: LoadProgress };
+
 export type WorkerReply =
   | { id: number; decision: Decision }
   | { id: number; opponent: Opponent }
