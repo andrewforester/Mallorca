@@ -182,12 +182,14 @@ test.describe('phone', () => {
   test.use({ viewport: { width: 360, height: 740 } });
   test.skip(({ isMobile }) => !isMobile, 'the chat sheet is the phone layout');
 
-  test('the chat sheet opens from her plaque and closes back to the table', async ({ page }) => {
+  test('the chat sheet opens from her face frame and closes back to the table', async ({
+    page,
+  }) => {
     test.setTimeout(SOLVER_TIMEOUT_MS);
     const requests = await serveConversation(page, answers);
     await sitWithSolver(page);
     await myTurn(page);
-    const open = byId(page, 'seat-1').getByTestId('chat-open');
+    const open = byId(page, 'face-frame').getByTestId('chat-open');
     await expect(open).toHaveAccessibleName('Chat with Mallorca');
     await open.click();
     const sheet = byId(page, 'chat-sheet');

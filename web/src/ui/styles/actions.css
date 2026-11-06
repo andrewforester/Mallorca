@@ -1,9 +1,21 @@
+.action-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px calc(26px + env(safe-area-inset-bottom));
+  border-radius: var(--radius-large) var(--radius-large) 0 0;
+  background: var(--color-surface);
+}
+
+.result-actions {
+  display: grid;
+}
+
+.result-actions .button {
+  min-height: var(--action-height);
+}
+
 .action-bar {
-  position: fixed;
-  left: var(--space-3);
-  right: var(--space-3);
-  bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
-  z-index: 5;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -44,10 +56,6 @@
 
 .bet-presets {
   display: contents;
-}
-
-.table-side {
-  display: none;
 }
 
 .coach:empty {

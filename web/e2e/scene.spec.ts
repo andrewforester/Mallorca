@@ -1,23 +1,21 @@
 import type { Page } from '@playwright/test';
 import { byId, expect, FAST_URL, test, waitForWaypoint } from './fixtures.ts';
 
-const ABORTED_PLATE = 'console.error: Failed to load resource: net::ERR_FAILED';
-
-test('the table stays playable when the plate fails to load', async ({ page, problems }) => {
-  let aborted = 0;
-  await page.route('**/*.webp', (route) => {
-    aborted += 1;
-    return route.abort();
+test('the table is a dark room that loads no photo of a room', async ({ page }) => {
+  const rooms: string[] = [];
+  page.on('request', (request) => {
+    if (/\/attic-[^/]*\.webp$/.test(request.url())) {
+      rooms.push(request.url());
+    }
   });
   await page.goto(FAST_URL);
   await byId(page, 'start-tournament').click();
   await expect(byId(page, 'passive')).toBeEnabled();
   await expect(byId(page, 'passive')).toBeInViewport({ ratio: 1 });
-  const felt = await byId(page, 'scene').evaluate((node) => getComputedStyle(node).backgroundColor);
-  expect(felt).toBe('rgb(31, 74, 82)');
-  const plateErrors = problems.filter((problem) => problem === ABORTED_PLATE).length;
-  expect(plateErrors).toBeLessThanOrEqual(aborted);
-  problems.splice(0, problems.length, ...problems.filter((problem) => problem !== ABORTED_PLATE));
+  await expect(byId(page, 'face-frame')).toBeInViewport();
+  const room = await byId(page, 'scene').evaluate((node) => getComputedStyle(node).backgroundColor);
+  expect(room).toBe('rgb(29, 23, 22)');
+  expect(rooms).toEqual([]);
 });
 
 async function playToTheFlop(page: Page) {
@@ -69,30 +67,20 @@ test('the showdown result leaves both shown hands and the board visible', async 
   expect(covered).toEqual([]);
 });
 
-test('the simple table is flat, skips the photo and is remembered', async ({ page }) => {
-  const plates: string[] = [];
-  page.on('request', (request) => {
-    if (/\/attic-[^/]*\.webp$/.test(request.url())) {
-      plates.push(request.url());
-    }
-  });
+test('the simple table flattens her frame and is remembered', async ({ page }) => {
   await page.goto(FAST_URL);
   await byId(page, 'start-tournament').click();
   await expect(byId(page, 'passive')).toBeEnabled();
   await page.locator('.menu-summary').click();
   await byId(page, 'simple-table').check();
-  plates.length = 0;
   await page.reload();
   await expect(byId(page, 'scene')).toHaveClass(/scene-simple/);
   await byId(page, 'start-tournament').click();
   await expect(byId(page, 'passive')).toBeEnabled();
-  const transforms = await page.evaluate(() =>
-    ['.felt-plane', '.seat-top .card', '.seat-bottom .card'].map(
-      (selector) => getComputedStyle(document.querySelector(selector) as Element).transform,
-    ),
+  const frame = await byId(page, 'face-frame').evaluate(
+    (node) => getComputedStyle(node).backgroundImage,
   );
-  expect(transforms).toEqual(['none', 'none', 'none']);
-  expect(plates).toEqual([]);
+  expect(frame).toBe('none');
   for (const id of ['fold', 'passive', 'raise']) {
     await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
   }

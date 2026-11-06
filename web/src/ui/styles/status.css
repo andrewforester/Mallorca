@@ -1,33 +1,29 @@
 .app {
   position: absolute;
   inset: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .status-bar {
-  position: absolute;
-  top: var(--space-3);
-  left: var(--space-4);
-  right: var(--space-4);
+  position: relative;
   z-index: 6;
   display: flex;
+  flex: none;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
+  min-height: 52px;
+  padding: 4px 4px 4px 18px;
+  padding-top: max(4px, env(safe-area-inset-top));
   white-space: nowrap;
   font-size: var(--font-size-small);
   color: var(--color-muted);
 }
 
-.status-info > span {
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--color-glass-border);
-  border-radius: var(--radius-pill);
-  background: var(--color-glass);
-  -webkit-backdrop-filter: blur(var(--blur-glass));
-  backdrop-filter: blur(var(--blur-glass));
-}
-
-.scene-simple .status-info > span {
-  background: var(--color-glass-strong);
+.status-bar .glass {
+  border: none;
+  background: transparent;
+  box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
@@ -35,7 +31,7 @@
 .status-info {
   display: flex;
   flex: 1 1 auto;
-  gap: var(--space-2);
+  gap: var(--space-3);
   min-width: 0;
   overflow: hidden;
 }
@@ -102,4 +98,43 @@
   border-radius: var(--radius-medium);
   background: var(--color-glass-strong);
   color: var(--color-text);
+}
+
+@media (max-width: 480px) {
+  .status-bar {
+    padding-left: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .status-info {
+    flex: 1 0 100%;
+    order: 1;
+    gap: var(--space-2);
+  }
+
+  .status-bar .menu-summary {
+    padding: 0 var(--space-3);
+    font-size: var(--font-size-base);
+  }
+
+  .status-bar .leave {
+    padding: var(--space-1) var(--space-2);
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .status-bar .menu-summary {
+    padding: 0 var(--space-2);
+    font-size: var(--font-size-small);
+  }
+
+  .status-bar .leave {
+    padding: var(--space-1);
+  }
+
+  .status-bar,
+  .status-info {
+    gap: var(--space-1);
+  }
 }

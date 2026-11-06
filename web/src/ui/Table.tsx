@@ -1,13 +1,11 @@
 import type { ComponentChildren } from 'preact';
 import type { Intent, Phase, QuickPhrase, SeatIndex, ViewModel } from '../game/index.ts';
 import { ActionBar } from './ActionBar.tsx';
-import { BetChips } from './BetChips.tsx';
 import { BoardRow } from './BoardRow.tsx';
 import { Bubble } from './Bubble.tsx';
 import { Chat } from './Chat.tsx';
 import type { ChatProps } from './Chat.tsx';
 import { ChatSheet } from './ChatSheet.tsx';
-import { DealerButton } from './DealerButton.tsx';
 import { t } from './i18n.ts';
 import { handName } from './phrases.ts';
 import { Seat } from './Seat.tsx';
@@ -68,50 +66,54 @@ function chipsDirection(winner: SeatIndex | null, humanSeat: SeatIndex): string 
   return winner === humanSeat ? 'to-bottom' : 'to-top';
 }
 
-interface FeltSpotProps {
-  vm: ViewModel;
-  seat: SeatIndex;
-  side: 'top' | 'bottom';
-  bets: [number, number];
+function ResultChips({ vm, humanSeat }: { vm: ViewModel; humanSeat: SeatIndex }) {
+  if (vm.result === null) {
+    return null;
+  }
+  return (
+    <span
+      class={`result-chips result-chips-${chipsDirection(vm.result.winner, humanSeat)}`}
+      aria-hidden="true"
+    >
+      <span class="chip-dot" />
+    </span>
+  );
 }
 
-function FeltSpot({ vm, seat, side, bets }: FeltSpotProps) {
-  const view = vm.seats[seat];
-  const amount = bets[seat];
+function TableBoard({
+  vm,
+  humanSeat,
+  text,
+}: {
+  vm: ViewModel;
+  humanSeat: SeatIndex;
+  text: string | null;
+}) {
   return (
-    <div class={`felt-spot felt-spot-${side}`}>
-      <span class="felt-spot-dealer">{view.isButton && <DealerButton />}</span>
-      <BetChips seat={seat} amount={amount} sweeping={amount !== view.bet} />
+    <div class="table-board" data-testid="table-board">
+      <BoardRow pot={text === null ? vm.pot : null} board={vm.board} />
+      {text !== null && (
+        <p class="result-text" data-testid="result">
+          {text}
+        </p>
+      )}
+      <ResultChips vm={vm} humanSeat={humanSeat} />
     </div>
   );
 }
 
-function Felt({
-  vm,
-  humanSeat,
-  showPot,
-}: {
-  vm: ViewModel;
-  humanSeat: SeatIndex;
-  showPot: boolean;
-}) {
-  const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
-  const bets = useSweep([vm.seats[0].bet, vm.seats[1].bet], vm.pot.collected);
+interface FaceFrameProps {
+  name: string;
+  face: ComponentChildren;
+  children?: ComponentChildren;
+}
+
+function FaceFrame({ name, face, children }: FaceFrameProps) {
+  const off = face === undefined || face === null;
   return (
-    <div class="table-felt">
-      <FeltSpot vm={vm} seat={botSeat} side="top" bets={bets} />
-      <div class="felt-plane">
-        <BoardRow pot={showPot ? vm.pot : null} board={vm.board} />
-      </div>
-      <FeltSpot vm={vm} seat={humanSeat} side="bottom" bets={bets} />
-      {vm.result !== null && (
-        <span
-          class={`result-chips result-chips-${chipsDirection(vm.result.winner, humanSeat)}`}
-          aria-hidden="true"
-        >
-          <span class="chip-dot" />
-        </span>
-      )}
+    <div class={off ? 'face-frame face-frame-off' : 'face-frame'} data-testid="face-frame">
+      {off ? <span class="face-frame-name">{name}</span> : face}
+      {children}
     </div>
   );
 }
@@ -125,29 +127,24 @@ function useSeatActions(vm: ViewModel): HeldActions {
   );
 }
 
-interface ResultProps {
-  text: string;
-  canContinue: boolean;
+interface NextHandProps {
   autoNextMs: number | null;
   onNextHand: () => void;
 }
 
-function Result({ text, canContinue, autoNextMs, onNextHand }: ResultProps) {
+function NextHand({ autoNextMs, onNextHand }: NextHandProps) {
   const auto = autoNextMs !== null;
   return (
-    <div class="result glass" data-testid="result">
-      <span class="result-text">{text}</span>
-      {canContinue && (
-        <button
-          type="button"
-          class={`button button-primary${auto ? ' next-hand-auto' : ''}`}
-          style={auto ? { '--auto-next-ms': `${autoNextMs}ms` } : undefined}
-          data-testid="next-hand"
-          onClick={onNextHand}
-        >
-          {t('result.next')}
-        </button>
-      )}
+    <div class="result-actions">
+      <button
+        type="button"
+        class={`button button-passive${auto ? ' next-hand-auto' : ''}`}
+        style={auto ? { '--auto-next-ms': `${autoNextMs}ms` } : undefined}
+        data-testid="next-hand"
+        onClick={onNextHand}
+      >
+        {t('result.next')}
+      </button>
     </div>
   );
 }
@@ -169,9 +166,9 @@ function herLine(vm: ViewModel, chat: ChatProps | null): string {
   return chat === null ? '' : (vm.conversation.herBubble?.text ?? '');
 }
 
-function TableSide({ chat, coach }: { chat: ChatProps | null; coach: ComponentChildren }) {
+function TableLeft({ chat }: { chat: ChatProps | null }) {
   return (
-    <div class="table-side">
+    <div class="table-left">
       {chat !== null && (
         <section
           class="side-panel glass"
@@ -181,9 +178,25 @@ function TableSide({ chat, coach }: { chat: ChatProps | null; coach: ComponentCh
           <Chat {...chat} />
         </section>
       )}
+    </div>
+  );
+}
+
+function TableRight({
+  coach,
+  children,
+}: {
+  coach: ComponentChildren;
+  children: ComponentChildren;
+}) {
+  return (
+    <div class="table-right">
       <aside class="coach" data-testid="coach" aria-label={t('coach.label')}>
         {coach}
       </aside>
+      <div class="action-panel" data-testid="action-panel">
+        {children}
+      </div>
     </div>
   );
 }
@@ -194,65 +207,93 @@ interface SeatsProps {
   held: HeldActions;
   thinking: boolean;
   chat: ChatProps | null;
+  bets: [number, number];
 }
 
-function Seats({ vm, humanSeat, held, thinking, chat }: SeatsProps) {
+function seatBet(vm: ViewModel, seat: SeatIndex, bets: [number, number]) {
+  return { amount: bets[seat], sweeping: bets[seat] !== vm.seats[seat].bet };
+}
+
+function HerSeat({ vm, humanSeat, held, thinking, chat, bets }: SeatsProps) {
   const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
-  const winner = vm.result?.winner ?? null;
   return (
-    <>
-      <Seat
-        index={botSeat}
-        view={vm.seats[botSeat]}
-        action={held.actions[botSeat]}
-        thinking={thinking}
-        winner={winner === botSeat}
-        position="top"
-      >
-        {chat !== null && <Bubble line={vm.conversation.herBubble} />}
-        {chat !== null && <ChatSheet {...chat} />}
-      </Seat>
-      <Seat
-        index={humanSeat}
-        view={vm.seats[humanSeat]}
-        action={held.actions[humanSeat]}
-        thinking={false}
-        winner={winner === humanSeat}
-        position="bottom"
-      >
-        {chat !== null && <Bubble line={vm.conversation.playerBubble} />}
-      </Seat>
-    </>
+    <Seat
+      index={botSeat}
+      view={vm.seats[botSeat]}
+      action={held.actions[botSeat]}
+      thinking={thinking}
+      winner={(vm.result?.winner ?? null) === botSeat}
+      position="top"
+      bet={seatBet(vm, botSeat, bets)}
+    >
+      {chat !== null && <Bubble line={vm.conversation.herBubble} />}
+    </Seat>
   );
 }
 
+function YourSeat({ vm, humanSeat, held, chat, bets }: SeatsProps) {
+  return (
+    <Seat
+      index={humanSeat}
+      view={vm.seats[humanSeat]}
+      action={held.actions[humanSeat]}
+      thinking={false}
+      winner={(vm.result?.winner ?? null) === humanSeat}
+      position="bottom"
+      bet={seatBet(vm, humanSeat, bets)}
+    >
+      {chat !== null && <Bubble line={vm.conversation.playerBubble} />}
+    </Seat>
+  );
+}
+
+function layoutClass(vm: ViewModel, humanSeat: SeatIndex, text: string | null): string {
+  const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
+  const shown = vm.seats[botSeat].cards.some((card) => card !== 'back');
+  return [
+    'table-layout',
+    text === null ? '' : 'table-result',
+    text !== null && shown ? 'table-showdown' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
+function Actions({ props, over }: { props: TableProps; over: boolean }) {
+  if (over) {
+    return <NextHand autoNextMs={props.autoNextMs ?? null} onNextHand={props.onNextHand} />;
+  }
+  const raise = props.vm.controls.raise;
+  const barKey = raise === null ? 'none' : `${raise.min}:${raise.max}`;
+  return <ActionBar key={barKey} controls={props.vm.controls} onAct={props.onAct} />;
+}
+
 export function Table(props: TableProps) {
-  const { vm, phase, humanSeat, autoNextMs = null, onAct, onNextHand } = props;
+  const { vm, phase, humanSeat } = props;
   const chat = chatOf(props);
   const botSeat: SeatIndex = humanSeat === 0 ? 1 : 0;
   const botWaiting = phase === 'botThinking' || phase === 'animating';
   const text = resultText(vm, humanSeat);
-  const raise = vm.controls.raise;
-  const barKey = raise === null ? 'none' : `${raise.min}:${raise.max}`;
   const held = useSeatActions(vm);
+  const bets = useSweep([vm.seats[0].bet, vm.seats[1].bet], vm.pot.collected);
   const thinking = botWaiting && vm.seats[botSeat].isToAct && !held.holding;
   const announcement = text ?? (thinking ? t('seat.thinking') : '');
+  const seats = { vm, humanSeat, held, thinking, chat, bets };
   return (
-    <div class={`table-layout${text === null ? '' : ' table-result'}`}>
+    <div class={layoutClass(vm, humanSeat, text)}>
       <Announcements text={announcement} her={herLine(vm, chat)} />
-      <Felt vm={vm} humanSeat={humanSeat} showPot={text === null} />
-      {text !== null && (
-        <Result
-          text={text}
-          canContinue={phase === 'handOver'}
-          autoNextMs={autoNextMs}
-          onNextHand={onNextHand}
-        />
-      )}
-      {props.face?.(thinking)}
-      <Seats vm={vm} humanSeat={humanSeat} held={held} thinking={thinking} chat={chat} />
-      <ActionBar key={barKey} controls={vm.controls} onAct={onAct} />
-      <TableSide chat={chat} coach={props.coach} />
+      <TableLeft chat={chat} />
+      <div class="table-centre">
+        <FaceFrame name={vm.seats[botSeat].name} face={props.face?.(thinking)}>
+          {chat !== null && <ChatSheet {...chat} />}
+        </FaceFrame>
+        <HerSeat {...seats} />
+        <TableBoard vm={vm} humanSeat={humanSeat} text={text} />
+        <YourSeat {...seats} />
+      </div>
+      <TableRight coach={props.coach}>
+        <Actions props={props} over={text !== null && phase === 'handOver'} />
+      </TableRight>
     </div>
   );
 }
