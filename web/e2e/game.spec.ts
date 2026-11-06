@@ -4,6 +4,7 @@ import {
   byId,
   expect,
   FAST_URL,
+  goAllIn,
   playToTheEnd,
   stackOf,
   test,
@@ -57,8 +58,7 @@ test('all in on every hand ends the tournament and play again returns to a fresh
       continue;
     }
     if (await byId(page, 'raise').isEnabled()) {
-      await byId(page, 'preset-allin').click();
-      await byId(page, 'raise').click();
+      await goAllIn(page);
     } else {
       await byId(page, 'passive').click();
     }

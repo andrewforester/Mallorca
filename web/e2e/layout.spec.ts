@@ -1,6 +1,16 @@
+import type { Page } from '@playwright/test';
 import { byId, expect, FAST_URL, test } from './fixtures.ts';
 
 const CONTROLS = ['fold', 'passive', 'raise'];
+const SHEET = ['preset-half', 'preset-pot', 'preset-allin', 'raise-amount', 'raise-confirm'];
+
+async function expectTheSheetInView(page: Page) {
+  await byId(page, 'raise').click();
+  for (const id of SHEET) {
+    await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
+  }
+  await byId(page, 'raise-back').click();
+}
 
 test('the start screen and the table fit the viewport without horizontal scroll', async ({
   page,
@@ -18,9 +28,7 @@ test('the start screen and the table fit the viewport without horizontal scroll'
   for (const id of CONTROLS) {
     await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
   }
-  for (const id of ['preset-half', 'preset-pot', 'preset-allin', 'raise-amount']) {
-    await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
-  }
+  await expectTheSheetInView(page);
 });
 
 test('the cash table and the session summary fit the viewport', async ({ page }) => {
@@ -136,16 +144,17 @@ test('long amounts stay inside the small phone', async ({ page }) => {
   await page.goto(FAST_URL);
   await byId(page, 'start-tournament').click();
   await expect(byId(page, 'passive')).toBeEnabled();
+  await byId(page, 'raise').click();
   await byId(page, 'preset-allin').click();
-  await expect(byId(page, 'raise')).toContainText('2000');
-  for (const id of CONTROLS) {
+  await expect(byId(page, 'raise-confirm')).toContainText('Hold for all-in 2000');
+  for (const id of SHEET) {
     await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     viewport.width,
   );
   const overflowing = await page.evaluate(() =>
-    ['fold', 'passive', 'raise'].filter((id) => {
+    ['raise-back', 'raise-confirm', 'preset-half', 'preset-pot', 'preset-allin'].filter((id) => {
       const node = document.querySelector(`[data-testid="${id}"]`);
       return node !== null && node.scrollWidth > node.clientWidth;
     }),
@@ -169,9 +178,10 @@ for (const viewport of [
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       viewport.width,
     );
-    for (const id of [...CONTROLS, 'preset-half', 'preset-pot', 'preset-allin', 'raise-amount']) {
+    for (const id of CONTROLS) {
       await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
     }
+    await expectTheSheetInView(page);
   });
 }
 
@@ -188,8 +198,9 @@ for (const viewport of [
     await byId(page, 'start-tournament').click();
     await expect(byId(page, 'passive')).toBeEnabled();
     expect(await scrollWidth()).toBeLessThanOrEqual(viewport.width);
-    for (const id of [...CONTROLS, 'preset-half', 'preset-pot', 'preset-allin', 'raise-amount']) {
+    for (const id of CONTROLS) {
       await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
     }
+    await expectTheSheetInView(page);
   });
 }

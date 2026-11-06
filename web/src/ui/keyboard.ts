@@ -6,6 +6,9 @@ export interface KeyHandlers {
   passive: () => void;
   raise: () => void;
   adjust: (direction: 1 | -1) => void;
+  confirm?: () => boolean;
+  back?: () => boolean;
+  release?: () => void;
 }
 
 export interface KeyLike {
@@ -16,13 +19,15 @@ export interface KeyLike {
   target?: unknown;
 }
 
-type Binding = (handlers: KeyHandlers) => void;
+type Binding = (handlers: KeyHandlers) => boolean | void;
 
 const fold: Binding = (handlers) => handlers.fold();
 const passive: Binding = (handlers) => handlers.passive();
 const raise: Binding = (handlers) => handlers.raise();
 const up: Binding = (handlers) => handlers.adjust(1);
 const down: Binding = (handlers) => handlers.adjust(-1);
+const confirm: Binding = (handlers) => handlers.confirm?.() ?? false;
+const back: Binding = (handlers) => handlers.back?.() ?? false;
 
 const BINDINGS = new Map<string, Binding>([
   ['f', fold],
@@ -35,6 +40,8 @@ const BINDINGS = new Map<string, Binding>([
   ['ArrowUp', up],
   ['ArrowLeft', down],
   ['ArrowDown', down],
+  ['Enter', confirm],
+  ['Escape', back],
 ]);
 
 const NOT_TEXT = new Set(['button', 'checkbox', 'radio', 'range', 'reset', 'submit']);
@@ -59,18 +66,26 @@ export function handleKey(event: KeyLike, handlers: KeyHandlers): boolean {
   if (!handlers.enabled || hasModifier(event) || binding === undefined || isTyping(event.target)) {
     return false;
   }
-  binding(handlers);
-  return true;
+  return binding(handlers) !== false;
 }
 
 export function useKeyboard(handlers: KeyHandlers): void {
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
-      if (handleKey(event, handlers)) {
+      if (!event.repeat && handleKey(event, handlers)) {
         event.preventDefault();
       }
     };
+    const release = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        handlers.release?.();
+      }
+    };
     document.addEventListener('keydown', listener);
-    return () => document.removeEventListener('keydown', listener);
+    document.addEventListener('keyup', release);
+    return () => {
+      document.removeEventListener('keydown', listener);
+      document.removeEventListener('keyup', release);
+    };
   }, [handlers]);
 }

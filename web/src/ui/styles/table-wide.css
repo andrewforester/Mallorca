@@ -77,7 +77,7 @@
   }
 
   .action-buttons {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 
   .action-buttons .button,
@@ -87,9 +87,56 @@
     font-size: var(--font-size-base);
   }
 
+  .action-buttons .button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+  }
+
   .action-buttons .button-raise {
-    grid-column: 1 / -1;
+    order: -2;
+  }
+
+  .action-buttons .button-passive {
     order: -1;
+  }
+
+  .key-hint {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 5px;
+    background: rgba(243, 235, 225, 0.1);
+    font-family: var(--font-numeric);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .button-raise .key-hint {
+    background: rgba(29, 23, 22, 0.15);
+  }
+
+  .button-passive .key-hint {
+    background: rgba(29, 23, 22, 0.1);
+  }
+
+  .bet-sheet {
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--color-surface);
+  }
+
+  .bet-sheet-size {
+    font-size: 30px;
+  }
+
+  .bet-preset {
+    border-radius: 10px;
+  }
+
+  .bet-sheet-buttons .button {
+    min-height: 52px;
+    border-radius: var(--radius-medium);
   }
 
   .coach {

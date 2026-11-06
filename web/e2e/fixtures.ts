@@ -48,7 +48,7 @@ export const test = base.extend<{ problems: string[] }>({
 });
 
 export { expect };
-export { byId, playToTheEnd, waitForWaypoint } from './shared.ts';
+export { byId, goAllIn, playToTheEnd, waitForWaypoint } from './shared.ts';
 export type { Waypoint } from './shared.ts';
 
 export const FAST_URL = '/?seed=42&botDelay=0&autoNext=off';

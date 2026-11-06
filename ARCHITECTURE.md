@@ -839,13 +839,20 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   speaks each new line of hers with the browser's `speechSynthesis`, an English voice from a preferred list, the
   `prosody` of `faceNow()`, and her lips follow `speechOf` resynced on every word boundary. Without
   `speechSynthesis` the checkbox is not shown.
-- Keyboard: `f` folds, `c` checks or calls, `r` raises, the arrow keys move the raise amount.
+- Action panel (`ActionBar`): Fold, Check or Call, and Raise to (or Bet) the smallest raise; Fold is offered only
+  when a call is owed. Raise opens the bet sheet in the same panel: the size, the presets Half pot, Pot (Min when the
+  pot preset reaches the stack) and All-in, a slider with smaller and bigger steps of one big blind (`step` of the
+  `RaiseControl`), Back and the confirm. At the stack the confirm reads Hold for all-in and acts only after a
+  `HOLD_MS` (600 ms) hold (`useHold`). On wide screens the buttons stack Raise, Call, Fold with their key hints.
+- Keyboard: `f` folds, `c` checks or calls, `r` opens the bet sheet; in the sheet the arrow keys move the size by
+  one big blind, Enter confirms (held for an all-in) and Escape goes back.
 - `data-testid` contract for e2e and contact sheets: `scene`, `start-cash`, `start-tournament`, `opponent-<key>`,
   `start-loading`, `farewell`, `blinds`, `session-result`, `hand-number`, `leave`, `new-game`, `seat-<i>`, `stack-<i>`
   (with `data-stack`), `face-frame`, `table-board`, `action-panel`, `bet-<i>`, `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`,
   `bubble-aggressive` or `bubble-fold`), `thinking-<i>`, `card` (with `data-card`), `card-back`, `board`, `pot` (with
   `data-amount` = total and `data-collected`), `result`, `next-hand`, `fold`, `passive`, `raise`, `raise-amount`,
-  `preset-half`, `preset-pot`, `preset-allin`, `hand-log-toggle`, `sound-toggle`, `simple-table`, `auto-next`,
+  `preset-half`, `preset-pot` (or `preset-min`), `preset-allin`, `raise-size`, `raise-less`, `raise-more`,
+  `raise-back`, `raise-confirm`, `hand-log-toggle`, `sound-toggle`, `simple-table`, `auto-next`,
   `sound`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`, `coach-mode`, `start-coach`, `coach-toggle`,
   `coach-close`, `coach-scrim`, `coach-status`, `coach-hint`, `coach-tab-hint`, `coach-tab-range`, `coach-tab-numbers`,
   `coach-strategy`, `coach-range`, `coach-numbers`, `coach-composition`, `coach-outs`, `coach-blockers`, `coach-tab-session`, `coach-review`, `coach-leaks`, `live-region`, `tournament-over`, `leave-tonight`,
