@@ -1,7 +1,7 @@
 export type { Card } from './cards.ts';
 export { formatCard, rankOf } from './cards.ts';
 export type { BotClient } from './botClient.ts';
-export { inProcessBot, workerBot } from './botClient.ts';
+export { inProcessBot, sharedWorkerBot, workerBot } from './botClient.ts';
 export type { Opponent } from './opponent.ts';
 export { opponentsFor } from './opponent.ts';
 export type {

@@ -189,6 +189,7 @@ function Start({
       seed={seed}
       simple={preferences.simple}
       face={preferences.face}
+      onChoose={(opponent) => app.session.getState().prepare(opponent)}
       farewell={app.farewell ?? false}
       coach={preferences.coach}
       onToggleCoach={preferences.toggleCoach}

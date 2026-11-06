@@ -89,7 +89,7 @@ own layer by path. `brains/index.ts` holds `Brain`, `Decision`, `Observation`, `
 `startHand`, `apply`, `legalActionsOf`, `toAct`), `isLegal`, `checkOrCall`, `playToEnd`, `createTable`, `rulesOf`,
 the modes, `startingStack`, `BOARD_SIZE` and `handHistory`; `cfr/index.ts` `createCfrBrain`, `CfrModel`,
 `loadCfrModel`, `SHIPPED_STRATEGIES`, `ShippedStrategyKey` and `BotRecord`; `game/index.ts` is the surface of `ui`
-(with `createSession`, `toViewModel`, `groupHand`, `workerBot` and `inProcessBot`).
+(with `createSession`, `toViewModel`, `groupHand`, `workerBot`, `sharedWorkerBot` and `inProcessBot`).
 
 ESLint enforces the table with a `@typescript-eslint/no-restricted-imports` rule per directory. For `brains` the
 rule sets `allowTypeImports` on `engine`; the tests in `brains`, `persona` and `conversation` (`*.test.ts`) may also import `engine` code to
@@ -561,7 +561,7 @@ class, mask)` moves a per-class chance toward the mean of its classes by her mas
   split. It equals the `win` entry of the log; an uncalled bet is its own `returned` entry.
 - `BotClient` has `observe(observations)`, `decide(legal, bias?, explain?)` (with `explain` the decision carries
   the brain's `explain()` as `breakdown` when the brain has one), `reset()`, an optional `select(opponent, seed)`, an
-  optional `coach(observations, legal, pot)`, an optional `opponentRange()` and an optional `dispose()`. `workerBot()` runs the brain in `bot.worker.ts` over the `WorkerRequest` and `WorkerReply`
+  optional `coach(observations, legal, pot)`, an optional `opponentRange()`, an optional `warm(opponent)` and an optional `dispose()`. `workerBot()` runs the brain in `bot.worker.ts` over the `WorkerRequest` and `WorkerReply`
   messages in `workerProtocol.ts`; `createWorkerHandler(newBrain, post, load)` in `workerHandler.ts` is the worker's
   message handling as a plain function. A `select` request queues every later request until the opponent's brain
   factory is ready, then replies `{ id, opponent }` or `{ id, error }` and keeps the old brain on an error. The worker
@@ -572,7 +572,12 @@ class, mask)` moves a per-class chance toward the mean of its classes by her mas
   `createWorkerHandler`, the opponent's own strategy, `cfr` for the math bot) and replies `{ id, facts }` or
   `{ id, error }`. The coach never touches the playing brain's RNG. An `opponentRange` request (`{ id }`) replies
   `{ id, range }` with `opponentRange()` of the playing brain when it arrives, after every observation sent before
-  it, or null for the math brain. Replacing a brain disposes it. `inProcessBot()` runs the math brain on the main thread and
+  it, or null for the math brain. A `warm` request (`{ opponent }`, no reply, never queued behind a `select`) starts
+  loading a cfr opponent's model, so the start screen can begin the download as soon as the player picks the
+  solver (`prepare(opponent)` of the session). `sharedWorkerBot()` keeps one worker for the page: `main.tsx` takes a
+  client from it for every game, and disposing a game's client resets the worker instead of stopping it, so a
+  loaded model survives Play again and a new evening. `vercel-output-config.json` serves `/assets/*` (hashed
+  names, the models among them) with `Cache-Control: public, max-age=31536000, immutable`. Replacing a brain disposes it. `inProcessBot()` runs the math brain on the main thread and
   rejects `select('cfr')`.
 - `withFallback` wraps a client: when `decide` rejects or takes longer than 5 s, it disposes the primary, replays
   the observations of the hand into an in-process bot and uses it from then on. It falls back once, and a failure

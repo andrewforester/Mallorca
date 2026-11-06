@@ -286,6 +286,14 @@ function switchCoach(rt: Runtime, on: boolean): void {
   }
 }
 
+function leaveTable(rt: Runtime): void {
+  const { phase, table } = rt.get();
+  if (table.mode.kind === 'cash' && phase === 'handOver') {
+    rt.set({ phase: 'sessionOver' });
+    rt.conversation.leave();
+  }
+}
+
 function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
   return {
     start(next, opponent) {
@@ -301,13 +309,10 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
       }
       return choose(rt, target).then(() => (mine === rt.epoch ? restart(rt, options) : undefined));
     },
-    leave() {
-      const { phase, table } = rt.get();
-      if (table.mode.kind === 'cash' && phase === 'handOver') {
-        rt.set({ phase: 'sessionOver' });
-        rt.conversation.leave();
-      }
+    prepare(opponent) {
+      rt.bot.warm?.(opponent);
     },
+    leave: () => leaveTable(rt),
     dispose() {
       rt.conversation.leave();
       rt.epoch += 1;

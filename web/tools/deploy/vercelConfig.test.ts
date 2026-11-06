@@ -60,4 +60,13 @@ describe('the shipped policy', () => {
     const connect = policy.split(';').find((part) => part.trim().startsWith('connect-src ')) ?? '';
     expect(connect.trim().split(/\s+/)).toContain('blob:');
   });
+
+  it('keeps the hashed assets, the solver models among them, for a year', () => {
+    const shipped = JSON.parse(
+      readFileSync(new URL('../../vercel-output-config.json', import.meta.url), 'utf8'),
+    ) as OutputConfig;
+    const assets = shipped.routes.find((route) => route.src === '/assets/(.*)');
+    expect(assets?.headers?.['Cache-Control']).toBe('public, max-age=31536000, immutable');
+    expect(assets?.['continue']).toBe(true);
+  });
 });

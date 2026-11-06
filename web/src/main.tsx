@@ -5,7 +5,7 @@ import {
   openHandStore,
   conversationConnector,
   TOURNAMENT,
-  workerBot,
+  sharedWorkerBot,
 } from './game/index.ts';
 import type { Session } from './game/index.ts';
 import { App } from './ui/App.tsx';
@@ -74,12 +74,14 @@ if (root === null) {
   throw new Error('Missing #app element');
 }
 
+const nextBot = sharedWorkerBot();
+
 function mount(farewell = false): void {
   session?.getState().dispose();
   const seed = nextSeed ?? randomSeed();
   nextSeed = null;
   session = createSession({
-    bot: workerBot(),
+    bot: nextBot(),
     seed,
     botDelayMs: botDelay,
     humanSeat: HUMAN_SEAT,

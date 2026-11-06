@@ -27,6 +27,13 @@ describe('StartScreen', () => {
     expect(onStart).toHaveBeenLastCalledWith(CASH, 'cfr');
   });
 
+  it('tells which opponent was chosen as soon as it is chosen', () => {
+    const onChoose = vi.fn();
+    render(<StartScreen seed={42} onStart={vi.fn()} onChoose={onChoose} finePointer />);
+    fireEvent.click(screen.getByTestId('opponent-cfr-v2'));
+    expect(onChoose).toHaveBeenCalledWith('cfr-v2');
+  });
+
   it('offers the v2 solver where a fine pointer is present', () => {
     const onStart = vi.fn();
     render(<StartScreen seed={42} onStart={onStart} finePointer />);

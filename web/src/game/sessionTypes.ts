@@ -48,6 +48,7 @@ export interface SessionState {
 
 export interface SessionActions {
   start(mode?: TableMode, opponent?: Opponent): Promise<void>;
+  prepare(opponent: Opponent): void;
   leave(): void;
   nextHand(): Promise<void>;
   act(intent: Intent): Promise<void>;

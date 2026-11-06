@@ -84,6 +84,45 @@ function brainSlot(newBrain: BrainFactory): BrainSlot {
   return slot;
 }
 
+function warm(opponent: Opponent, coachModel: CoachModel): void {
+  if (opponent !== 'math') {
+    void coachModel(opponent).catch(() => undefined);
+  }
+}
+
+interface Context {
+  slot: BrainSlot;
+  post: (reply: WorkerReply) => void;
+  coachModel: CoachModel;
+  select: (request: Select) => void;
+}
+
+function dispatch(request: Exclude<WorkerRequest, { kind: 'warm' }>, context: Context): void {
+  const { slot, post, coachModel, select } = context;
+  switch (request.kind) {
+    case 'reset':
+      slot.reset();
+      break;
+    case 'observe':
+      for (const observation of request.observations) {
+        slot.brain.observe(observation);
+      }
+      break;
+    case 'decide':
+      answer(slot.brain, request, post);
+      break;
+    case 'select':
+      select(request);
+      break;
+    case 'coach':
+      coach(request, slot.brain.range?.() ?? null, coachModel(slot.opponent), post);
+      break;
+    case 'opponentRange':
+      opponentRange(slot.brain, request.id, post);
+      break;
+  }
+}
+
 export function createWorkerHandler(
   newBrain: BrainFactory,
   post: (reply: WorkerReply) => void,
@@ -113,31 +152,12 @@ export function createWorkerHandler(
       });
   };
   const handle = (request: WorkerRequest): void => {
-    if (waiting !== null) {
+    if (request.kind === 'warm') {
+      warm(request.opponent, coachModel);
+    } else if (waiting !== null) {
       waiting.push(request);
-      return;
-    }
-    switch (request.kind) {
-      case 'reset':
-        slot.reset();
-        break;
-      case 'observe':
-        for (const observation of request.observations) {
-          slot.brain.observe(observation);
-        }
-        break;
-      case 'decide':
-        answer(slot.brain, request, post);
-        break;
-      case 'select':
-        select(request);
-        break;
-      case 'coach':
-        coach(request, slot.brain.range?.() ?? null, coachModel(slot.opponent), post);
-        break;
-      case 'opponentRange':
-        opponentRange(slot.brain, request.id, post);
-        break;
+    } else {
+      dispatch(request, { slot, post, coachModel, select });
     }
   };
   return handle;
