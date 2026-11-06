@@ -1,0 +1,105 @@
+.app {
+  position: absolute;
+  inset: 0;
+}
+
+.status-bar {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-4);
+  right: var(--space-4);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+
+.status-info > span {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-glass);
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  backdrop-filter: blur(var(--blur-glass));
+}
+
+.scene-simple .status-info > span {
+  background: var(--color-glass-strong);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.status-info {
+  display: flex;
+  flex: 1 1 auto;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.status-info > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.leave {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.leave + .log-toggle,
+.sound-toggle + .log-toggle,
+.log-toggle + .menu {
+  margin-left: 0;
+}
+
+.log-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: var(--tap-size);
+  min-height: var(--tap-size);
+  margin-left: auto;
+  padding: 0;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.menu-summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap-size);
+  padding: 0 var(--space-4);
+  color: var(--color-text);
+  cursor: pointer;
+  list-style: none;
+}
+
+.menu-summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu-body {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-2));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(20rem, calc(100vw - 2 * var(--space-4)));
+  padding: var(--space-3);
+  border-radius: var(--radius-medium);
+  background: var(--color-glass-strong);
+  color: var(--color-text);
+}

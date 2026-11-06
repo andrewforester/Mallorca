@@ -1,0 +1,115 @@
+@media (min-aspect-ratio: 1/1) {
+  .action-bar {
+    left: auto;
+    right: var(--space-5);
+    bottom: var(--space-5);
+    width: var(--action-bar-width);
+  }
+
+  .action-buttons {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .seat-bottom .card {
+    width: calc(var(--card-width) * 1.55);
+  }
+
+  .action-buttons .button {
+    min-height: 56px;
+    border-radius: 14px;
+    font-size: var(--font-size-base);
+  }
+
+  .action-buttons .button-raise {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+
+  .table-side {
+    position: absolute;
+    top: 64px;
+    right: var(--space-5);
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    width: 18rem;
+    max-height: calc(100dvh - 64px - var(--action-bar-reserve));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .board .card {
+    animation: deal-in 260ms ease-out both;
+  }
+
+  .bubble-thinking {
+    animation: thinking 2.4s ease-in-out infinite;
+  }
+
+  .result-chips-to-top {
+    animation: chips-to-top 600ms ease-in both;
+  }
+
+  .result-chips-to-bottom {
+    animation: chips-to-bottom 600ms ease-in both;
+  }
+
+  .result-chips-split {
+    animation: chips-split 600ms ease-in both;
+  }
+}
+
+@keyframes deal-in {
+  from {
+    opacity: 0;
+    transform: translate(-40px, 30px) rotate(-8deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes thinking {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes chips-to-top {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, -160px) scale(0.7);
+  }
+}
+
+@keyframes chips-to-bottom {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, 200px) scale(1.2);
+  }
+}
+
+@keyframes chips-split {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(1.6);
+  }
+}

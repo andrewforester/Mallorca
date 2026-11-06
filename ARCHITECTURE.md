@@ -790,7 +790,11 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   a scrim that closes on tap; in landscape it is a floating panel and the scrim does not take pointer events, so
   the player can act while it is open.
 - Every colour, font, radius, spacing and shadow is a CSS token on `:root` in `ui/styles/tokens.css`, with a dark
-  theme under `prefers-color-scheme: dark`. The visual design brief is GitHub issue #2.
+  theme under `prefers-color-scheme: dark`. The visual design is the redesign epic #89 with its spec in
+  `docs/design/redesign/spec.md`.
+- Styles are plain global CSS in `ui/styles/`, one file per layer, imported by `main.tsx` in cascade order after
+  `tokens.css`: `base`, `start`, `status`, `table`, `actions`, `dialog`, `table-wide`, `scene`, `hand-log`, `talk`,
+  `coach`, `face`. A rule goes to the file of the layer it styles.
 - Every string comes from `src/locales/en.json` through i18next (`ui/i18n.ts`). `ui/phrases.ts` words log
   entries, action tags and hand categories; an entry with the human seat uses the `log.you` keys, any other seat
   the `log.other` keys with `{{name}}`.
