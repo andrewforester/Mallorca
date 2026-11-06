@@ -28,7 +28,10 @@
     "autoNext": "Auto next hand",
     "sound": "Sound",
     "face": "Her face",
-    "voice": "Her voice"
+    "voice": "Her voice",
+    "log": "Log",
+    "coach": "Coach",
+    "menuGlyph": "≡"
   },
   "seat": {
     "you": "You",
@@ -261,6 +264,7 @@
       "conversation": "Table talk"
     },
     "undelivered": "Not delivered",
-    "message": "Message"
+    "message": "Message",
+    "talk": "Talk"
   }
 }

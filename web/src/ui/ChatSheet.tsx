@@ -4,20 +4,6 @@ import { Chat } from './Chat.tsx';
 import type { ChatProps } from './Chat.tsx';
 import { t } from './i18n.ts';
 
-function ChatIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-      <path
-        d="M4 5.5C4 4.7 4.7 4 5.5 4h13c.8 0 1.5.7 1.5 1.5v9c0 .8-.7 1.5-1.5 1.5H10l-4.5 4v-4h0c-.8 0-1.5-.7-1.5-1.5z"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.6"
-        stroke-linejoin="round"
-      />
-    </svg>
-  );
-}
-
 export function ChatSheet(props: ChatProps) {
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
@@ -36,13 +22,13 @@ export function ChatSheet(props: ChatProps) {
       <button
         type="button"
         ref={button}
-        class="chat-open glass"
+        class="status-button chat-open"
         data-testid="chat-open"
         aria-label={t('conversation.open')}
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
-        <ChatIcon />
+        {t('conversation.talk')}
       </button>
       {open &&
         createPortal(

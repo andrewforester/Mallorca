@@ -51,20 +51,6 @@
   backdrop-filter: none;
 }
 
-.menu-toggle {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: var(--tap-size);
-  cursor: pointer;
-}
-
-.menu-toggle input {
-  width: 20px;
-  height: 20px;
-  accent-color: var(--color-accent);
-}
-
 .next-hand-auto {
   position: relative;
   overflow: hidden;

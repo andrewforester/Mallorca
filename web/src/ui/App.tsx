@@ -10,7 +10,9 @@ import type {
   SeatIndex,
   ViewModel,
 } from '../game/index.ts';
+import { ChatSheet } from './ChatSheet.tsx';
 import { HandLogDrawer } from './HandLogDrawer.tsx';
+import { t } from './i18n.ts';
 import { HistoryMenu } from './HistoryMenu.tsx';
 import { Scene } from './Scene.tsx';
 import { SessionOver } from './SessionOver.tsx';
@@ -233,14 +235,11 @@ function Header({ app, vm, seed, drawer, preferences, coach, onMenu }: HeaderPro
   return (
     <StatusBar
       vm={vm}
-      canLeave={phase === 'handOver'}
-      onLeave={() => app.session.getState().leave()}
       logOpen={drawer.open}
       logToggle={drawer.toggle}
       onToggleLog={drawer.flip}
-      sound={preferences.sound}
-      onToggleSound={preferences.toggleSound}
       coach={coach.toggle}
+      talk={<Talk session={app.session} vm={vm} />}
     >
       <HistoryMenu
         seed={seed}
@@ -253,8 +252,37 @@ function Header({ app, vm, seed, drawer, preferences, coach, onMenu }: HeaderPro
         onClose={() => onMenu(false)}
       >
         <Settings preferences={preferences} {...conversationActions(app.session, vm)} />
+        {vm.mode === 'cash' && (
+          <button
+            type="button"
+            class="button menu-leave"
+            data-testid="leave"
+            disabled={phase !== 'handOver'}
+            onClick={(event) => {
+              const menu = (event.currentTarget as HTMLElement).closest('details');
+              if (menu !== null) menu.open = false;
+              app.session.getState().leave();
+            }}
+          >
+            {t('status.leave')}
+          </button>
+        )}
       </HistoryMenu>
     </StatusBar>
+  );
+}
+
+function Talk({ session, vm }: { session: Session; vm: ViewModel }) {
+  const { conversation } = vm;
+  if (!conversation.available || !conversation.on) {
+    return null;
+  }
+  return (
+    <ChatSheet
+      lines={conversation.lines}
+      onSay={(text) => session.getState().say(text)}
+      onQuick={(id, text) => session.getState().quick(id, text)}
+    />
   );
 }
 
