@@ -43,6 +43,10 @@ async function capture(browser: Browser, sheet: Sheet): Promise<Shot[]> {
   }
   await waitForWaypoint(page);
   await snap(page, 'after flop', shots);
+  await byId(page, 'raise').click();
+  await byId(page, 'preset-half').click();
+  await snap(page, 'bet sheet', shots);
+  await byId(page, 'raise-back').click();
 
   for (;;) {
     const waypoint = await waitForWaypoint(page);

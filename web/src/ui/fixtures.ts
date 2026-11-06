@@ -34,6 +34,7 @@ export function viewModel(overrides: Partial<ViewModel['controls']> = {}): ViewM
         min: 160,
         max: 2000,
         presets: { halfPot: 250, pot: 400, allIn: 2000 },
+        step: 20,
       },
       enabled: true,
       ...overrides,

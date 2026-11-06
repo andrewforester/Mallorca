@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 import type { Browser, Page } from '@playwright/test';
-import { byId, DEVICES, waitForWaypoint } from './shared.ts';
+import { byId, DEVICES, goAllIn, waitForWaypoint } from './shared.ts';
 import { answers, compose, snap, waitForServer } from './sheet.ts';
 import type { Shot } from './sheet.ts';
 
@@ -64,8 +64,7 @@ async function untilNewDecision(page: Page): Promise<void> {
 
 async function shove(page: Page): Promise<void> {
   if (await byId(page, 'raise').isEnabled()) {
-    await byId(page, 'preset-allin').click();
-    await byId(page, 'raise').click();
+    await goAllIn(page);
   } else {
     await byId(page, 'passive').click();
   }

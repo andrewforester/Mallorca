@@ -61,7 +61,19 @@
     "half": "Half pot",
     "pot": "Pot",
     "allIn": "All-in",
-    "label": "Your actions"
+    "label": "Your actions",
+    "min": "Min",
+    "back": "Back",
+    "less": "Smaller",
+    "more": "Bigger",
+    "holdAllIn": "Hold for all-in {{amount}}",
+    "raiseVerb": "Raise to",
+    "betVerb": "Bet",
+    "keyFold": "F",
+    "keyPassive": "C",
+    "keyRaise": "R",
+    "lessGlyph": "−",
+    "moreGlyph": "+"
   },
   "result": {
     "wins": "{{name}} wins {{amount}}",
