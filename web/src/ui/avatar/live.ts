@@ -1,9 +1,14 @@
 import type { FaceCue, FaceFrame, VisemeCue } from '../../game/index.ts';
 import { Avatar } from './avatar.ts';
+import type { FaceRenderer } from './avatar.ts';
 import { Motion } from './motion.ts';
+import { RigAvatar } from './rig/RigAvatar.ts';
+
+export const rigRenderer = (base: string) => (): FaceRenderer => new RigAvatar(base);
+export const glbRenderer = (url: string) => (): FaceRenderer => new Avatar(url);
 
 export interface LiveOptions {
-  url: string;
+  create: () => FaceRenderer;
   frame: () => FaceFrame | null;
   calm: boolean;
   onLost: () => void;
@@ -22,8 +27,13 @@ const FRAME_EVERY_S = 0.1;
 const MAX_STEP_S = 0.1;
 
 export async function mountFace(host: HTMLElement, options: LiveOptions): Promise<LiveFace> {
-  const avatar = new Avatar();
-  await avatar.load(options.url);
+  const avatar = options.create();
+  try {
+    await avatar.load();
+  } catch (error) {
+    avatar.dispose();
+    throw error;
+  }
   const motion = new Motion({ random: Math.random, calm: options.calm });
   avatar.canvas.classList.add('face-canvas');
   host.append(avatar.canvas);

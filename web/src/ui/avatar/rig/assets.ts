@@ -45,8 +45,8 @@ export interface RigHeader {
 export interface RigAssets {
   header: RigHeader;
   bin: ArrayBuffer;
-  dna: Uint8Array;
-  masks: Uint8Array;
+  dna: Uint8Array<ArrayBuffer>;
+  masks: Uint8Array<ArrayBuffer>;
   mapping: Mapping;
 }
 

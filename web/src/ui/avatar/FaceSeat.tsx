@@ -4,11 +4,13 @@ import { speechOf } from '../../game/index.ts';
 import type { ChatLine, FaceCue, Session } from '../../game/index.ts';
 import { t } from '../i18n.ts';
 import { canRender } from './canRender.ts';
-import type { LiveFace } from './live.ts';
+import { firstOf } from './firstOf.ts';
+import type { LiveFace, LiveOptions } from './live.ts';
 import { createVoice } from './voice.ts';
 import type { Voice } from './voice.ts';
 
 export const MODEL_URL = `${import.meta.env.BASE_URL}avatar/mallorca.glb`;
+export const RIG_BASE = `${import.meta.env.BASE_URL}avatar/her/`;
 export const PORTRAIT_URL = `${import.meta.env.BASE_URL}avatar/portrait.webp`;
 
 export interface FaceSeatProps {
@@ -37,14 +39,16 @@ function useLive(host: RefObject<HTMLDivElement | null>, session: Session) {
       setMode('portrait');
     };
     import('./live.ts')
-      .then(({ mountFace }) =>
-        mountFace(node, {
-          url: MODEL_URL,
+      .then(({ mountFace, rigRenderer, glbRenderer }) => {
+        const options: Omit<LiveOptions, 'create'> = {
           frame: () => session.getState().faceNow(),
           calm: reducedMotion(),
           onLost: drop,
-        }),
-      )
+        };
+        const mount = (create: LiveOptions['create']) => () =>
+          mountFace(node, { ...options, create });
+        return firstOf([mount(rigRenderer(RIG_BASE)), mount(glbRenderer(MODEL_URL))]);
+      })
       .then((face) => {
         if (gone) return face.dispose();
         live.current = face;

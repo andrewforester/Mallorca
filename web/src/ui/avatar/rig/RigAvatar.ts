@@ -1,0 +1,185 @@
+import * as THREE from 'three';
+import type { FaceRenderer } from '../avatar.ts';
+import type { Pose } from '../motion.ts';
+import { FOV, addLights, createRenderer, frameHead } from '../stage.ts';
+import type { RigAssets } from './assets.ts';
+import { loadAssets } from './assets.ts';
+import { NormalTracker, applyBlends, followHead } from './blend.ts';
+import type { MeshData } from './geometry.ts';
+import { meshGeometry } from './geometry.ts';
+import { wearGlasses } from './glasses.ts';
+import type { Materials } from './materials.ts';
+import { CARDS_SOFT_ORDER, loadMaterials, renderOrderOf } from './materials.ts';
+import { createRig } from './riglogic.ts';
+import { RigState } from './rigState.ts';
+import type { WrinkleLayout } from './skin.ts';
+import { wrinkleWeights } from './skin.ts';
+
+const WASM_URL = new URL('./riglogic.wasm', import.meta.url);
+const EXPOSURE = 1.45;
+const HELMET_SCALE = 0.995;
+
+interface LiveMesh {
+  data: MeshData;
+  positions: Float32Array;
+  attribute: THREE.BufferAttribute;
+  normals: NormalTracker | null;
+}
+
+function maskTexture({ header, masks }: RigAssets): THREE.DataArrayTexture {
+  const size = header.maskSize;
+  const texture = new THREE.DataArrayTexture(masks, size, size, header.masks.length);
+  texture.format = THREE.RedFormat;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+export class RigAvatar implements FaceRenderer {
+  readonly canvas: HTMLCanvasElement;
+  private readonly base: string;
+  private readonly renderer = createRenderer(EXPOSURE);
+  private readonly scene = new THREE.Scene();
+  private readonly camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 20);
+  private state: RigState | null = null;
+  private assets: RigAssets | null = null;
+  private layout: WrinkleLayout | null = null;
+  private live: LiveMesh[] = [];
+  private head: LiveMesh | null = null;
+
+  constructor(base: string) {
+    this.base = base;
+    this.canvas = this.renderer.domElement;
+    addLights(this.scene);
+    const fill = new THREE.DirectionalLight(0xfff4ea, 1.3);
+    fill.position.set(0.2, 1.7, 2.5);
+    this.scene.add(fill, new THREE.AmbientLight(0xffffff, 0.35));
+  }
+
+  async load(): Promise<void> {
+    const [assets, wasm] = await Promise.all([
+      loadAssets(this.base),
+      fetch(WASM_URL).then((r) => r.arrayBuffer()),
+    ]);
+    const state = new RigState(assets, await createRig(wasm, assets.dna));
+    const { masks, maps } = assets.header;
+    const blink = [masks.indexOf('head_wm1_blink_L'), masks.indexOf('head_wm1_blink_R')] as [
+      number,
+      number,
+    ];
+    const weights = masks.map(() => new THREE.Vector3());
+    this.layout = { masks: maskTexture(assets), count: masks.length, blink, weights };
+    const materials = await loadMaterials(this.base, this.layout);
+    this.assets = assets;
+    this.state = state;
+    this.scene.add(state.root);
+    this.buildMeshes(assets, state, materials);
+    wrinkleWeights(maps, masks, state.update(this.restPose()).maps, weights);
+    await this.dress(state);
+  }
+
+  private restPose(): Pose {
+    return {
+      weights: {},
+      eyes: [0, 0],
+      head: [0, 0, 0],
+      neck: [0, 0, 0],
+      spine: [0, 0, 0],
+      shoulder: 0,
+    };
+  }
+
+  private buildMeshes(assets: RigAssets, state: RigState, materials: Materials): void {
+    const skeleton = new THREE.Skeleton(state.bones);
+    state.root.updateMatrixWorld(true);
+    const add = (geometry: THREE.BufferGeometry, material: THREE.Material, order: number) => {
+      const mesh = new THREE.SkinnedMesh(geometry, material);
+      mesh.frustumCulled = false;
+      mesh.renderOrder = order;
+      state.root.add(mesh);
+      mesh.bind(skeleton);
+      return mesh;
+    };
+    for (const section of assets.header.meshes) {
+      const material = materials.byMesh[section.name];
+      if (!material) continue;
+      const data = meshGeometry(assets.bin, section);
+      const mesh = add(data.geometry, material, renderOrderOf(section.name));
+      if (section.name === 'helmet') mesh.scale.setScalar(HELMET_SCALE);
+      if (section.name === 'cards') add(data.geometry, materials.cardsSoft, CARDS_SOFT_ORDER);
+      this.track(section.name, data);
+    }
+  }
+
+  private track(name: string, data: MeshData): void {
+    if (!data.targets.length && !data.follow) return;
+    const attribute = data.geometry.getAttribute('position') as THREE.BufferAttribute;
+    const normals =
+      name === 'head'
+        ? new NormalTracker(
+            data.geometry.getAttribute('normal').array as Float32Array,
+            data.base,
+            data.geometry.index!.array,
+          )
+        : null;
+    const entry = { data, positions: attribute.array as Float32Array, attribute, normals };
+    if (name === 'head') this.head = entry;
+    this.live.push(entry);
+  }
+
+  private async dress(state: RigState): Promise<void> {
+    const world = (name: string) => state.bone(name)!.getWorldPosition(new THREE.Vector3());
+    state.root.updateMatrixWorld(true);
+    frameHead(this.camera, world('head'));
+    const eyes = [world('FACIAL_L_Eye'), world('FACIAL_R_Eye')] as const;
+    await wearGlasses(`${this.base}glasses/glasses.gltf`, this.scene, eyes, state.bone('head')!);
+  }
+
+  resize(width: number, height: number): void {
+    this.renderer.setSize(width, height, false);
+    this.camera.aspect = width / Math.max(1, height);
+    this.camera.updateProjectionMatrix();
+  }
+
+  render(pose: Pose): void {
+    if (this.state && this.assets && this.layout) {
+      const frame = this.state.update(pose);
+      this.deform(frame.blends);
+      wrinkleWeights(
+        this.assets.header.maps,
+        this.assets.header.masks,
+        frame.maps,
+        this.layout.weights,
+      );
+    }
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  private deform(blends: Float32Array): void {
+    const head = this.head;
+    for (const m of this.live) {
+      if (m.data.follow && head) {
+        followHead(
+          { now: head.positions, base: head.data.base },
+          m.data.follow,
+          m.data.base,
+          m.positions,
+        );
+      } else {
+        applyBlends(m.data.base, m.data.targets, blends, m.positions);
+      }
+      m.attribute.needsUpdate = true;
+      if (m.normals) {
+        const normal = m.data.geometry.getAttribute('normal') as THREE.BufferAttribute;
+        m.normals.update(m.positions, normal.array as Float32Array);
+        normal.needsUpdate = true;
+      }
+    }
+  }
+
+  dispose(): void {
+    this.renderer.dispose();
+    this.renderer.forceContextLoss();
+  }
+}
