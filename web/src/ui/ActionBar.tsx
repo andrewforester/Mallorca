@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import type { Intent, RaiseControl, ViewModel } from '../game/index.ts';
-import { BetSlider } from './BetSlider.tsx';
+import { BetSlider, defaultSize } from './BetSlider.tsx';
 import { t } from './i18n.ts';
 import { useKeyboard } from './keyboard.ts';
 import { useHold } from './useHold.ts';
@@ -13,8 +13,6 @@ export interface ActionBarProps {
   onAct: (intent: Intent) => void;
 }
 
-type Mode = 'buttons' | 'size';
-
 function KeyHint({ letter }: { letter: string }) {
   return (
     <span class="key-hint" aria-hidden="true">
@@ -25,6 +23,7 @@ function KeyHint({ letter }: { letter: string }) {
 
 function raiseLabel(raise: RaiseControl | null, amount: number): string {
   if (raise === null) return t('actions.raise');
+  if (amount >= raise.max) return t('actions.holdAllIn', { amount });
   return t(raise.kind === 'bet' ? 'actions.bet' : 'actions.raiseTo', { amount });
 }
 
@@ -34,22 +33,55 @@ function passiveLabel(passive: ViewModel['controls']['passive']): string {
     : t('actions.call', { amount: passive.amount });
 }
 
-interface ButtonsProps {
+interface RaiseButtonProps {
   controls: ViewModel['controls'];
-  onFold: () => void;
-  onPassive: () => void;
-  onOpen: () => void;
+  amount: number;
+  hold: Hold;
+  onRaise: () => void;
 }
 
-function Buttons({ controls, onFold, onPassive, onOpen }: ButtonsProps) {
-  const { enabled, fold, passive, raise } = controls;
+function RaiseButton({ controls, amount, hold, onRaise }: RaiseButtonProps) {
+  const { enabled, raise } = controls;
+  const allIn = raise !== null && amount >= raise.max;
+  const classes = [
+    'button',
+    'button-raise',
+    allIn ? 'button-hold' : '',
+    hold.holding ? 'button-holding' : '',
+  ];
+  return (
+    <button
+      type="button"
+      class={classes.filter(Boolean).join(' ')}
+      style={{ '--hold-ms': `${HOLD_MS}ms` }}
+      data-testid="raise"
+      disabled={!enabled || raise === null}
+      onClick={allIn ? undefined : onRaise}
+      onPointerDown={allIn ? hold.start : undefined}
+      onPointerUp={allIn ? hold.stop : undefined}
+      onPointerLeave={allIn ? hold.stop : undefined}
+      onPointerCancel={allIn ? hold.stop : undefined}
+    >
+      <span>{raiseLabel(raise, amount)}</span>
+      <KeyHint letter={t('actions.keyRaise')} />
+    </button>
+  );
+}
+
+interface ButtonsProps extends RaiseButtonProps {
+  onFold: () => void;
+  onPassive: () => void;
+}
+
+function Buttons(props: ButtonsProps) {
+  const { controls, onFold, onPassive } = props;
   return (
     <div class="action-buttons">
       <button
         type="button"
         class="button button-fold"
         data-testid="fold"
-        disabled={!enabled || !fold}
+        disabled={!controls.enabled || !controls.fold}
         onClick={onFold}
       >
         <span>{t('actions.fold')}</span>
@@ -59,55 +91,25 @@ function Buttons({ controls, onFold, onPassive, onOpen }: ButtonsProps) {
         type="button"
         class="button button-passive"
         data-testid="passive"
-        disabled={!enabled}
+        disabled={!controls.enabled}
         onClick={onPassive}
       >
-        <span>{passiveLabel(passive)}</span>
+        <span>{passiveLabel(controls.passive)}</span>
         <KeyHint letter={t('actions.keyPassive')} />
       </button>
-      <button
-        type="button"
-        class="button button-raise"
-        data-testid="raise"
-        disabled={!enabled || raise === null}
-        onClick={onOpen}
-      >
-        <span>{raiseLabel(raise, raise?.min ?? 0)}</span>
-        <KeyHint letter={t('actions.keyRaise')} />
-      </button>
+      <RaiseButton {...props} />
     </div>
   );
 }
 
-interface SheetProps {
+interface SizeProps {
   raise: RaiseControl;
   amount: number;
-  hold: Hold;
+  enabled: boolean;
   onChange: (amount: number) => void;
-  actions: { back: () => void; confirm: () => void };
 }
 
-function ConfirmButton({ raise, amount, hold, actions }: Omit<SheetProps, 'onChange'>) {
-  const allIn = amount >= raise.max;
-  return (
-    <button
-      type="button"
-      class={`button button-raise${allIn ? ' button-hold' : ''}${hold.holding ? ' button-holding' : ''}`}
-      style={{ '--hold-ms': `${HOLD_MS}ms` }}
-      data-testid="raise-confirm"
-      onClick={allIn ? undefined : actions.confirm}
-      onPointerDown={allIn ? hold.start : undefined}
-      onPointerUp={allIn ? hold.stop : undefined}
-      onPointerLeave={allIn ? hold.stop : undefined}
-      onPointerCancel={allIn ? hold.stop : undefined}
-    >
-      <span>{allIn ? t('actions.holdAllIn', { amount }) : raiseLabel(raise, amount)}</span>
-    </button>
-  );
-}
-
-function Sheet(props: SheetProps) {
-  const { raise, amount, onChange, actions } = props;
+function Size({ raise, amount, enabled, onChange }: SizeProps) {
   return (
     <div class="bet-sheet">
       <div class="bet-sheet-head">
@@ -118,84 +120,59 @@ function Sheet(props: SheetProps) {
           {amount}
         </span>
       </div>
-      <BetSlider raise={raise} value={amount} disabled={false} onChange={onChange} />
-      <div class="bet-sheet-buttons">
-        <button type="button" class="button" data-testid="raise-back" onClick={actions.back}>
-          {t('actions.back')}
-        </button>
-        <ConfirmButton {...props} />
-      </div>
+      <BetSlider raise={raise} value={amount} disabled={!enabled} onChange={onChange} />
     </div>
   );
 }
 
-function useActionState(controls: ViewModel['controls']) {
-  const [mode, setMode] = useState<Mode>('buttons');
+function useSize(controls: ViewModel['controls']) {
   const [chosen, setChosen] = useState<number | null>(null);
   const { enabled, raise } = controls;
   useEffect(() => {
-    if (!enabled) {
-      setMode('buttons');
-      setChosen(null);
-    }
+    if (!enabled) setChosen(null);
   }, [enabled]);
-  const amount = raise === null ? 0 : Math.min(Math.max(chosen ?? raise.min, raise.min), raise.max);
-  return { mode, setMode, amount, setChosen };
+  const clamp = (value: number) =>
+    raise === null ? 0 : Math.min(Math.max(value, raise.min), raise.max);
+  const amount = raise === null ? 0 : clamp(chosen ?? defaultSize(raise));
+  const step = (direction: 1 | -1) => {
+    if (raise !== null) setChosen(clamp(amount + direction * raise.step));
+  };
+  return { amount, setChosen, step };
 }
 
 export function ActionBar({ controls, onAct }: ActionBarProps) {
   const { enabled, fold, raise } = controls;
-  const state = useActionState(controls);
-  const { mode, setMode, amount } = state;
-  const raiseTo = () => onAct({ kind: 'raise', to: amount });
+  const size = useSize(controls);
+  const raiseTo = () => onAct({ kind: 'raise', to: size.amount });
   const hold = useHold(HOLD_MS, raiseTo);
-  const allIn = raise !== null && amount >= raise.max;
+  const allIn = raise !== null && size.amount >= raise.max;
   const doFold = () => onAct({ kind: 'fold' });
   const doPassive = () => onAct({ kind: 'passive' });
-  const open = () => raise !== null && setMode('size');
-  const back = () => setMode('buttons');
-  const sizing = mode === 'size' && raise !== null;
   useKeyboard({
     enabled,
-    fold: () => mode === 'buttons' && fold && doFold(),
-    passive: () => mode === 'buttons' && doPassive(),
-    raise: () => mode === 'buttons' && open(),
-    adjust: (direction) => {
-      if (sizing)
-        state.setChosen(Math.min(Math.max(amount + direction * raise.step, raise.min), raise.max));
-    },
-    confirm: () => {
-      if (!sizing) return false;
+    fold: () => fold && doFold(),
+    passive: doPassive,
+    raise: () => {
+      if (raise === null) return;
       if (allIn) hold.start();
       else raiseTo();
-      return true;
     },
-    back: () => {
-      if (mode === 'buttons') return false;
-      back();
-      return true;
-    },
+    adjust: size.step,
     release: hold.stop,
   });
   return (
     <div class="action-bar" role="group" aria-label={t('actions.label')}>
-      {sizing && (
-        <Sheet
-          raise={raise}
-          amount={amount}
-          hold={hold}
-          onChange={state.setChosen}
-          actions={{ back, confirm: raiseTo }}
-        />
+      {raise !== null && (
+        <Size raise={raise} amount={size.amount} enabled={enabled} onChange={size.setChosen} />
       )}
-      {mode === 'buttons' && (
-        <Buttons
-          controls={controls}
-          onFold={doFold}
-          onPassive={doPassive}
-          onOpen={() => void open()}
-        />
-      )}
+      <Buttons
+        controls={controls}
+        amount={size.amount}
+        hold={hold}
+        onRaise={raiseTo}
+        onFold={doFold}
+        onPassive={doPassive}
+      />
     </div>
   );
 }

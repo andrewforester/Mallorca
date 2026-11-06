@@ -42,8 +42,10 @@
 
 .action-buttons .button {
   min-height: var(--action-height);
-  padding: var(--space-2) var(--space-2);
+  padding: var(--space-1) var(--space-2);
   font-size: clamp(14px, 4.1vw, 16px);
+  line-height: 1.15;
+  white-space: normal;
 }
 
 .key-hint {

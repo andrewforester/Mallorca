@@ -44,6 +44,8 @@ const BINDINGS = new Map<string, Binding>([
   ['Escape', back],
 ]);
 
+const RELEASE = new Set(['Enter', 'r', 'R']);
+
 const NOT_TEXT = new Set(['button', 'checkbox', 'radio', 'range', 'reset', 'submit']);
 
 function isTyping(target: unknown): boolean {
@@ -77,7 +79,7 @@ export function useKeyboard(handlers: KeyHandlers): void {
       }
     };
     const release = (event: KeyboardEvent) => {
-      if (event.key === 'Enter') {
+      if (RELEASE.has(event.key)) {
         handlers.release?.();
       }
     };

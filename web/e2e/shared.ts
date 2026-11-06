@@ -42,9 +42,8 @@ export async function leaveTable(page: Page): Promise<void> {
 export const HOLD_FOR_ALL_IN_MS = 800;
 
 export async function goAllIn(page: Page): Promise<void> {
-  await byId(page, 'raise').click();
   await byId(page, 'preset-allin').click();
-  await byId(page, 'raise-confirm').click({ delay: HOLD_FOR_ALL_IN_MS });
+  await byId(page, 'raise').click({ delay: HOLD_FOR_ALL_IN_MS });
 }
 
 export async function playToTheEnd(page: Page): Promise<void> {
