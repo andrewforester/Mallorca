@@ -26,14 +26,26 @@ export interface LiveFace {
 const FRAME_EVERY_S = 0.1;
 const MAX_STEP_S = 0.1;
 
-export async function mountFace(host: HTMLElement, options: LiveOptions): Promise<LiveFace> {
-  const avatar = options.create();
+async function loadOrDispose(avatar: FaceRenderer): Promise<void> {
+  let lostWhileLoading = false;
+  const early = () => {
+    lostWhileLoading = true;
+  };
+  avatar.canvas.addEventListener('webglcontextlost', early);
   try {
     await avatar.load();
+    if (lostWhileLoading) throw new Error('WebGL context lost while loading');
   } catch (error) {
     avatar.dispose();
     throw error;
+  } finally {
+    avatar.canvas.removeEventListener('webglcontextlost', early);
   }
+}
+
+export async function mountFace(host: HTMLElement, options: LiveOptions): Promise<LiveFace> {
+  const avatar = options.create();
+  await loadOrDispose(avatar);
   const motion = new Motion({ random: Math.random, calm: options.calm });
   avatar.canvas.classList.add('face-canvas');
   host.append(avatar.canvas);

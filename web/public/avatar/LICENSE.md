@@ -32,14 +32,37 @@ It is the fallback when her MetaHuman face cannot load. It is under the library'
 `her/` is her live face and `portrait.webp` a still of it. It is a MetaHuman made in MetaHuman Creator inside Unreal
 Engine 5.8 by conforming the shape of `brunette.glb`, an avatar made with Ready Player Me and published by Mika
 Suominen in the TalkingHead project (https://github.com/met4citizen/TalkingHead) under the Creative Commons
-Attribution-NonCommercial 4.0 International license (https://creativecommons.org/licenses/by-nc/4.0/). Her face is an
-adaptation of that avatar: its proportions were fitted by the MetaHuman conform, and the rig, skin, eyes, teeth, hair
-and lashes are MetaHuman Creator's. The adaptation is shared under the same terms. **While her face is used, the game
-is non-commercial.** Replacing the face lifts that condition.
+Attribution-NonCommercial 4.0 International license (https://creativecommons.org/licenses/by-nc/4.0/). Only the shape
+of her face comes from that avatar: the MetaHuman conform fitted its proportions. That shape carries the BY-NC terms:
+the attribution above, and **while her face is used, the game is non-commercial**; replacing the face lifts that
+condition. Everything else in `her/` (the rig and its DNA, skin, eyes, teeth, hair and lashes) is MetaHuman Creator's
+and stays under Epic's terms below, which do not allow it to be reused outside this game.
 
 `her/glasses/` is "Round Spectacles" by Sean Buckley from Poly Haven (https://polyhaven.com/a/round_spectacles), CC0,
 with its textures resized to 512 px. RigLogic and the DNA reader in `web/src/ui/avatar/rig/riglogic.wasm` are
-OpenRigLogic (https://github.com/EpicGames/OpenRigLogic), MIT.
+OpenRigLogic (https://github.com/EpicGames/OpenRigLogic), under its license:
+
+    MIT License
+
+    Copyright (c) 2026 Epic Games, Inc.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
 
 The steps that build `her/` are in `web/tools/avatar/metahuman/README.md`. The MetaHuman terms it is built under were
 checked on 2026-11-01 against the Unreal Engine EULA (https://www.unrealengine.com/eula/unreal), the MetaHuman licence

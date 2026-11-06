@@ -77,6 +77,18 @@ export class RigAvatar implements FaceRenderer {
     this.buildMeshes(assets, state, materials);
     wrinkleWeights(maps, masks, state.update(this.restPose()).maps, weights);
     await this.dress(state);
+    await this.compile();
+  }
+
+  private async compile(): Promise<void> {
+    let failed = false;
+    this.renderer.debug.onShaderError = () => {
+      failed = true;
+    };
+    await this.renderer.compileAsync(this.scene, this.camera);
+    this.renderer.render(this.scene, this.camera);
+    this.renderer.debug.onShaderError = null;
+    if (failed) throw new Error('her shaders did not compile');
   }
 
   private restPose(): Pose {
