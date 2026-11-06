@@ -38,3 +38,38 @@ may stop it, the disk stays, and `start` brings it back.
 
 Once on the VM: sign in to the Epic Games Launcher and install Unreal Engine 5.8 with the option MetaHuman Creator Core
 Data, without extra target platforms.
+
+## From a Creator character to the game
+
+Her look is the Ready Player Me `brunette.glb` of the TalkingHead project (CC BY-NC 4.0), conformed to a MetaHuman.
+The scripts in `ue/` run inside the editor through Python remote execution (`ue/rexec.py <script>` on the VM, with the
+Face project open); they read and write under `C:\mallorca`.
+
+1. `ue/conform_prep.py` imports `C:\mallorca\ue\brunette_body.fbx` (the glb's merged body and head, exported from
+   Blender) as a static mesh and places a camera on its face; `ue/conform.py` tracks the face contours in that render,
+   conforms a new character `/Game/Her/Brunette_<n>` to the mesh and records its path in `current_asset.txt`.
+2. Add the groom `Hair_L_StraightBangs` and the eyebrows `Eyebrows_M_Natural` in the Creator window, then
+   `ue/rig.py` requests the auto rig (sign in to Epic once when the editor asks).
+3. `ue/export_dcc.py` writes the DCC export (`head.dna`, `Maps`, `Masks`); `ue/synth.py` draws the skin Creator
+   synthesizes into render targets (`Synth/BASECOLOR`, `Synth/NORMAL`), because those textures live only on the GPU;
+   `ue/cards.py` and `ue/helmet.py` write the hair cards, the helmet and their textures to `cards/`.
+4. Copy those folders into one local folder (the Creator export) and run, with the OpenRigLogic Python bindings on
+   `ORL_PYTHON` and `pip install -r export/requirements.txt`:
+
+```sh
+python export/build.py <creator export> <archetype head.dna> <round_spectacles 1k glTF folder> web/public/avatar/her --check
+```
+
+The archetype is the head DNA of an untouched MetaHuman from the same Creator: the groom cards are modelled on it, and
+each card vertex follows its nearest archetype vertex onto her head. The glasses are Poly Haven's
+[Round Spectacles](https://polyhaven.com/a/round_spectacles) (CC0), downloaded as glTF 1k. `--check` decodes the packed
+rig and fails when a position is off by more than 0.005 cm, a blendshape delta by more than 0.03 cm, or the folder
+exceeds 15 MB.
+
+`export/` writes:
+
+- `rig.json` and `rig.bin`: controls, joints, animated maps, wrinkle masks and the meshes. Positions, normals and UVs are
+  int16, skin weights and blendshape deltas int8, each with a scale and an offset per component; deltas under 0.01 cm are
+  dropped. Hair cards and the helmet carry no blendshapes: `follow` names the head vertex each card vertex moves with.
+- `behavior.dna` for RigLogic, `masks.r8` (the wrinkle masks, 128 px each, channels in `export/mask_channels.json`),
+  `mapping.json` (ARKit and viseme weights to MetaHuman controls, `export/controls.py`), the textures and `glasses/`.
