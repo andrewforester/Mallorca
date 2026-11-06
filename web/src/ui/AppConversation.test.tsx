@@ -67,6 +67,21 @@ describe('App table talk', () => {
     session.getState().dispose();
   });
 
+  it('opens Talk as a layer of the table and returns to the table', async () => {
+    const session = await seated(client());
+    const talk = screen.getByTestId('chat-open');
+    fireEvent.click(talk);
+    const layer = screen.getByTestId('chat-sheet');
+    expect(document.querySelector('.table-left')?.contains(layer)).toBe(true);
+    expect(document.querySelector('.table-layout')?.classList.contains('table-layer-talk')).toBe(
+      true,
+    );
+    fireEvent.click(screen.getByTestId('chat-close'));
+    expect(screen.queryByTestId('chat-sheet')).toBeNull();
+    expect(document.activeElement).toBe(talk);
+    session.getState().dispose();
+  });
+
   it('switches conversation off and on from the menu and keeps the choice', async () => {
     const session = await seated(client());
     fireEvent.click(screen.getByTestId('table-conversation'));
