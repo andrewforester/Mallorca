@@ -38,6 +38,10 @@
     display: none;
   }
 
+  .table-layer-open .bet-sheet {
+    display: none;
+  }
+
   .table-layer-talk {
     --face-basis: 260px;
     --card-width: 24px;

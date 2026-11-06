@@ -17,37 +17,104 @@ function value(): number {
   return Number((screen.getByTestId('raise-amount') as HTMLInputElement).value);
 }
 
-describe('ActionBar buttons', () => {
-  it('shows Fold, Call with the amount and Raise to the smallest raise', () => {
+describe('ActionBar', () => {
+  it('shows the size controls with the buttons whenever a raise is legal', () => {
     bar();
-    expect(screen.getByTestId('fold').textContent).toContain('Fold');
+    for (const id of ['fold', 'passive', 'raise', 'preset-half', 'preset-pot', 'preset-allin']) {
+      expect(screen.getByTestId(id)).not.toBeNull();
+    }
+    expect(screen.getByTestId('raise-amount')).not.toBeNull();
+    expect(screen.queryByTestId('raise-back')).toBeNull();
+    expect(screen.queryByTestId('raise-confirm')).toBeNull();
+  });
+
+  it('starts at the pot and names it on the raise button', () => {
+    bar();
+    expect(value()).toBe(400);
+    expect(screen.getByTestId('raise-size').textContent).toBe('400');
+    expect(screen.getByTestId('preset-pot').getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByTestId('raise').textContent).toContain('Raise to 400');
     expect(screen.getByTestId('passive').textContent).toContain('Call 60');
-    expect(screen.getByTestId('raise').textContent).toContain('Raise to 160');
-    expect(screen.queryByTestId('raise-amount')).toBeNull();
+    expect(screen.getByTestId('fold').textContent).toContain('Fold');
+  });
+
+  it('starts at Min when the pot preset reaches the stack', () => {
+    const base = viewModel().controls;
+    const raise = { ...base.raise!, max: 380, presets: { halfPot: 250, pot: 380, allIn: 380 } };
+    render(<ActionBar controls={{ ...base, raise }} onAct={vi.fn()} />);
+    expect(screen.queryByTestId('preset-pot')).toBeNull();
+    expect(screen.getByTestId('preset-min').getAttribute('aria-pressed')).toBe('true');
+    expect(value()).toBe(160);
   });
 
   it('names the raise button Bet when opening the betting', () => {
     const base = viewModel().controls;
-    const controls = { ...base, raise: { ...base.raise!, kind: 'bet' as const, min: 60 } };
+    const controls = { ...base, raise: { ...base.raise!, kind: 'bet' as const } };
     render(<ActionBar controls={controls} onAct={vi.fn()} />);
-    expect(screen.getByTestId('raise').textContent).toContain('Bet 60');
+    expect(screen.getByTestId('raise').textContent).toContain('Bet 400');
   });
 
-  it('shows Check when nothing is owed', () => {
-    bar({ passive: { kind: 'check', amount: 0 } });
+  it('raises in one tap with the chosen size, and a preset alone does not act', () => {
+    const { onAct } = bar();
+    fireEvent.click(screen.getByTestId('preset-half'));
+    expect(onAct).not.toHaveBeenCalled();
+    expect(screen.getByTestId('raise').textContent).toContain('Raise to 250');
+    fireEvent.click(screen.getByTestId('raise'));
+    expect(onAct.mock.calls).toEqual([[{ kind: 'raise', to: 250 }]]);
+  });
+
+  it('steps the size by the big blind', () => {
+    bar();
+    fireEvent.click(screen.getByTestId('raise-more'));
+    expect(value()).toBe(420);
+    fireEvent.click(screen.getByTestId('raise-less'));
+    fireEvent.click(screen.getByTestId('raise-less'));
+    expect(value()).toBe(380);
+  });
+
+  it('asks to hold Raise for an all-in and acts only after the hold', () => {
+    vi.useFakeTimers();
+    const { onAct } = bar();
+    fireEvent.click(screen.getByTestId('preset-allin'));
+    const raise = screen.getByTestId('raise');
+    expect(raise.textContent).toContain('Hold for all-in 2000');
+    fireEvent.click(raise);
+    expect(onAct).not.toHaveBeenCalled();
+    fireEvent.pointerDown(raise);
+    act(() => {
+      vi.advanceTimersByTime(HOLD_MS / 2);
+    });
+    fireEvent.pointerUp(raise);
+    act(() => {
+      vi.advanceTimersByTime(HOLD_MS);
+    });
+    expect(onAct).not.toHaveBeenCalled();
+    fireEvent.pointerDown(raise);
+    act(() => {
+      vi.advanceTimersByTime(HOLD_MS);
+    });
+    expect(onAct.mock.calls).toEqual([[{ kind: 'raise', to: 2000 }]]);
+  });
+
+  it('shows Check when nothing is owed and folds and calls at once', () => {
+    const { onAct } = bar({ passive: { kind: 'check', amount: 0 } });
     expect(screen.getByTestId('passive').textContent).toContain('Check');
+    fireEvent.click(screen.getByTestId('passive'));
+    expect(onAct.mock.calls).toEqual([[{ kind: 'passive' }]]);
   });
 
-  it('disables every button when not enabled', () => {
-    bar({ enabled: false });
-    for (const id of ['fold', 'passive', 'raise']) {
-      expect((screen.getByTestId(id) as HTMLButtonElement).disabled).toBe(true);
-    }
-  });
-
-  it('disables raise when no raise is legal', () => {
+  it('has no size controls when no raise is legal', () => {
     bar({ raise: null });
     expect((screen.getByTestId('raise') as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByTestId('raise-amount')).toBeNull();
+  });
+
+  it('disables every control when not enabled', () => {
+    bar({ enabled: false });
+    for (const id of ['fold', 'passive', 'raise', 'preset-half', 'preset-pot', 'raise-more']) {
+      expect((screen.getByTestId(id) as HTMLButtonElement).disabled).toBe(true);
+    }
+    expect((screen.getByTestId('raise-amount') as HTMLInputElement).disabled).toBe(true);
   });
 
   it('shows the key of each move as a hint hidden from assistive tech', () => {
@@ -62,123 +129,46 @@ describe('ActionBar buttons', () => {
       expect(hint?.getAttribute('aria-hidden')).toBe('true');
     }
   });
-
-  it('folds and calls at once when a call is owed', () => {
-    const { onAct } = bar();
-    fireEvent.click(screen.getByTestId('fold'));
-    fireEvent.click(screen.getByTestId('passive'));
-    expect(onAct.mock.calls).toEqual([[{ kind: 'fold' }], [{ kind: 'passive' }]]);
-  });
 });
 
-describe('ActionBar bet sheet', () => {
-  it('opens the sheet from Raise with the presets, the slider and the size', () => {
+describe('ActionBar keyboard', () => {
+  it('folds with f, calls with c and raises the chosen size with r', () => {
     const { onAct } = bar();
-    fireEvent.click(screen.getByTestId('raise'));
-    expect(onAct).not.toHaveBeenCalled();
-    expect(screen.queryByTestId('fold')).toBeNull();
-    for (const id of ['preset-half', 'preset-pot', 'preset-allin', 'raise-amount', 'raise-less']) {
-      expect(screen.getByTestId(id)).not.toBeNull();
-    }
-    expect(screen.getByTestId('raise-size').textContent).toBe('160');
-    expect(screen.getByTestId('raise-confirm').textContent).toContain('Raise to 160');
+    fireEvent.keyDown(document, { key: 'f' });
+    fireEvent.keyDown(document, { key: 'c' });
+    fireEvent.keyDown(document, { key: 'ArrowRight' });
+    expect(value()).toBe(420);
+    fireEvent.keyDown(document, { key: 'ArrowLeft' });
+    fireEvent.keyDown(document, { key: 'r' });
+    expect(onAct.mock.calls).toEqual([
+      [{ kind: 'fold' }],
+      [{ kind: 'passive' }],
+      [{ kind: 'raise', to: 400 }],
+    ]);
   });
 
-  it('steps the size by the big blind and confirms it', () => {
-    const { onAct } = bar();
-    fireEvent.click(screen.getByTestId('raise'));
-    fireEvent.click(screen.getByTestId('raise-more'));
-    fireEvent.click(screen.getByTestId('raise-more'));
-    expect(value()).toBe(200);
-    fireEvent.click(screen.getByTestId('raise-less'));
-    expect(value()).toBe(180);
-    fireEvent.click(screen.getByTestId('preset-pot'));
-    fireEvent.click(screen.getByTestId('raise-confirm'));
-    expect(onAct.mock.calls).toEqual([[{ kind: 'raise', to: 400 }]]);
-  });
-
-  it('marks the chosen preset', () => {
-    bar();
-    fireEvent.click(screen.getByTestId('raise'));
-    fireEvent.click(screen.getByTestId('preset-half'));
-    expect(screen.getByTestId('preset-half').getAttribute('aria-pressed')).toBe('true');
-    expect(screen.getByTestId('preset-pot').getAttribute('aria-pressed')).toBe('false');
-  });
-
-  it('offers Min instead of Pot when the pot is bigger than the stack', () => {
-    const base = viewModel().controls;
-    const raise = { ...base.raise!, max: 380, presets: { halfPot: 250, pot: 380, allIn: 380 } };
-    render(<ActionBar controls={{ ...base, raise }} onAct={vi.fn()} />);
-    fireEvent.click(screen.getByTestId('raise'));
-    expect(screen.queryByTestId('preset-pot')).toBeNull();
-    fireEvent.click(screen.getByTestId('preset-min'));
-    expect(value()).toBe(160);
-  });
-
-  it('goes back to the three buttons without acting', () => {
-    const { onAct } = bar();
-    fireEvent.click(screen.getByTestId('raise'));
-    fireEvent.click(screen.getByTestId('raise-back'));
-    expect(screen.getByTestId('fold')).not.toBeNull();
-    expect(onAct).not.toHaveBeenCalled();
-  });
-
-  it('asks to hold the confirm for an all-in and acts only after the hold', () => {
+  it('needs r held for an all-in', () => {
     vi.useFakeTimers();
     const { onAct } = bar();
-    fireEvent.click(screen.getByTestId('raise'));
     fireEvent.click(screen.getByTestId('preset-allin'));
-    const confirm = screen.getByTestId('raise-confirm');
-    expect(confirm.textContent).toContain('Hold for all-in 2000');
-    fireEvent.click(confirm);
-    expect(onAct).not.toHaveBeenCalled();
-    fireEvent.pointerDown(confirm);
-    act(() => {
-      vi.advanceTimersByTime(HOLD_MS / 2);
-    });
-    fireEvent.pointerUp(confirm);
+    fireEvent.keyDown(document, { key: 'r' });
+    fireEvent.keyUp(document, { key: 'r' });
     act(() => {
       vi.advanceTimersByTime(HOLD_MS);
     });
     expect(onAct).not.toHaveBeenCalled();
-    fireEvent.pointerDown(confirm);
+    fireEvent.keyDown(document, { key: 'r' });
     act(() => {
       vi.advanceTimersByTime(HOLD_MS);
     });
     expect(onAct.mock.calls).toEqual([[{ kind: 'raise', to: 2000 }]]);
   });
-});
-
-describe('ActionBar keyboard', () => {
-  it('folds with f, calls with c and opens the sheet with r', () => {
-    const { onAct } = bar();
-    fireEvent.keyDown(document, { key: 'f' });
-    fireEvent.keyDown(document, { key: 'c' });
-    expect(onAct.mock.calls).toEqual([[{ kind: 'fold' }], [{ kind: 'passive' }]]);
-    fireEvent.keyDown(document, { key: 'r' });
-    expect(screen.getByTestId('raise-amount')).not.toBeNull();
-  });
-
-  it('moves the size with the arrows, goes back with Escape and confirms with Enter', () => {
-    const { onAct } = bar();
-    fireEvent.keyDown(document, { key: 'r' });
-    fireEvent.keyDown(document, { key: 'ArrowRight' });
-    expect(value()).toBe(180);
-    fireEvent.keyDown(document, { key: 'ArrowLeft' });
-    expect(value()).toBe(160);
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(screen.queryByTestId('raise-amount')).toBeNull();
-    fireEvent.keyDown(document, { key: 'r' });
-    fireEvent.keyDown(document, { key: 'Enter' });
-    expect(onAct.mock.calls).toEqual([[{ kind: 'raise', to: 160 }]]);
-  });
 
   it('ignores the keys when not enabled', () => {
     const { onAct } = bar({ enabled: false });
-    for (const key of ['f', 'c', 'r', 'Enter']) {
+    for (const key of ['f', 'c', 'r']) {
       fireEvent.keyDown(document, { key });
     }
     expect(onAct).not.toHaveBeenCalled();
-    expect(screen.queryByTestId('raise-amount')).toBeNull();
   });
 });

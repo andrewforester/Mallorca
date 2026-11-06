@@ -14,6 +14,10 @@ interface Preset {
   amount: number;
 }
 
+export function defaultSize(raise: RaiseControl): number {
+  return raise.presets.pot >= raise.max ? raise.min : raise.presets.pot;
+}
+
 function presetsOf(raise: RaiseControl): Preset[] {
   const { presets } = raise;
   const middle =
