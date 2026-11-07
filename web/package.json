@@ -41,27 +41,27 @@
     "@preact/preset-vite": "^2.10.6",
     "@testing-library/preact": "^3.2.6",
     "@types/node": "^24.19.2",
-    "@types/three": "^0.170.0",
-    "eslint": "^10.13.0",
+    "@types/three": "^0.187.0",
+    "eslint": "^10.14.0",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import-x": "^4.17.1",
     "fast-check": "^4.10.2",
     "happy-dom": "^21.0.4",
     "prettier": "^3.9.10",
-    "three": "^0.170.0",
+    "three": "^0.187.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.72.0",
+    "typescript-eslint": "^8.72.1",
     "vite": "^8.3.5",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "@fontsource/inter": "^5.3.0",
-    "@supabase/supabase-js": "^2.117.3",
-    "i18next": "^26.5.6",
+    "@supabase/supabase-js": "^2.118.0",
+    "i18next": "^26.7.1",
     "phe": "^0.6.0",
-    "preact": "^11.0.1",
+    "preact": "^11.1.1",
     "zustand": "^5.0.16"
   }
 }
