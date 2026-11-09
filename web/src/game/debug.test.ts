@@ -77,13 +77,13 @@ describe('the emotion debug state', () => {
     expect(bot.asked.every((a) => a !== true)).toBe(true);
   });
 
-  it('is null outside a development build', async () => {
+  it('follows the option in a production build too, for the hidden link', async () => {
     vi.stubEnv('DEV', false);
     const { session, bot } = open({ debug: true });
     await session.getState().start(CASH, 'cfr');
     await session.getState().act({ kind: 'passive' });
-    expect(session.getState().debug).toBeNull();
-    expect(bot.asked.every((a) => a !== true)).toBe(true);
+    expect(session.getState().debug).not.toBeNull();
+    expect(bot.asked.some((a) => a === true)).toBe(true);
   });
 
   it('follows her feeling and explains every decision', async () => {

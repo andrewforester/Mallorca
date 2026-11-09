@@ -671,9 +671,8 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   to `createSession` as `connectConversation`, so the anonymous sign-in happens only for the Solver opponent with conversation on, and
   `onPageExit` (`pageExit.ts`, `pagehide` or the document becoming hidden) calls `pageHidden()`. The remote client
   keeps the latest access token, so a `keepalive` summary is sent at once with `fetch(..., { keepalive: true })`.
-- Emotion debug (`debug.ts`, development builds only): with `SessionOptions.debug` true and
-  `import.meta.env.DEV`, `SessionState.debug` is a `DebugState`, otherwise null and the code that fills it is dead
-  and left out of the production bundle. It holds the `personality` (a `PersonalityKey`, or `custom` with its
+- Emotion debug (`debug.ts`): with `SessionOptions.debug` true (a development build, or the hidden `?debug` link in
+  production), `SessionState.debug` is a `DebugState`, otherwise null. It holds the `personality` (a `PersonalityKey`, or `custom` with its
   `Personality`), her `snapshot` (`persona.view(now()).snapshot`, there for every opponent since the face reads it), `sentBias`, the bias sent with
   the last `decide` (null before one, or against the math bot), the last `DebugDecision` (her hole cards, the board,
   one `DecisionRow` per move of the `Breakdown`, its `coachMove` label and amount with its `base` and `biased`
@@ -816,10 +815,11 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   player's turn the panel shows the hand's review (`coach-review`: street, action, grade and the strategy's top
   shares) and the leaks. Fold, passive and all-in have their own colour tokens; sized bets and raises are shaded
   from `--color-coach-small` to `--color-coach-large` by size.
-- Emotion debug panel (`ui/debug/`, development builds only): `main.tsx` imports `EmotionDebug` dynamically
-  under `import.meta.env.DEV`, creates the session with `debug: true` and passes the component to `App`, which
-  renders it beside the table; the production build has neither the import nor the option. Its copy lives in
-  `ui/debug/copy.ts`, in plain English, not in `en.json`, so no string of it reaches the production bundle. A toggle
+- Emotion debug panel (`ui/debug/`): in a development build, or in production with the hidden `?debug` link (#119,
+  hidden but not protected), `main.tsx` imports `EmotionDebug` dynamically, creates the session with `debug: true`
+  and passes the component to `App`, which renders it beside the table. In production the panel is its own lazy
+  chunk (`assets/EmotionDebug-*`), loaded only by that link; `scripts/check-dist.ts` fails the build when its
+  markers reach any other file. Its copy lives in `ui/debug/copy.ts`, in plain English, not in `en.json`. A toggle
   on the left edge of the table (`emotion-debug-toggle`, `aria-expanded`) opens and hides a panel fixed over the
   left side of the screen (`emotion-debug`), which scrolls on its own and moves neither the cards nor the action
   bar; its open state is kept in `localStorage` (`mallorca.debugPanel`). It renders `toDebugView` in five sections:
@@ -909,7 +909,7 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu). Table talk adds
   `bubble-mallorca`, `bubble-player`, `conversation-region`, `chat-panel`, `chat-open`, `chat-sheet`, `chat-close`,
   `chat-line`, `chat-input`, `chat-send`, `quick-<id>` and `table-conversation`. The face adds `face-seat` (with
-  `data-face` = `portrait` or `live`), `face` and `voice`. The emotion debug panel, in development builds only, adds
+  `data-face` = `portrait` or `live`), `face` and `voice`. The emotion debug panel, in development builds or with `?debug`, adds
   `emotion-debug-toggle`, `emotion-debug`, `debug-personality-<key>`, `debug-reset`, `debug-emotions`, `debug-mood`,
   `debug-load`, `debug-bias`, `debug-decision` and `debug-journal`.
 

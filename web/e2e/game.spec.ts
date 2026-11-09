@@ -15,13 +15,24 @@ import {
 
 const ALL_IN_TIMEOUT_MS = 600_000;
 
-test('the production build has no emotion debug panel', async ({ page }) => {
+test('the production build shows no emotion debug panel without the hidden link', async ({
+  page,
+}) => {
   await page.goto(FAST_URL);
   await byId(page, 'start-cash').click();
   await expect(byId(page, 'fold')).toBeVisible();
   await expect(byId(page, 'emotion-debug-toggle')).toHaveCount(0);
   await expect(byId(page, 'emotion-debug')).toHaveCount(0);
   await expect(byId(page, 'conversation-debug')).toHaveCount(0);
+});
+
+test('the hidden link opens the emotion debug panel in the production build', async ({ page }) => {
+  await page.goto(`${FAST_URL}&debug`);
+  await byId(page, 'start-cash').click();
+  await expect(byId(page, 'fold')).toBeVisible();
+  await byId(page, 'emotion-debug-toggle').click();
+  await expect(byId(page, 'emotion-debug')).toBeVisible();
+  await expect(byId(page, 'debug-personality-mallorca')).toBeVisible();
 });
 
 test('a passive hand ends with the chips conserved', async ({ page }) => {
