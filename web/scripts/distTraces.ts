@@ -5,6 +5,8 @@ export const DEBUG_MARKERS = ['emotion-debug', 'sentStyle', 'engineStyle'] as co
 
 const TEXT = /\.(html|js|mjs|css|json|txt|svg|map)$/;
 
+export const DEBUG_CHUNK = /^assets\/EmotionDebug-[\w-]+\.(js|css)$/;
+
 function files(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true })
     .flatMap((entry) => {
@@ -20,6 +22,7 @@ export function distTraces(dir: string, markers: readonly string[] = DEBUG_MARKE
     .flatMap((path) => {
       const text = readFileSync(path, 'utf8');
       const name = relative(dir, path).split('\\').join('/');
+      if (DEBUG_CHUNK.test(name)) return [];
       return markers.filter((m) => text.includes(m)).map((m) => `${name}: ${m}`);
     });
 }

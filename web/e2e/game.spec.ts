@@ -15,7 +15,9 @@ import {
 
 const ALL_IN_TIMEOUT_MS = 600_000;
 
-test('the production build has no emotion debug panel', async ({ page }) => {
+test('the production build shows no emotion debug panel without the hidden link', async ({
+  page,
+}) => {
   await page.goto(FAST_URL);
   await byId(page, 'start-cash').click();
   await expect(byId(page, 'fold')).toBeVisible();
