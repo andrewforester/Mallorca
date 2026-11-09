@@ -1,3 +1,4 @@
+import { PERSONALITIES } from '../persona/index.ts';
 import { mulberry32 } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import type { BotClient } from './botClient.ts';
@@ -69,13 +70,17 @@ function wirePersona(
   options: SessionOptions,
   botSeat: SeatIndex,
 ): SessionPersona {
-  return sessionPersona({
+  const her = sessionPersona({
     botSeat,
     now: options.now ?? Date.now,
     epoch: () => host.epoch(),
     handNumber: () => host.get().table.handNumber,
     playerRange: () => host.bot().opponentRange?.() ?? Promise.resolve(null),
   });
+  if (options.personality !== undefined) {
+    her.setPersonality(PERSONALITIES[options.personality]);
+  }
+  return her;
 }
 
 function wireConversation(
@@ -132,5 +137,8 @@ export function wireProbe(
   if (!import.meta.env.DEV || options.debug !== true) {
     return null;
   }
-  return createProbe(her.persona, options.now ?? Date.now, write, her.trace);
+  return createProbe(her.persona, options.now ?? Date.now, write, {
+    trace: her.trace,
+    personality: options.personality,
+  });
 }

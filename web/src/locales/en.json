@@ -18,7 +18,40 @@
     "greeting": "Hi. I'm Mallorca. I was hoping someone would come by. Do you play?",
     "farewellTitle": "Sleep well.",
     "coach": "Coach",
-    "loadingPercent": "Bringing the solver to the table · {{percent}}%"
+    "loadingPercent": "Bringing the solver to the table · {{percent}}%",
+    "who": "Who's at the table tonight?",
+    "characters": {
+      "mallorca": {
+        "name": "Mallorca",
+        "line": "Warm and calm. Rarely loses her temper.",
+        "hard": "A real game",
+        "hello": "Oh, it's you. Sit, I'll deal."
+      },
+      "mira": {
+        "name": "Mira",
+        "line": "Even-tempered and kind.",
+        "hard": "Comfortable",
+        "hello": "Shall we? No hurry."
+      },
+      "ingrid": {
+        "name": "Ingrid",
+        "line": "A professional. Plays to win.",
+        "hard": "The toughest",
+        "hello": "Your blind."
+      },
+      "lola": {
+        "name": "Lola",
+        "line": "The life of the party.",
+        "hard": "Easy-going",
+        "hello": "Finally! Deal me in, I feel lucky."
+      },
+      "nina": {
+        "name": "Nina",
+        "line": "Nervous, and new to the game.",
+        "hard": "A gentle start",
+        "hello": "Um, hi. Go easy on me?"
+      }
+    }
   },
   "status": {
     "blinds": "Blinds {{small}}/{{big}}",
