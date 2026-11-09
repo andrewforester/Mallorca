@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { eyeMaterial, occlusionMap } from './eyes.ts';
 import type { WrinkleLayout } from './skin.ts';
 import { mouthMaterial, plain, skinMaterial } from './skin.ts';
 
@@ -63,13 +64,7 @@ export async function loadMaterials(base: string, layout: WrinkleLayout): Promis
       tex('eyelashes.webp', true),
       tex('hair_cards.webp', true, false),
     ]);
-  const eye = plain({
-    map: eyesC,
-    normalMap: eyesN,
-    roughness: 0.08,
-    clearcoat: 1,
-    clearcoatRoughness: 0.02,
-  });
+  const eye = eyeMaterial(eyesC, eyesN);
   const { soft, ...hair } = hairMaterials(cards);
   const byMesh: Record<string, THREE.Material> = {
     head: skinMaterial({ color, normal, roughness, wrinkles: [wm1, wm2, wm3] }, layout),
@@ -88,7 +83,7 @@ export async function loadMaterials(base: string, layout: WrinkleLayout): Promis
     eyeshell: plain({
       color: 0x1a0d08,
       transparent: true,
-      opacity: 0.22,
+      alphaMap: occlusionMap(),
       roughness: 1,
       depthWrite: false,
     }),
