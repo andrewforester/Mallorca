@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { eyeMaterial, occlusionMap } from './eyes.ts';
 import type { WrinkleLayout } from './skin.ts';
 import { fabricMaterial } from './fabric.ts';
 import { mouthMaterial, plain, skinMaterial } from './skin.ts';
@@ -84,7 +85,7 @@ function films(lashes: THREE.Texture): Record<string, THREE.Material> {
     eyeshell: plain({
       color: 0x1a0d08,
       transparent: true,
-      opacity: 0.22,
+      alphaMap: occlusionMap(),
       roughness: 1,
       depthWrite: false,
     }),
@@ -121,13 +122,7 @@ export async function loadMaterials(
       tex('eyelashes.webp', true),
       tex('hair_cards.webp', true, false),
     ]);
-  const eye = plain({
-    map: eyesC,
-    normalMap: eyesN,
-    roughness: 0.08,
-    clearcoat: 1,
-    clearcoatRoughness: 0.02,
-  });
+  const eye = eyeMaterial(eyesC, eyesN);
   const { soft, ...hair } = hairMaterials(cards);
   const dressed = await dressing;
   const byMesh: Record<string, THREE.Material> = {
