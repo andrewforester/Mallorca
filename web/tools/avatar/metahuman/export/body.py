@@ -5,6 +5,7 @@ import numpy as np
 from dnafile import load, mesh_arrays
 from groom import nearest
 from seated import rotation, seated
+from skintone import body_color
 
 SHARED_TOLERANCE_CM = 0.05
 SEAM_CM = 0.02
@@ -108,6 +109,12 @@ def seam_normals(mesh, face):
     return len(hits)
 
 
+def seam_height(mesh, face):
+    near = nearest(mesh["position"], face["position"])
+    gap = np.linalg.norm(mesh["position"] - face["position"][near], axis=1)
+    return float(mesh["position"][gap < SEAM_CM, 1].mean())
+
+
 def body_mesh(r, merged, face):
     m = next(i for i in r.getMeshIndicesForLOD(LOD))
     mesh = mesh_arrays(r, m)
@@ -128,4 +135,6 @@ def body(src, header, face, out):
     part = {"body": skeleton(set(header["joints"]), r)}
     merged = header["joints"] + part["body"]["joints"]
     part["pose"] = {"sitting": seated(src / "body.dna", set(merged))}
-    return part, [body_mesh(r, merged, face)]
+    mesh = body_mesh(r, merged, face)
+    body_color(src, mesh, face, seam_height(mesh, face), out)
+    return part, [mesh]

@@ -46,6 +46,21 @@ function hairMaterials(
   };
 }
 
+async function bodyMaterial(tex: ReturnType<typeof loader>): Promise<THREE.Material> {
+  const [map, normalMap] = await Promise.all([
+    tex('body_color_map.webp', true),
+    tex('body_normal_map.webp'),
+  ]);
+  return plain({
+    map,
+    normalMap,
+    roughness: 0.55,
+    sheen: 0.25,
+    sheenRoughness: 0.6,
+    sheenColor: new THREE.Color(0xff8a6a),
+  });
+}
+
 export async function loadMaterials(base: string, layout: WrinkleLayout): Promise<Materials> {
   const tex = loader(base);
   const [color, normal, roughness, wm1, wm2, wm3, teethC, teethN, eyesC, eyesN, lashes, cards] =
@@ -71,6 +86,7 @@ export async function loadMaterials(base: string, layout: WrinkleLayout): Promis
     clearcoatRoughness: 0.02,
   });
   const { soft, ...hair } = hairMaterials(cards);
+  const body = await bodyMaterial(tex);
   const byMesh: Record<string, THREE.Material> = {
     head: skinMaterial({ color, normal, roughness, wrinkles: [wm1, wm2, wm3] }, layout),
     teeth: mouthMaterial(teethC, teethN),
@@ -100,6 +116,7 @@ export async function loadMaterials(base: string, layout: WrinkleLayout): Promis
       depthWrite: false,
     }),
     cartilage: plain({ color: 0xc9827a, roughness: 0.35 }),
+    body,
     ...hair,
   };
   return { byMesh, cardsSoft: soft };

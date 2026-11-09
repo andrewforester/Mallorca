@@ -35,3 +35,19 @@ export function heldJoints(sitting: Record<string, number[]>, bones: THREE.Bone[
 export function hold(joints: HeldJoint[]): void {
   for (const { bone, row } of joints) jointTransform(row, null, 0, bone);
 }
+
+export function keep(joints: HeldJoint[]): () => void {
+  const saved = joints.map(({ bone }) => ({
+    bone,
+    position: bone.position.clone(),
+    quaternion: bone.quaternion.clone(),
+    scale: bone.scale.clone(),
+  }));
+  return () => {
+    for (const { bone, position, quaternion, scale } of saved) {
+      bone.position.copy(position);
+      bone.quaternion.copy(quaternion);
+      bone.scale.copy(scale);
+    }
+  };
+}

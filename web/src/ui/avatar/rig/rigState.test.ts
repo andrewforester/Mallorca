@@ -105,6 +105,20 @@ describe('RigState', () => {
     expect(bone('root').parent).toBe(state.root);
   });
 
+  it('stands in the DNA pose until the first frame, so meshes bind to it', async () => {
+    const fresh = new RigState({ header, mapping }, await loadRig());
+    const arm = fresh.bone('lowerarm_l')!;
+    const j = header.body!.joints.indexOf('lowerarm_l');
+    const [, , , rx, ry, rz] = header.body!.rest[j]!;
+    const deg = Math.PI / 180;
+    const rest = new THREE.Quaternion().setFromEuler(
+      new THREE.Euler(rx! * deg, ry! * deg, rz! * deg, 'ZYX'),
+    );
+    expect(arm.quaternion.angleTo(rest)).toBeLessThan(1e-5);
+    fresh.update(pose());
+    expect(arm.quaternion.angleTo(rest)).toBeGreaterThan(0.1);
+  });
+
   it('holds her arms in the seated pose', () => {
     state.update(pose());
     for (const name of ['upperarm_l', 'lowerarm_r', 'upperarm_out_l']) {

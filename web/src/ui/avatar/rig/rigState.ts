@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { Angles, Pose } from '../motion.ts';
 import type { RigHeader } from './assets.ts';
 import type { HeldJoint } from './bodyBones.ts';
-import { addBodyBones, heldJoints, hold } from './bodyBones.ts';
+import { addBodyBones, heldJoints, hold, keep } from './bodyBones.ts';
 import type { Mapping } from './controls.ts';
 import { controlsOf } from './controls.ts';
 import { jointTransform } from './joints.ts';
@@ -68,12 +68,15 @@ export class RigState {
     });
     if (header.body) this.bones.push(...addBodyBones(header.body, this.root, this.bones));
     this.held = heldJoints(header.pose?.sitting ?? {}, this.bones);
+    const restore = keep(this.held);
     hold(this.held);
     this.root.updateMatrixWorld(true);
     for (const name of POSED) {
       const b = this.bones[header.joints.indexOf(name)];
       if (b) this.rest.set(name, b.getWorldQuaternion(new THREE.Quaternion()));
     }
+    restore();
+    this.root.updateMatrixWorld(true);
     for (const name of LIDS) {
       const bone = this.bone(name)!;
       this.lidBones.push({ bone, open: bone.quaternion.clone() });

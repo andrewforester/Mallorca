@@ -3,6 +3,7 @@ import * as THREE from 'three';
 export const FOV = 14;
 const ABOVE_HEAD = 0.25;
 const BELOW_HEAD = 0.37;
+const BELOW_BUST = 0.55;
 
 export function createRenderer(exposure = 1.05): THREE.WebGLRenderer {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -27,8 +28,16 @@ export function addLights(scene: THREE.Scene): void {
 }
 
 export function frameHead(camera: THREE.PerspectiveCamera, head: THREE.Vector3): void {
-  const centre = head.y + (ABOVE_HEAD - BELOW_HEAD) / 2;
-  const span = ABOVE_HEAD + BELOW_HEAD;
+  frame(camera, head, BELOW_HEAD);
+}
+
+export function frameBust(camera: THREE.PerspectiveCamera, head: THREE.Vector3): void {
+  frame(camera, head, BELOW_BUST);
+}
+
+function frame(camera: THREE.PerspectiveCamera, head: THREE.Vector3, below: number): void {
+  const centre = head.y + (ABOVE_HEAD - below) / 2;
+  const span = ABOVE_HEAD + below;
   const distance = span / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2));
   camera.position.set(head.x, centre + 0.04, head.z + distance);
   camera.lookAt(head.x, centre, head.z);
