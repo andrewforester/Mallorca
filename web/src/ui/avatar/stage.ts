@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export const FOV = 14;
 const ABOVE_HEAD = 0.25;
 const BELOW_HEAD = 0.37;
-const BELOW_BUST = 0.55;
+const BELOW_BUST = 0.4;
 
 export function createRenderer(exposure = 1.05): THREE.WebGLRenderer {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });

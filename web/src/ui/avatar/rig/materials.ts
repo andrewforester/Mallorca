@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { WrinkleLayout } from './skin.ts';
+import { fabricMaterial } from './fabric.ts';
 import { mouthMaterial, plain, skinMaterial } from './skin.ts';
 
 export interface Materials {
@@ -46,12 +47,15 @@ function hairMaterials(
   };
 }
 
-async function bodyMaterial(tex: ReturnType<typeof loader>): Promise<THREE.Material> {
-  const [map, normalMap] = await Promise.all([
+async function bodyMaterials(
+  tex: ReturnType<typeof loader>,
+): Promise<Record<'body' | 'sweater', THREE.Material>> {
+  const [map, normalMap, knit] = await Promise.all([
     tex('body_color_map.webp', true),
     tex('body_normal_map.webp'),
+    tex('knit_normal_map.webp'),
   ]);
-  return plain({
+  const body = plain({
     map,
     normalMap,
     roughness: 0.55,
@@ -59,6 +63,7 @@ async function bodyMaterial(tex: ReturnType<typeof loader>): Promise<THREE.Mater
     sheenRoughness: 0.6,
     sheenColor: new THREE.Color(0xff8a6a),
   });
+  return { body, sweater: fabricMaterial(knit) };
 }
 
 export async function loadMaterials(base: string, layout: WrinkleLayout): Promise<Materials> {
@@ -86,7 +91,7 @@ export async function loadMaterials(base: string, layout: WrinkleLayout): Promis
     clearcoatRoughness: 0.02,
   });
   const { soft, ...hair } = hairMaterials(cards);
-  const body = await bodyMaterial(tex);
+  const dressed = await bodyMaterials(tex);
   const byMesh: Record<string, THREE.Material> = {
     head: skinMaterial({ color, normal, roughness, wrinkles: [wm1, wm2, wm3] }, layout),
     teeth: mouthMaterial(teethC, teethN),
@@ -116,7 +121,7 @@ export async function loadMaterials(base: string, layout: WrinkleLayout): Promis
       depthWrite: false,
     }),
     cartilage: plain({ color: 0xc9827a, roughness: 0.35 }),
-    body,
+    ...dressed,
     ...hair,
   };
   return { byMesh, cardsSoft: soft };
