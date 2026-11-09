@@ -6,11 +6,14 @@ from dnafile import load, mesh_arrays
 from groom import nearest
 from seated import rotation, seated
 from skintone import body_color
+from knit import knit
+from sweater import keep_tris, marks_of, sweater
 
 SHARED_TOLERANCE_CM = 0.05
 SEAM_CM = 0.02
 LEGS = ("thigh_l", "thigh_r")
-LOD = 1
+LOD = 0
+HEM_ABOVE_PELVIS_CM = 6.0
 
 
 def local_rows(r):
@@ -86,16 +89,6 @@ def above(mesh, height):
     keep_tris(mesh, ~low[mesh["index"]].all(1))
 
 
-def keep_tris(mesh, kept):
-    tris = mesh["index"][kept]
-    used = np.unique(tris)
-    new = np.full(len(mesh["position"]), -1, np.int64)
-    new[used] = np.arange(len(used))
-    for key in ("position", "normal", "uv", "skinIndex", "skinWeight", "layout"):
-        mesh[key] = mesh[key][used]
-    mesh["index"] = new[tris].astype(np.uint32)
-
-
 def seam_normals(mesh, face):
     near = nearest(mesh["position"], face["position"])
     gap = np.linalg.norm(mesh["position"] - face["position"][near], axis=1)
@@ -115,15 +108,21 @@ def seam_height(mesh, face):
     return float(mesh["position"][gap < SEAM_CM, 1].mean())
 
 
-def body_mesh(r, merged, face):
+def body_meshes(r, merged, face, colour):
     m = next(i for i in r.getMeshIndicesForLOD(LOD))
     mesh = mesh_arrays(r, m)
     mesh["name"] = "body"
     mesh["targets"] = []
+    mesh["uv"] = mesh["uv"] - np.floor(mesh["uv"].min(0))
     remap_skin(mesh, joint_map(r, merged, leg_joints(r)))
-    above(mesh, world_of(r)["pelvis"][1, 3])
+    world = world_of(r)
+    pelvis = world["pelvis"][1, 3]
+    colour(mesh, seam_height(mesh, face))
+    worn, covered = sweater(mesh, face, merged, marks_of(world), pelvis + HEM_ABOVE_PELVIS_CM)
+    keep_tris(mesh, ~covered[mesh["index"]].all(1))
+    above(mesh, pelvis)
     seam_normals(mesh, face)
-    return mesh
+    return mesh, worn
 
 
 def body(src, header, face, out):
@@ -135,6 +134,6 @@ def body(src, header, face, out):
     part = {"body": skeleton(set(header["joints"]), r)}
     merged = header["joints"] + part["body"]["joints"]
     part["pose"] = {"sitting": seated(src / "body.dna", set(merged))}
-    mesh = body_mesh(r, merged, face)
-    body_color(src, mesh, face, seam_height(mesh, face), out)
-    return part, [mesh]
+    mesh, worn = body_meshes(r, merged, face, lambda m, seam: body_color(src, m, face, seam, out))
+    knit(out)
+    return part, [mesh, worn]
