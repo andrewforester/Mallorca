@@ -5,6 +5,7 @@ import type {
   HandStore,
   Intent,
   LoadProgress,
+  Opponent,
   Phase,
   QuickPhrase,
   Session,
@@ -12,6 +13,8 @@ import type {
   ViewModel,
 } from '../game/index.ts';
 import { TalkButton } from './ChatSheet.tsx';
+import { ALL_FEATURES } from './features.ts';
+import type { Features } from './features.ts';
 import { tableLayer, useLogDrawer, useTalk } from './layers.tsx';
 import type { LogDrawer, Talk } from './layers.tsx';
 import { t } from './i18n.ts';
@@ -43,6 +46,8 @@ export interface AppProps {
   autoNext?: boolean;
   player?: SoundPlayer;
   debugPanel?: ComponentType<{ session: Session }>;
+  features?: Features;
+  opponent?: Opponent;
 }
 
 function useSessionState(session: Session) {
@@ -98,6 +103,10 @@ function useAdvance(
   return { pause: { setMenuOpen, wait }, autoNextMs };
 }
 
+function offeredCoach(props: AppProps, preferences: Preferences): Preferences {
+  return (props.features ?? ALL_FEATURES).coach ? preferences : { ...preferences, coach: false };
+}
+
 type UnlockingPreferences = Preferences & { unlock: () => void };
 
 function useUnlockingPreferences(player: SoundPlayer): UnlockingPreferences {
@@ -128,7 +137,7 @@ export function App(props: AppProps) {
   const preferences = useUnlockingPreferences(player);
   const drawer = useLogDrawer(state.phase);
   useSoundCues(session, player, preferences.sound);
-  const coach = useCoach(session, state, preferences);
+  const coach = useCoach(session, state, offeredCoach(props, preferences));
   useFaceSwitch(session, preferences.face);
   const vm = state.phase === 'idle' ? null : toViewModel(state, humanSeat);
   const talk = useTalk(vm, drawer.dismiss);
@@ -198,7 +207,8 @@ function Start({
       progress={progress}
       farewell={app.farewell ?? false}
       coach={preferences.coach}
-      onToggleCoach={preferences.toggleCoach}
+      onToggleCoach={(app.features ?? ALL_FEATURES).coach ? preferences.toggleCoach : undefined}
+      opponent={(app.features ?? ALL_FEATURES).opponents ? undefined : (app.opponent ?? 'math')}
       onStart={(mode, opponent) => {
         preferences.unlock();
         void app.session.getState().start(mode, opponent);
@@ -220,6 +230,7 @@ interface HeaderProps {
 
 function Header({ app, vm, seed, drawer, preferences, coach, talk, onMenu }: HeaderProps) {
   const phase = app.session.getState().phase;
+  const features = app.features ?? ALL_FEATURES;
   return (
     <StatusBar
       vm={vm}
@@ -243,7 +254,12 @@ function Header({ app, vm, seed, drawer, preferences, coach, talk, onMenu }: Hea
         }}
         onClose={() => onMenu(false)}
       >
-        <Settings preferences={preferences} {...conversationActions(app.session, vm)} />
+        <Settings
+          preferences={preferences}
+          offered={{ coach: features.coach, voice: features.talk }}
+          {...conversationActions(app.session, vm)}
+          conversation={features.talk && vm.conversation.available}
+        />
         {vm.mode === 'cash' && (
           <button
             type="button"

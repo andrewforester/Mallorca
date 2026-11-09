@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { CASH, opponentsFor, TOURNAMENT } from '../game/index.ts';
 import type { LoadProgress, Opponent, TableMode } from '../game/index.ts';
 import { t } from './i18n.ts';
@@ -16,6 +16,7 @@ export interface StartScreenProps {
   face?: boolean;
   onChoose?: (opponent: Opponent) => void;
   progress?: LoadProgress | null;
+  opponent?: Opponent;
 }
 
 function OpponentChoice({
@@ -130,6 +131,49 @@ function Tagline({ farewell }: { farewell: boolean }) {
   );
 }
 
+interface ChoicesProps {
+  fixed: Opponent | undefined;
+  opponent: Opponent;
+  onOpponent: (opponent: Opponent) => void;
+  coach: boolean;
+  onToggleCoach: (() => void) | undefined;
+  finePointer: boolean;
+}
+
+function Choices(props: ChoicesProps) {
+  return (
+    <>
+      {props.fixed === undefined && (
+        <OpponentChoice
+          value={props.opponent}
+          onChange={props.onOpponent}
+          opponents={opponentsFor(props.finePointer)}
+        />
+      )}
+      {props.onToggleCoach !== undefined && (
+        <CoachChoice coach={props.coach} onToggle={props.onToggleCoach} />
+      )}
+    </>
+  );
+}
+
+function useOpponent(
+  fixed: Opponent | undefined,
+  onChoose: ((opponent: Opponent) => void) | undefined,
+): [Opponent, (opponent: Opponent) => void] {
+  const [opponent, setOpponent] = useState<Opponent>(fixed ?? 'math');
+  useEffect(() => {
+    if (fixed !== undefined) onChoose?.(fixed);
+  }, [fixed]);
+  return [
+    opponent,
+    (next) => {
+      setOpponent(next);
+      onChoose?.(next);
+    },
+  ];
+}
+
 function hasFinePointer(): boolean {
   return globalThis.matchMedia?.('(pointer: fine)').matches ?? true;
 }
@@ -145,8 +189,9 @@ export function StartScreen({
   face = true,
   onChoose,
   progress = null,
+  opponent: fixed,
 }: StartScreenProps) {
-  const [opponent, setOpponent] = useState<Opponent>('math');
+  const [opponent, choose] = useOpponent(fixed, onChoose);
   const [starting, setStarting] = useState(false);
   const start = (mode: TableMode) => {
     setStarting(true);
@@ -161,15 +206,14 @@ export function StartScreen({
         <TonightFace face={face} farewell={farewell} />
         <div class="tonight-body">
           <Tagline farewell={farewell} />
-          <OpponentChoice
-            value={opponent}
-            onChange={(next) => {
-              setOpponent(next);
-              onChoose?.(next);
-            }}
-            opponents={opponentsFor(finePointer)}
+          <Choices
+            fixed={fixed}
+            opponent={opponent}
+            onOpponent={choose}
+            coach={coach}
+            onToggleCoach={onToggleCoach}
+            finePointer={finePointer}
           />
-          <CoachChoice coach={coach} onToggle={onToggleCoach} />
           <SeedLine loading={loadShown(opponent, starting, progress)} seed={seed} />
           <div class="start-actions">
             <button

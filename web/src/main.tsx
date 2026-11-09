@@ -9,6 +9,7 @@ import {
 } from './game/index.ts';
 import type { Session } from './game/index.ts';
 import { App } from './ui/App.tsx';
+import { readFeatures, releaseOpponent } from './ui/features.ts';
 import { createSynthPlayer } from './ui/sound/player.ts';
 import { t } from './ui/i18n.ts';
 import { readFace, readConversation } from './ui/preferences.ts';
@@ -58,10 +59,17 @@ const player = createSynthPlayer();
 let nextSeed: number | null = numberParam('seed');
 let session: Session | null = null;
 const store = await openHandStore();
-const connectConversation = conversationConnector({
-  url: import.meta.env.VITE_SUPABASE_URL as string | undefined,
-  anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
-});
+const features = readFeatures(window.location.search);
+const opponent = releaseOpponent(
+  window.location.search,
+  globalThis.matchMedia?.('(pointer: fine)').matches ?? true,
+);
+const connectConversation = features.talk
+  ? conversationConnector({
+      url: import.meta.env.VITE_SUPABASE_URL as string | undefined,
+      anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
+    })
+  : undefined;
 
 onPageExit(window, document, () => session?.getState().pageHidden());
 
@@ -88,7 +96,7 @@ function mount(farewell = false): void {
     names: [t('seat.you'), t('seat.bot')],
     mode: TOURNAMENT,
     connectConversation,
-    conversationOn: readConversation(),
+    conversationOn: features.talk && readConversation(),
     faceOn: readFace(),
     debug: import.meta.env.DEV,
     records: {
@@ -106,6 +114,8 @@ function mount(farewell = false): void {
       autoNext={autoNext}
       player={player}
       debugPanel={debugPanel}
+      features={features}
+      opponent={opponent}
       onNewGame={() => mount()}
       onLeaveTonight={() => mount(true)}
     />,

@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { byId, expect, FAST_URL, test, waitForWaypoint } from './fixtures.ts';
+import { byId, expect, LAB_URL, test, waitForWaypoint } from './fixtures.ts';
 import { serveConversation, CONVERSATION_URL } from './conversationServer.ts';
 import type { ConversationRequest } from './conversationServer.ts';
 
@@ -23,7 +23,7 @@ function answers(request: ConversationRequest) {
 }
 
 async function sitWithSolver(page: Page): Promise<void> {
-  await page.goto(FAST_URL);
+  await page.goto(LAB_URL);
   await byId(page, 'opponent-cfr').click();
   await byId(page, 'start-cash').click();
   await expect(byId(page, 'passive')).toBeEnabled({ timeout: SOLVER_TIMEOUT_MS });
@@ -74,7 +74,7 @@ test('the math opponent signs nobody in', async ({ page }) => {
     }
   });
   const requests = await serveConversation(page, answers);
-  await page.goto(FAST_URL);
+  await page.goto(LAB_URL);
   await byId(page, 'start-cash').click();
   let hands = 0;
   await playUntil(page, async () => {

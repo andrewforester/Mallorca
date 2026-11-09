@@ -51,7 +51,8 @@ export { expect };
 export { byId, goAllIn, leaveTable, openMenu, playToTheEnd, waitForWaypoint } from './shared.ts';
 export type { Waypoint } from './shared.ts';
 
-export const FAST_URL = '/?seed=42&botDelay=0&autoNext=off';
+export const FAST_URL = '/?seed=42&botDelay=0&autoNext=off&opponent=math';
+export const LAB_URL = `${FAST_URL}&features=opponents,coach,talk`;
 export const TOTAL_CHIPS = 2 * startingStack(TOURNAMENT);
 
 export async function stackOf(page: Page, seat: 0 | 1): Promise<number> {

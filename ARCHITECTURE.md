@@ -763,6 +763,14 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   enabled when `main.tsx` allows it, the `mallorca.autoNext` preference is on, the hand log drawer and the menu are
   closed, and Wait (`next-hand-wait`) was not pressed for this hand. While it runs the action panel says "Next hand
   in a moment" and the next hand button fills a bar, with no number.
+- Release scope (`ui/features.ts`, issue #119): `readFeatures(location.search)` keeps the coach, table talk and the
+  opponent choice hidden unless the link names them (`?features=coach,talk,opponents`); `releaseOpponent` fixes the
+  opponent to the v2 solver on a fine pointer and the v1 solver otherwise, or to `?opponent=<key>`. `main.tsx`
+  passes both to `App` (`features`, `opponent`); without them `App` offers everything, which the unit tests use.
+  With the coach hidden there is no coach switch on Tonight or in the menu and the coach stays off; with talk
+  hidden no conversation client is connected and the voice switch is gone. A fixed opponent shows no choice on
+  Tonight and is warmed as Tonight opens. The e2e specs play the math bot (`opponent=math` in `FAST_URL`) and the
+  coach, talk and solver specs use `LAB_URL`; `release.spec.ts` checks the plain link.
 - The start screen is Tonight: her face in a frame (`tonight-face`, her name when the face is off) with her greeting,
   the opponents of `opponentsFor` as a segmented control (buttons `opponent-<key>` with `aria-pressed`, `math` by
   default), the coach switch, the seed or a loading line while a cfr opponent starts, and the two start buttons.

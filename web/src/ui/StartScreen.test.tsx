@@ -59,6 +59,34 @@ describe('StartScreen', () => {
     expect(screen.getByRole('progressbar').hasAttribute('aria-valuenow')).toBe(false);
   });
 
+  it('plays a fixed opponent without a choice and starts loading it at once', () => {
+    const onStart = vi.fn();
+    const onChoose = vi.fn();
+    render(<StartScreen seed={1} onStart={onStart} onChoose={onChoose} opponent="cfr-v2" />);
+    expect(screen.queryByTestId('opponent-math')).toBeNull();
+    expect(screen.queryByTestId('opponent-cfr-v2')).toBeNull();
+    expect(onChoose).toHaveBeenCalledWith('cfr-v2');
+    fireEvent.click(screen.getByTestId('start-cash'));
+    expect(onStart).toHaveBeenLastCalledWith(CASH, 'cfr-v2');
+  });
+
+  it('shows the download of a fixed opponent without a choice', () => {
+    render(
+      <StartScreen
+        seed={1}
+        onStart={vi.fn()}
+        opponent="cfr"
+        progress={{ opponent: 'cfr', received: 10, total: 100 }}
+      />,
+    );
+    expect(screen.getByTestId('start-loading').textContent).toContain('10%');
+  });
+
+  it('hides the coach switch when the coach is not offered', () => {
+    render(<StartScreen seed={1} onStart={vi.fn()} />);
+    expect(screen.queryByTestId('start-coach')).toBeNull();
+  });
+
   it('tells which opponent was chosen as soon as it is chosen', () => {
     const onChoose = vi.fn();
     render(<StartScreen seed={42} onStart={vi.fn()} onChoose={onChoose} finePointer />);
@@ -91,7 +119,7 @@ describe('StartScreen', () => {
   });
 
   it('is Tonight: her face in a frame with her greeting, the opponent and the coach', () => {
-    render(<StartScreen seed={1} onStart={vi.fn()} />);
+    render(<StartScreen seed={1} onStart={vi.fn()} onToggleCoach={vi.fn()} />);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Tonight');
     const frame = screen.getByTestId('tonight-face');
     expect(frame.querySelector('img')?.getAttribute('alt')).toBe('Mallorca');

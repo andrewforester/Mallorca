@@ -1,10 +1,10 @@
 import type { Page } from '@playwright/test';
-import { byId, expect, FAST_URL, test, waitForWaypoint } from './fixtures.ts';
+import { byId, expect, LAB_URL, test, waitForWaypoint } from './fixtures.ts';
 
 const COACH_TIMEOUT_MS = 120_000;
 
 async function openCoach(page: Page, opponent: string): Promise<void> {
-  await page.goto(FAST_URL);
+  await page.goto(LAB_URL);
   await byId(page, 'start-coach').check();
   await byId(page, `opponent-${opponent}`).click();
   await byId(page, 'start-cash').click();
@@ -52,7 +52,7 @@ test('on a phone the coach sheet closes with Escape and the player can act', asy
 
 test('on the flop the range tab shows what the bot range is made of', async ({ page }) => {
   test.setTimeout(COACH_TIMEOUT_MS);
-  await page.goto(FAST_URL);
+  await page.goto(LAB_URL);
   await byId(page, 'start-coach').check();
   await byId(page, 'opponent-cfr').click();
   await byId(page, 'start-cash').click();
@@ -77,7 +77,7 @@ test('on the flop the range tab shows what the bot range is made of', async ({ p
 
 test('after a coached hand the coach reviews it', async ({ page }) => {
   test.setTimeout(COACH_TIMEOUT_MS);
-  await page.goto(FAST_URL);
+  await page.goto(LAB_URL);
   await byId(page, 'start-coach').check();
   await byId(page, 'opponent-cfr').click();
   await byId(page, 'start-cash').click();

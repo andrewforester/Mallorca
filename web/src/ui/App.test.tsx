@@ -17,7 +17,13 @@ afterEach(() => {
   localStorage.clear();
 });
 
-function setup(mode = TOURNAMENT, store = memoryStore(), autoNext?: boolean, player?: SoundPlayer) {
+function setup(
+  mode = TOURNAMENT,
+  store = memoryStore(),
+  autoNext?: boolean,
+  player?: SoundPlayer,
+  features = { coach: true, talk: true, opponents: true },
+) {
   const session = createSession({
     bot: inProcessBot(),
     seed: 42,
@@ -36,10 +42,27 @@ function setup(mode = TOURNAMENT, store = memoryStore(), autoNext?: boolean, pla
       onLeaveTonight={vi.fn()}
       autoNext={autoNext}
       player={player}
+      features={features}
     />,
   );
   return { session, onNewGame };
 }
+
+describe('App release scope', () => {
+  it('offers no coach anywhere when the coach is off', async () => {
+    const off = { coach: false, talk: false, opponents: false };
+    const { session } = setup(TOURNAMENT, memoryStore(), false, undefined, off);
+    expect(screen.queryByTestId('start-coach')).toBeNull();
+    expect(screen.queryByTestId('opponent-math')).toBeNull();
+    fireEvent.click(screen.getByTestId('start-tournament'));
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    expect(screen.queryByTestId('coach-mode')).toBeNull();
+    expect(screen.queryByTestId('coach-toggle')).toBeNull();
+    expect(screen.queryByTestId('voice')).toBeNull();
+    expect(screen.getByTestId('sound')).not.toBeNull();
+    session.getState().dispose();
+  });
+});
 
 describe('App sound toggles', () => {
   it('keeps sound in the menu, not in the header, in step with storage', async () => {
