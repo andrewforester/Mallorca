@@ -17,7 +17,6 @@ import { wrinkleWeights } from './skin.ts';
 
 const WASM_URL = new URL('./riglogic.wasm', import.meta.url);
 const EXPOSURE = 1.45;
-const HELMET_SCALE = 0.995;
 
 interface LiveMesh {
   data: MeshData;
@@ -117,8 +116,7 @@ export class RigAvatar implements FaceRenderer {
       const material = materials.byMesh[section.name];
       if (!material) continue;
       const data = meshGeometry(assets.bin, section);
-      const mesh = add(data.geometry, material, renderOrderOf(section.name));
-      if (section.name === 'helmet') mesh.scale.setScalar(HELMET_SCALE);
+      add(data.geometry, material, renderOrderOf(section.name));
       if (section.name === 'cards') add(data.geometry, materials.cardsSoft, CARDS_SOFT_ORDER);
       this.track(section.name, data);
     }

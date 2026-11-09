@@ -52,7 +52,7 @@ Face project open); they read and write under `C:\mallorca`.
    `ue/rig.py` requests the auto rig (sign in to Epic once when the editor asks).
 3. `ue/export_dcc.py` writes the DCC export (`head.dna`, `Maps`, `Masks`); `ue/synth.py` draws the skin Creator
    synthesizes into render targets (`Synth/BASECOLOR`, `Synth/NORMAL`), because those textures live only on the GPU;
-   `ue/cards.py` and `ue/helmet.py` write the hair cards, the helmet and their textures to `cards/`.
+   `ue/cards.py` writes the hair cards and their texture to `cards/`.
 4. Copy those folders into one local folder (the Creator export) and run, with the OpenRigLogic Python bindings on
    `ORL_PYTHON` and `pip install -r export/requirements.txt`:
 
@@ -72,7 +72,7 @@ exceeds 15 MB.
 
 - `rig.json` and `rig.bin`: controls, joints, animated maps, wrinkle masks and the meshes. Positions, normals and UVs are
   int16, skin weights and blendshape deltas int8, each with a scale and an offset per component; deltas under 0.01 cm are
-  dropped. Hair cards and the helmet carry no blendshapes: `follow` names the head vertex each card vertex moves with.
+  dropped. Hair cards carry no blendshapes: `follow` names the head vertex each card vertex moves with.
 - `behavior.dna` for RigLogic, `masks.r8` (the wrinkle masks, 128 px each, channels in `export/mask_channels.json`),
   `mapping.json` (ARKit and viseme weights to MetaHuman controls, `export/controls.py`), the textures and `glasses/`.
 

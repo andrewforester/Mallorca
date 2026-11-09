@@ -11,7 +11,6 @@ const ORDER: Readonly<Record<string, number>> = {
   eyelashes: 1,
   eyeshell: 2,
   saliva: 2,
-  helmet: 2,
   cards: 3,
 };
 
@@ -31,7 +30,7 @@ function loader(base: string) {
 
 function hairMaterials(
   cards: THREE.Texture,
-): Pick<Record<string, THREE.Material>, 'cards' | 'helmet'> & { soft: THREE.Material } {
+): Pick<Record<string, THREE.Material>, 'cards'> & { soft: THREE.Material } {
   const hair = {
     map: cards,
     side: THREE.DoubleSide,
@@ -44,13 +43,6 @@ function hairMaterials(
   return {
     cards: plain({ ...hair, alphaTest: 0.5 }),
     soft: plain({ ...hair, transparent: true, alphaTest: 0.12, depthWrite: false }),
-    helmet: plain({
-      color: 0x24170f,
-      roughness: 0.6,
-      sheen: 0.4,
-      sheenColor: new THREE.Color(0x5a3c2c),
-      specularIntensity: 0.3,
-    }),
   };
 }
 
