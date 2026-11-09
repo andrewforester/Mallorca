@@ -4,20 +4,12 @@ import numpy as np
 
 from dnafile import load, mesh_arrays
 from groom import nearest
+from seated import rotation, seated
 
 SHARED_TOLERANCE_CM = 0.05
 SEAM_CM = 0.02
 LEGS = ("thigh_l", "thigh_r")
 LOD = 1
-
-
-def rotation(rx, ry, rz):
-    x, y, z = np.radians([rx, ry, rz])
-    cx, sx, cy, sy, cz, sz = np.cos(x), np.sin(x), np.cos(y), np.sin(y), np.cos(z), np.sin(z)
-    rot_x = np.array([[1, 0, 0], [0, cx, -sx], [0, sx, cx]])
-    rot_y = np.array([[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]])
-    rot_z = np.array([[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]])
-    return rot_z @ rot_y @ rot_x
 
 
 def local_rows(r):
@@ -135,4 +127,5 @@ def body(src, header, face, out):
         raise SystemExit(f"shared joints differ by {error:.4f} cm")
     part = {"body": skeleton(set(header["joints"]), r)}
     merged = header["joints"] + part["body"]["joints"]
+    part["pose"] = {"sitting": seated(src / "body.dna", set(merged))}
     return part, [body_mesh(r, merged, face)]
