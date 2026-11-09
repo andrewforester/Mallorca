@@ -95,7 +95,7 @@
   }
 
   .table-layer-talk .result-text,
-  .table-layer-talk .seat-bottom .seat-plate {
+  .table-layer-talk .seat-bottom .seat-block {
     display: none;
   }
 
@@ -163,21 +163,22 @@
 }
 
 .board-row {
+  position: relative;
   display: flex;
   flex-direction: column-reverse;
   align-items: center;
-  gap: var(--space-2);
+  justify-content: center;
+  gap: var(--space-4);
 }
 
 .pot-block {
   display: flex;
-  justify-content: center;
-  min-height: 20px;
+  justify-content: flex-end;
 }
 
 .board {
   display: flex;
-  gap: 6px;
+  gap: var(--board-gap, 6px);
 }
 
 .board-slot {
@@ -190,20 +191,30 @@
 .pot {
   display: flex;
   align-items: baseline;
-  gap: var(--space-3);
-  font-family: var(--font-numeric);
+  gap: var(--space-2);
+  padding: 6px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
   color: var(--color-text);
+  font-family: var(--font-body);
   white-space: nowrap;
 }
 
 .pot-amount {
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .pot-total {
   color: var(--color-muted);
   font-size: var(--font-size-small);
+}
+
+.pot-total:only-child {
+  color: var(--color-text);
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .result-text {
@@ -229,14 +240,14 @@
 .bet-chips {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .bet-amount {
   color: var(--color-text);
-  font-family: var(--font-numeric);
-  font-size: 14px;
-  font-weight: 500;
+  font-family: var(--font-body);
+  font-size: var(--bet-font, 17px);
+  font-weight: 600;
 }
 
 .chip-dot {
@@ -244,131 +255,116 @@
   flex: none;
   width: var(--chip-dot-size);
   height: var(--chip-dot-size);
-  border: 2px solid var(--color-paper);
+  border: 3px solid var(--color-surface);
   border-radius: 50%;
   background: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
 }
 
 .seat {
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-}
-
-.seat-plate {
-  display: flex;
-  flex: 1 1 auto;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.seat-who {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px var(--space-2);
-  min-width: 0;
-}
-
-.seat-act {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
+  padding: 0 20px;
 }
 
 .seat-top {
-  min-height: 34px;
-  padding: 10px 20px 0;
+  --seat-cards-height: calc(var(--back-width, 40px) * 1.4);
 }
 
-.seat-top .seat-cards {
-  gap: 3px;
-}
-
-.seat-top .seat-cards:not(.seat-cards-shown) .card {
-  width: 16px;
-  filter: none;
-}
-
-.seat-top .seat-cards-shown {
-  position: absolute;
-  right: 24px;
-  bottom: calc(100% + 14px);
-  z-index: 2;
-  gap: 6px;
-}
-
-.seat-top .seat-cards-shown .card {
-  width: var(--shown-width);
-}
-
-.seat-top .seat-cards-shown .card-body {
-  stroke: var(--color-accent);
-  stroke-width: 14;
+.seat-shown {
+  --seat-cards-height: calc(var(--shown-width) * 1.4);
 }
 
 .seat-bottom {
-  justify-content: center;
-  gap: var(--space-4);
-  padding: 0 20px 12px;
+  padding-bottom: 12px;
+  --seat-cards-height: calc(var(--hole-width) * 1.4);
 }
 
-.seat-bottom .seat-plate {
-  flex: 0 1 auto;
-  flex-direction: column;
-  align-items: flex-start;
+.seat-top .seat-cards .card {
+  width: var(--back-width, 40px);
 }
 
-.seat-bottom .seat-who .seat-stack {
-  flex-basis: 100%;
+.seat-shown .seat-cards .card {
+  width: var(--shown-width);
 }
 
-.seat-bottom .card {
+.seat-bottom .seat-cards .card {
   width: var(--hole-width);
 }
 
-.seat-name {
+.seat-block {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 120px;
+  margin-top: -6px;
+  padding: 5px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+  box-shadow: 0 -3px 10px rgba(60, 40, 20, 0.18);
+  text-align: center;
+}
+
+.seat-active .seat-block {
+  border-color: var(--color-accent);
+}
+
+.seat-side {
+  position: absolute;
+  top: calc(var(--seat-cards-height) / 2);
+  left: calc(50% + var(--side-offset, 70px));
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  transform: translateY(-50%);
+}
+
+.dealer-slot {
+  display: inline-flex;
+  width: var(--dealer-size);
+  height: var(--dealer-size);
+}
+
+.seat-strip {
+  margin: 5px -12px -5px;
+  padding: 4px 12px;
+  border-radius: 0 0 11px 11px;
+  background: var(--color-accent);
+  color: var(--color-accent-text);
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bubble-fold {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.bubble-thinking {
+  background: var(--color-surface-alt);
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.seat-name {
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
   font-weight: 500;
 }
 
 .seat-stack {
-  font-family: var(--font-numeric);
-  font-size: 14px;
-  color: var(--color-muted);
-}
-
-.seat-active .seat-name {
-  color: var(--color-accent);
-}
-
-.seat-bubble:empty {
-  display: none;
-}
-
-.bubble {
-  display: block;
-  padding: 6px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background: var(--color-surface);
   color: var(--color-text);
   font-family: var(--font-body);
-  font-size: var(--font-size-small);
-  font-weight: 400;
-  white-space: nowrap;
-}
-
-.bubble-fold,
-.bubble-thinking {
-  color: var(--color-muted);
-}
-
-.bubble-aggressive {
-  border-color: var(--color-accent);
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .dealer-button {
@@ -379,14 +375,17 @@
   height: var(--dealer-size);
   border-radius: 50%;
   background: var(--color-paper);
+  box-shadow: var(--shadow-dealer);
   color: var(--color-paper-text);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: calc(var(--dealer-size) * 0.44);
+  font-weight: 700;
 }
 
 .seat-cards {
+  position: relative;
+  z-index: 1;
   display: flex;
-  gap: 6px;
+  gap: 3px;
 }
 
 .card {

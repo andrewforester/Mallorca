@@ -85,3 +85,30 @@ test('on a phone the hand log replaces the board under her face and the actions 
   await expect(byId(page, 'board')).toBeHidden();
   expect(await raiseIsClickable(page)).toBe(true);
 });
+
+test('bets of both seats share one column', async ({ page }) => {
+  await page.goto(FAST_URL);
+  await byId(page, 'start-tournament').click();
+  await expect(byId(page, 'passive')).toBeEnabled();
+  const [mine, hers] = await Promise.all([
+    byId(page, 'bet-0').boundingBox(),
+    byId(page, 'bet-1').boundingBox(),
+  ]);
+  expect(Math.abs((mine?.x ?? 0) - (hers?.x ?? 100))).toBeLessThanOrEqual(2);
+});
+
+test('a long stack stays in its block', async ({ page }) => {
+  await page.goto(FAST_URL);
+  await byId(page, 'start-tournament').click();
+  await expect(byId(page, 'passive')).toBeEnabled();
+  await byId(page, 'stack-0').evaluate((node) => {
+    node.textContent = '123 456';
+  });
+  const stack = await byId(page, 'stack-0').boundingBox();
+  const block = await page.locator('[data-testid="seat-0"] .seat-block').boundingBox();
+  if (stack === null || block === null) {
+    throw new Error('the stack or its block is not laid out');
+  }
+  expect(stack.x).toBeGreaterThanOrEqual(block.x);
+  expect(stack.x + stack.width).toBeLessThanOrEqual(block.x + block.width);
+});
