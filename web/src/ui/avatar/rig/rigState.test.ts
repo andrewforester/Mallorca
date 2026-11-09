@@ -161,4 +161,15 @@ describe('RigState', () => {
     old.update(pose({ weights: { jawOpen: 1 } }));
     expect(old.bone('FACIAL_C_Jaw')!.quaternion.angleTo(rest)).toBeGreaterThan(0.1);
   });
+
+  it('raises her shoulders by about a centimetre as she breathes in', () => {
+    const height = () => {
+      state.root.updateMatrixWorld(true);
+      return bone('clavicle_l').getWorldPosition(new THREE.Vector3()).y;
+    };
+    state.update(pose());
+    const rest = height();
+    state.update(pose({ shoulder: 0.06 }));
+    expect(height() - rest).toBeGreaterThan(0.008);
+  });
 });

@@ -20,6 +20,8 @@ export interface RigFrame {
 }
 
 const CM = 0.01;
+const LIFT_CM_PER_RAD = 16;
+const SHOULDERS = ['clavicle_l', 'clavicle_r'] as const;
 const POSED = ['head', 'neck_01', 'neck_02', 'spine_05', 'clavicle_l', 'clavicle_r'] as const;
 type Posed = (typeof POSED)[number];
 
@@ -53,6 +55,8 @@ export class RigState {
   private readonly local = new THREE.Quaternion();
   private readonly lidBones: { bone: THREE.Bone; open: THREE.Quaternion }[] = [];
   private readonly held: HeldJoint[];
+  private readonly up = new THREE.Vector3(0, 1, 0);
+  private readonly lifted: THREE.Bone[];
 
   constructor({ header, mapping }: RigData, rig: Rig) {
     this.rig = rig;
@@ -77,6 +81,9 @@ export class RigState {
     }
     restore();
     this.root.updateMatrixWorld(true);
+    const chest = this.rest.get('spine_05');
+    if (chest) this.up.applyQuaternion(chest.clone().invert());
+    this.lifted = SHOULDERS.map((n) => this.bone(n)).filter((b) => b !== undefined);
     for (const name of LIDS) {
       const bone = this.bone(name)!;
       this.lidBones.push({ bone, open: bone.quaternion.clone() });
@@ -98,6 +105,8 @@ export class RigState {
     });
     hold(this.held);
     this.applyPose(poseAngles(pose));
+    for (const b of this.lifted)
+      b.position.addScaledVector(this.up, LIFT_CM_PER_RAD * pose.shoulder);
     return { blends: this.rig.blends(), maps: this.rig.maps(), lids: this.lids() };
   }
 
