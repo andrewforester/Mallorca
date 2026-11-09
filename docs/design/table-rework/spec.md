@@ -21,8 +21,8 @@ Three columns as now: an empty left column, the centre column (680 px), the righ
   The board row is centred vertically between the bottom of her seat block (with its action strip) and the top of
   your cards.
 - **Right column:** the raise box (size presets, slider) stays as it is, only recoloured (§5). Below it Raise,
-  Call, Fold in the same order, restyled: all three in one colour, a soft green fill (`--color-action`) with dark
-  green text (`--color-action-text`), 64 px high, 19 px bold label on the left, the key hint (`R`, `C`, `F`) in a
+  Call, Fold in the same order, restyled: all three in one colour, a muted green fill (`--color-action`) with white
+  text (`--color-action-text`), 64 px high, 19 px bold label on the left, the key hint (`R`, `C`, `F`) in a
   small outlined box on the right, and a 3 px step shadow under each button (`--color-action-edge`).
   They sit at the bottom of the column.
 
@@ -87,14 +87,14 @@ longer changes the screen.
 | `--color-muted` | `#646e68` | names, captions, `Pot`, hand and blinds line |
 | `--color-accent` | `#2f7a52` | action strip, chips, card backs, selected size preset |
 | `--color-accent-text` | `#ffffff` | text on the accent |
-| `--color-action` | `#c3e2cf` | Raise, Call and Fold buttons |
-| `--color-action-text` | `#174a2f` | their labels and key hints |
-| `--color-action-edge` | `#98c7ab` | the step shadow under them |
+| `--color-action` | `#3f7f5c` | Raise, Call and Fold buttons |
+| `--color-action-text` | `#ffffff` | their labels and key hints |
+| `--color-action-edge` | `#2a5c41` | the step shadow under them |
 | `--color-paper` | `#1f2a24` | dealer button (dark filled) |
 | `--color-paper-text` | `#ffffff` | text on it |
 | `--color-card-face` | `#ffffff` | card faces, with a hairline edge and a soft shadow |
 
-Checked contrast: text on bg 14.0:1, accent text on accent 5.2:1, button text on button 7.3:1, muted on surface 5.3:1 and on bg 5.0:1.
+Checked contrast: text on bg 14.0:1, accent text on accent 5.2:1, button text on button 4.8:1, muted on surface 5.3:1 and on bg 5.0:1.
 `contrast.test.ts` keeps its pairs; tokens it checks that this table does not use (felt, coach, her surface,
 danger) get light values that pass it.
 
