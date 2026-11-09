@@ -79,8 +79,8 @@ to 3 mm outside it.
 ## Browser: `web/src/ui/avatar/rig/`
 
 - `assets.ts`: optional `body` and `pose` in `RigHeader`. A header without them loads as today.
-- `RigState`: body bones are created after the head bones and parented by name; the head's `spine_04` is attached to
-  `spine_03`. Each frame: RigLogic for the face, then `pose.sitting` replaces the local transforms of its joints, then
+- `RigState`: body bones are created after the head bones and parented by name; the head's `spine_04` stays a root,
+  and the body chain `root`, `pelvis`, `spine_01` to `spine_03` hangs from the rig root beside it. Each frame: RigLogic for the face, then `pose.sitting` replaces the local transforms of its joints, then
   `Pose.spine` and `Pose.shoulder` on top. Neck joints stay moved by `Pose.neck` only.
 - `RigAvatar`: meshes `body` and `sweater` are built like the others. Body gets the head skin material without
   wrinkles; the sweater gets a fabric material in a new `fabric.ts`: tiling knit normal and roughness, sheen.
