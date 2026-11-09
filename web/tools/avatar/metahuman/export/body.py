@@ -7,7 +7,7 @@ from groom import nearest
 from seated import rotation, seated
 from skintone import body_color
 from knit import knit
-from sweater import keep_tris, marks_of, sweater
+from sweater import arms_of, keep_tris, marks_of, sweater
 
 SHARED_TOLERANCE_CM = 0.05
 SEAM_CM = 0.02
@@ -118,7 +118,7 @@ def body_meshes(r, merged, face, colour):
     world = world_of(r)
     pelvis = world["pelvis"][1, 3]
     colour(mesh, seam_height(mesh, face))
-    worn, covered = sweater(mesh, face, merged, marks_of(world), pelvis + HEM_ABOVE_PELVIS_CM)
+    worn, covered = sweater(mesh, face, merged, marks_of(world), pelvis + HEM_ABOVE_PELVIS_CM, arms_of(world))
     keep_tris(mesh, ~covered[mesh["index"]].all(1))
     above(mesh, pelvis)
     seam_normals(mesh, face)

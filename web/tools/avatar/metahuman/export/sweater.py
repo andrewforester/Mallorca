@@ -14,6 +14,7 @@ BACK_DROP_CM = 1.0
 TILE_CM = 3.2
 RIB_SQUEEZE = 2.0
 EDGE_ROUNDS = 12
+SLIM = 0.12
 RELAX_ROUNDS = 10
 TAUBIN_SHRINK = 0.5
 TAUBIN_GROW = -0.53
@@ -141,7 +142,33 @@ def thickness(mesh, names, near_neck, rib):
     return NECKLINE_CM + (base - NECKLINE_CM) * ease * ease * (3 - 2 * ease) + RIB_LIFT_CM * rib
 
 
-def sweater(body, face, names, marks, hem):
+def axis_point(points, a, b):
+    ab = b - a
+    t = np.clip(((points - a) @ ab) / (ab @ ab), 0, 1)
+    return a + t[:, None] * ab
+
+
+def slim(moved, mesh, names, arms, to_edge):
+    arm = influence(mesh, names, SLEEVE)
+    ease = np.clip(to_edge / EASE_CM, 0, 1)
+    pull = SLIM * arm * ease * ease * (3 - 2 * ease)
+    best = np.full(len(moved), np.inf)
+    target = moved.copy()
+    for a, b in arms:
+        point = axis_point(moved, a, b)
+        d = np.linalg.norm(moved - point, axis=1)
+        closer = d < best
+        best[closer], target[closer] = d[closer], point[closer]
+    return moved + (target - moved) * pull[:, None]
+
+
+def arms_of(world):
+    joint = lambda n: world[n][:3, 3]
+    return [(joint(f"{a}_{s}"), joint(f"{b}_{s}")) for s in "lr"
+            for a, b in (("upperarm", "lowerarm"), ("lowerarm", "hand"))]
+
+
+def sweater(body, face, names, marks, hem, arms):
     full, from_head = joined(body, face)
     kept = region(full, names, marks, hem, from_head)
     tris = full["index"][kept]
@@ -156,6 +183,7 @@ def sweater(body, face, names, marks, hem):
     normal = smooth_normals(pos, tris, group)
     moved = pos + normal * thickness(full, names, near_neck, rib)[:, None]
     moved = relax(moved, tris, group)
+    moved = slim(moved, full, names, arms, to_edge)
     neck_groups = np.unique(group[np.isin(group, edge) & (pos[:, 1] > marks[0] - 1)])
     smooth_edge(moved, boundary_edges(tris, group), group, neck_groups)
     scale = cm_per_uv(pos, full["uv"], tris) / TILE_CM

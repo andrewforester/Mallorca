@@ -2,11 +2,16 @@ import numpy as np
 
 from groom import nearest, vertex_normals
 from seated import rotation
+from sweater import boundary, welded
 
 GAP_CM = 0.3
 REACH_CM = 3.0
 PASSES = 12
 EXTRA_CM = 0.02
+ROUNDS = 6
+HEAD_TURN_RAD = 0.2
+HEAD_TURNS = [((0, 1, 0), 0.0), ((0, 1, 0), HEAD_TURN_RAD), ((0, 1, 0), -HEAD_TURN_RAD),
+              ((1, 0, 0), HEAD_TURN_RAD), ((1, 0, 0), -HEAD_TURN_RAD)]
 
 
 def matrix_of(row):
@@ -28,6 +33,23 @@ def worlds(names, parent, rows):
     return np.array([world(n) for n in names])
 
 
+def turn(axis, angle):
+    m = np.eye(4)
+    m[:3, :3] = rotation(*(np.degrees(angle) * np.array(axis)))
+    return m
+
+
+def under(names, parent, top):
+    def below(n):
+        while n is not None:
+            if n == top:
+                return True
+            n = parent[n]
+        return False
+
+    return np.array([below(n) for n in names])
+
+
 def skin_matrices(head_reader, header, part):
     names = header["joints"] + part["body"]["joints"]
     rows = {n: [*head_reader.getNeutralJointTranslation(j), *head_reader.getNeutralJointRotation(j)]
@@ -35,8 +57,17 @@ def skin_matrices(head_reader, header, part):
     parent = {n: (None if p == j else header["joints"][p]) for j, (n, p) in enumerate(zip(header["joints"], header["parents"]))}
     for n, p, row in zip(part["body"]["joints"], part["body"]["parents"], part["body"]["rest"]):
         rows[n], parent[n] = row, p or None
-    seated = {**rows, **part["pose"]["sitting"]}
-    return worlds(names, parent, seated) @ np.linalg.inv(worlds(names, parent, rows))
+    seated = worlds(names, parent, {**rows, **part["pose"]["sitting"]})
+    unbind = np.linalg.inv(worlds(names, parent, rows))
+    neck = under(names, parent, "neck_01")
+    pivot = np.eye(4)
+    pivot[:3, 3] = seated[names.index("neck_01")][:3, 3]
+    out = []
+    for axis, angle in HEAD_TURNS:
+        moved = seated.copy()
+        moved[neck] = pivot @ turn(axis, angle) @ np.linalg.inv(pivot) @ seated[neck]
+        out.append(moved @ unbind)
+    return out
 
 
 def blended(mesh, skins):
@@ -54,12 +85,18 @@ def inside(cards, cloth):
     offset = cards - cloth["at"][near]
     depth = (offset * cloth["normal"][near]).sum(1)
     gap = np.linalg.norm(offset, axis=1)
-    return near, depth, (gap < REACH_CM) & ((depth < 0) | (gap < GAP_CM))
+    through = (depth < 0) & ~cloth["rim"][near]
+    return near, depth, (gap < REACH_CM) & (through | (gap < GAP_CM))
 
 
-def push_out(cards, sweater, skins):
+def cloth_of(sweater, skins):
     at, _ = posed(sweater, skins)
-    cloth = {"at": at, "normal": vertex_normals(at, sweater["index"].astype(np.int64))}
+    tris = sweater["index"].astype(np.int64)
+    group = welded(sweater["position"])
+    return {"at": at, "normal": vertex_normals(at, tris), "rim": np.isin(group, boundary(tris, group))}
+
+
+def push_once(cards, cloth, skins):
     hair, blend = posed(cards, skins)
     moved = np.zeros(len(hair), bool)
     for _ in range(PASSES):
@@ -71,7 +108,14 @@ def push_out(cards, sweater, skins):
     moved |= hit
     back = np.einsum("vab,vb->va", np.linalg.inv(blend[moved]), np.c_[hair[moved], np.ones(moved.sum())])[:, :3]
     cards["position"][moved] = back.astype(np.float32)
-    left = inside(posed(cards, skins)[0], cloth)[2].sum()
+    return int(moved.sum())
+
+
+def push_out(cards, sweater, poses):
+    clothes = [cloth_of(sweater, skins) for skins in poses]
+    for _ in range(ROUNDS):
+        if not sum(push_once(cards, cloth, skins) for cloth, skins in zip(clothes, poses)):
+            break
+    left = sum(int(inside(posed(cards, skins)[0], cloth)[2].sum()) for cloth, skins in zip(clothes, poses))
     if left:
         raise SystemExit(f"{left} hair card vertices still inside her sweater")
-    return int(moved.sum())
