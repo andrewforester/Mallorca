@@ -74,3 +74,19 @@ test('the table rail is drawn over her face inside the frame', async ({ page }) 
     .evaluate((node) => getComputedStyle(node).clipPath);
   expect(rail).toContain('inset');
 });
+
+test('with her face off the start screen shows her name in large light type', async ({ page }) => {
+  await page.goto(FAST_URL);
+  await byId(page, 'start-cash').click();
+  await page.locator('.menu-summary').click();
+  await byId(page, 'face').click();
+  await page.reload();
+  const name = page.locator('.tonight-face .face-frame-name');
+  await expect(name).toBeVisible();
+  const style = await name.evaluate((node) => {
+    const computed = getComputedStyle(node);
+    return { size: parseFloat(computed.fontSize), color: computed.color };
+  });
+  expect(style.size).toBeGreaterThanOrEqual(22);
+  expect(style.color).toBe('rgb(255, 255, 255)');
+});

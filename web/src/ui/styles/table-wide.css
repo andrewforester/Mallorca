@@ -13,7 +13,7 @@
     --card-width: 62px;
     --hole-width: 56px;
     --shown-width: 56px;
-    --board-gap: 14px;
+    --board-gap: clamp(6px, calc((min(680px, 50vw) - 470px) / 4), 14px);
     --chip-dot-size: 28px;
     --bet-font: 24px;
     --dealer-size: 36px;
@@ -51,10 +51,6 @@
     --shown-width: 56px;
   }
 
-  .seat-top .seat-cards {
-    margin-top: -45px;
-  }
-
   .seat-bottom {
     padding: 0 4px 28px;
   }
@@ -69,13 +65,21 @@
   }
 
   .board-row {
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    width: 100%;
     margin: auto 0;
   }
 
   .pot-block {
-    position: absolute;
-    right: calc(50% + 190px);
+    justify-self: end;
+  }
+
+  .pot {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0;
+    border-radius: var(--radius-medium);
   }
 
   .pot-amount,
@@ -262,6 +266,10 @@
 }
 
 @media (min-aspect-ratio: 1/1) and (min-height: 561px) {
+  .seat-top .seat-cards {
+    margin-top: -45px;
+  }
+
   .status-bar {
     position: absolute;
     top: 20px;

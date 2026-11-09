@@ -136,3 +136,38 @@ test('wide screens have no top bar', async ({ page }) => {
   const blinds = await byId(page, 'blinds').boundingBox();
   expect((hand?.y ?? 0) < (blinds?.y ?? 0)).toBe(true);
 });
+
+test('a long pot stays inside the centre column', async ({ page }) => {
+  const viewport = page.viewportSize();
+  test.skip(viewport === null || viewport.width < viewport.height);
+  for (const size of [viewport ?? { width: 1440, height: 900 }, { width: 1024, height: 768 }]) {
+    await page.setViewportSize(size);
+    await page.goto(FAST_URL);
+    await byId(page, 'start-tournament').click();
+    await expect(byId(page, 'passive')).toBeEnabled();
+    await byId(page, 'pot').evaluate((node) => {
+      node.innerHTML =
+        '<span class="pot-amount">Pot 12345</span><span class="pot-total">Total 23456</span>';
+    });
+    const pot = await byId(page, 'pot').boundingBox();
+    const centre = await page.locator('.table-centre').boundingBox();
+    if (pot === null || centre === null) {
+      throw new Error('the pot is not laid out');
+    }
+    expect(pot.x).toBeGreaterThanOrEqual(centre.x);
+    expect(pot.x + pot.width).toBeLessThanOrEqual(centre.x + centre.width);
+  }
+});
+
+test('her cards never cover her face on a short landscape screen', async ({ page }) => {
+  await page.setViewportSize({ width: 844, height: 390 });
+  await page.goto(FAST_URL);
+  await byId(page, 'start-tournament').click();
+  await expect(byId(page, 'passive')).toBeEnabled();
+  const frame = await byId(page, 'face-frame').boundingBox();
+  const cards = await page.locator('[data-testid="seat-1"] .seat-cards').boundingBox();
+  if (frame === null || cards === null) {
+    throw new Error('the table is not laid out');
+  }
+  expect(cards.y).toBeGreaterThanOrEqual(frame.y + frame.height - 1);
+});
