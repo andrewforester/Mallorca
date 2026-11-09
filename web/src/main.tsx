@@ -73,9 +73,8 @@ const connectConversation = features.talk
 
 onPageExit(window, document, () => session?.getState().pageHidden());
 
-const debugPanel = import.meta.env.DEV
-  ? (await import('./ui/debug/EmotionDebug.tsx')).EmotionDebug
-  : undefined;
+const debugOn = import.meta.env.DEV || params.has('debug');
+const debugPanel = debugOn ? (await import('./ui/debug/EmotionDebug.tsx')).EmotionDebug : undefined;
 
 const root = document.getElementById('app');
 if (root === null) {
@@ -99,7 +98,7 @@ function mount(farewell = false, character = readCharacter()): void {
     connectConversation,
     conversationOn: features.talk && readConversation(),
     faceOn: readFace(),
-    debug: import.meta.env.DEV,
+    debug: debugOn,
     records: {
       store,
       sessionId: crypto.randomUUID(),

@@ -26,6 +26,15 @@ test('the production build shows no emotion debug panel without the hidden link'
   await expect(byId(page, 'conversation-debug')).toHaveCount(0);
 });
 
+test('the hidden link opens the emotion debug panel in the production build', async ({ page }) => {
+  await page.goto(`${FAST_URL}&debug`);
+  await byId(page, 'start-cash').click();
+  await expect(byId(page, 'fold')).toBeVisible();
+  await byId(page, 'emotion-debug-toggle').click();
+  await expect(byId(page, 'emotion-debug')).toBeVisible();
+  await expect(byId(page, 'debug-personality-mallorca')).toBeVisible();
+});
+
 test('a passive hand ends with the chips conserved', async ({ page }) => {
   await page.goto(FAST_URL);
   await byId(page, 'start-tournament').click();

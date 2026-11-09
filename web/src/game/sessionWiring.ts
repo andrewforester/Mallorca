@@ -59,7 +59,7 @@ export function wireHer(
   botSeat: SeatIndex,
 ): Pick<Her, 'persona' | 'conversation' | 'face' | 'trace'> {
   const persona = wirePersona(host, options, botSeat);
-  const traced = import.meta.env.DEV && options.debug === true;
+  const traced = options.debug === true;
   const trace = traced ? createTrace(() => host.felt()) : null;
   const conversation = wireConversation(host, options, botSeat, { persona, trace });
   return { persona, conversation, face: wireFace(host, persona, options, botSeat), trace };
@@ -134,7 +134,7 @@ export function wireProbe(
   options: SessionOptions,
   write: (state: DebugState) => void,
 ): DebugProbe | null {
-  if (!import.meta.env.DEV || options.debug !== true) {
+  if (options.debug !== true) {
     return null;
   }
   return createProbe(her.persona, options.now ?? Date.now, write, {
