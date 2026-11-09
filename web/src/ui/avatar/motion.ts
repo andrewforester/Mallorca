@@ -33,7 +33,17 @@ const GAZE: Readonly<Record<GazeTarget, readonly [number, number]>> = {
   down: [0.05, 0.5],
 };
 
-const GLANCES: readonly GazeTarget[] = ['cards', 'chips', 'away', 'board'];
+const THINK_SPOTS: ReadonlyArray<readonly [number, number]> = [
+  [-0.3, -0.22],
+  [0.3, -0.22],
+  [0.05, -0.28],
+  [-0.42, 0.03],
+  [0.42, 0.03],
+  [0.02, 0.42],
+  [0, 0.3],
+];
+
+const GLANCES: readonly GazeTarget[] = ['cards', 'board', 'away', 'down'];
 const BACK_AFTER_S = 0.9;
 
 interface Timed {
@@ -71,6 +81,7 @@ export class Motion {
   private back: { target: GazeTarget; at: number } | null = null;
   private glance: { target: GazeTarget; until: number } | null = null;
   private thinking = false;
+  private thinkAt: readonly [number, number] = GAZE.think;
   private offset: [number, number] = [0, 0];
   private eyes: [number, number] = [0, 0];
   private head: Angles = [0, 0, 0];
@@ -87,6 +98,9 @@ export class Motion {
   }
 
   setThinking(thinking: boolean): void {
+    if (thinking && !this.thinking) {
+      this.thinkAt = THINK_SPOTS[Math.floor(this.random() * THINK_SPOTS.length)] ?? GAZE.think;
+    }
     this.thinking = thinking;
   }
 
@@ -203,8 +217,7 @@ export class Motion {
   }
 
   private look(dt: number, w: Weights): [number, number] {
-    const at = this.thinking ? 'think' : (this.glance?.target ?? this.gaze);
-    const target = GAZE[at];
+    const target = this.thinking ? this.thinkAt : GAZE[this.glance?.target ?? this.gaze];
     this.eyes[0] = ease(this.eyes[0], target[0] + this.offset[0], 18, dt);
     this.eyes[1] = ease(this.eyes[1], target[1] + this.offset[1], 18, dt);
     const yaw = clamp(this.eyes[0] * 0.75, -0.45, 0.45);

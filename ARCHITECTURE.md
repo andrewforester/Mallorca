@@ -879,7 +879,7 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   clavicles by the pose in world axes; blendshapes and the head's normals are updated on the CPU, hair cards follow
   their head vertex, and the skin shader blends the wrinkle normal maps by mask. `Motion` (`motion.ts`, no WebGL) eases toward `faceNow()` (read about
   ten times a second), plays new `FaceCue`s once (pulses, gaze with a glance back), blinks, saccades and glances
-  away from `idle`, poses the head from the shown PAD and breathes; `thinking` turns her gaze away to think. It
+  away from `idle`, poses the head from the shown PAD and breathes; `thinking` turns her gaze to one of seven spots, drawn anew for each decision (up to either side, up, aside, her cards, the board). It
   pauses while the document is hidden, calms the idle motion under `prefers-reduced-motion`, and falls back to the
   portrait when the model fails to load or WebGL is lost. Off, there is no `face-seat` and the frame shrinks to
   her name.

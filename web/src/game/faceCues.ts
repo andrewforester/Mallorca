@@ -14,11 +14,7 @@ function gazeAt(event: EngineEvent, botSeat: SeatIndex): Gaze | null {
       return event.seat === botSeat ? look('cards') : null;
     case 'streetDealt':
       return look('board');
-    case 'acted': {
-      const kind = event.action.kind;
-      const paid = kind === 'call' || kind === 'raise';
-      return event.seat === botSeat && paid ? look('chips', 'player') : look('player');
-    }
+    case 'acted':
     case 'handEnded':
       return look('player');
     default:

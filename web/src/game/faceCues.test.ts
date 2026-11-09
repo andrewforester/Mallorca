@@ -20,9 +20,9 @@ describe('gazeOf', () => {
     expect(gazeOf([hole(0), hole(1)], 1)).toEqual({ target: 'cards', then: null });
   });
 
-  it('looks at the chips and back at the player when she puts money in', () => {
-    expect(gazeOf([acted(1, 'raise')], 1)).toEqual({ target: 'chips', then: 'player' });
-    expect(gazeOf([acted(1, 'call')], 1)).toEqual({ target: 'chips', then: 'player' });
+  it('keeps her eyes on the player when she puts money in', () => {
+    expect(gazeOf([acted(1, 'raise')], 1)).toEqual({ target: 'player', then: null });
+    expect(gazeOf([acted(1, 'call')], 1)).toEqual({ target: 'player', then: null });
     expect(gazeOf([acted(1, 'check')], 1)).toEqual({ target: 'player', then: null });
   });
 
