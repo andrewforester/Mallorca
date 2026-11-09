@@ -47,9 +47,13 @@ function hairMaterials(
   };
 }
 
-async function bodyMaterials(
-  tex: ReturnType<typeof loader>,
-): Promise<Record<'body' | 'sweater', THREE.Material>> {
+export type TextureLoad = (name: string, srgb?: boolean) => Promise<THREE.Texture>;
+
+export async function bodyMaterials(
+  tex: TextureLoad,
+  meshes: readonly string[],
+): Promise<Partial<Record<'body' | 'sweater', THREE.Material>>> {
+  if (!meshes.includes('body') && !meshes.includes('sweater')) return {};
   const [map, normalMap, knit] = await Promise.all([
     tex('body_color_map.webp', true),
     tex('body_normal_map.webp'),
@@ -66,37 +70,8 @@ async function bodyMaterials(
   return { body, sweater: fabricMaterial(knit) };
 }
 
-export async function loadMaterials(base: string, layout: WrinkleLayout): Promise<Materials> {
-  const tex = loader(base);
-  const [color, normal, roughness, wm1, wm2, wm3, teethC, teethN, eyesC, eyesN, lashes, cards] =
-    await Promise.all([
-      tex('head_color_map.webp', true),
-      tex('head_normal_map.webp'),
-      tex('head_roughness_map.webp'),
-      tex('head_wm1_normal_map.webp'),
-      tex('head_wm2_normal_map.webp'),
-      tex('head_wm3_normal_map.webp'),
-      tex('teeth_color_map.webp', true),
-      tex('teeth_normal_map.webp'),
-      tex('eyes_color_map.webp', true),
-      tex('eyes_normal_map.webp'),
-      tex('eyelashes.webp', true),
-      tex('hair_cards.webp', true, false),
-    ]);
-  const eye = plain({
-    map: eyesC,
-    normalMap: eyesN,
-    roughness: 0.08,
-    clearcoat: 1,
-    clearcoatRoughness: 0.02,
-  });
-  const { soft, ...hair } = hairMaterials(cards);
-  const dressed = await bodyMaterials(tex);
-  const byMesh: Record<string, THREE.Material> = {
-    head: skinMaterial({ color, normal, roughness, wrinkles: [wm1, wm2, wm3] }, layout),
-    teeth: mouthMaterial(teethC, teethN),
-    eyeLeft: eye,
-    eyeRight: eye,
+function films(lashes: THREE.Texture): Record<string, THREE.Material> {
+  return {
     eyelashes: plain({
       map: lashes,
       transparent: true,
@@ -121,6 +96,46 @@ export async function loadMaterials(base: string, layout: WrinkleLayout): Promis
       depthWrite: false,
     }),
     cartilage: plain({ color: 0xc9827a, roughness: 0.35 }),
+  };
+}
+
+export async function loadMaterials(
+  base: string,
+  layout: WrinkleLayout,
+  meshes: readonly string[],
+): Promise<Materials> {
+  const tex = loader(base);
+  const dressing = bodyMaterials(tex, meshes);
+  const [color, normal, roughness, wm1, wm2, wm3, teethC, teethN, eyesC, eyesN, lashes, cards] =
+    await Promise.all([
+      tex('head_color_map.webp', true),
+      tex('head_normal_map.webp'),
+      tex('head_roughness_map.webp'),
+      tex('head_wm1_normal_map.webp'),
+      tex('head_wm2_normal_map.webp'),
+      tex('head_wm3_normal_map.webp'),
+      tex('teeth_color_map.webp', true),
+      tex('teeth_normal_map.webp'),
+      tex('eyes_color_map.webp', true),
+      tex('eyes_normal_map.webp'),
+      tex('eyelashes.webp', true),
+      tex('hair_cards.webp', true, false),
+    ]);
+  const eye = plain({
+    map: eyesC,
+    normalMap: eyesN,
+    roughness: 0.08,
+    clearcoat: 1,
+    clearcoatRoughness: 0.02,
+  });
+  const { soft, ...hair } = hairMaterials(cards);
+  const dressed = await dressing;
+  const byMesh: Record<string, THREE.Material> = {
+    head: skinMaterial({ color, normal, roughness, wrinkles: [wm1, wm2, wm3] }, layout),
+    teeth: mouthMaterial(teethC, teethN),
+    eyeLeft: eye,
+    eyeRight: eye,
+    ...films(lashes),
     ...dressed,
     ...hair,
   };

@@ -79,7 +79,11 @@ export class RigAvatar implements FaceRenderer {
       lids: new THREE.Vector2(),
       eye: eyeCenter(state),
     };
-    const materials = await loadMaterials(this.base, this.layout);
+    const materials = await loadMaterials(
+      this.base,
+      this.layout,
+      assets.header.meshes.map((m) => m.name),
+    );
     this.assets = assets;
     this.state = state;
     this.scene.add(state.root);
