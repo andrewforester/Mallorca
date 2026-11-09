@@ -49,8 +49,8 @@ Three columns as now: an empty left column, the centre column (680 px), the righ
 
 One component for both seats, mirrored around the board:
 
-- **Cards** centred on the column axis. They tuck about 12 px under the block below them.
-  - Her cards: card backs, 50 × 70 px, raised so they overlap the bottom edge of the scene by about 35 px, as if
+- **Cards** centred on the column axis, 3 px apart. Their bottom edge tucks a few px under the block below them.
+  - Her cards: card backs, 50 × 70 px, raised so they overlap the bottom edge of the scene by about 45 px, as if
     lying on her edge of the table. Back pattern: diagonal stripes in the accent colour with a white border.
   - Your cards: faces, 56 × 80 px.
 - **Block** under the cards, centred: white surface, 1 px border, radius 12 px, min width 136 px, a soft shadow
