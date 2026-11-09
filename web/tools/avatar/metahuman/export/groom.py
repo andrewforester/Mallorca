@@ -11,7 +11,6 @@ BROW = np.array([40, 28, 22], np.float32)
 HAIR = np.array([38, 26, 20], np.float32)
 LASH = np.array([34, 22, 17], np.float32)
 HAIR_CARDS = ["hair_g0_s0.json", "hair_g1_s0.json"]
-HELMET_REACH_CM = 3.0
 
 
 def nearest(points, ref):
@@ -44,12 +43,9 @@ def vertex_normals(pos, tris):
     return nrm / np.maximum(np.linalg.norm(nrm, axis=1, keepdims=True), 1e-9)
 
 
-def card_mesh(name, files, ctx, reach=None):
+def card_mesh(name, files, ctx):
     P, U, I = read_cards(ctx["cards"], files)
     near = nearest(P, ctx["arch"])
-    if reach is not None:
-        far = np.linalg.norm(P - ctx["arch"][near], axis=1) > reach
-        I = I[~far[I].any(1)]
     follow = ctx["first"][near]
     head = ctx["head"]
     pos = (ctx["pos"][near] + (P - ctx["arch"][near])).astype(np.float32)
@@ -111,4 +107,4 @@ def groom(src, archetype, head_mesh, out):
     head_color(src, out)
     hair_texture(src, out)
     lashes(src, out)
-    return [card_mesh("cards", HAIR_CARDS, ctx), card_mesh("helmet", ["helmet.json"], ctx, HELMET_REACH_CM)]
+    return [card_mesh("cards", HAIR_CARDS, ctx)]

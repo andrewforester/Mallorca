@@ -1,5 +1,32 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import type { MeshSection, RigHeader, Section } from './assets.ts';
 import { decode, loadAssets } from './assets.ts';
+
+const her = (file: string) => readFileSync(resolve('public/avatar/her', file));
+const BYTES: Record<Section['type'], number> = {
+  int8: 1,
+  uint8: 1,
+  int16: 2,
+  uint16: 2,
+  uint32: 4,
+  float32: 4,
+};
+
+function sectionsOf(mesh: MeshSection): Section[] {
+  const { position, normal, uv, index, skinIndex, skinWeight, targets, follow } = mesh;
+  return [
+    position,
+    normal,
+    uv,
+    index,
+    skinIndex,
+    skinWeight,
+    ...targets.flatMap((t) => [t.index, t.delta]),
+    ...(follow ? [follow] : []),
+  ];
+}
 
 describe('decode', () => {
   it('scales and offsets each component of a quantized int16 section', () => {
@@ -64,5 +91,22 @@ describe('loadAssets', () => {
     expect([...assets.dna]).toEqual([3]);
     expect(assets.masks.length).toBe(3);
     expect(assets.mapping.jawOpen).toEqual({ jawOpen: 1 });
+  });
+});
+
+describe('her packed rig', () => {
+  const header = JSON.parse(her('rig.json').toString('utf8')) as RigHeader;
+
+  it('dresses her hair in cards alone, with no helmet under them', () => {
+    const names = header.meshes.map((m) => m.name);
+    expect(names).toContain('cards');
+    expect(names).not.toContain('helmet');
+  });
+
+  it('ends the binary at its last section, padded to 16 bytes', () => {
+    const end = Math.max(
+      ...header.meshes.flatMap(sectionsOf).map((s) => s.offset + s.length * BYTES[s.type]),
+    );
+    expect(her('rig.bin').byteLength).toBe(Math.ceil(end / 16) * 16);
   });
 });
