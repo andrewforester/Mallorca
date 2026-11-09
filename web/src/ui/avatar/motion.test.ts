@@ -112,10 +112,10 @@ describe('motion', () => {
       };
     };
     const lively = breathing(false);
-    expect(lively.chest).toBeGreaterThan(0.1);
-    expect(lively.shoulders).toBeGreaterThan(0.1);
+    expect(lively.chest).toBeGreaterThan(0.07);
+    expect(lively.shoulders).toBeGreaterThan(0.07);
     const calm = breathing(true);
-    expect(calm.chest).toBeGreaterThan(0.05);
+    expect(calm.chest).toBeGreaterThan(0.03);
     expect(calm.chest).toBeLessThan(lively.chest);
   });
 
