@@ -1,8 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Decision, Observation } from '../brains/index.ts';
 import type { BotClient } from './botClient.ts';
-import { BOT_TIMEOUT_MS, inProcessBot, withFallback, workerBot } from './botClient.ts';
-import type { WorkerReply, WorkerRequest } from './workerProtocol.ts';
+import {
+  BOT_TIMEOUT_MS,
+  inProcessBot,
+  sharedWorkerBot,
+  withFallback,
+  workerBot,
+} from './botClient.ts';
+import type { WorkerMessage, WorkerReply, WorkerRequest } from './workerProtocol.ts';
 
 const legal = { fold: true, check: false, call: 10, raise: { min: 40, max: 2000 } };
 
@@ -90,6 +96,10 @@ class FakeWorker {
     this.onmessage?.({ data: reply } as MessageEvent<WorkerReply>);
   }
 
+  notify(message: WorkerMessage) {
+    this.onmessage?.({ data: message } as MessageEvent<WorkerReply>);
+  }
+
   decideIds() {
     return this.sent.flatMap((request) => (request.kind === 'decide' ? [request.id] : []));
   }
@@ -120,6 +130,47 @@ describe('workerBot', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it('hands the download progress of a model to its listeners until they stop', () => {
+    const bot = workerBot();
+    const seen: unknown[] = [];
+    const stop = bot.onProgress?.((progress) => seen.push(progress));
+    currentWorker().notify({ progress: { opponent: 'cfr-v2', received: 10, total: 100 } });
+    stop?.();
+    currentWorker().notify({ progress: { opponent: 'cfr-v2', received: 20, total: 100 } });
+    expect(seen).toEqual([{ opponent: 'cfr-v2', received: 10, total: 100 }]);
+  });
+
+  it('stops the listeners of a finished game on the shared worker', () => {
+    const next = sharedWorkerBot();
+    const first = next();
+    const seen: unknown[] = [];
+    first.onProgress?.((progress) => seen.push(progress));
+    first.dispose?.();
+    currentWorker().notify({ progress: { opponent: 'cfr', received: 1, total: 2 } });
+    expect(seen).toEqual([]);
+  });
+
+  it('asks the worker to warm the model of an opponent', () => {
+    const bot = workerBot();
+    bot.warm?.('cfr-v2');
+    expect(currentWorker().sent).toEqual([{ kind: 'warm', opponent: 'cfr-v2' }]);
+  });
+
+  it('keeps one worker, and with it the loaded model, across games', () => {
+    const next = sharedWorkerBot();
+    const first = next();
+    first.observe(hand);
+    first.dispose?.();
+    const second = next();
+    second.observe(hand);
+    expect(FakeWorker.instances).toHaveLength(1);
+    expect(currentWorker().terminated).toBe(false);
+    const kinds = currentWorker().sent.map((request) => request.kind);
+    expect(kinds[0]).toBe('observe');
+    expect(kinds.at(-1)).toBe('observe');
+    expect(kinds.slice(1, -1).every((kind) => kind === 'reset')).toBe(true);
   });
 
   it('posts observe and reset requests to the worker', () => {

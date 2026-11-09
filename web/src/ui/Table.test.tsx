@@ -17,6 +17,34 @@ describe('Table layout', () => {
   });
 });
 
+describe('Table layer', () => {
+  it('opens a layer such as the hand log or the coach in the left area in place of the chat panel', () => {
+    const { container } = render(
+      <Table
+        vm={talking()}
+        phase="humanToAct"
+        humanSeat={0}
+        onAct={vi.fn()}
+        onNextHand={vi.fn()}
+        layer={<section data-testid="log-stub" />}
+      />,
+    );
+    const left = container.querySelector('.table-left');
+    expect(left?.contains(screen.getByTestId('log-stub'))).toBe(true);
+    expect(screen.queryByTestId('chat-panel')).toBeNull();
+    expect(container.querySelector('.table-layout')?.classList.contains('table-layer-open')).toBe(
+      true,
+    );
+    expect(screen.getByTestId('fold')).not.toBeNull();
+  });
+
+  it('keeps the chat panel while no layer is open', () => {
+    const { container } = table(talking());
+    expect(screen.getByTestId('chat-panel')).not.toBeNull();
+    expect(container.querySelector('.table-layer-open')).toBeNull();
+  });
+});
+
 describe('Table result and announcements', () => {
   it('shows the won amount and hides the pot while a result is shown', () => {
     table(fixtureResult(), 'handOver');
@@ -44,35 +72,77 @@ describe('Table result and announcements', () => {
     expect(region.textContent).toBe('Mallorca wins 120 with Two pair');
   });
 
-  it('keeps both seats and the felt layer in order', () => {
+  it('stacks her face frame, her plate, the board and your row in the centre column', () => {
     const { container } = table();
-    const felt = container.querySelector('.table-felt');
-    expect(felt).not.toBeNull();
-    expect(felt?.contains(screen.getByTestId('board'))).toBe(true);
-    expect(felt?.contains(screen.getByTestId('pot'))).toBe(true);
+    const centre = container.querySelector('.table-centre');
+    const order = [...(centre?.children ?? [])].map(
+      (node) => node.getAttribute('data-testid') ?? node.className,
+    );
+    expect(order).toEqual(['face-frame', 'seat-1', 'table-board', 'seat-0']);
+    const board = screen.getByTestId('table-board');
+    expect(board.contains(screen.getByTestId('board'))).toBe(true);
+    expect(board.contains(screen.getByTestId('pot'))).toBe(true);
     expect(within(screen.getByTestId('seat-1')).getAllByTestId('card-back').length).toBe(2);
   });
 
-  it('puts the dealer button once on the felt beside the button seat bet', () => {
-    const { container } = table();
+  it('frames her name when her face is off and her face when it is on', () => {
+    table();
+    const frame = screen.getByTestId('face-frame');
+    expect(frame.classList.contains('face-frame-off')).toBe(true);
+    expect(frame.querySelector('.face-frame-name')?.textContent).toBe('Mallorca');
+    cleanup();
+    render(
+      <Table
+        vm={viewModel()}
+        phase="humanToAct"
+        humanSeat={0}
+        onAct={vi.fn()}
+        onNextHand={vi.fn()}
+        face={() => <span data-testid="face-stub" />}
+      />,
+    );
+    const live = screen.getByTestId('face-frame');
+    expect(live.classList.contains('face-frame-off')).toBe(false);
+    expect(live.contains(screen.getByTestId('face-stub'))).toBe(true);
+  });
+
+  it('puts the dealer button once on the button seat beside its bet', () => {
+    table();
     const dealers = screen.getAllByTestId('dealer-button');
     expect(dealers.length).toBe(1);
     const dealer = screen.getByTestId('dealer-button');
     expect(dealer.getAttribute('role')).toBe('img');
     expect(dealer.getAttribute('aria-label')).toBe('Dealer button');
-    expect(container.querySelector('.table-felt')?.contains(dealer)).toBe(true);
-    expect(dealer.closest('.felt-spot')?.contains(screen.getByTestId('bet-0'))).toBe(true);
-    expect(screen.getByTestId('seat-0').contains(dealer)).toBe(false);
+    expect(screen.getByTestId('seat-0').contains(dealer)).toBe(true);
+    expect(screen.getByTestId('seat-1').contains(dealer)).toBe(false);
   });
 
-  it('puts the bets on the felt instead of the seat tags', () => {
-    const { container } = table();
-    expect(screen.getByTestId('seat-0').contains(screen.getByTestId('bet-0'))).toBe(false);
-    expect(screen.getByTestId('seat-1').contains(screen.getByTestId('bet-1'))).toBe(false);
-    const felt = container.querySelector('.table-felt');
-    expect(felt?.contains(screen.getByTestId('bet-0'))).toBe(true);
-    expect(felt?.contains(screen.getByTestId('bet-1'))).toBe(true);
+  it('puts each bet and action tag on its own seat', () => {
+    table();
+    expect(screen.getByTestId('seat-0').contains(screen.getByTestId('bet-0'))).toBe(true);
+    expect(screen.getByTestId('seat-1').contains(screen.getByTestId('bet-1'))).toBe(true);
     expect(screen.getByTestId('seat-1').contains(screen.getByTestId('action-1'))).toBe(true);
+  });
+
+  it('pushes in on her face when her cards are shown at the end of a hand', () => {
+    const { container } = table(fixtureResult(), 'handOver');
+    expect(container.querySelector('.table-layout')?.classList.contains('table-showdown')).toBe(
+      true,
+    );
+    cleanup();
+    const quiet = table();
+    expect(
+      quiet.container.querySelector('.table-layout')?.classList.contains('table-showdown'),
+    ).toBe(false);
+  });
+
+  it('writes the result under the board and offers Next hand in the action panel', () => {
+    table(fixtureResult(), 'handOver');
+    const board = screen.getByTestId('table-board');
+    expect(board.contains(screen.getByTestId('result'))).toBe(true);
+    const panel = screen.getByTestId('action-panel');
+    expect(panel.contains(screen.getByTestId('next-hand'))).toBe(true);
+    expect(screen.queryByTestId('fold')).toBeNull();
   });
 
   it('marks the player seat active on their turn', () => {
@@ -106,11 +176,14 @@ describe('Table result and announcements', () => {
     const button = screen.getByTestId('next-hand');
     expect(button.classList.contains('next-hand-auto')).toBe(true);
     expect(button.getAttribute('style')).toContain('--auto-next-ms: 2000ms');
+    expect(screen.getByTestId('action-panel').textContent).toContain('Next hand in a moment');
+    expect(screen.getByTestId('next-hand-wait').textContent).toBe('Wait');
   });
 
   it('shows a plain Next hand when auto next hand is off', () => {
     table(fixtureResult(), 'handOver');
     expect(screen.getByTestId('next-hand').classList.contains('next-hand-auto')).toBe(false);
+    expect(screen.queryByTestId('next-hand-wait')).toBeNull();
   });
 
   it('announces the bot thinking state', () => {
@@ -178,11 +251,11 @@ describe('Table talk', () => {
     expect(screen.getByTestId('coach')).not.toBeNull();
   });
 
-  it('shows her bubble at her seat, mine at mine, and the chat entry points', () => {
+  it('shows her bubble at her seat, mine at mine, and the chat panel, with the Talk button left to the header', () => {
     table(talking());
     expect(within(screen.getByTestId('seat-1')).getByTestId('bubble-mallorca')).not.toBeNull();
     expect(within(screen.getByTestId('seat-0')).getByTestId('bubble-player')).not.toBeNull();
-    expect(within(screen.getByTestId('seat-1')).getByTestId('chat-open')).not.toBeNull();
+    expect(screen.queryByTestId('chat-open')).toBeNull();
     expect(within(screen.getByTestId('chat-panel')).getByTestId('chat-input')).not.toBeNull();
     expect(screen.getByTestId('coach')).not.toBeNull();
   });

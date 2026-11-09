@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { byId, expect, FAST_URL, test, waitForWaypoint } from './fixtures.ts';
+import { byId, expect, LAB_URL, test, waitForWaypoint } from './fixtures.ts';
 import { serveConversation, CONVERSATION_URL } from './conversationServer.ts';
 import type { ConversationRequest } from './conversationServer.ts';
 
@@ -23,7 +23,7 @@ function answers(request: ConversationRequest) {
 }
 
 async function sitWithSolver(page: Page): Promise<void> {
-  await page.goto(FAST_URL);
+  await page.goto(LAB_URL);
   await byId(page, 'opponent-cfr').click();
   await byId(page, 'start-cash').click();
   await expect(byId(page, 'passive')).toBeEnabled({ timeout: SOLVER_TIMEOUT_MS });
@@ -74,7 +74,7 @@ test('the math opponent signs nobody in', async ({ page }) => {
     }
   });
   const requests = await serveConversation(page, answers);
-  await page.goto(FAST_URL);
+  await page.goto(LAB_URL);
   await byId(page, 'start-cash').click();
   let hands = 0;
   await playUntil(page, async () => {
@@ -182,12 +182,14 @@ test.describe('phone', () => {
   test.use({ viewport: { width: 360, height: 740 } });
   test.skip(({ isMobile }) => !isMobile, 'the chat sheet is the phone layout');
 
-  test('the chat sheet opens from her plaque and closes back to the table', async ({ page }) => {
+  test('the chat sheet opens from Talk in the header and closes back to the table', async ({
+    page,
+  }) => {
     test.setTimeout(SOLVER_TIMEOUT_MS);
     const requests = await serveConversation(page, answers);
     await sitWithSolver(page);
     await myTurn(page);
-    const open = byId(page, 'seat-1').getByTestId('chat-open');
+    const open = page.locator('.status-bar').getByTestId('chat-open');
     await expect(open).toHaveAccessibleName('Chat with Mallorca');
     await open.click();
     const sheet = byId(page, 'chat-sheet');

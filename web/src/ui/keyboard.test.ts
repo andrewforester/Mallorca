@@ -2,7 +2,15 @@ import { describe, expect, it, vi } from 'vitest';
 import { handleKey } from './keyboard.ts';
 
 function handlers(enabled: boolean) {
-  return { enabled, fold: vi.fn(), passive: vi.fn(), raise: vi.fn(), adjust: vi.fn() };
+  return {
+    enabled,
+    fold: vi.fn(),
+    passive: vi.fn(),
+    raise: vi.fn(),
+    adjust: vi.fn(),
+    confirm: vi.fn(() => true),
+    back: vi.fn(() => true),
+  };
 }
 
 describe('handleKey', () => {
@@ -14,6 +22,14 @@ describe('handleKey', () => {
     expect(h.fold).toHaveBeenCalledTimes(1);
     expect(h.passive).toHaveBeenCalledTimes(1);
     expect(h.raise).toHaveBeenCalledTimes(1);
+  });
+
+  it('maps Enter to confirm and Escape to back', () => {
+    const h = handlers(true);
+    expect(handleKey({ key: 'Enter' }, h)).toBe(true);
+    expect(handleKey({ key: 'Escape' }, h)).toBe(true);
+    expect(h.confirm).toHaveBeenCalledTimes(1);
+    expect(h.back).toHaveBeenCalledTimes(1);
   });
 
   it('maps arrows to slider steps', () => {

@@ -29,6 +29,25 @@ function fakeBrain(decide: Brain['decide'] = () => decision) {
 }
 
 describe('createWorkerHandler', () => {
+  it('warms the model of a solver opponent without replying', async () => {
+    const warmed: string[] = [];
+    const replies: WorkerReply[] = [];
+    const handle = createWorkerHandler(
+      () => fakeBrain().brain,
+      (reply) => replies.push(reply),
+      noLoader,
+      (opponent) => {
+        warmed.push(opponent);
+        return Promise.reject(new Error('not needed'));
+      },
+    );
+    handle({ kind: 'warm', opponent: 'cfr-v2' });
+    handle({ kind: 'warm', opponent: 'math' });
+    await Promise.resolve();
+    expect(warmed).toEqual(['cfr-v2']);
+    expect(replies).toEqual([]);
+  });
+
   it('feeds every observation to the brain', () => {
     const { brain, observed } = fakeBrain();
     const handle = createWorkerHandler(

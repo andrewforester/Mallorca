@@ -23,7 +23,14 @@ function Row({ decision }: { decision: CoachDecision }) {
     <li class={`coach-review-row coach-grade-${decision.grade ?? 'none'}`}>
       <span class="coach-review-street">{t(`log.street.${decision.street}`)}</span>
       <span class="coach-review-move">{played(decision)}</span>
-      <span class="coach-review-grade">{t(`coach.grade.${decision.grade ?? 'none'}`)}</span>
+      <span class="coach-review-grade">
+        {decision.grade !== null && (
+          <span class="coach-verdict-mark" aria-hidden="true">
+            {t(`coach.mark.${decision.grade}`)}
+          </span>
+        )}
+        {t(`coach.grade.${decision.grade ?? 'none'}`)}
+      </span>
       <span class="coach-review-shares">
         {top.map(({ move, share }) => (
           <span key={`${move.label}-${move.amount}`}>

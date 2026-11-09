@@ -5,20 +5,35 @@ import {
   openHandStore,
   conversationConnector,
   TOURNAMENT,
-  workerBot,
+  sharedWorkerBot,
 } from './game/index.ts';
 import type { Session } from './game/index.ts';
 import { App } from './ui/App.tsx';
+import { readFeatures, releaseOpponent } from './ui/features.ts';
 import { createSynthPlayer } from './ui/sound/player.ts';
 import { t } from './ui/i18n.ts';
-import { readFace, readConversation } from './ui/preferences.ts';
-import '@fontsource/cormorant-garamond/latin-500.css';
-import '@fontsource/cormorant-garamond/latin-600.css';
-import '@fontsource/inter/latin-400.css';
-import '@fontsource/inter/latin-600.css';
+import { readCharacter, readConversation, readFace, writeCharacter } from './ui/preferences.ts';
+import '@fontsource/newsreader/latin-400.css';
+import '@fontsource/newsreader/latin-400-italic.css';
+import '@fontsource/newsreader/latin-500.css';
+import '@fontsource/ibm-plex-sans/latin-400.css';
+import '@fontsource/ibm-plex-sans/latin-500.css';
+import '@fontsource/ibm-plex-sans/latin-600.css';
+import '@fontsource/ibm-plex-mono/latin-400.css';
 import '@fontsource/ibm-plex-mono/latin-500.css';
 import './ui/styles/tokens.css';
-import './ui/styles/layout.css';
+import './ui/styles/base.css';
+import './ui/styles/start.css';
+import './ui/styles/status.css';
+import './ui/styles/table.css';
+import './ui/styles/actions.css';
+import './ui/styles/dialog.css';
+import './ui/styles/table-wide.css';
+import './ui/styles/scene.css';
+import './ui/styles/hand-log.css';
+import './ui/styles/talk.css';
+import './ui/styles/coach.css';
+import './ui/styles/face.css';
 
 const HUMAN_SEAT = 0;
 const DEFAULT_BOT_DELAY = 700;
@@ -44,37 +59,46 @@ const player = createSynthPlayer();
 let nextSeed: number | null = numberParam('seed');
 let session: Session | null = null;
 const store = await openHandStore();
-const connectConversation = conversationConnector({
-  url: import.meta.env.VITE_SUPABASE_URL as string | undefined,
-  anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
-});
+const features = readFeatures(window.location.search);
+const opponent = releaseOpponent(
+  window.location.search,
+  globalThis.matchMedia?.('(pointer: fine)').matches ?? true,
+);
+const connectConversation = features.talk
+  ? conversationConnector({
+      url: import.meta.env.VITE_SUPABASE_URL as string | undefined,
+      anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
+    })
+  : undefined;
 
 onPageExit(window, document, () => session?.getState().pageHidden());
 
-const debugPanel = import.meta.env.DEV
-  ? (await import('./ui/debug/EmotionDebug.tsx')).EmotionDebug
-  : undefined;
+const debugOn = import.meta.env.DEV || params.has('debug');
+const debugPanel = debugOn ? (await import('./ui/debug/EmotionDebug.tsx')).EmotionDebug : undefined;
 
 const root = document.getElementById('app');
 if (root === null) {
   throw new Error('Missing #app element');
 }
 
-function mount(farewell = false): void {
+const nextBot = sharedWorkerBot();
+
+function mount(farewell = false, character = readCharacter()): void {
   session?.getState().dispose();
   const seed = nextSeed ?? randomSeed();
   nextSeed = null;
   session = createSession({
-    bot: workerBot(),
+    bot: nextBot(),
     seed,
     botDelayMs: botDelay,
     humanSeat: HUMAN_SEAT,
-    names: [t('seat.you'), t('seat.bot')],
+    names: [t('seat.you'), t(`start.characters.${character}.name`)],
+    personality: character,
     mode: TOURNAMENT,
     connectConversation,
-    conversationOn: readConversation(),
+    conversationOn: features.talk && readConversation(),
     faceOn: readFace(),
-    debug: import.meta.env.DEV,
+    debug: debugOn,
     records: {
       store,
       sessionId: crypto.randomUUID(),
@@ -90,6 +114,13 @@ function mount(farewell = false): void {
       autoNext={autoNext}
       player={player}
       debugPanel={debugPanel}
+      features={features}
+      opponent={opponent}
+      character={character}
+      onCharacter={(next) => {
+        writeCharacter(next);
+        mount(farewell, next);
+      }}
       onNewGame={() => mount()}
       onLeaveTonight={() => mount(true)}
     />,

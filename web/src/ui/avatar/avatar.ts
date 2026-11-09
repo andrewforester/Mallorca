@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { Angles, Pose } from './motion.ts';
+import { FOV, addLights, createRenderer, frameHead } from './stage.ts';
 
 const BONES = ['Head', 'Neck', 'Spine2', 'LeftEye', 'RightEye', 'LeftShoulder', 'RightShoulder'];
 const ARMS: ReadonlyArray<[string, Angles]> = [
@@ -8,13 +9,17 @@ const ARMS: ReadonlyArray<[string, Angles]> = [
   ['RightArm', [0, -0.85, 0.25]],
 ];
 
-const FOV = 14;
-const ABOVE_HEAD = 0.25;
-const BELOW_HEAD = 0.37;
-
 const biped = ([pitch, yaw, roll]: Angles): Angles => [yaw, roll, pitch];
 
-export class Avatar {
+export interface FaceRenderer {
+  readonly canvas: HTMLCanvasElement;
+  load(): Promise<void>;
+  resize(width: number, height: number): void;
+  render(pose: Pose): void;
+  dispose(): void;
+}
+
+export class Avatar implements FaceRenderer {
   readonly canvas: HTMLCanvasElement;
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
@@ -25,31 +30,17 @@ export class Avatar {
   private readonly euler = new THREE.Euler();
   private readonly quat = new THREE.Quaternion();
 
-  constructor() {
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
-    this.renderer.setClearColor(0x000000, 0);
+  private readonly url: string;
+
+  constructor(url: string) {
+    this.url = url;
+    this.renderer = createRenderer();
     this.canvas = this.renderer.domElement;
-    this.light();
+    addLights(this.scene);
   }
 
-  private light(): void {
-    this.scene.add(new THREE.HemisphereLight(0xffe2c0, 0x1f4a52, 0.9));
-    const add = (light: THREE.Light, x: number, y: number, z: number) => {
-      light.position.set(x, y, z);
-      this.scene.add(light);
-    };
-    add(new THREE.DirectionalLight(0xffcf98, 2.2), -1.3, 2.2, 2);
-    add(new THREE.DirectionalLight(0xffe9d6, 0.6), 1.6, 1.3, 1.6);
-    add(new THREE.DirectionalLight(0x86c7d3, 1.1), 0.9, 2.4, -2.2);
-    add(new THREE.PointLight(0xffa860, 0.8, 3, 1.5), 0, 1.05, 0.7);
-  }
-
-  async load(url: string): Promise<void> {
-    const gltf = await new GLTFLoader().loadAsync(url);
+  async load(): Promise<void> {
+    const gltf = await new GLTFLoader().loadAsync(this.url);
     const root = gltf.scene;
     this.scene.add(root);
     root.traverse((o) => {
@@ -72,11 +63,7 @@ export class Avatar {
   private frame(): void {
     const head = new THREE.Vector3();
     this.bones.Head?.getWorldPosition(head);
-    const centre = head.y + (ABOVE_HEAD - BELOW_HEAD) / 2;
-    const span = ABOVE_HEAD + BELOW_HEAD;
-    const distance = span / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2));
-    this.camera.position.set(0, centre + 0.04, distance);
-    this.camera.lookAt(0, centre, 0);
+    frameHead(this.camera, new THREE.Vector3(0, head.y, 0));
   }
 
   resize(width: number, height: number): void {

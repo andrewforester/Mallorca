@@ -1,7 +1,7 @@
 export type { Card } from './cards.ts';
 export { formatCard, rankOf } from './cards.ts';
 export type { BotClient } from './botClient.ts';
-export { inProcessBot, workerBot } from './botClient.ts';
+export { inProcessBot, sharedWorkerBot, workerBot } from './botClient.ts';
 export type { Opponent } from './opponent.ts';
 export { opponentsFor } from './opponent.ts';
 export type {
@@ -73,3 +73,5 @@ export type {
   BiasKey,
   TableEvent,
 } from '../persona/index.ts';
+export type { LoadProgress } from './workerProtocol.ts';
+export { CHARACTERS } from './characters.ts';

@@ -38,6 +38,15 @@ describe('distTraces', () => {
     ]);
   });
 
+  it('lets the panel ship only as its own lazily loaded chunk', () => {
+    const dir = dist({
+      'assets/EmotionDebug-Ab12_x.js': 'a="emotion-debug-toggle";b={sentStyle:1}',
+      'assets/index-Q9.js': 'import("./EmotionDebug-Ab12_x.js")',
+      'arena/assets/EmotionDebug-Ab12_x.js': 'a="emotion-debug"',
+    });
+    expect(distTraces(dir)).toEqual(['arena/assets/EmotionDebug-Ab12_x.js: emotion-debug']);
+  });
+
   it('checks the three markers of the contract', () => {
     expect(DEBUG_MARKERS).toEqual(['emotion-debug', 'sentStyle', 'engineStyle']);
   });

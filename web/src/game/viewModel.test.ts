@@ -63,6 +63,7 @@ describe('toViewModel', () => {
     expect(vm.controls.fold).toBe(true);
     expect(vm.controls.passive).toEqual({ kind: 'call', amount: 40 });
     expect(vm.controls.raise?.presets).toEqual({ halfPot: 120, pot: 180, allIn: 2000 });
+    expect(vm.controls.raise?.step).toBe(20);
   });
 
   it('splits the pot into collected and total and names a bet or a raise', async () => {

@@ -3,18 +3,55 @@
     "title": "Mallorca"
   },
   "start": {
-    "heading": "Heads-up against Mallorca",
-    "tagline": "Heads-up no-limit hold'em. A cash game with 100 big blinds, or a tournament with rising blinds.",
+    "heading": "Tonight",
+    "tagline": "Heads-up hold'em, just the two of you. No money, no account needed.",
     "cash": "Cash game, 100 big blinds",
     "tournament": "Tournament",
-    "farewell": "Sleep well. The table will be here.",
+    "farewell": "The table will be here.",
     "opponent": "Opponent",
     "opponents": {
       "math": "Classic",
       "cfr": "Solver",
       "cfr-v2": "Solver v2"
     },
-    "loading": "Bringing the solver to the table"
+    "loading": "Bringing the solver to the table",
+    "greeting": "Hi. I'm Mallorca. I was hoping someone would come by. Do you play?",
+    "farewellTitle": "Sleep well.",
+    "coach": "Coach",
+    "loadingPercent": "Bringing the solver to the table · {{percent}}%",
+    "who": "Who's at the table tonight?",
+    "characters": {
+      "mallorca": {
+        "name": "Mallorca",
+        "line": "Warm and calm. Rarely loses her temper.",
+        "hard": "A real game",
+        "hello": "Oh, it's you. Sit, I'll deal."
+      },
+      "mira": {
+        "name": "Mira",
+        "line": "Even-tempered and kind.",
+        "hard": "Comfortable",
+        "hello": "Shall we? No hurry."
+      },
+      "ingrid": {
+        "name": "Ingrid",
+        "line": "A professional. Plays to win.",
+        "hard": "The toughest",
+        "hello": "Your blind."
+      },
+      "lola": {
+        "name": "Lola",
+        "line": "The life of the party.",
+        "hard": "Easy-going",
+        "hello": "Finally! Deal me in, I feel lucky."
+      },
+      "nina": {
+        "name": "Nina",
+        "line": "Nervous, and new to the game.",
+        "hard": "A gentle start",
+        "hello": "Um, hi. Go easy on me?"
+      }
+    }
   },
   "status": {
     "blinds": "Blinds {{small}}/{{big}}",
@@ -28,7 +65,10 @@
     "autoNext": "Auto next hand",
     "sound": "Sound",
     "face": "Her face",
-    "voice": "Her voice"
+    "voice": "Her voice",
+    "log": "Log",
+    "coach": "Coach",
+    "menuGlyph": "≡"
   },
   "seat": {
     "you": "You",
@@ -61,7 +101,18 @@
     "half": "Half pot",
     "pot": "Pot",
     "allIn": "All-in",
-    "label": "Your actions"
+    "label": "Your actions",
+    "min": "Min",
+    "less": "Smaller",
+    "more": "Bigger",
+    "holdAllIn": "Hold for all-in {{amount}}",
+    "raiseVerb": "Raise to",
+    "betVerb": "Bet",
+    "keyFold": "F",
+    "keyPassive": "C",
+    "keyRaise": "R",
+    "lessGlyph": "−",
+    "moreGlyph": "+"
   },
   "result": {
     "wins": "{{name}} wins {{amount}}",
@@ -69,7 +120,9 @@
     "youWin": "You win {{amount}}",
     "youWinWith": "You win {{amount}} with {{hand}}",
     "split": "Split pot {{amount}} each",
-    "next": "Next hand"
+    "next": "Next hand",
+    "soon": "Next hand in a moment",
+    "wait": "Wait"
   },
   "log": {
     "title": "Hand log",
@@ -122,18 +175,18 @@
     "close": "Close the coach",
     "mode": "Coach mode",
     "idle": "The coach speaks on your turn.",
-    "waiting": "The coach is thinking.",
+    "waiting": "The coach is counting",
     "unavailable": "The coach is not available right now.",
     "hintHeading": "Strategy with your hand",
     "share": "{{move}} {{percent}}%",
     "mixed": "A mixed strategy: play each action about this often.",
-    "approximate": "Approximate: this spot is off the strategy tree.",
+    "approximate": "Approximate spot. This line is outside the solver tree, so the numbers are estimates.",
     "noHint": "The strategy has no advice for this spot.",
     "tabs": {
       "hint": "Strategy",
-      "range": "Bot range",
+      "range": "Her range",
       "numbers": "Numbers",
-      "session": "Session"
+      "session": "This session"
     },
     "move": {
       "fold": "Fold",
@@ -144,15 +197,15 @@
       "allIn": "All-in {{amount}}"
     },
     "strategyCaption": "What the strategy plays from your seat with every hand",
-    "rangeCaption": "How likely the bot holds each hand after its actions",
+    "rangeCaption": "How likely she holds each hand after her actions",
     "noRange": "The math bot does not play from the strategy, so it has no range to show.",
     "combos": "{{combos}} combos in the range",
     "equity": "Your equity",
     "versus": {
-      "range": "against the bot range",
+      "range": "against her range",
       "random": "against a random hand"
     },
-    "required": "Equity to call",
+    "required": "Equity needed to call",
     "mdf": "Minimum defence",
     "bluffs": "Bluffs this bet can hold",
     "percent": "{{value}}%",
@@ -180,7 +233,7 @@
       "raise": "Raise to {{amount}}"
     },
     "grade": {
-      "strategy": "Strategy move",
+      "strategy": "In the strategy",
       "rare": "Rare in the strategy",
       "off": "Off the strategy",
       "none": "Not graded"
@@ -197,7 +250,13 @@
       "riverFold": "Fold to a river bet"
     },
     "leakLine": "You {{player}}%, strategy {{strategy}}%, {{spots}} spots",
-    "noLeaks": "Leaks appear after {{count}} spots of one kind."
+    "noLeaks": "Leaks appear after {{count}} spots of one kind.",
+    "hide": "Hide",
+    "mark": {
+      "strategy": "●",
+      "rare": "◐",
+      "off": "○"
+    }
   },
   "over": {
     "title": "Good game",
@@ -216,10 +275,13 @@
   },
   "session": {
     "title": "Session over",
-    "summary_one": "{{sign}}{{bb}} bb over {{count}} hand",
-    "summary_other": "{{sign}}{{bb}} bb over {{count}} hands",
     "rate": "{{rate}} bb/100",
-    "again": "Play again"
+    "again": "Play again",
+    "summary": "{{sign}}{{bb}} bb",
+    "hands_one": "{{count}} hand",
+    "hands_other": "{{count}} hands",
+    "thanks": "Thank you for the company.",
+    "leave": "That's enough for tonight"
   },
   "hands": {
     "high-card": "High card",
@@ -247,6 +309,7 @@
       "conversation": "Table talk"
     },
     "undelivered": "Not delivered",
-    "message": "Message"
+    "message": "Message",
+    "talk": "Talk"
   }
 }

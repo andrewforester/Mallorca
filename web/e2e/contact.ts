@@ -25,7 +25,7 @@ async function capture(browser: Browser, sheet: Sheet): Promise<Shot[]> {
   const open = async (query: string) => {
     const context = await browser.newContext({ viewport, isMobile, hasTouch });
     const page = await context.newPage();
-    await page.goto(`${BASE}?${query}`);
+    await page.goto(`${BASE}?${query}&opponent=math&features=opponents,coach,talk`);
     return page;
   };
 
@@ -43,6 +43,8 @@ async function capture(browser: Browser, sheet: Sheet): Promise<Shot[]> {
   }
   await waitForWaypoint(page);
   await snap(page, 'after flop', shots);
+  await byId(page, 'preset-half').click();
+  await snap(page, 'bet size', shots);
 
   for (;;) {
     const waypoint = await waitForWaypoint(page);
@@ -56,6 +58,17 @@ async function capture(browser: Browser, sheet: Sheet): Promise<Shot[]> {
   await byId(page, 'hand-log').waitFor();
   await snap(page, 'hand log', shots);
   await byId(page, 'hand-log-close').click();
+
+  const coached = await open('seed=42&botDelay=0&autoNext=off');
+  await byId(coached, 'start-coach').check();
+  await byId(coached, 'start-tournament').click();
+  await byId(coached, 'passive').and(coached.locator(':enabled')).waitFor();
+  const coachToggle = byId(coached, 'coach-toggle');
+  if (await coachToggle.isVisible()) {
+    await coachToggle.click();
+  }
+  await byId(coached, 'coach-hint').waitFor({ timeout: 30000 });
+  await snap(coached, 'coach', shots);
 
   const slow = await open(`seed=42&botDelay=${THINKING_DELAY_MS}&autoNext=off`);
   await byId(slow, 'start-tournament').click();
@@ -72,7 +85,6 @@ async function capture(browser: Browser, sheet: Sheet): Promise<Shot[]> {
   await snap(cash, 'cash hand over', shots);
   await cash.locator('summary.menu-summary').click();
   await snap(cash, 'menu open', shots);
-  await cash.locator('summary.menu-summary').click();
   await byId(cash, 'leave').click();
   await byId(cash, 'session-over').waitFor();
   await snap(cash, 'session over', shots);
@@ -99,7 +111,7 @@ async function captureConversation(browser: Browser, sheet: Sheet): Promise<Shot
           : {},
   }));
   const page = await context.newPage();
-  await page.goto(`${BASE}?seed=42&botDelay=0&autoNext=off`);
+  await page.goto(`${BASE}?seed=42&botDelay=0&autoNext=off&features=opponents,coach,talk`);
   await byId(page, 'opponent-cfr').click();
   await byId(page, 'start-cash').click();
   const bubble = byId(page, 'bubble-mallorca');

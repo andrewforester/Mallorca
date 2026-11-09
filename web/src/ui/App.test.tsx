@@ -17,7 +17,13 @@ afterEach(() => {
   localStorage.clear();
 });
 
-function setup(mode = TOURNAMENT, store = memoryStore(), autoNext?: boolean, player?: SoundPlayer) {
+function setup(
+  mode = TOURNAMENT,
+  store = memoryStore(),
+  autoNext?: boolean,
+  player?: SoundPlayer,
+  features = { coach: true, talk: true, opponents: true },
+) {
   const session = createSession({
     bot: inProcessBot(),
     seed: 42,
@@ -36,26 +42,68 @@ function setup(mode = TOURNAMENT, store = memoryStore(), autoNext?: boolean, pla
       onLeaveTonight={vi.fn()}
       autoNext={autoNext}
       player={player}
+      features={features}
     />,
   );
   return { session, onNewGame };
 }
 
+describe('App release scope', () => {
+  it('passes the chosen character on from Tonight', () => {
+    const onCharacter = vi.fn();
+    const session = createSession({
+      bot: inProcessBot(),
+      seed: 1,
+      botDelayMs: 0,
+      humanSeat: 0,
+      names: ['You', 'Lola'],
+      mode: TOURNAMENT,
+    });
+    render(
+      <App
+        session={session}
+        store={memoryStore()}
+        humanSeat={0}
+        onNewGame={vi.fn()}
+        onLeaveTonight={vi.fn()}
+        character="lola"
+        onCharacter={onCharacter}
+      />,
+    );
+    expect(screen.getByTestId('character-lola').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByTestId('character-ingrid'));
+    expect(onCharacter).toHaveBeenCalledWith('ingrid');
+    session.getState().dispose();
+  });
+
+  it('offers no coach anywhere when the coach is off', async () => {
+    const off = { coach: false, talk: false, opponents: false };
+    const { session } = setup(TOURNAMENT, memoryStore(), false, undefined, off);
+    expect(screen.queryByTestId('start-coach')).toBeNull();
+    expect(screen.queryByTestId('opponent-math')).toBeNull();
+    fireEvent.click(screen.getByTestId('start-tournament'));
+    await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
+    expect(screen.queryByTestId('coach-mode')).toBeNull();
+    expect(screen.queryByTestId('coach-toggle')).toBeNull();
+    expect(screen.queryByTestId('voice')).toBeNull();
+    expect(screen.getByTestId('sound')).not.toBeNull();
+    session.getState().dispose();
+  });
+});
+
 describe('App sound toggles', () => {
-  it('keeps the status bar button, the menu checkbox and storage in step', async () => {
+  it('keeps sound in the menu, not in the header, in step with storage', async () => {
     const { session } = setup();
     fireEvent.click(screen.getByTestId('start-tournament'));
     await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
-    const button = screen.getByTestId('sound-toggle');
+    expect(screen.queryByTestId('sound-toggle')).toBeNull();
     const box = screen.getByTestId('sound') as HTMLInputElement;
-    expect(button.getAttribute('aria-pressed')).toBe('true');
+    expect(document.querySelector('details.menu')?.contains(box)).toBe(true);
     expect(box.checked).toBe(true);
-    fireEvent.click(button);
-    expect(button.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(box);
     expect(box.checked).toBe(false);
     expect(readSound()).toBe(false);
     fireEvent.click(box);
-    expect(button.getAttribute('aria-pressed')).toBe('true');
     expect(readSound()).toBe(true);
     session.getState().dispose();
   });
@@ -96,11 +144,11 @@ describe('App sound', () => {
     fireEvent.click(screen.getByTestId('start-tournament'));
     await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
     expect(unlock).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByTestId('sound-toggle'));
+    fireEvent.click(screen.getByTestId('sound'));
     expect(unlock).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByTestId('sound-toggle'));
+    fireEvent.click(screen.getByTestId('sound'));
     expect(unlock).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByTestId('sound-toggle'));
+    fireEvent.click(screen.getByTestId('sound'));
     expect(unlock).toHaveBeenCalledTimes(2);
     fireEvent.click(screen.getByTestId('fold'));
     expect(unlock).toHaveBeenCalledTimes(3);
@@ -113,7 +161,7 @@ describe('App sound', () => {
     fireEvent.click(screen.getByTestId('start-tournament'));
     await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
     expect(plays).toContain('turn');
-    fireEvent.click(screen.getByTestId('sound-toggle'));
+    fireEvent.click(screen.getByTestId('sound'));
     const before = plays.length;
     fireEvent.click(screen.getByTestId('fold'));
     await waitFor(() => expect(screen.queryByTestId('next-hand')).not.toBeNull());
@@ -124,8 +172,11 @@ describe('App sound', () => {
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function foldFirstHand(session: ReturnType<typeof setup>['session']) {
-  fireEvent.click(screen.getByTestId('start-tournament'));
+async function foldFirstHand(
+  session: ReturnType<typeof setup>['session'],
+  start = 'start-tournament',
+) {
+  fireEvent.click(screen.getByTestId(start));
   await waitFor(() => expect(session.getState().phase).toBe('humanToAct'));
   fireEvent.click(screen.getByTestId('fold'));
   await waitFor(() => expect(screen.queryByTestId('next-hand')).not.toBeNull());
@@ -181,6 +232,47 @@ describe('App auto next hand', () => {
     expect(session.getState().phase).toBe('handOver');
     expect(screen.getByTestId('hand-number').textContent).toBe('Hand 1');
     fireEvent.click(screen.getByTestId('hand-log-close'));
+    await waitFor(() => expect(screen.getByTestId('hand-number').textContent).toBe('Hand 2'), {
+      timeout: 2500,
+    });
+    session.getState().dispose();
+  });
+
+  it('moves to the next hand by itself in a cash game as well', async () => {
+    localStorage.clear();
+    const { session } = setup(CASH);
+    await foldFirstHand(session, 'start-cash');
+    await waitFor(() => expect(screen.getByTestId('hand-number').textContent).toBe('Hand 2'), {
+      timeout: 2500,
+    });
+    session.getState().dispose();
+  });
+
+  it('keeps the result on the table after Wait until Next hand is clicked', async () => {
+    localStorage.clear();
+    const { session } = setup(CASH);
+    await foldFirstHand(session, 'start-cash');
+    fireEvent.click(screen.getByTestId('next-hand-wait'));
+    expect(screen.queryByTestId('next-hand-wait')).toBeNull();
+    await pause(1300);
+    expect(screen.getByTestId('hand-number').textContent).toBe('Hand 1');
+    expect((screen.getByTestId('leave') as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(screen.getByTestId('next-hand'));
+    await waitFor(() => expect(screen.getByTestId('hand-number').textContent).toBe('Hand 2'));
+    session.getState().dispose();
+  });
+
+  it('pauses while the menu is open', async () => {
+    localStorage.clear();
+    const { session } = setup(CASH);
+    await foldFirstHand(session, 'start-cash');
+    const menu = document.querySelector('details.menu') as HTMLDetailsElement;
+    menu.open = true;
+    fireEvent(menu, new Event('toggle'));
+    await pause(1300);
+    expect(screen.getByTestId('hand-number').textContent).toBe('Hand 1');
+    menu.open = false;
+    fireEvent(menu, new Event('toggle'));
     await waitFor(() => expect(screen.getByTestId('hand-number').textContent).toBe('Hand 2'), {
       timeout: 2500,
     });
@@ -302,10 +394,17 @@ describe('App', () => {
     session.setState({ phase: 'handOver', session: { hands: 1, net: 250 } });
     await waitFor(() => expect(screen.getByTestId('session-result').textContent).toBe('+12.5 bb'));
     expect(screen.queryByTestId('blinds')).not.toBeNull();
+    expect(document.querySelector('details.menu')?.contains(screen.getByTestId('leave'))).toBe(
+      true,
+    );
     expect(screen.queryByTestId('leave')?.hasAttribute('disabled')).toBe(false);
+    const menu = document.querySelector('details.menu') as HTMLDetailsElement;
+    menu.open = true;
     fireEvent.click(screen.getByTestId('leave'));
+    expect(menu.open).toBe(false);
     await waitFor(() => expect(screen.queryByTestId('session-over')).not.toBeNull());
-    expect(screen.getByTestId('session-over').textContent).toContain('+12.5 bb over 1 hand');
+    expect(screen.getByTestId('session-summary').textContent).toBe('+12.5 bb');
+    expect(screen.getByTestId('session-hands').textContent).toBe('1 hand');
     fireEvent.click(screen.getByTestId('play-again'));
     expect(onNewGame).toHaveBeenCalledOnce();
     session.getState().dispose();

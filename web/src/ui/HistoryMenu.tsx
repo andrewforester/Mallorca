@@ -9,6 +9,7 @@ export interface HistoryMenuProps {
   store: HandStore;
   onNewGame: () => void;
   onOpen?: () => void;
+  onClose?: () => void;
   children?: ComponentChildren;
 }
 
@@ -35,7 +36,31 @@ function ExportButtons({ store }: { store: HandStore }) {
   );
 }
 
-export function HistoryMenu({ seed, store, onNewGame, onOpen, children }: HistoryMenuProps) {
+function MenuSummary() {
+  return (
+    <>
+      <summary class="status-button menu-summary" aria-label={t('status.menu')}>
+        <span class="menu-glyph" aria-hidden="true">
+          {t('status.menuGlyph')}
+        </span>
+        <span class="menu-word" aria-hidden="true">
+          {t('status.menu')}
+        </span>
+      </summary>
+      <div
+        class="menu-scrim"
+        aria-hidden="true"
+        onClick={(event) => {
+          const menu = (event.currentTarget as HTMLElement).closest('details');
+          if (menu !== null) menu.open = false;
+        }}
+      />
+    </>
+  );
+}
+
+export function HistoryMenu(props: HistoryMenuProps) {
+  const { seed, store, onNewGame, onOpen, onClose, children } = props;
   const [confirmClear, setConfirmClear] = useState(false);
   const clear = () => {
     if (!confirmClear) {
@@ -53,11 +78,12 @@ export function HistoryMenu({ seed, store, onNewGame, onOpen, children }: Histor
           onOpen?.();
         } else {
           setConfirmClear(false);
+          onClose?.();
         }
       }}
     >
-      <summary class="menu-summary glass pill">{t('status.menu')}</summary>
-      <div class="menu-body glass">
+      <MenuSummary />
+      <div class="menu-body">
         {children}
         <span>{t('status.seed', { seed })}</span>
         <button

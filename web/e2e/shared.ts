@@ -28,6 +28,24 @@ export async function waitForWaypoint(page: Page): Promise<Waypoint> {
   return 'act';
 }
 
+export async function openMenu(page: Page): Promise<void> {
+  if ((await page.locator('details.menu[open]').count()) === 0) {
+    await page.locator('summary.menu-summary').click();
+  }
+}
+
+export async function leaveTable(page: Page): Promise<void> {
+  await openMenu(page);
+  await byId(page, 'leave').click();
+}
+
+export const HOLD_FOR_ALL_IN_MS = 800;
+
+export async function goAllIn(page: Page): Promise<void> {
+  await byId(page, 'preset-allin').click();
+  await byId(page, 'raise').click({ delay: HOLD_FOR_ALL_IN_MS });
+}
+
 export async function playToTheEnd(page: Page): Promise<void> {
   for (;;) {
     const waypoint = await waitForWaypoint(page);
@@ -39,8 +57,7 @@ export async function playToTheEnd(page: Page): Promise<void> {
       continue;
     }
     if (await byId(page, 'raise').isEnabled()) {
-      await byId(page, 'preset-allin').click();
-      await byId(page, 'raise').click();
+      await goAllIn(page);
     } else {
       await byId(page, 'passive').click();
     }

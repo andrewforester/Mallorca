@@ -58,6 +58,16 @@ afterEach(() => {
 });
 
 describe('the emotion debug state', () => {
+  it('starts her with the personality chosen for the evening', async () => {
+    const { session } = open({ debug: true, personality: 'lola' });
+    await session.getState().start(CASH, 'cfr');
+    const chosen = session.getState().debug;
+    expect(chosen?.personality).toEqual({ key: 'lola' });
+    const { session: plain } = open({ debug: true });
+    await plain.getState().start(CASH, 'cfr');
+    expect(chosen?.snapshot?.traits).not.toEqual(plain.getState().debug?.snapshot?.traits);
+  });
+
   it('is null and asks for no explanation without the option', async () => {
     const { session, bot } = open();
     await session.getState().start(CASH, 'cfr');
@@ -67,13 +77,13 @@ describe('the emotion debug state', () => {
     expect(bot.asked.every((a) => a !== true)).toBe(true);
   });
 
-  it('is null outside a development build', async () => {
+  it('follows the option in a production build too, for the hidden link', async () => {
     vi.stubEnv('DEV', false);
     const { session, bot } = open({ debug: true });
     await session.getState().start(CASH, 'cfr');
     await session.getState().act({ kind: 'passive' });
-    expect(session.getState().debug).toBeNull();
-    expect(bot.asked.every((a) => a !== true)).toBe(true);
+    expect(session.getState().debug).not.toBeNull();
+    expect(bot.asked.some((a) => a === true)).toBe(true);
   });
 
   it('follows her feeling and explains every decision', async () => {

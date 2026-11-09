@@ -1,3 +1,4 @@
+import type { LoadProgress } from './workerProtocol.ts';
 import type { StoreApi } from 'zustand/vanilla';
 import type { Decision } from '../brains/index.ts';
 import type { LogEntry, SeatIndex, Table, TableMode } from '../engine/index.ts';
@@ -40,6 +41,7 @@ export interface SessionState {
   session: SessionResult;
   sessionId: string | null;
   opponent: Opponent;
+  loading: LoadProgress | null;
   conversation: ConversationState;
   coach: CoachState;
   face: FaceState;
@@ -48,6 +50,7 @@ export interface SessionState {
 
 export interface SessionActions {
   start(mode?: TableMode, opponent?: Opponent): Promise<void>;
+  prepare(opponent: Opponent): void;
   leave(): void;
   nextHand(): Promise<void>;
   act(intent: Intent): Promise<void>;
@@ -68,6 +71,7 @@ export type Session = StoreApi<SessionState & SessionActions>;
 
 export interface SessionOptions {
   bot: BotClient;
+  personality?: PersonalityKey;
   seed: number;
   botDelayMs: number;
   humanSeat: SeatIndex;

@@ -1,9 +1,14 @@
 import type { FaceCue, FaceFrame, VisemeCue } from '../../game/index.ts';
 import { Avatar } from './avatar.ts';
+import type { FaceRenderer } from './avatar.ts';
 import { Motion } from './motion.ts';
+import { RigAvatar } from './rig/RigAvatar.ts';
+
+export const rigRenderer = (base: string) => (): FaceRenderer => new RigAvatar(base);
+export const glbRenderer = (url: string) => (): FaceRenderer => new Avatar(url);
 
 export interface LiveOptions {
-  url: string;
+  create: () => FaceRenderer;
   frame: () => FaceFrame | null;
   calm: boolean;
   onLost: () => void;
@@ -21,9 +26,26 @@ export interface LiveFace {
 const FRAME_EVERY_S = 0.1;
 const MAX_STEP_S = 0.1;
 
+async function loadOrDispose(avatar: FaceRenderer): Promise<void> {
+  let lostWhileLoading = false;
+  const early = () => {
+    lostWhileLoading = true;
+  };
+  avatar.canvas.addEventListener('webglcontextlost', early);
+  try {
+    await avatar.load();
+    if (lostWhileLoading) throw new Error('WebGL context lost while loading');
+  } catch (error) {
+    avatar.dispose();
+    throw error;
+  } finally {
+    avatar.canvas.removeEventListener('webglcontextlost', early);
+  }
+}
+
 export async function mountFace(host: HTMLElement, options: LiveOptions): Promise<LiveFace> {
-  const avatar = new Avatar();
-  await avatar.load(options.url);
+  const avatar = options.create();
+  await loadOrDispose(avatar);
   const motion = new Motion({ random: Math.random, calm: options.calm });
   avatar.canvas.classList.add('face-canvas');
   host.append(avatar.canvas);

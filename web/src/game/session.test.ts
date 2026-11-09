@@ -684,3 +684,32 @@ describe('session opponent', () => {
     expect(session.getState().phase).toBe('humanToAct');
   });
 });
+
+describe('session prepare', () => {
+  it('asks the bot to warm the chosen opponent before the start', () => {
+    const bot = { ...callingBot(), warm: vi.fn() };
+    const session = open(bot);
+    session.getState().prepare('cfr');
+    expect(bot.warm).toHaveBeenCalledWith('cfr');
+  });
+});
+
+describe('session loading', () => {
+  it('shows the download of a model while it runs and clears it when it is done', () => {
+    let emit: (progress: { opponent: 'cfr'; received: number; total: number }) => void = () =>
+      undefined;
+    const bot = {
+      ...callingBot(),
+      onProgress: (listener: typeof emit) => {
+        emit = listener;
+        return () => undefined;
+      },
+    };
+    const session = open(bot);
+    expect(session.getState().loading).toBeNull();
+    emit({ opponent: 'cfr', received: 40, total: 100 });
+    expect(session.getState().loading).toEqual({ opponent: 'cfr', received: 40, total: 100 });
+    emit({ opponent: 'cfr', received: 100, total: 100 });
+    expect(session.getState().loading).toBeNull();
+  });
+});

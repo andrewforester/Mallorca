@@ -5,11 +5,20 @@ import type { Opponent } from './opponent.ts';
 
 export type WorkerRequest =
   | { kind: 'reset' }
+  | { kind: 'warm'; opponent: Opponent }
   | { kind: 'observe'; observations: Observation[] }
   | { kind: 'decide'; id: number; legal: LegalActions; bias?: BotBias; explain?: boolean }
   | { kind: 'select'; id: number; opponent: Opponent; seed: number }
   | { kind: 'coach'; id: number; observations: Observation[]; legal: LegalActions; pot: number }
   | { kind: 'opponentRange'; id: number };
+
+export interface LoadProgress {
+  opponent: Opponent;
+  received: number;
+  total: number;
+}
+
+export type WorkerMessage = WorkerReply | { progress: LoadProgress };
 
 export type WorkerReply =
   | { id: number; decision: Decision }

@@ -21,8 +21,9 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 | `web/tools/arena/external/`                                         | Matches against external bots over their APIs, see "arena"                         |
 | `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                              |
 | `web/prototypes/emotion-lab/`                                       | Emotion sandbox: the `emotion` engine with a face and a voice, see `docs/emotion`  |
-| `web/public/avatar/`                                                | Her 3D model `mallorca.glb`, its still `portrait.webp` and `LICENSE.md` (MIT)      |
+| `web/public/avatar/`                                                | Her MetaHuman face `her/`, its still `portrait.webp`, the fallback `mallorca.glb`, `LICENSE.md` |
 | `web/tools/avatar/`                                                 | Blender script that converts the Rocketbox source into `mallorca.glb`, see README  |
+| `web/tools/avatar/metahuman/`                                       | Workstation, Unreal scripts, export to `public/avatar/her/` and the RigLogic wasm, see README |
 | `docs/emotion/`                                                     | Emotion model document, its screenshots and generated tables                       |
 | `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`               |
 | `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`               |
@@ -89,7 +90,7 @@ own layer by path. `brains/index.ts` holds `Brain`, `Decision`, `Observation`, `
 `startHand`, `apply`, `legalActionsOf`, `toAct`), `isLegal`, `checkOrCall`, `playToEnd`, `createTable`, `rulesOf`,
 the modes, `startingStack`, `BOARD_SIZE` and `handHistory`; `cfr/index.ts` `createCfrBrain`, `CfrModel`,
 `loadCfrModel`, `SHIPPED_STRATEGIES`, `ShippedStrategyKey` and `BotRecord`; `game/index.ts` is the surface of `ui`
-(with `createSession`, `toViewModel`, `groupHand`, `workerBot` and `inProcessBot`).
+(with `createSession`, `toViewModel`, `groupHand`, `workerBot`, `sharedWorkerBot` and `inProcessBot`).
 
 ESLint enforces the table with a `@typescript-eslint/no-restricted-imports` rule per directory. For `brains` the
 rule sets `allowTypeImports` on `engine`; the tests in `brains`, `persona` and `conversation` (`*.test.ts`) may also import `engine` code to
@@ -561,7 +562,7 @@ class, mask)` moves a per-class chance toward the mean of its classes by her mas
   split. It equals the `win` entry of the log; an uncalled bet is its own `returned` entry.
 - `BotClient` has `observe(observations)`, `decide(legal, bias?, explain?)` (with `explain` the decision carries
   the brain's `explain()` as `breakdown` when the brain has one), `reset()`, an optional `select(opponent, seed)`, an
-  optional `coach(observations, legal, pot)`, an optional `opponentRange()` and an optional `dispose()`. `workerBot()` runs the brain in `bot.worker.ts` over the `WorkerRequest` and `WorkerReply`
+  optional `coach(observations, legal, pot)`, an optional `opponentRange()`, an optional `warm(opponent)` and an optional `dispose()`. `workerBot()` runs the brain in `bot.worker.ts` over the `WorkerRequest` and `WorkerReply`
   messages in `workerProtocol.ts`; `createWorkerHandler(newBrain, post, load)` in `workerHandler.ts` is the worker's
   message handling as a plain function. A `select` request queues every later request until the opponent's brain
   factory is ready, then replies `{ id, opponent }` or `{ id, error }` and keeps the old brain on an error. The worker
@@ -572,7 +573,17 @@ class, mask)` moves a per-class chance toward the mean of its classes by her mas
   `createWorkerHandler`, the opponent's own strategy, `cfr` for the math bot) and replies `{ id, facts }` or
   `{ id, error }`. The coach never touches the playing brain's RNG. An `opponentRange` request (`{ id }`) replies
   `{ id, range }` with `opponentRange()` of the playing brain when it arrives, after every observation sent before
-  it, or null for the math brain. Replacing a brain disposes it. `inProcessBot()` runs the math brain on the main thread and
+  it, or null for the math brain. A `warm` request (`{ opponent }`, no reply, never queued behind a `select`) starts
+  loading a cfr opponent's model, so the start screen can begin the download as soon as the player picks the
+  solver (`prepare(opponent)` of the session). While a model downloads the worker posts `{ progress: { opponent,
+  received, total } }` (`readWithProgress` in `progressRead.ts`, at most one notice per percent); `onProgress` of the
+  client hands it to the session, whose `loading` holds it until the download is complete (`loadingOf`), and the
+  start screen shows "Bringing the solver to the table · N%" over a thin amber bar (`start-loading`, a
+  `progressbar`; without a known size the line has no number and the bar sweeps). A shared worker's client stops its
+  listeners when its game is disposed. `sharedWorkerBot()` keeps one worker for the page: `main.tsx` takes a
+  client from it for every game, and disposing a game's client resets the worker instead of stopping it, so a
+  loaded model survives Play again and a new evening. `vercel-output-config.json` serves `/assets/*` (hashed
+  names, the models among them) with `Cache-Control: public, max-age=31536000, immutable`. Replacing a brain disposes it. `inProcessBot()` runs the math brain on the main thread and
   rejects `select('cfr')`.
 - `withFallback` wraps a client: when `decide` rejects or takes longer than 5 s, it disposes the primary, replays
   the observations of the hand into an in-process bot and uses it from then on. It falls back once, and a failure
@@ -660,9 +671,8 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   to `createSession` as `connectConversation`, so the anonymous sign-in happens only for the Solver opponent with conversation on, and
   `onPageExit` (`pageExit.ts`, `pagehide` or the document becoming hidden) calls `pageHidden()`. The remote client
   keeps the latest access token, so a `keepalive` summary is sent at once with `fetch(..., { keepalive: true })`.
-- Emotion debug (`debug.ts`, development builds only): with `SessionOptions.debug` true and
-  `import.meta.env.DEV`, `SessionState.debug` is a `DebugState`, otherwise null and the code that fills it is dead
-  and left out of the production bundle. It holds the `personality` (a `PersonalityKey`, or `custom` with its
+- Emotion debug (`debug.ts`): with `SessionOptions.debug` true (a development build, or the hidden `?debug` link in
+  production), `SessionState.debug` is a `DebugState`, otherwise null. It holds the `personality` (a `PersonalityKey`, or `custom` with its
   `Personality`), her `snapshot` (`persona.view(now()).snapshot`, there for every opponent since the face reads it), `sentBias`, the bias sent with
   the last `decide` (null before one, or against the math bot), the last `DebugDecision` (her hole cards, the board,
   one `DecisionRow` per move of the `Breakdown`, its `coachMove` label and amount with its `base` and `biased`
@@ -720,47 +730,84 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   and hold no game rules.
 - Components: `App`, `Scene`, `StatusBar`, `HistoryMenu`, `Settings`, `StartScreen`, `Table`, `Seat`, `BetChips`,
   `DealerButton`, `ActionBubble`, `Card` (SVG), `BoardRow`, `Board`, `Pot`, `ActionBar`, `BetSlider`,
-  `HandLogDrawer`, `TournamentOver`, `SessionOver`, `Chat`, `ChatSheet`, `Bubble`, `FaceSeat`. `ui/suits.ts` `suitFace(card)`
-  gives the glyph and whether the suit is red for a card value or its text, for `Card` and the hand log.
-- `Scene` wraps the start screen and the table: the attic photo (`ui/scene/*.webp`, a portrait and a landscape plate
-  over a blurred copy as the background) under a vignette, or with `simple` a flat felt without the photo (class
-  `scene-simple`); `dimmed` blurs the plate behind the start screen. `ui/scene.ts` holds the `PlateGeometry` of each
-  plate (`LANDSCAPE`, `PORTRAIT`, `SIMPLE_LANDSCAPE`, `SIMPLE_PORTRAIT`: focus point, felt tilt, seat, rail and board
-  heights, card size), which `geometryStyle` turns into the CSS variables the layout reads.
+  `HandLogDrawer`, `TournamentOver`, `SessionOver`, `Chat`, `TalkButton` and `TalkLayer` (`ChatSheet.tsx`), `Bubble`, `FaceSeat`. `ui/suits.ts` `suitFace(card)`
+  gives the glyph and the suit name (`clubs`, `diamonds`, `hearts`, `spades`) for a card value or its text, for the
+  four suit colours of `Card` and the hand log.
+- `Scene` wraps the start screen and the table in the dark room colour, with no photo; `simple` (class
+  `scene-simple`) flattens her face frame, `dimmed` marks the start screen.
+- Table layout (`Table`): a grid of three areas. The centre column stacks her face frame (`face-frame`, a lamp lit
+  gradient holding `FaceSeat`, or her name when the face is off, and the chat button), her plate (`seat-<bot>`: name,
+  dealer button, stack, card backs, bet and action tag; her shown cards sit in the bottom right corner of the frame),
+  the board area (`table-board`: board, pot, the result line and the chip that travels to the winner) and the
+  player's row (`seat-<human>`: cards, name, dealer button, stack, bet and action tag). The right area holds the
+  `coach` slot and the `action-panel` (the `ActionBar`, or Next hand once the hand is over); the left area holds the
+  chat panel on wide screens. The frame shrinks first when the screen is short and grows at a showdown
+  (`table-showdown`). On phones the areas stack (centre, then the action panel at the bottom) and the left area is
+  hidden; on wide screens the columns are `minmax(0, 1fr) min(680px, 50vw) minmax(0, 1fr)`.
 - Preferences: `ui/preferences.ts` reads and writes `localStorage` (`mallorca.tableStyle` `room` or `simple`,
   `mallorca.autoNext` and `mallorca.sound`, on unless stored as `off`) and falls back to the default when storage
-  throws. `usePreferences()` holds them as state with a toggle each; `Settings` renders the three menu checkboxes
-  `simple-table`, `auto-next` and `sound` inside `HistoryMenu`.
-- Auto next hand: in a tournament `nextHandDelay(vm)` (`ui/autoNext.ts`) is 1000 ms after a hand won without a
-  showdown and 2000 ms after a showdown, and null in cash, before a result and after the tournament ends.
+  throws. `usePreferences()` holds them as state with a toggle each; `Settings` renders them as switch rows
+  (checkboxes with `role="switch"`) inside `HistoryMenu`: Sound, Her face, Her voice, Table talk, Coach mode, Auto
+  next hand and Simple table.
+- Header (`StatusBar`): the blinds, the running result in cash and the hand number on the left; on the right the
+  text buttons Talk (`chat-open`, only while table talk is on), Log (`hand-log-toggle`), Coach (`coach-toggle`, only
+  while the coach sheet is used) and the menu (`summary.menu-summary`, ≡ on phones, Menu on wide screens). The
+  buttons wrap as one group under the values when the line is too narrow.
+- Menu (`HistoryMenu`, a `details`): a bottom sheet over a scrim on phones and a 340 px popover under the header on
+  wide screens; the scrim closes it. It holds the switch rows, Leave table in cash (`leave`, enabled only between
+  hands, closes the menu), the seed, New game, the exports and Clear history.
+- Auto next hand: in a tournament and in cash `nextHandDelay(vm)` (`ui/autoNext.ts`) is 1000 ms after a hand won
+  without a showdown and 2000 ms after a showdown, and null before a result and after the tournament ends.
   `useAutoNext(session, vm, enabled)` calls `nextHand` after that delay while the phase is still `handOver`; it is
-  enabled when `main.tsx` allows it, the `mallorca.autoNext` preference is on and the hand log drawer is closed.
-  The delay drives the countdown style of the next hand button.
-- The start screen offers the opponents of `opponentsFor` (buttons `opponent-<key>` with `aria-pressed`, `math`
-  by default) and shows a loading line while a cfr opponent starts. `leave-tonight` in the tournament-over dialog
-  mounts a new game whose start screen shows a farewell line.
+  enabled when `main.tsx` allows it, the `mallorca.autoNext` preference is on, the hand log drawer and the menu are
+  closed, and Wait (`next-hand-wait`) was not pressed for this hand. While it runs the action panel says "Next hand
+  in a moment" and the next hand button fills a bar, with no number.
+- Release scope (`ui/features.ts`, issue #119): `readFeatures(location.search)` keeps the coach, table talk and the
+  opponent choice hidden unless the link names them (`?features=coach,talk,opponents`); `releaseOpponent` fixes the
+  opponent to the v2 solver on a fine pointer and the v1 solver otherwise, or to `?opponent=<key>`. `main.tsx`
+  passes both to `App` (`features`, `opponent`); without them `App` offers everything, which the unit tests use.
+  With the coach hidden there is no coach switch on Tonight or in the menu and the coach stays off; with talk
+  hidden no conversation client is connected and the voice switch is gone. A fixed opponent shows no choice on
+  Tonight and is warmed as Tonight opens. The e2e specs play the math bot (`opponent=math` in `FAST_URL`) and the
+  coach, talk and solver specs use `LAB_URL`; `release.spec.ts` checks the plain link.
+- Her character: Tonight lists the five personas of `CHARACTERS` (`game/characters.ts`, keys of `PERSONALITIES`) with
+  her line and how hard she is (`character-<key>` with `aria-pressed`), greets in the chosen one's words and names
+  her in the frame. The choice is kept in `localStorage` (`mallorca.character`, `readCharacter`, Mallorca by
+  default); `main.tsx` mounts the session with `personality` (her persona and the debug probe start from it) and
+  her seat name, and choosing another one mounts a new session, so a character changes between evenings only.
+- The start screen is Tonight: her face in a frame (`tonight-face`, her name when the face is off) with her greeting,
+  the opponents of `opponentsFor` as a segmented control (buttons `opponent-<key>` with `aria-pressed`, `math` by
+  default), the coach switch, the seed or a loading line while a cfr opponent starts, and the two start buttons.
+  `leave-tonight` in the session-over and tournament-over panels mounts a new game whose start screen says good
+  night (`farewell`: "Sleep well." and "The table will be here.").
 - Hooks: `useSweep(bets, collected)` keeps half of the newly collected chips on each seat for `SWEEP_MS`
   (300 ms) when a street closes, so the bets slide into the pot; new bets or a new hand show at once.
   `useHeldActions(actions, closing, board)` keeps the closing action tags, and hides the thinking bubble, for
   `HOLD_MS` (900 ms) after the board grows; a new action or a new hand shows at once.
 - Table talk shows only while `conversation.available` and `conversation.on`: `Bubble` types a line at about 40 characters per
   second and removes it after 7 s (full text at once under `prefers-reduced-motion`), her bubble at her plaque and the
-  player's at theirs. On wide screens the chat sits in the right column of the table; on phones and short screens a
-  chat button at her plaque opens `ChatSheet`, a sheet portalled to `body`. The hand log stays in its drawer. The menu
+  player's at theirs. On wide screens the chat sits in the left column of the table; on phones and short screens the
+  Talk button in the header (`TalkButton`) opens `TalkLayer`, a layer of the table (`layerKind` `talk`, class
+  `table-layer-talk`, from `ui/layers.tsx`): her face shrinks, the board and the player's cards stay as a strip, the
+  thread with the quick phrases and the field fills the rest, and her and the player's bubbles are not repeated;
+  Hide, Escape and Talk close it. One layer shows at a time: the hand log, then Talk, then the coach sheet. The hand log stays in its drawer. The menu
   holds Table talk, kept in `localStorage` (`mallorca.talk`) and passed to `createSession` as `conversationOn`; a
   stored `mallorca.tells` of older builds is ignored. Keyboard shortcuts ignore keys typed in a text field.
-- The start screen offers a cash game (100 bb) and a tournament. In cash the status bar shows the blinds, the
-  running result in bb and a leave button, enabled only between hands; the session-over dialog shows the result in
-  bb, bb/100 and the hands, with play again and the export of the session. `signed` formats a bb value as sign
+- The start screen offers a cash game (100 bb) and a tournament. In cash the header shows the blinds and the
+  running result in bb, and the menu a leave button, enabled only between hands; the session-over panel shows the result in
+  bb large (`session-summary`), the hands (`session-hands`) and bb/100 (`session-rate`), the export of the session,
+  and Play again and That's enough for tonight with equal weight. The end panels rise from the bottom on phones
+  and sit low in the centre on wide screens, so her face stays in view. `signed` formats a bb value as sign
   and one-decimal absolute value.
-- Layout: portrait for phones (bot at the top, the human's cards and controls at the bottom), landscape for wide
-  screens, switched by a `min-aspect-ratio: 1/1` media query. The layout has no side log.
+- Layout: portrait for phones (her face at the top, the human's cards and controls at the bottom), three columns for
+  wide screens, switched by a `min-aspect-ratio: 1/1` media query. The layout has no side log.
 - Coach mode: the `mallorca.coach` preference (off unless stored `on`), switched by the start screen checkbox
   `start-coach` and the menu checkbox `coach-mode`; `useCoach` calls `setCoach` from it. On wide screens `Coach` fills
   the `coach` slot of the table; on narrow ones the status bar button `coach-toggle` (`aria-expanded`) opens it in
-  `CoachSheet`, a bottom sheet over a scrim closed by its button, Escape or the scrim (`useWide`, `(min-aspect-ratio: 1/1) and
-(min-height: 561px)` like the floating hand log, decides, so the panel exists once and a short landscape screen
-  gets the sheet). `Coach` shows the hint line (shares of 0.5 % and more, a mixed-strategy line when
+  `CoachSheet`, a layer of the table like the hand log (no scrim, closed by Hide or Escape; `useWide`,
+  `(min-aspect-ratio: 1/1) and (min-height: 561px)`, decides, so the panel exists once and a short landscape screen
+  gets the layer). The coach is drawn in its cold slate material (`--color-coach*`); a graded move carries a shape
+  and a word: ● In the strategy, ◐ Rare in the strategy, ○ Off the strategy. `Coach` shows the hint line (shares of 0.5 % and more, a mixed-strategy line when
   two moves reach 10 %, an approximate line), then tabs: the strategy grid (each cell striped by its moves' shares,
   the player's cell outlined), the bot range grid (shaded by weight relative to the heaviest cell) or the math-bot
   line with the composition (`coach-composition`) under it, the numbers with the outs (`coach-outs`)
@@ -768,10 +815,11 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   player's turn the panel shows the hand's review (`coach-review`: street, action, grade and the strategy's top
   shares) and the leaks. Fold, passive and all-in have their own colour tokens; sized bets and raises are shaded
   from `--color-coach-small` to `--color-coach-large` by size.
-- Emotion debug panel (`ui/debug/`, development builds only): `main.tsx` imports `EmotionDebug` dynamically
-  under `import.meta.env.DEV`, creates the session with `debug: true` and passes the component to `App`, which
-  renders it beside the table; the production build has neither the import nor the option. Its copy lives in
-  `ui/debug/copy.ts`, in plain English, not in `en.json`, so no string of it reaches the production bundle. A toggle
+- Emotion debug panel (`ui/debug/`): in a development build, or in production with the hidden `?debug` link (#119,
+  hidden but not protected), `main.tsx` imports `EmotionDebug` dynamically, creates the session with `debug: true`
+  and passes the component to `App`, which renders it beside the table. In production the panel is its own lazy
+  chunk (`assets/EmotionDebug-*`), loaded only by that link; `scripts/check-dist.ts` fails the build when its
+  markers reach any other file. Its copy lives in `ui/debug/copy.ts`, in plain English, not in `en.json`. A toggle
   on the left edge of the table (`emotion-debug-toggle`, `aria-expanded`) opens and hides a panel fixed over the
   left side of the screen (`emotion-debug`), which scrolls on its own and moves neither the cards nor the action
   bar; its open state is kept in `localStorage` (`mallorca.debugPanel`). It renders `toDebugView` in five sections:
@@ -784,13 +832,18 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   of `npm run build` and fails when any file in `dist` contains
   `emotion-debug` (the panel and its copy), `sentBias` (the session's debug state) or `engineBias`
   (`toDebugView`), so none of them reaches production.
-- The hand log is a drawer grouped by street (`groupHand` of `game`), opened by the status bar toggle
-  `hand-log-toggle` (`aria-expanded`). Opening moves focus to `hand-log-close`; closing, by the close button,
-  Escape, the toggle or the scrim, returns focus to the toggle. On portrait screens it is a full-height sheet over
-  a scrim that closes on tap; in landscape it is a floating panel and the scrim does not take pointer events, so
-  the player can act while it is open.
+- The hand log is a layer of the table grouped by street (`groupHand` of `game`), opened by the header toggle
+  `hand-log-toggle` (`aria-expanded`) and passed to `Table` as `layer` (class `table-layer-open`), which the
+  phone coach sheet also uses when the log is closed. Opening moves focus
+  to `hand-log-close`; closing, by the close button, Escape or the toggle, returns focus to the toggle. On phones it
+  takes the place of the board and the player's row under her face and plate, and the face shrinks; on wide
+  screens it takes the left column in place of the chat. There is no scrim: the actions stay in play.
 - Every colour, font, radius, spacing and shadow is a CSS token on `:root` in `ui/styles/tokens.css`, with a dark
-  theme under `prefers-color-scheme: dark`. The visual design brief is GitHub issue #2.
+  theme under `prefers-color-scheme: dark`. The visual design is the redesign epic #89 with its spec in
+  `docs/design/redesign/spec.md`.
+- Styles are plain global CSS in `ui/styles/`, one file per layer, imported by `main.tsx` in cascade order after
+  `tokens.css`: `base`, `start`, `status`, `table`, `actions`, `dialog`, `table-wide`, `scene`, `hand-log`, `talk`,
+  `coach`, `face`. A rule goes to the file of the layer it styles.
 - Every string comes from `src/locales/en.json` through i18next (`ui/i18n.ts`). `ui/phrases.ts` words log
   entries, action tags and hand categories; an entry with the human seat uses the `log.you` keys, any other seat
   the `log.other` keys with `{{name}}`.
@@ -809,39 +862,54 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   update, 120 ms apart; it starts from the log at mount and ignores a shrinking log, so nothing old is replayed.
   `main.tsx` creates one player and passes it to every `App`; no `AudioContext` exists before `unlock()`, which
   `App` calls on the click of a start button. The `mallorca.sound` preference (`readSound`, `writeSound`; on unless
-  stored as `off`) is switched by the status bar button `sound-toggle` (`aria-pressed`) and the menu checkbox
-  `sound`; off silences every cue.
-- Live face (`ui/avatar/`): `FaceSeat` seats her in the chair of the photo: its bottom edge is the far table rail
-  (`railY` of the `PlateGeometry`, `--rail-y`), so her body goes on below the rail and her plaque and cards lie in
-  front of her. Nothing covers her face: her action bubble moves to the left of the plaque, the hand result below the board (over the idle action bar on phones), and on phones her conversation bubble below her cards. With the face preference on (`mallorca.face`, on
+  stored as `off`) is switched by the menu switch `sound`; off silences every cue.
+- Live face (`ui/avatar/`): `FaceSeat` fills her face frame, the portrait cropped to her head and shoulders.
+  Nothing covers her face: her action tag lives on her plate, the result under the board, her line in the bottom
+  left corner of the frame and her shown cards in the bottom right. With the face preference on (`mallorca.face`, on
   unless stored `off`, the menu checkbox `face`) it shows the still `portrait.webp` at once and, when `canRender()`
   finds hardware WebGL (a software renderer such as SwiftShader or llvmpipe counts as weak) on a device that is not
   weak (more than 2 cores and more than 2 GB when the browser tells), imports `ui/avatar/live.ts` on demand, so
-  three.js and `mallorca.glb` are a separate chunk and a request made only then. The `Avatar` renders the model over
-  52 ARKit blendshapes and 15 Oculus visemes; `Motion` (`motion.ts`, no WebGL) eases toward `faceNow()` (read about
+  three.js, RigLogic and her assets are a separate chunk and requests made only then. `mountFace` takes a
+  `FaceRenderer` (`canvas`, `load`, `resize`, `render(pose)`, `dispose`); `FaceSeat` tries `RigAvatar` first and the
+  Rocketbox `Avatar` (`mallorca.glb`, 52 ARKit blendshapes and 15 Oculus visemes) when it fails (`firstOf`).
+  `RigAvatar` (`ui/avatar/rig/`) is her MetaHuman from `public/avatar/her/`: `controlsOf` maps the pose's ARKit and
+  viseme weights through `mapping.json` to raw MetaHuman controls clamped to [0, 1] and the eye angles to eyeLook;
+  RigLogic (`riglogic.wasm`, `createRig`) gives joint deltas, blendshape weights and wrinkle map weights; `RigState`
+  sets the bones (neck joints only from `Pose.neck`) and turns `head`, `neck_01`/`neck_02`, `spine_05` and the
+  clavicles by the pose in world axes; blendshapes and the head's normals are updated on the CPU, hair cards follow
+  their head vertex, and the skin shader blends the wrinkle normal maps by mask. `Motion` (`motion.ts`, no WebGL) eases toward `faceNow()` (read about
   ten times a second), plays new `FaceCue`s once (pulses, gaze with a glance back), blinks, saccades and glances
   away from `idle`, poses the head from the shown PAD and breathes; `thinking` turns her gaze away to think. It
   pauses while the document is hidden, calms the idle motion under `prefers-reduced-motion`, and falls back to the
-  portrait when the model fails to load or WebGL is lost. Off, there is no `face-seat` and the plaque is as before.
+  portrait when the model fails to load or WebGL is lost. Off, there is no `face-seat` and the frame shrinks to
+  her name.
 - Voice (`ui/avatar/voice.ts`): the `mallorca.voice` preference (off unless stored `on`, the menu checkbox `voice`)
   speaks each new line of hers with the browser's `speechSynthesis`, an English voice from a preferred list, the
   `prosody` of `faceNow()`, and her lips follow `speechOf` resynced on every word boundary. Without
   `speechSynthesis` the checkbox is not shown.
-- Keyboard: `f` folds, `c` checks or calls, `r` raises, the arrow keys move the raise amount.
+- Action panel (`ActionBar`): whenever a bet or a raise is legal the size controls stand above the buttons: the
+  size, the presets Half pot, Pot (Min when the pot preset reaches the stack) and All-in, and a slider with smaller
+  and bigger steps of one big blind (`step` of the `RaiseControl`). The size starts at the pot (`defaultSize`: Pot,
+  or Min when the pot reaches the stack). The buttons are Fold (offered only when a call is owed), Check or Call,
+  and Raise to (or Bet) the chosen size, which acts in one tap; at the stack it reads Hold for all-in and acts
+  only after a `HOLD_MS` (600 ms) hold (`useHold`). On phones the size controls hide while a layer is open and Raise
+  uses the chosen size. On wide screens the buttons stack Raise, Call, Fold with their key hints.
+- Keyboard: `f` folds, `c` checks or calls, `r` raises the chosen size (held for an all-in), the arrow keys move
+  the size by one big blind.
 - `data-testid` contract for e2e and contact sheets: `scene`, `start-cash`, `start-tournament`, `opponent-<key>`,
   `start-loading`, `farewell`, `blinds`, `session-result`, `hand-number`, `leave`, `new-game`, `seat-<i>`, `stack-<i>`
-  (with `data-stack`), `bet-<i>`, `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`,
+  (with `data-stack`), `face-frame`, `table-board`, `action-panel`, `bet-<i>`, `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`,
   `bubble-aggressive` or `bubble-fold`), `thinking-<i>`, `card` (with `data-card`), `card-back`, `board`, `pot` (with
-  `data-amount` = total and `data-collected`), `result`, `next-hand`, `fold`, `passive`, `raise`, `raise-amount`,
-  `preset-half`, `preset-pot`, `preset-allin`, `hand-log-toggle`, `sound-toggle`, `simple-table`, `auto-next`,
-  `sound`, `hand-log`, `hand-log-close`, `hand-log-scrim`, `coach`, `coach-mode`, `start-coach`, `coach-toggle`,
-  `coach-close`, `coach-scrim`, `coach-status`, `coach-hint`, `coach-tab-hint`, `coach-tab-range`, `coach-tab-numbers`,
+  `data-amount` = total and `data-collected`), `result`, `next-hand`, `next-hand-wait`, `fold`, `passive`, `raise`, `raise-amount`,
+  `preset-half`, `preset-pot` (or `preset-min`), `preset-allin`, `raise-size`, `raise-less`, `raise-more`, `hand-log-toggle`, `simple-table`, `auto-next`,
+  `sound`, `hand-log`, `hand-log-close`, `coach`, `coach-mode`, `start-coach`, `coach-toggle`,
+  `coach-close`, `coach-status`, `coach-hint`, `coach-tab-hint`, `coach-tab-range`, `coach-tab-numbers`,
   `coach-strategy`, `coach-range`, `coach-numbers`, `coach-composition`, `coach-outs`, `coach-blockers`, `coach-tab-session`, `coach-review`, `coach-leaks`, `live-region`, `tournament-over`, `leave-tonight`,
-  `session-over`, `session-summary`, `session-rate`, `play-again`, `export-json` and `export-text` (the session
+  `session-over`, `session-summary`, `session-hands`, `session-rate`, `tonight-face`, `play-again`, `export-json` and `export-text` (the session
   dialog, current session), and `export-all-json`, `export-all-text` and `clear-history` (the menu). Table talk adds
   `bubble-mallorca`, `bubble-player`, `conversation-region`, `chat-panel`, `chat-open`, `chat-sheet`, `chat-close`,
   `chat-line`, `chat-input`, `chat-send`, `quick-<id>` and `table-conversation`. The face adds `face-seat` (with
-  `data-face` = `portrait` or `live`), `face` and `voice`. The emotion debug panel, in development builds only, adds
+  `data-face` = `portrait` or `live`), `face` and `voice`. The emotion debug panel, in development builds or with `?debug`, adds
   `emotion-debug-toggle`, `emotion-debug`, `debug-personality-<key>`, `debug-reset`, `debug-emotions`, `debug-mood`,
   `debug-load`, `debug-bias`, `debug-decision` and `debug-journal`.
 
@@ -944,11 +1012,11 @@ clamps above; her words reach her feeling only as the signals the player's reply
   table, the cash table, the session summary and a cash status bar with long values fit the viewport without
   horizontal scroll, and every control stays visible on the simple table and on short landscape screens.
   `table.spec.ts`: on the human's first turn the dealer button, both bets, the pot and the board are inside the
-  viewport on every project, the hand log drawer opens inside the viewport with its close button, without
-  horizontal scroll, and Escape hides it, the floating log stops above the action bar on a 1280 × 720 screen, and
-  it is a full-height sheet on a 900 × 500 screen.
-- `scene.spec.ts`: the table stays playable on the felt colour when the plates fail to load, the showdown result
-  covers neither shown hand nor the board, the simple table is flat, loads no plate and is remembered across a reload,
+  viewport on every project, the hand log opens inside the viewport with its close button, without
+  horizontal scroll, and Escape hides it; at 1280 × 720 and 900 × 500 it takes the left column beside her face and
+  Raise stays clickable; on phones it replaces the board under her face and the actions stay.
+- `scene.spec.ts`: the table is the dark room colour and loads no photo of a room, the showdown result covers
+  neither shown hand nor the board, the simple table flattens her frame and is remembered across a reload,
   and the deal animation follows `prefers-reduced-motion`. `face.spec.ts`: headless Chromium renders WebGL in software, so
   her seat shows the portrait and never requests the model; without WebGL it is the portrait too; the face can be
   turned off and stays off across a reload. The live face is checked on the contact sheets, which `npm run contact`

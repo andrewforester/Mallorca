@@ -21,6 +21,7 @@ export interface RaiseControl {
   min: number;
   max: number;
   presets: { halfPot: number; pot: number; allIn: number };
+  step: number;
 }
 
 export interface ConversationView {
@@ -98,6 +99,7 @@ function raiseControl(
       pot: clamp(currentBet + potAfterCall, min, max),
       allIn: max,
     },
+    step: hand.bigBlind,
   };
 }
 

@@ -1,6 +1,14 @@
-import { byId, expect, FAST_URL, test } from './fixtures.ts';
+import type { Page } from '@playwright/test';
+import { byId, expect, FAST_URL, leaveTable, openMenu, test } from './fixtures.ts';
 
 const CONTROLS = ['fold', 'passive', 'raise'];
+const SIZE = ['preset-half', 'preset-pot', 'preset-allin', 'raise-amount', 'raise-size'];
+
+async function expectTheSizeInView(page: Page) {
+  for (const id of SIZE) {
+    await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
+  }
+}
 
 test('the start screen and the table fit the viewport without horizontal scroll', async ({
   page,
@@ -18,9 +26,7 @@ test('the start screen and the table fit the viewport without horizontal scroll'
   for (const id of CONTROLS) {
     await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
   }
-  for (const id of ['preset-half', 'preset-pot', 'preset-allin', 'raise-amount']) {
-    await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
-  }
+  await expectTheSizeInView(page);
 });
 
 test('the cash table and the session summary fit the viewport', async ({ page }) => {
@@ -33,12 +39,14 @@ test('the cash table and the session summary fit the viewport', async ({ page })
   await byId(page, 'start-cash').click();
   await expect(byId(page, 'passive')).toBeEnabled();
   expect(await scrollWidth()).toBeLessThanOrEqual(viewport.width);
-  for (const id of [...CONTROLS, 'session-result', 'leave']) {
+  for (const id of [...CONTROLS, 'session-result']) {
     await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
   }
   await byId(page, 'fold').click();
   await expect(byId(page, 'leave')).toBeEnabled();
-  await byId(page, 'leave').click();
+  await openMenu(page);
+  await expect(byId(page, 'leave')).toBeInViewport({ ratio: 1 });
+  await leaveTable(page);
   await expect(byId(page, 'session-over')).toBeInViewport({ ratio: 1 });
   expect(await scrollWidth()).toBeLessThanOrEqual(viewport.width);
 });
@@ -68,11 +76,13 @@ test('the cash status bar keeps long values inside the viewport', async ({ page 
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     viewport.width,
   );
-  for (const id of ['session-result', 'hand-number', 'leave']) {
+  for (const id of ['session-result', 'hand-number']) {
     await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
   }
-  await page.locator('summary.menu-summary').click();
-  await expect(byId(page, 'clear-history')).toBeInViewport({ ratio: 1 });
+  await openMenu(page);
+  for (const id of ['leave', 'clear-history']) {
+    await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
+  }
 });
 
 for (const viewport of [
@@ -103,19 +113,19 @@ test('the cash status bar shows every value without clipping when the text runs 
   await byId(page, 'start-cash').click();
   await expect(byId(page, 'passive')).toBeEnabled();
   await page.addStyleTag({ content: '.status-bar { letter-spacing: 0.12em; }' });
-  const leave = await byId(page, 'leave').boundingBox();
+  const menu = await page.locator('summary.menu-summary').boundingBox();
   const bar = await page.locator('.status-bar').boundingBox();
   const info = await page.locator('.status-info').boundingBox();
   const values = await Promise.all(
     ['blinds', 'session-result', 'hand-number'].map((id) => byId(page, id).boundingBox()),
   );
-  if (leave === null || bar === null || info === null || values.includes(null)) {
+  if (menu === null || bar === null || info === null || values.includes(null)) {
     throw new Error('status bar is not rendered');
   }
   const tops = values.map((box) => box?.y ?? 0);
   expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(2);
-  expect(bar.height).toBeLessThan(leave.height * 2);
-  expect(info.height).toBeLessThan(leave.height);
+  expect(bar.height).toBeLessThan(menu.height * 2);
+  expect(info.height).toBeLessThan(menu.height);
   const clipped = await page.evaluate(() =>
     ['blinds', 'session-result', 'hand-number'].filter((id) => {
       const node = document.querySelector(`[data-testid="${id}"]`);
@@ -123,7 +133,7 @@ test('the cash status bar shows every value without clipping when the text runs 
     }),
   );
   expect(clipped).toEqual([]);
-  for (const id of [...CONTROLS, 'session-result', 'leave']) {
+  for (const id of [...CONTROLS, 'session-result']) {
     await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
   }
 });
@@ -137,15 +147,15 @@ test('long amounts stay inside the small phone', async ({ page }) => {
   await byId(page, 'start-tournament').click();
   await expect(byId(page, 'passive')).toBeEnabled();
   await byId(page, 'preset-allin').click();
-  await expect(byId(page, 'raise')).toContainText('2000');
-  for (const id of CONTROLS) {
+  await expect(byId(page, 'raise')).toContainText('Hold for all-in 2000');
+  for (const id of [...SIZE, ...CONTROLS]) {
     await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     viewport.width,
   );
   const overflowing = await page.evaluate(() =>
-    ['fold', 'passive', 'raise'].filter((id) => {
+    ['fold', 'passive', 'raise', 'preset-half', 'preset-pot', 'preset-allin'].filter((id) => {
       const node = document.querySelector(`[data-testid="${id}"]`);
       return node !== null && node.scrollWidth > node.clientWidth;
     }),
@@ -169,9 +179,10 @@ for (const viewport of [
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       viewport.width,
     );
-    for (const id of [...CONTROLS, 'preset-half', 'preset-pot', 'preset-allin', 'raise-amount']) {
+    for (const id of CONTROLS) {
       await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
     }
+    await expectTheSizeInView(page);
   });
 }
 
@@ -188,8 +199,9 @@ for (const viewport of [
     await byId(page, 'start-tournament').click();
     await expect(byId(page, 'passive')).toBeEnabled();
     expect(await scrollWidth()).toBeLessThanOrEqual(viewport.width);
-    for (const id of [...CONTROLS, 'preset-half', 'preset-pot', 'preset-allin', 'raise-amount']) {
+    for (const id of CONTROLS) {
       await expect(byId(page, id)).toBeInViewport({ ratio: 1 });
     }
+    await expectTheSizeInView(page);
   });
 }

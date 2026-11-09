@@ -1,76 +1,64 @@
-import { createPortal } from 'preact/compat';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import type { Ref } from 'preact';
+import { useEffect, useRef } from 'preact/hooks';
 import { Chat } from './Chat.tsx';
 import type { ChatProps } from './Chat.tsx';
 import { t } from './i18n.ts';
 
-function ChatIcon() {
+export interface TalkButtonProps {
+  open: boolean;
+  onToggle: () => void;
+  button?: Ref<HTMLButtonElement>;
+}
+
+export function TalkButton({ open, onToggle, button }: TalkButtonProps) {
   return (
-    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-      <path
-        d="M4 5.5C4 4.7 4.7 4 5.5 4h13c.8 0 1.5.7 1.5 1.5v9c0 .8-.7 1.5-1.5 1.5H10l-4.5 4v-4h0c-.8 0-1.5-.7-1.5-1.5z"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.6"
-        stroke-linejoin="round"
-      />
-    </svg>
+    <button
+      type="button"
+      ref={button}
+      class="status-button chat-open"
+      data-testid="chat-open"
+      aria-label={t('conversation.open')}
+      aria-expanded={open}
+      onClick={onToggle}
+    >
+      {t('conversation.talk')}
+    </button>
   );
 }
 
-export function ChatSheet(props: ChatProps) {
-  const [open, setOpen] = useState(false);
-  const button = useRef<HTMLButtonElement>(null);
-  const sheet = useRef<HTMLDivElement>(null);
-  const close = () => {
-    setOpen(false);
-    button.current?.focus();
-  };
+export interface TalkLayerProps extends ChatProps {
+  onClose: () => void;
+}
+
+export function TalkLayer({ onClose, ...chat }: TalkLayerProps) {
+  const section = useRef<HTMLElement>(null);
   useEffect(() => {
-    if (open) {
-      sheet.current?.querySelector<HTMLInputElement>('.chat-input')?.focus();
-    }
-  }, [open]);
+    section.current?.querySelector<HTMLInputElement>('.chat-input')?.focus();
+  }, []);
   return (
-    <>
-      <button
-        type="button"
-        ref={button}
-        class="chat-open glass"
-        data-testid="chat-open"
-        aria-label={t('conversation.open')}
-        aria-expanded={open}
-        onClick={() => setOpen(!open)}
-      >
-        <ChatIcon />
-      </button>
-      {open &&
-        createPortal(
-          <div
-            ref={sheet}
-            class="chat-sheet glass"
-            role="dialog"
-            aria-label={t('conversation.open')}
-            data-testid="chat-sheet"
-            onKeyDown={(event) => {
-              if (event.key === 'Escape') {
-                close();
-              }
-            }}
-          >
-            <button
-              type="button"
-              class="chat-close button button-small"
-              data-testid="chat-close"
-              aria-label={t('conversation.close')}
-              onClick={close}
-            >
-              ×
-            </button>
-            <Chat {...props} />
-          </div>,
-          document.body,
-        )}
-    </>
+    <section
+      ref={section}
+      class="chat-sheet"
+      aria-label={t('conversation.open')}
+      data-testid="chat-sheet"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          onClose();
+        }
+      }}
+    >
+      <div class="chat-sheet-head">
+        <button
+          type="button"
+          class="chat-close"
+          data-testid="chat-close"
+          aria-label={t('conversation.close')}
+          onClick={onClose}
+        >
+          {t('coach.hide')}
+        </button>
+      </div>
+      <Chat {...chat} />
+    </section>
   );
 }

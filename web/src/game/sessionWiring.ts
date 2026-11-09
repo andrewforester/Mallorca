@@ -1,3 +1,4 @@
+import { PERSONALITIES } from '../persona/index.ts';
 import { mulberry32 } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import type { BotClient } from './botClient.ts';
@@ -58,7 +59,7 @@ export function wireHer(
   botSeat: SeatIndex,
 ): Pick<Her, 'persona' | 'conversation' | 'face' | 'trace'> {
   const persona = wirePersona(host, options, botSeat);
-  const traced = import.meta.env.DEV && options.debug === true;
+  const traced = options.debug === true;
   const trace = traced ? createTrace(() => host.felt()) : null;
   const conversation = wireConversation(host, options, botSeat, { persona, trace });
   return { persona, conversation, face: wireFace(host, persona, options, botSeat), trace };
@@ -69,13 +70,17 @@ function wirePersona(
   options: SessionOptions,
   botSeat: SeatIndex,
 ): SessionPersona {
-  return sessionPersona({
+  const her = sessionPersona({
     botSeat,
     now: options.now ?? Date.now,
     epoch: () => host.epoch(),
     handNumber: () => host.get().table.handNumber,
     playerRange: () => host.bot().opponentRange?.() ?? Promise.resolve(null),
   });
+  if (options.personality !== undefined) {
+    her.setPersonality(PERSONALITIES[options.personality]);
+  }
+  return her;
 }
 
 function wireConversation(
@@ -129,8 +134,11 @@ export function wireProbe(
   options: SessionOptions,
   write: (state: DebugState) => void,
 ): DebugProbe | null {
-  if (!import.meta.env.DEV || options.debug !== true) {
+  if (options.debug !== true) {
     return null;
   }
-  return createProbe(her.persona, options.now ?? Date.now, write, her.trace);
+  return createProbe(her.persona, options.now ?? Date.now, write, {
+    trace: her.trace,
+    personality: options.personality,
+  });
 }

@@ -1,0 +1,246 @@
+.action-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px calc(26px + env(safe-area-inset-bottom));
+  border-radius: var(--radius-large) var(--radius-large) 0 0;
+  background: var(--color-surface);
+}
+
+.result-actions {
+  display: grid;
+}
+
+.result-actions .button {
+  min-height: var(--action-height);
+}
+
+.result-actions-auto {
+  grid-template-columns: 1fr 1.4fr;
+  gap: var(--space-2);
+}
+
+.result-soon {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 15px;
+  text-align: center;
+}
+
+.action-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1.4fr;
+  gap: var(--space-2);
+}
+
+.action-buttons .button {
+  min-height: var(--action-height);
+  padding: var(--space-1) var(--space-2);
+  font-size: clamp(14px, 4.1vw, 16px);
+  line-height: 1.15;
+  white-space: normal;
+}
+
+.key-hint {
+  display: none;
+}
+
+.bet-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bet-sheet-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.bet-sheet-verb {
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.bet-sheet-size {
+  font-family: var(--font-numeric);
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.bet-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.bet-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-size);
+  padding: 2px var(--space-1);
+  border: 1px solid rgba(243, 235, 225, 0.2);
+  border-radius: var(--radius-medium);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.15;
+}
+
+.bet-preset[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background: #3a2b22;
+}
+
+.bet-preset-value {
+  color: var(--color-muted);
+  font-family: var(--font-numeric);
+  font-size: 11px;
+}
+
+.bet-slider {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.bet-step {
+  flex: none;
+  width: var(--tap-size);
+  height: var(--tap-size);
+  border: 1px solid rgba(243, 235, 225, 0.2);
+  border-radius: var(--radius-medium);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.bet-step:disabled,
+.bet-preset:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.bet-track {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.bet-range {
+  width: 100%;
+  min-height: var(--tap-size);
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+}
+
+.bet-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    var(--color-accent) var(--fill),
+    var(--color-surface-alt) var(--fill)
+  );
+}
+
+.bet-range::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    var(--color-accent) var(--fill),
+    var(--color-surface-alt) var(--fill)
+  );
+}
+
+.bet-range::-webkit-slider-thumb {
+  width: 26px;
+  height: 26px;
+  margin-top: -10px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-paper);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  appearance: none;
+}
+
+.bet-range::-moz-range-thumb {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-paper);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.bet-limits {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -8px;
+  color: var(--color-faint);
+  font-family: var(--font-numeric);
+  font-size: 11px;
+}
+
+.bet-sheet-buttons {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-2);
+}
+
+.bet-sheet-buttons .button {
+  min-height: var(--action-height);
+  padding: var(--space-2);
+  white-space: normal;
+}
+
+.button-hold {
+  position: relative;
+  overflow: hidden;
+  background: #4a3a30;
+  color: var(--color-text);
+  touch-action: none;
+  user-select: none;
+}
+
+.button-hold::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.button-hold > span {
+  position: relative;
+}
+
+.button-holding {
+  color: var(--color-accent-text);
+}
+
+.button-holding::before {
+  transform: scaleX(1);
+  transition: transform var(--hold-ms) linear;
+}
+
+.coach:empty {
+  display: none;
+}

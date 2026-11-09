@@ -1,16 +1,24 @@
 import type { ComponentType } from 'preact';
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { toViewModel } from '../game/index.ts';
 import type {
   HandStore,
   Intent,
+  LoadProgress,
+  Opponent,
+  PersonalityKey,
   Phase,
   QuickPhrase,
   Session,
   SeatIndex,
   ViewModel,
 } from '../game/index.ts';
-import { HandLogDrawer } from './HandLogDrawer.tsx';
+import { TalkButton } from './ChatSheet.tsx';
+import { ALL_FEATURES } from './features.ts';
+import type { Features } from './features.ts';
+import { tableLayer, useLogDrawer, useTalk } from './layers.tsx';
+import type { LogDrawer, Talk } from './layers.tsx';
+import { t } from './i18n.ts';
 import { HistoryMenu } from './HistoryMenu.tsx';
 import { Scene } from './Scene.tsx';
 import { SessionOver } from './SessionOver.tsx';
@@ -39,6 +47,10 @@ export interface AppProps {
   autoNext?: boolean;
   player?: SoundPlayer;
   debugPanel?: ComponentType<{ session: Session }>;
+  features?: Features;
+  opponent?: Opponent;
+  character?: PersonalityKey;
+  onCharacter?: (character: PersonalityKey) => void;
 }
 
 function useSessionState(session: Session) {
@@ -81,22 +93,21 @@ function faceSlot(session: Session, vm: ViewModel, preferences: Preferences) {
   );
 }
 
-function useLogDrawer(phase: Phase) {
-  const [open, setOpen] = useState(false);
-  const ended = phase === 'idle' || phase === 'sessionOver' || phase === 'tournamentOver';
-  useEffect(() => {
-    if (ended) {
-      setOpen(false);
-    }
-  }, [ended]);
-  const toggle = useRef<HTMLButtonElement>(null);
-  const close = useCallback(() => {
-    setOpen(false);
-    toggle.current?.focus();
-  }, []);
-  const flip = useCallback(() => (open ? close() : setOpen(true)), [open, close]);
-  const dismiss = useCallback(() => setOpen(false), []);
-  return { open: open && !ended, toggle, close, flip, dismiss };
+function useAdvance(
+  props: AppProps,
+  handOver: ViewModel | null,
+  { on, logOpen }: { on: boolean; logOpen: boolean },
+) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [waited, wait] = useState<number | null>(null);
+  const enabled =
+    (props.autoNext ?? true) && on && !logOpen && !menuOpen && waited !== handOver?.handNumber;
+  const autoNextMs = useAutoNext(props.session, handOver, enabled);
+  return { pause: { setMenuOpen, wait }, autoNextMs };
+}
+
+function offeredCoach(props: AppProps, preferences: Preferences): Preferences {
+  return (props.features ?? ALL_FEATURES).coach ? preferences : { ...preferences, coach: false };
 }
 
 type UnlockingPreferences = Preferences & { unlock: () => void };
@@ -129,19 +140,21 @@ export function App(props: AppProps) {
   const preferences = useUnlockingPreferences(player);
   const drawer = useLogDrawer(state.phase);
   useSoundCues(session, player, preferences.sound);
-  const coach = useCoach(session, state, preferences);
+  const coach = useCoach(session, state, offeredCoach(props, preferences));
   useFaceSwitch(session, preferences.face);
   const vm = state.phase === 'idle' ? null : toViewModel(state, humanSeat);
-  const handOver = state.phase === 'handOver' ? vm : null;
-  const autoNextMs = useAutoNext(
-    session,
-    handOver,
-    (props.autoNext ?? true) && preferences.autoNext && !drawer.open,
-  );
+  const talk = useTalk(vm, drawer.dismiss);
+  const { pause, autoNextMs } = useAdvance(props, state.phase === 'handOver' ? vm : null, {
+    on: preferences.autoNext,
+    logOpen: drawer.open,
+  });
   if (vm === null) {
-    return <Start app={props} seed={state.seed} preferences={preferences} />;
+    return (
+      <Start app={props} seed={state.seed} preferences={preferences} progress={state.loading} />
+    );
   }
   const act = actWith(session, preferences);
+  const layer = tableLayer({ session, state, vm, humanSeat, open: { drawer, talk, coach } });
   return (
     <Scene simple={preferences.simple}>
       <div class="app">
@@ -152,6 +165,8 @@ export function App(props: AppProps) {
           drawer={drawer}
           preferences={preferences}
           coach={coach}
+          talk={talk}
+          onMenu={pause.setMenuOpen}
         />
         <Table
           vm={vm}
@@ -160,20 +175,14 @@ export function App(props: AppProps) {
           autoNextMs={autoNextMs}
           onAct={act}
           onNextHand={() => void session.getState().nextHand()}
+          onWait={() => pause.wait(vm.handNumber)}
           onSay={(text) => session.getState().say(text)}
           onQuick={(id, text) => session.getState().quick(id, text)}
           coach={coach.panel}
+          layer={layer.layer}
+          layerKind={layer.kind}
           face={faceSlot(session, vm, preferences)}
         />
-        {coach.sheet}
-        {drawer.open && (
-          <HandLogDrawer
-            entries={state.log}
-            names={[vm.seats[0].name, vm.seats[1].name]}
-            humanSeat={humanSeat}
-            onClose={drawer.close}
-          />
-        )}
         <GameOver props={props} vm={vm} phase={state.phase} sessionId={state.sessionId} />
         {props.debugPanel !== undefined && <props.debugPanel session={session} />}
       </div>
@@ -185,18 +194,26 @@ function Start({
   app,
   seed,
   preferences,
+  progress,
 }: {
   app: AppProps;
   seed: number;
   preferences: UnlockingPreferences;
+  progress: LoadProgress | null;
 }) {
   return (
     <StartScreen
       seed={seed}
       simple={preferences.simple}
+      face={preferences.face}
+      onChoose={(opponent) => app.session.getState().prepare(opponent)}
+      progress={progress}
       farewell={app.farewell ?? false}
       coach={preferences.coach}
-      onToggleCoach={preferences.toggleCoach}
+      onToggleCoach={(app.features ?? ALL_FEATURES).coach ? preferences.toggleCoach : undefined}
+      opponent={(app.features ?? ALL_FEATURES).opponents ? undefined : (app.opponent ?? 'math')}
+      character={app.character}
+      onCharacter={app.onCharacter}
       onStart={(mode, opponent) => {
         preferences.unlock();
         void app.session.getState().start(mode, opponent);
@@ -209,27 +226,60 @@ interface HeaderProps {
   app: AppProps;
   vm: ViewModel;
   seed: number;
-  drawer: ReturnType<typeof useLogDrawer>;
+  drawer: LogDrawer;
   preferences: Preferences;
   coach: CoachView;
+  talk: Talk;
+  onMenu: (open: boolean) => void;
 }
 
-function Header({ app, vm, seed, drawer, preferences, coach }: HeaderProps) {
+function Header({ app, vm, seed, drawer, preferences, coach, talk, onMenu }: HeaderProps) {
   const phase = app.session.getState().phase;
+  const features = app.features ?? ALL_FEATURES;
   return (
     <StatusBar
       vm={vm}
-      canLeave={phase === 'handOver'}
-      onLeave={() => app.session.getState().leave()}
       logOpen={drawer.open}
       logToggle={drawer.toggle}
       onToggleLog={drawer.flip}
-      sound={preferences.sound}
-      onToggleSound={preferences.toggleSound}
       coach={coach.toggle}
+      talk={
+        talk.available ? (
+          <TalkButton open={talk.open} onToggle={talk.toggle} button={talk.button} />
+        ) : null
+      }
     >
-      <HistoryMenu seed={seed} store={app.store} onNewGame={app.onNewGame} onOpen={drawer.dismiss}>
-        <Settings preferences={preferences} {...conversationActions(app.session, vm)} />
+      <HistoryMenu
+        seed={seed}
+        store={app.store}
+        onNewGame={app.onNewGame}
+        onOpen={() => {
+          drawer.dismiss();
+          onMenu(true);
+        }}
+        onClose={() => onMenu(false)}
+      >
+        <Settings
+          preferences={preferences}
+          offered={{ coach: features.coach, voice: features.talk }}
+          {...conversationActions(app.session, vm)}
+          conversation={features.talk && vm.conversation.available}
+        />
+        {vm.mode === 'cash' && (
+          <button
+            type="button"
+            class="button menu-leave"
+            data-testid="leave"
+            disabled={phase !== 'handOver'}
+            onClick={(event) => {
+              const menu = (event.currentTarget as HTMLElement).closest('details');
+              if (menu !== null) menu.open = false;
+              app.session.getState().leave();
+            }}
+          >
+            {t('status.leave')}
+          </button>
+        )}
       </HistoryMenu>
     </StatusBar>
   );
@@ -250,6 +300,7 @@ function GameOver({ props, vm, phase, sessionId }: GameOverProps) {
         store={props.store}
         sessionId={sessionId}
         onPlayAgain={props.onNewGame}
+        onLeave={props.onLeaveTonight}
       />
     );
   }

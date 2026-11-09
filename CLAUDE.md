@@ -30,7 +30,10 @@
 - Screenshots: `npm run contact` builds, plays a seeded game and writes one contact sheet per device,
   `web/e2e/contact/phone.png` and `web/e2e/contact/desktop.png` (gitignored). After a UI change, look at each
   sheet once, as one image, before committing.
-- Visual design: the brief is GitHub issue #2 (https://github.com/andrewforester/mallorca/issues/2).
+- Visual design: the redesign epic is GitHub issue #89 and its spec is `docs/design/redesign/spec.md`, taken from the
+  design canvas linked there. Redesign work goes to the `redesign` branch: each subtask is a branch and a pull request
+  with base `redesign`, and one final pull request merges it into `master`. After a merge into `redesign`, build a
+  preview with `gh workflow run web-vercel.yml --ref redesign`.
 - Git: one branch and one worktree per task, created from a freshly fetched `origin/master`. Atomic conventional
   commits with the layer as scope (`feat(engine): ...`, `refactor(brains): ...`, `docs: ...`). Run
   `git branch --show-current` before committing. Never push to `master`. Each task ends with a pull request; PRs

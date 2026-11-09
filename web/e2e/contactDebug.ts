@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 import type { Browser, Page } from '@playwright/test';
-import { byId, DEVICES, waitForWaypoint } from './shared.ts';
+import { byId, DEVICES, goAllIn, waitForWaypoint } from './shared.ts';
 import { answers, compose, snap, waitForServer } from './sheet.ts';
 import type { Shot } from './sheet.ts';
 
@@ -64,8 +64,7 @@ async function untilNewDecision(page: Page): Promise<void> {
 
 async function shove(page: Page): Promise<void> {
   if (await byId(page, 'raise').isEnabled()) {
-    await byId(page, 'preset-allin').click();
-    await byId(page, 'raise').click();
+    await goAllIn(page);
   } else {
     await byId(page, 'passive').click();
   }
@@ -88,7 +87,7 @@ async function captureView(browser: Browser, view: View): Promise<Shot[]> {
   const { viewport, isMobile, hasTouch, label } = view;
   const context = await browser.newContext({ viewport, isMobile, hasTouch });
   const page = await context.newPage();
-  await page.goto(`${BASE}?seed=42&botDelay=0&autoNext=off`);
+  await page.goto(`${BASE}?seed=42&botDelay=0&autoNext=off&features=opponents,coach,talk`);
   await byId(page, 'opponent-cfr').click();
   await byId(page, 'start-cash').click();
   await waitForWaypoint(page);

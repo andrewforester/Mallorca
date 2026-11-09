@@ -6,14 +6,19 @@ import { readyCoach } from './coachFixtures.ts';
 afterEach(cleanup);
 
 describe('CoachSheet', () => {
-  it('shows the coach and closes by the button, the scrim and Escape', () => {
+  it('is a named section with no scrim and closes by Hide and Escape', () => {
     const onClose = vi.fn();
     render(<CoachSheet state={readyCoach()} onClose={onClose} />);
+    const sheet = document.getElementById('coach-sheet');
+    expect(sheet?.tagName).toBe('SECTION');
+    expect(sheet?.getAttribute('aria-label')).toBe('Coach');
+    expect(screen.queryByTestId('coach-scrim')).toBeNull();
     expect(screen.getByTestId('coach-hint')).not.toBeNull();
-    expect(document.activeElement).toBe(screen.getByTestId('coach-close'));
-    fireEvent.click(screen.getByTestId('coach-close'));
-    fireEvent.click(screen.getByTestId('coach-scrim'));
+    const hide = screen.getByTestId('coach-close');
+    expect(document.activeElement).toBe(hide);
+    expect(hide.textContent).toBe('Hide');
+    fireEvent.click(hide);
     fireEvent.keyDown(document, { key: 'Escape' });
-    expect(onClose).toHaveBeenCalledTimes(3);
+    expect(onClose).toHaveBeenCalledTimes(2);
   });
 });

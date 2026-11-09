@@ -1,0 +1,33 @@
+.face-seat {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.face-portrait,
+.face-stage,
+.face-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.face-portrait {
+  object-fit: cover;
+  object-position: 50% 8%;
+  transition: opacity 400ms ease;
+}
+
+.face-stage .face-canvas {
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
+.face-seat.face-mode-live .face-portrait {
+  opacity: 0;
+}
+
+.face-seat.face-mode-live .face-canvas {
+  opacity: 1;
+}

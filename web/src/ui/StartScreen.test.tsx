@@ -27,6 +27,102 @@ describe('StartScreen', () => {
     expect(onStart).toHaveBeenLastCalledWith(CASH, 'cfr');
   });
 
+  it('shows the download of the chosen solver as a line and a bar', () => {
+    render(
+      <StartScreen
+        seed={1}
+        onStart={vi.fn()}
+        progress={{ opponent: 'cfr', received: 42, total: 100 }}
+      />,
+    );
+    expect(screen.queryByTestId('start-loading')).toBeNull();
+    fireEvent.click(screen.getByTestId('opponent-cfr'));
+    expect(screen.getByTestId('start-loading').textContent).toBe(
+      'Bringing the solver to the table · 42%',
+    );
+    const bar = screen.getByRole('progressbar');
+    expect(bar.getAttribute('aria-valuenow')).toBe('42');
+  });
+
+  it('shows the line without a number when the size is unknown', () => {
+    render(
+      <StartScreen
+        seed={1}
+        onStart={vi.fn()}
+        progress={{ opponent: 'cfr', received: 42, total: 0 }}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('opponent-cfr'));
+    expect(screen.getByTestId('start-loading').textContent).toBe(
+      'Bringing the solver to the table',
+    );
+    expect(screen.getByRole('progressbar').hasAttribute('aria-valuenow')).toBe(false);
+  });
+
+  it('plays a fixed opponent without a choice and starts loading it at once', () => {
+    const onStart = vi.fn();
+    const onChoose = vi.fn();
+    render(<StartScreen seed={1} onStart={onStart} onChoose={onChoose} opponent="cfr-v2" />);
+    expect(screen.queryByTestId('opponent-math')).toBeNull();
+    expect(screen.queryByTestId('opponent-cfr-v2')).toBeNull();
+    expect(onChoose).toHaveBeenCalledWith('cfr-v2');
+    fireEvent.click(screen.getByTestId('start-cash'));
+    expect(onStart).toHaveBeenLastCalledWith(CASH, 'cfr-v2');
+  });
+
+  it('shows the download of a fixed opponent without a choice', () => {
+    render(
+      <StartScreen
+        seed={1}
+        onStart={vi.fn()}
+        opponent="cfr"
+        progress={{ opponent: 'cfr', received: 10, total: 100 }}
+      />,
+    );
+    expect(screen.getByTestId('start-loading').textContent).toContain('10%');
+  });
+
+  it('lets the player choose her character among five, with her line and how hard she is', () => {
+    const onCharacter = vi.fn();
+    render(
+      <StartScreen seed={1} onStart={vi.fn()} character="mallorca" onCharacter={onCharacter} />,
+    );
+    const choices = screen.getAllByTestId(/^character-/);
+    expect(choices.map((node) => node.getAttribute('data-testid'))).toEqual([
+      'character-mallorca',
+      'character-mira',
+      'character-ingrid',
+      'character-lola',
+      'character-nina',
+    ]);
+    expect(screen.getByTestId('character-mallorca').getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByTestId('character-ingrid').textContent).toContain(
+      'A professional. Plays to win.',
+    );
+    expect(screen.getByTestId('character-ingrid').textContent).toContain('The toughest');
+    fireEvent.click(screen.getByTestId('character-nina'));
+    expect(onCharacter).toHaveBeenCalledWith('nina');
+  });
+
+  it('greets the player in the words of the chosen character, under her name', () => {
+    render(<StartScreen seed={1} onStart={vi.fn()} character="lola" onCharacter={vi.fn()} />);
+    const frame = screen.getByTestId('tonight-face');
+    expect(frame.textContent).toContain('Finally! Deal me in, I feel lucky.');
+    expect(frame.querySelector('img')?.getAttribute('alt')).toBe('Lola');
+  });
+
+  it('hides the coach switch when the coach is not offered', () => {
+    render(<StartScreen seed={1} onStart={vi.fn()} />);
+    expect(screen.queryByTestId('start-coach')).toBeNull();
+  });
+
+  it('tells which opponent was chosen as soon as it is chosen', () => {
+    const onChoose = vi.fn();
+    render(<StartScreen seed={42} onStart={vi.fn()} onChoose={onChoose} finePointer />);
+    fireEvent.click(screen.getByTestId('opponent-cfr-v2'));
+    expect(onChoose).toHaveBeenCalledWith('cfr-v2');
+  });
+
   it('offers the v2 solver where a fine pointer is present', () => {
     const onStart = vi.fn();
     render(<StartScreen seed={42} onStart={onStart} finePointer />);
@@ -43,10 +139,30 @@ describe('StartScreen', () => {
     expect(screen.getByTestId('opponent-cfr')).toBeTruthy();
   });
 
-  it('shows the farewell line in place of the tagline', () => {
+  it('says good night with a title and a line in place of the tagline', () => {
     const { container } = render(<StartScreen seed={1} onStart={vi.fn()} farewell />);
-    expect(screen.getByTestId('farewell').textContent).toBe('Sleep well. The table will be here.');
+    const farewell = screen.getByTestId('farewell');
+    expect(farewell.querySelector('.tonight-farewell-title')?.textContent).toBe('Sleep well.');
+    expect(farewell.textContent).toContain('The table will be here.');
     expect(container.textContent).not.toContain(en.start.tagline);
+  });
+
+  it('is Tonight: her face in a frame with her greeting, the opponent and the coach', () => {
+    render(<StartScreen seed={1} onStart={vi.fn()} onToggleCoach={vi.fn()} />);
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Tonight');
+    const frame = screen.getByTestId('tonight-face');
+    expect(frame.querySelector('img')?.getAttribute('alt')).toBe('Mallorca');
+    expect(frame.textContent).toContain("Hi. I'm Mallorca.");
+    expect((screen.getByTestId('start-coach') as HTMLInputElement).getAttribute('role')).toBe(
+      'switch',
+    );
+  });
+
+  it('frames her name instead of her face when the face is off', () => {
+    render(<StartScreen seed={1} onStart={vi.fn()} face={false} />);
+    const frame = screen.getByTestId('tonight-face');
+    expect(frame.querySelector('img')).toBeNull();
+    expect(frame.textContent).toContain('Mallorca');
   });
 
   it('shows the tagline by default', () => {

@@ -1,0 +1,247 @@
+@media (min-aspect-ratio: 1/1) {
+  .status-bar {
+    min-height: 64px;
+    padding: 0 20px 0 32px;
+    border-bottom: 1px solid rgba(243, 235, 225, 0.07);
+    font-size: 14px;
+  }
+
+  .table-layout {
+    grid-template-areas: 'left centre right';
+    grid-template-columns: minmax(0, 1fr) min(680px, 50vw) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    --card-width: 62px;
+    --hole-width: 72px;
+    --shown-width: 56px;
+    --face-basis: 440px;
+  }
+
+  .table-showdown {
+    --face-basis: 560px;
+  }
+
+  .table-left {
+    display: flex;
+    grid-area: left;
+    flex-direction: column;
+    min-height: 0;
+    padding: 20px 24px 28px 32px;
+  }
+
+  .table-right {
+    justify-content: flex-end;
+    gap: var(--space-3);
+    padding: 20px 32px 28px;
+  }
+
+  .face-frame {
+    min-height: 0;
+    margin: 20px 0 0;
+    border-radius: 26px;
+    background: radial-gradient(ellipse 60% 60% at 50% 38%, #5a4436 0%, #33261f 55%, #241b18 100%);
+  }
+
+  .face-frame-off {
+    flex-basis: 120px;
+    min-height: 120px;
+  }
+
+  .seat-top {
+    padding: 12px 4px 0;
+  }
+
+  .seat-top .seat-cards:not(.seat-cards-shown) .card {
+    width: 18px;
+  }
+
+  .seat-name {
+    font-size: 17px;
+  }
+
+  .seat-stack {
+    font-size: 15px;
+  }
+
+  .seat-bottom {
+    padding: 0 4px 28px;
+  }
+
+  .pot-amount {
+    font-size: 16px;
+  }
+
+  .action-panel {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .action-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .action-buttons .button,
+  .result-actions .button {
+    min-height: 56px;
+    border-radius: 14px;
+    font-size: var(--font-size-base);
+  }
+
+  .action-buttons .button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+  }
+
+  .action-buttons .button-raise {
+    order: -2;
+  }
+
+  .action-buttons .button-passive {
+    order: -1;
+  }
+
+  .key-hint {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 5px;
+    background: rgba(243, 235, 225, 0.1);
+    font-family: var(--font-numeric);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .button-raise .key-hint {
+    background: rgba(29, 23, 22, 0.15);
+  }
+
+  .button-passive .key-hint {
+    background: rgba(29, 23, 22, 0.1);
+  }
+
+  .bet-sheet {
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--color-surface);
+  }
+
+  .bet-sheet-size {
+    font-size: 30px;
+  }
+
+  .bet-preset {
+    border-radius: 10px;
+  }
+
+  .bet-sheet-buttons .button {
+    min-height: 52px;
+    border-radius: var(--radius-medium);
+  }
+
+  .coach {
+    display: flex;
+    flex: 0 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+}
+
+@media (min-aspect-ratio: 1/1) and (max-height: 560px) {
+  .status-bar {
+    min-height: 52px;
+  }
+
+  .table-layout {
+    --card-width: 44px;
+    --hole-width: 52px;
+  }
+
+  .face-frame {
+    margin-top: 8px;
+  }
+
+  .seat-bottom {
+    padding-bottom: 8px;
+  }
+
+  .table-right {
+    padding: 8px 20px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .board .card {
+    animation: deal-in 260ms ease-out both;
+  }
+
+  .bubble-thinking {
+    animation: thinking 2.4s ease-in-out infinite;
+  }
+
+  .result-chips-to-top {
+    animation: chips-to-top 600ms ease-in both;
+  }
+
+  .result-chips-to-bottom {
+    animation: chips-to-bottom 600ms ease-in both;
+  }
+
+  .result-chips-split {
+    animation: chips-split 600ms ease-in both;
+  }
+}
+
+@keyframes deal-in {
+  from {
+    opacity: 0;
+    transform: translate(-40px, 30px) rotate(-8deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes thinking {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes chips-to-top {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, -160px) scale(0.7);
+  }
+}
+
+@keyframes chips-to-bottom {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, 200px) scale(1.2);
+  }
+}
+
+@keyframes chips-split {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(1.6);
+  }
+}

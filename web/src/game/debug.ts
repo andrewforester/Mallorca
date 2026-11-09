@@ -100,10 +100,11 @@ export function createProbe(
   her: SessionPersona,
   now: () => number,
   write: (state: DebugState) => void,
-  trace: TraceSink | null,
+  start: { trace: TraceSink | null; personality?: PersonalityKey },
 ): DebugProbe {
+  const { trace, personality = 'mallorca' } = start;
   let state: DebugState = {
-    personality: { key: 'mallorca' },
+    personality: { key: personality },
     snapshot: null,
     sentBias: null,
     decision: null,

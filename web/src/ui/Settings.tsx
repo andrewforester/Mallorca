@@ -4,54 +4,65 @@ import type { Preferences } from './usePreferences.ts';
 
 export interface SettingsProps {
   preferences: Preferences;
+  offered?: { coach: boolean; voice: boolean };
   conversation?: boolean;
   conversationOn?: boolean;
   onConversation?: (on: boolean) => void;
+}
+
+function Toggle({
+  id,
+  label,
+  checked,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <label class="menu-toggle">
+      <span>{label}</span>
+      <input type="checkbox" role="switch" data-testid={id} checked={checked} onChange={onChange} />
+    </label>
+  );
 }
 
 function ConversationSettings({ preferences, conversationOn, onConversation }: SettingsProps) {
   const on = conversationOn ?? preferences.conversation;
   return (
     <>
-      <label class="menu-toggle">
-        <input
-          type="checkbox"
-          data-testid="table-conversation"
-          checked={on}
-          onChange={() => {
-            const next = !on;
-            preferences.setConversation(next);
-            onConversation?.(next);
-          }}
-        />
-        <span>{t('conversation.settings.conversation')}</span>
-      </label>
+      <Toggle
+        id="table-conversation"
+        label={t('conversation.settings.conversation')}
+        checked={on}
+        onChange={() => {
+          const next = !on;
+          preferences.setConversation(next);
+          onConversation?.(next);
+        }}
+      />
     </>
   );
 }
 
-function FaceSettings({ preferences }: { preferences: Preferences }) {
+function FaceSettings({ preferences, voice }: { preferences: Preferences; voice: boolean }) {
   return (
     <>
-      <label class="menu-toggle">
-        <input
-          type="checkbox"
-          data-testid="face"
-          checked={preferences.face}
-          onChange={preferences.toggleFace}
+      <Toggle
+        id="face"
+        label={t('status.face')}
+        checked={preferences.face}
+        onChange={preferences.toggleFace}
+      />
+      {voice && voiceAvailable() && (
+        <Toggle
+          id="voice"
+          label={t('status.voice')}
+          checked={preferences.voice}
+          onChange={preferences.toggleVoice}
         />
-        <span>{t('status.face')}</span>
-      </label>
-      {voiceAvailable() && (
-        <label class="menu-toggle">
-          <input
-            type="checkbox"
-            data-testid="voice"
-            checked={preferences.voice}
-            onChange={preferences.toggleVoice}
-          />
-          <span>{t('status.voice')}</span>
-        </label>
       )}
     </>
   );
@@ -59,46 +70,37 @@ function FaceSettings({ preferences }: { preferences: Preferences }) {
 
 export function Settings(props: SettingsProps) {
   const { preferences } = props;
+  const offered = props.offered ?? { coach: true, voice: true };
   return (
     <>
-      <label class="menu-toggle">
-        <input
-          type="checkbox"
-          data-testid="simple-table"
-          checked={preferences.simple}
-          onChange={preferences.toggleSimple}
-        />
-        <span>{t('status.simpleTable')}</span>
-      </label>
-      <label class="menu-toggle">
-        <input
-          type="checkbox"
-          data-testid="auto-next"
-          checked={preferences.autoNext}
-          onChange={preferences.toggleAutoNext}
-        />
-        <span>{t('status.autoNext')}</span>
-      </label>
-      <label class="menu-toggle">
-        <input
-          type="checkbox"
-          data-testid="sound"
-          checked={preferences.sound}
-          onChange={preferences.toggleSound}
-        />
-        <span>{t('status.sound')}</span>
-      </label>
-      <label class="menu-toggle">
-        <input
-          type="checkbox"
-          data-testid="coach-mode"
+      <Toggle
+        id="sound"
+        label={t('status.sound')}
+        checked={preferences.sound}
+        onChange={preferences.toggleSound}
+      />
+      <FaceSettings preferences={preferences} voice={offered.voice} />
+      {props.conversation === true && <ConversationSettings {...props} />}
+      {offered.coach && (
+        <Toggle
+          id="coach-mode"
+          label={t('coach.mode')}
           checked={preferences.coach}
           onChange={preferences.toggleCoach}
         />
-        <span>{t('coach.mode')}</span>
-      </label>
-      <FaceSettings preferences={preferences} />
-      {props.conversation === true && <ConversationSettings {...props} />}
+      )}
+      <Toggle
+        id="auto-next"
+        label={t('status.autoNext')}
+        checked={preferences.autoNext}
+        onChange={preferences.toggleAutoNext}
+      />
+      <Toggle
+        id="simple-table"
+        label={t('status.simpleTable')}
+        checked={preferences.simple}
+        onChange={preferences.toggleSimple}
+      />
     </>
   );
 }

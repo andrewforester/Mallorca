@@ -32,6 +32,11 @@ const pairs = [
   ['color-felt', 'color-felt-text'],
   ['color-bg', 'color-text'],
   ['color-surface', 'color-text'],
+  ['color-surface', 'color-muted'],
+  ['color-paper', 'color-paper-text'],
+  ['color-coach-surface', 'color-coach'],
+  ['color-coach-surface', 'color-coach-text'],
+  ['color-her-surface', 'color-text'],
 ] as const;
 
 describe('colour tokens', () => {

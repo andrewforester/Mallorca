@@ -4,6 +4,8 @@ import {
   byId,
   expect,
   FAST_URL,
+  goAllIn,
+  leaveTable,
   playToTheEnd,
   stackOf,
   test,
@@ -13,13 +15,24 @@ import {
 
 const ALL_IN_TIMEOUT_MS = 600_000;
 
-test('the production build has no emotion debug panel', async ({ page }) => {
+test('the production build shows no emotion debug panel without the hidden link', async ({
+  page,
+}) => {
   await page.goto(FAST_URL);
   await byId(page, 'start-cash').click();
   await expect(byId(page, 'fold')).toBeVisible();
   await expect(byId(page, 'emotion-debug-toggle')).toHaveCount(0);
   await expect(byId(page, 'emotion-debug')).toHaveCount(0);
   await expect(byId(page, 'conversation-debug')).toHaveCount(0);
+});
+
+test('the hidden link opens the emotion debug panel in the production build', async ({ page }) => {
+  await page.goto(`${FAST_URL}&debug`);
+  await byId(page, 'start-cash').click();
+  await expect(byId(page, 'fold')).toBeVisible();
+  await byId(page, 'emotion-debug-toggle').click();
+  await expect(byId(page, 'emotion-debug')).toBeVisible();
+  await expect(byId(page, 'debug-personality-mallorca')).toBeVisible();
 });
 
 test('a passive hand ends with the chips conserved', async ({ page }) => {
@@ -57,8 +70,7 @@ test('all in on every hand ends the tournament and play again returns to a fresh
       continue;
     }
     if (await byId(page, 'raise').isEnabled()) {
-      await byId(page, 'preset-allin').click();
-      await byId(page, 'raise').click();
+      await goAllIn(page);
     } else {
       await byId(page, 'passive').click();
     }
@@ -86,7 +98,8 @@ test('leaving for tonight returns to a farewell start screen', async ({ page }) 
   await playToTheEnd(page);
   await byId(page, 'leave-tonight').click();
   await expect(byId(page, 'tournament-over')).toHaveCount(0);
-  await expect(byId(page, 'farewell')).toHaveText('Sleep well. The table will be here.');
+  await expect(byId(page, 'farewell')).toContainText('Sleep well.');
+  await expect(byId(page, 'farewell')).toContainText('The table will be here.');
   await byId(page, 'start-tournament').click();
   await expect(byId(page, 'hand-number')).toContainText('1');
   await page.reload();
@@ -95,7 +108,7 @@ test('leaving for tonight returns to a farewell start screen', async ({ page }) 
 });
 
 test('the next hand starts by itself after a fold', async ({ page }) => {
-  await page.goto('/?seed=42&botDelay=0');
+  await page.goto('/?seed=42&botDelay=0&opponent=math');
   await byId(page, 'start-tournament').click();
   await expect(byId(page, 'fold')).toBeEnabled();
   await byId(page, 'fold').click();
@@ -116,7 +129,7 @@ test('reloading in the middle of a hand shows the start screen', async ({ page }
 test('a cash game is played for a hand, left, and the session summary shows one hand', async ({
   page,
 }) => {
-  await page.goto('/?seed=3&botDelay=0');
+  await page.goto('/?seed=3&botDelay=0&opponent=math');
   await byId(page, 'start-cash').click();
   await expect(byId(page, 'session-result')).toBeVisible();
   await expect(byId(page, 'leave')).toBeDisabled();
@@ -129,9 +142,9 @@ test('a cash game is played for a hand, left, and the session summary shows one 
     await byId(page, 'passive').click();
   }
   await expect(byId(page, 'leave')).toBeEnabled();
-  await byId(page, 'leave').click();
+  await leaveTable(page);
   await expect(byId(page, 'session-over')).toBeVisible();
-  await expect(byId(page, 'session-summary')).toContainText('over 1 hand');
+  await expect(byId(page, 'session-hands')).toHaveText('1 hand');
   await byId(page, 'play-again').click();
   await expect(byId(page, 'start-cash')).toBeVisible();
 });
@@ -156,12 +169,12 @@ async function downloadJson(page: Page, id: string): Promise<unknown[]> {
 }
 
 test('hand history is exported, persists across a reload and is cleared', async ({ page }) => {
-  await page.goto('/?seed=3&botDelay=0');
+  await page.goto('/?seed=3&botDelay=0&opponent=math');
   await byId(page, 'start-cash').click();
   await playHandToEnd(page);
   await byId(page, 'next-hand').click();
   await playHandToEnd(page);
-  await byId(page, 'leave').click();
+  await leaveTable(page);
   await expect(byId(page, 'session-over')).toBeVisible();
   expect(await downloadJson(page, 'export-json')).toHaveLength(2);
   await page.reload();
@@ -173,4 +186,18 @@ test('hand history is exported, persists across a reload and is cleared', async 
   expect((await downloadJson(page, 'export-all-json')).length).toBeGreaterThanOrEqual(2);
   await byId(page, 'clear-history').click();
   expect(await downloadJson(page, 'export-all-json')).toEqual([]);
+});
+
+test('a cash hand moves on by itself and Wait keeps the result', async ({ page }) => {
+  await page.goto('/?seed=42&botDelay=0&opponent=math');
+  await byId(page, 'start-cash').click();
+  await expect(byId(page, 'passive')).toBeEnabled();
+  await byId(page, 'fold').click();
+  await expect(byId(page, 'hand-number')).toHaveText('Hand 2', { timeout: 5000 });
+  await expect(byId(page, 'passive')).toBeEnabled();
+  await byId(page, 'fold').click();
+  await byId(page, 'next-hand-wait').click();
+  await page.waitForTimeout(2500);
+  await expect(byId(page, 'hand-number')).toHaveText('Hand 2');
+  await expect(byId(page, 'leave')).toBeEnabled();
 });

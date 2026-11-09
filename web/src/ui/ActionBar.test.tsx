@@ -1,47 +1,145 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/preact';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ActionBar } from './ActionBar.tsx';
+import { ActionBar, HOLD_MS } from './ActionBar.tsx';
 import { viewModel } from './fixtures.ts';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
+
+function bar(overrides = {}, onAct = vi.fn()) {
+  const view = render(<ActionBar controls={viewModel(overrides).controls} onAct={onAct} />);
+  return { onAct, view };
+}
+
+function value(): number {
+  return Number((screen.getByTestId('raise-amount') as HTMLInputElement).value);
+}
 
 describe('ActionBar', () => {
-  it('shows Call with the amount facing a bet', () => {
-    render(<ActionBar controls={viewModel().controls} onAct={vi.fn()} />);
-    expect(screen.getByTestId('passive').textContent).toBe('Call 60');
-    expect(screen.getByTestId('fold').textContent).toBe('Fold');
-    expect(screen.getByTestId('raise').textContent).toBe('Raise to 160');
+  it('shows the size controls with the buttons whenever a raise is legal', () => {
+    bar();
+    for (const id of ['fold', 'passive', 'raise', 'preset-half', 'preset-pot', 'preset-allin']) {
+      expect(screen.getByTestId(id)).not.toBeNull();
+    }
+    expect(screen.getByTestId('raise-amount')).not.toBeNull();
+    expect(screen.queryByTestId('raise-back')).toBeNull();
+    expect(screen.queryByTestId('raise-confirm')).toBeNull();
+  });
+
+  it('starts at the pot and names it on the raise button', () => {
+    bar();
+    expect(value()).toBe(400);
+    expect(screen.getByTestId('raise-size').textContent).toBe('400');
+    expect(screen.getByTestId('preset-pot').getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByTestId('raise').textContent).toContain('Raise to 400');
+    expect(screen.getByTestId('passive').textContent).toContain('Call 60');
+    expect(screen.getByTestId('fold').textContent).toContain('Fold');
+  });
+
+  it('starts at Min when the pot preset reaches the stack', () => {
+    const base = viewModel().controls;
+    const raise = { ...base.raise!, max: 380, presets: { halfPot: 250, pot: 380, allIn: 380 } };
+    render(<ActionBar controls={{ ...base, raise }} onAct={vi.fn()} />);
+    expect(screen.queryByTestId('preset-pot')).toBeNull();
+    expect(screen.getByTestId('preset-min').getAttribute('aria-pressed')).toBe('true');
+    expect(value()).toBe(160);
   });
 
   it('names the raise button Bet when opening the betting', () => {
     const base = viewModel().controls;
-    const controls = { ...base, raise: { ...base.raise!, kind: 'bet' as const, min: 60 } };
+    const controls = { ...base, raise: { ...base.raise!, kind: 'bet' as const } };
     render(<ActionBar controls={controls} onAct={vi.fn()} />);
-    expect(screen.getByTestId('raise').textContent).toBe('Bet 60');
+    expect(screen.getByTestId('raise').textContent).toContain('Bet 400');
   });
 
-  it('shows Check when nothing is owed', () => {
-    const controls = viewModel({ passive: { kind: 'check', amount: 0 } }).controls;
-    render(<ActionBar controls={controls} onAct={vi.fn()} />);
-    expect(screen.getByTestId('passive').textContent).toBe('Check');
+  it('raises in one tap with the chosen size, and a preset alone does not act', () => {
+    const { onAct } = bar();
+    fireEvent.click(screen.getByTestId('preset-half'));
+    expect(onAct).not.toHaveBeenCalled();
+    expect(screen.getByTestId('raise').textContent).toContain('Raise to 250');
+    fireEvent.click(screen.getByTestId('raise'));
+    expect(onAct.mock.calls).toEqual([[{ kind: 'raise', to: 250 }]]);
   });
 
-  it('disables everything when not enabled', () => {
-    const controls = viewModel({ enabled: false }).controls;
-    render(<ActionBar controls={controls} onAct={vi.fn()} />);
-    for (const id of ['fold', 'passive', 'raise', 'preset-half', 'preset-pot', 'preset-allin']) {
+  it('steps the size by the big blind', () => {
+    bar();
+    fireEvent.click(screen.getByTestId('raise-more'));
+    expect(value()).toBe(420);
+    fireEvent.click(screen.getByTestId('raise-less'));
+    fireEvent.click(screen.getByTestId('raise-less'));
+    expect(value()).toBe(380);
+  });
+
+  it('asks to hold Raise for an all-in and acts only after the hold', () => {
+    vi.useFakeTimers();
+    const { onAct } = bar();
+    fireEvent.click(screen.getByTestId('preset-allin'));
+    const raise = screen.getByTestId('raise');
+    expect(raise.textContent).toContain('Hold for all-in 2000');
+    fireEvent.click(raise);
+    expect(onAct).not.toHaveBeenCalled();
+    fireEvent.pointerDown(raise);
+    act(() => {
+      vi.advanceTimersByTime(HOLD_MS / 2);
+    });
+    fireEvent.pointerUp(raise);
+    act(() => {
+      vi.advanceTimersByTime(HOLD_MS);
+    });
+    expect(onAct).not.toHaveBeenCalled();
+    fireEvent.pointerDown(raise);
+    act(() => {
+      vi.advanceTimersByTime(HOLD_MS);
+    });
+    expect(onAct.mock.calls).toEqual([[{ kind: 'raise', to: 2000 }]]);
+  });
+
+  it('shows Check when nothing is owed and folds and calls at once', () => {
+    const { onAct } = bar({ passive: { kind: 'check', amount: 0 } });
+    expect(screen.getByTestId('passive').textContent).toContain('Check');
+    fireEvent.click(screen.getByTestId('passive'));
+    expect(onAct.mock.calls).toEqual([[{ kind: 'passive' }]]);
+  });
+
+  it('has no size controls when no raise is legal', () => {
+    bar({ raise: null });
+    expect((screen.getByTestId('raise') as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByTestId('raise-amount')).toBeNull();
+  });
+
+  it('disables every control when not enabled', () => {
+    bar({ enabled: false });
+    for (const id of ['fold', 'passive', 'raise', 'preset-half', 'preset-pot', 'raise-more']) {
       expect((screen.getByTestId(id) as HTMLButtonElement).disabled).toBe(true);
     }
     expect((screen.getByTestId('raise-amount') as HTMLInputElement).disabled).toBe(true);
   });
 
-  it('reports intents', () => {
-    const onAct = vi.fn();
-    render(<ActionBar controls={viewModel().controls} onAct={onAct} />);
-    fireEvent.click(screen.getByTestId('fold'));
-    fireEvent.click(screen.getByTestId('passive'));
-    fireEvent.click(screen.getByTestId('preset-pot'));
-    fireEvent.click(screen.getByTestId('raise'));
+  it('shows the key of each move as a hint hidden from assistive tech', () => {
+    bar();
+    for (const [id, key] of [
+      ['fold', 'F'],
+      ['passive', 'C'],
+      ['raise', 'R'],
+    ]) {
+      const hint = screen.getByTestId(id as string).querySelector('.key-hint');
+      expect(hint?.textContent).toBe(key);
+      expect(hint?.getAttribute('aria-hidden')).toBe('true');
+    }
+  });
+});
+
+describe('ActionBar keyboard', () => {
+  it('folds with f, calls with c and raises the chosen size with r', () => {
+    const { onAct } = bar();
+    fireEvent.keyDown(document, { key: 'f' });
+    fireEvent.keyDown(document, { key: 'c' });
+    fireEvent.keyDown(document, { key: 'ArrowRight' });
+    expect(value()).toBe(420);
+    fireEvent.keyDown(document, { key: 'ArrowLeft' });
+    fireEvent.keyDown(document, { key: 'r' });
     expect(onAct.mock.calls).toEqual([
       [{ kind: 'fold' }],
       [{ kind: 'passive' }],
@@ -49,38 +147,28 @@ describe('ActionBar', () => {
     ]);
   });
 
-  it('disables raise when no raise is legal', () => {
-    const controls = viewModel({ raise: null }).controls;
-    render(<ActionBar controls={controls} onAct={vi.fn()} />);
-    expect((screen.getByTestId('raise') as HTMLButtonElement).disabled).toBe(true);
-    expect(screen.queryByTestId('raise-amount')).toBeNull();
-  });
-
-  it('responds to f, c and r only when enabled', () => {
-    const onAct = vi.fn();
-    const view = render(<ActionBar controls={viewModel().controls} onAct={onAct} />);
-    fireEvent.keyDown(document, { key: 'f' });
-    fireEvent.keyDown(document, { key: 'c' });
+  it('needs r held for an all-in', () => {
+    vi.useFakeTimers();
+    const { onAct } = bar();
+    fireEvent.click(screen.getByTestId('preset-allin'));
     fireEvent.keyDown(document, { key: 'r' });
-    expect(onAct.mock.calls).toEqual([
-      [{ kind: 'fold' }],
-      [{ kind: 'passive' }],
-      [{ kind: 'raise', to: 160 }],
-    ]);
-    onAct.mockClear();
-    view.rerender(<ActionBar controls={viewModel({ enabled: false }).controls} onAct={onAct} />);
-    fireEvent.keyDown(document, { key: 'f' });
-    fireEvent.keyDown(document, { key: 'c' });
-    fireEvent.keyDown(document, { key: 'r' });
+    fireEvent.keyUp(document, { key: 'r' });
+    act(() => {
+      vi.advanceTimersByTime(HOLD_MS);
+    });
     expect(onAct).not.toHaveBeenCalled();
+    fireEvent.keyDown(document, { key: 'r' });
+    act(() => {
+      vi.advanceTimersByTime(HOLD_MS);
+    });
+    expect(onAct.mock.calls).toEqual([[{ kind: 'raise', to: 2000 }]]);
   });
 
-  it('moves the slider with the arrow keys', () => {
-    render(<ActionBar controls={viewModel().controls} onAct={vi.fn()} />);
-    const slider = screen.getByTestId('raise-amount') as HTMLInputElement;
-    fireEvent.keyDown(document, { key: 'ArrowRight' });
-    expect(Number(slider.value)).toBeGreaterThan(160);
-    fireEvent.keyDown(document, { key: 'ArrowLeft' });
-    expect(Number(slider.value)).toBe(160);
+  it('ignores the keys when not enabled', () => {
+    const { onAct } = bar({ enabled: false });
+    for (const key of ['f', 'c', 'r']) {
+      fireEvent.keyDown(document, { key });
+    }
+    expect(onAct).not.toHaveBeenCalled();
   });
 });
