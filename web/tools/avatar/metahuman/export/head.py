@@ -34,6 +34,14 @@ def header_of(r):
     }
 
 
+def symmetric(layers, names):
+    for i, n in enumerate(names):
+        if n.endswith("L") and n[:-1] + "R" in names:
+            j = names.index(n[:-1] + "R")
+            left = np.maximum(layers[i], layers[j][:, ::-1])
+            layers[i], layers[j] = left, left[:, ::-1].copy()
+
+
 def write_masks(src, names, out):
     channels = json.loads(CHANNELS.read_text())
     layers = []
@@ -41,6 +49,7 @@ def write_masks(src, names, out):
         file, c = channels[n]
         im = np.asarray(Image.open(src / "Masks" / file).convert("RGBA").resize((MASK_SIZE, MASK_SIZE), Image.LANCZOS))[..., c]
         layers.append(im[::-1])
+    symmetric(layers, names)
     np.stack(layers).astype(np.uint8).tofile(out / "masks.r8")
 
 

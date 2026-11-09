@@ -65,6 +65,14 @@ describe('expression space', () => {
     expect(strong[index('joy')]!).toBeGreaterThan(strong[index('content')]!);
   });
 
+  it('smiles in joy with her eyes and cheeks and only parts her lips', () => {
+    const joy = ANCHORS[index('joy')]!.face;
+    expect(joy.jawOpen ?? 0).toBeLessThanOrEqual(0.1);
+    expect(joy.mouthUpperUpLeft ?? 0).toBeLessThanOrEqual(0.1);
+    expect(joy.eyeSquintLeft).toBeGreaterThanOrEqual(0.6);
+    expect(joy.mouthDimpleLeft).toBeGreaterThanOrEqual(0.45);
+  });
+
   it('scales a face by the look and the expressiveness', () => {
     const mix = blendOf([-0.65, 0.8, 0.65]);
     const calm = faceOf(mix, MALLORCA_LOOK, 0.5);

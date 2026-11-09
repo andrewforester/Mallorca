@@ -103,6 +103,29 @@ describe('her packed rig', () => {
     expect(names).not.toContain('helmet');
   });
 
+  it('gives each left and right wrinkle mask the same coverage, mirrored', () => {
+    const masks = new Uint8Array(her('masks.r8'));
+    const size = header.maskSize;
+    const layer = (name: string) => {
+      const i = header.masks.indexOf(name);
+      return masks.subarray(i * size * size, (i + 1) * size * size);
+    };
+    const pairs = header.masks.filter(
+      (n) => /L$/.test(n) && header.masks.includes(n.replace(/L$/, 'R')),
+    );
+    expect(pairs.length).toBeGreaterThan(10);
+    for (const left of pairs) {
+      const l = layer(left);
+      const r = layer(left.replace(/L$/, 'R'));
+      let diff = 0;
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++)
+          diff += Math.abs(l[y * size + x]! - r[y * size + size - 1 - x]!);
+      }
+      expect(diff, left).toBe(0);
+    }
+  });
+
   it('ends the binary at its last section, padded to 16 bytes', () => {
     const end = Math.max(
       ...header.meshes.flatMap(sectionsOf).map((s) => s.offset + s.length * BYTES[s.type]),
