@@ -35,6 +35,14 @@ function maskTexture({ header, masks }: RigAssets): THREE.DataArrayTexture {
   return texture;
 }
 
+function eyeCenter(state: RigState): THREE.Vector2 {
+  state.root.updateMatrixWorld(true);
+  const eye = state.root.worldToLocal(
+    state.bone('FACIAL_L_Eye')!.getWorldPosition(new THREE.Vector3()),
+  );
+  return new THREE.Vector2(Math.abs(eye.x), eye.y);
+}
+
 export class RigAvatar implements FaceRenderer {
   readonly canvas: HTMLCanvasElement;
   private readonly base: string;
@@ -63,12 +71,14 @@ export class RigAvatar implements FaceRenderer {
     ]);
     const state = new RigState(assets, await createRig(wasm, assets.dna));
     const { masks, maps } = assets.header;
-    const blink = [masks.indexOf('head_wm1_blink_L'), masks.indexOf('head_wm1_blink_R')] as [
-      number,
-      number,
-    ];
     const weights = masks.map(() => new THREE.Vector3());
-    this.layout = { masks: maskTexture(assets), count: masks.length, blink, weights };
+    this.layout = {
+      masks: maskTexture(assets),
+      count: masks.length,
+      weights,
+      lids: new THREE.Vector2(),
+      eye: eyeCenter(state),
+    };
     const materials = await loadMaterials(this.base, this.layout);
     this.assets = assets;
     this.state = state;
@@ -156,6 +166,7 @@ export class RigAvatar implements FaceRenderer {
     if (this.state && this.assets && this.layout) {
       const frame = this.state.update(pose);
       this.deform(frame.blends);
+      this.layout.lids.set(...frame.lids);
       wrinkleWeights(
         this.assets.header.maps,
         this.assets.header.masks,

@@ -14,11 +14,15 @@ export interface RigData {
 export interface RigFrame {
   blends: Float32Array;
   maps: Float32Array;
+  lids: [number, number];
 }
 
 const CM = 0.01;
 const POSED = ['head', 'neck_01', 'neck_02', 'spine_05', 'clavicle_l', 'clavicle_r'] as const;
 type Posed = (typeof POSED)[number];
+
+const LIDS = ['FACIAL_L_EyelidUpperB', 'FACIAL_R_EyelidUpperB'] as const;
+const LID_CLOSED = (19 * Math.PI) / 180;
 
 const half = ([x, y, z]: Angles): Angles => [x / 2, y / 2, z / 2];
 
@@ -45,6 +49,7 @@ export class RigState {
   private readonly euler = new THREE.Euler(0, 0, 0, 'YXZ');
   private readonly turn = new THREE.Quaternion();
   private readonly local = new THREE.Quaternion();
+  private readonly lidBones: { bone: THREE.Bone; open: THREE.Quaternion }[] = [];
 
   constructor({ header, mapping }: RigData, rig: Rig) {
     this.rig = rig;
@@ -63,6 +68,10 @@ export class RigState {
       const b = this.bones[header.joints.indexOf(name)];
       if (b) this.rest.set(name, b.getWorldQuaternion(new THREE.Quaternion()));
     }
+    for (const name of LIDS) {
+      const bone = this.bone(name)!;
+      this.lidBones.push({ bone, open: bone.quaternion.clone() });
+    }
   }
 
   bone(name: string): THREE.Bone | undefined {
@@ -78,7 +87,14 @@ export class RigState {
       jointTransform(this.neutral, this.frozen[j] ? null : joints, j, b),
     );
     this.applyPose(poseAngles(pose));
-    return { blends: this.rig.blends(), maps: this.rig.maps() };
+    return { blends: this.rig.blends(), maps: this.rig.maps(), lids: this.lids() };
+  }
+
+  private lids(): [number, number] {
+    const [l, r] = this.lidBones.map(({ bone, open }) =>
+      Math.min(1, bone.quaternion.angleTo(open) / LID_CLOSED),
+    );
+    return [l!, r!];
   }
 
   private applyPose(angles: Record<Posed, Angles>): void {
