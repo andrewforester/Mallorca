@@ -2,6 +2,7 @@ import argparse
 import subprocess
 from pathlib import Path
 
+from body import body
 from glasses import glasses
 from groom import groom
 from head import head
@@ -12,7 +13,7 @@ WEB = Path(__file__).resolve().parents[4]
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("creator", help="the Creator export: head.dna, Maps, Masks, Synth, cards, mask_channels.json")
+    parser.add_argument("creator", help="the Creator export: head.dna, body.dna, Maps, Masks, Synth, cards, mask_channels.json")
     parser.add_argument("archetype", help="head DNA of a default MetaHuman, the space the groom cards are in")
     parser.add_argument("glasses", help="folder of the Poly Haven round_spectacles 1k glTF")
     parser.add_argument("out")
@@ -23,6 +24,9 @@ def main():
     header, meshes = head(a.creator, out)
     face = next(m for m in meshes if m["name"] == "head")
     meshes += groom(a.creator, a.archetype, face, out)
+    part, extra = body(a.creator, header, face, out)
+    header.update(part)
+    meshes += extra
     glasses(a.glasses, out / "glasses")
     write(header, meshes, out)
     files = [str(f) for f in [*out.glob("*.json"), *out.glob("glasses/*.gltf")]]
