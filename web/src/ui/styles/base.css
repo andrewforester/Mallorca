@@ -63,9 +63,9 @@ button {
   min-height: var(--tap-size);
   padding: var(--space-1) var(--space-3);
   border-width: 1px;
-  border-color: rgba(243, 235, 225, 0.2);
+  border-color: var(--color-border);
   border-radius: var(--radius-medium);
-  color: #e9dfd3;
+  color: var(--color-text);
   font-family: var(--font-body);
   font-size: var(--font-size-small);
   font-weight: 500;

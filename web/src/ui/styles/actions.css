@@ -41,6 +41,11 @@
 }
 
 .action-buttons .button {
+  border-color: transparent;
+  background: var(--color-action);
+  box-shadow: 0 3px 0 var(--color-action-edge);
+  color: var(--color-action-text);
+  font-weight: 700;
   min-height: var(--action-height);
   padding: var(--space-1) var(--space-2);
   font-size: clamp(14px, 4.1vw, 16px);
@@ -89,7 +94,7 @@
   justify-content: center;
   min-height: var(--tap-size);
   padding: 2px var(--space-1);
-  border: 1px solid rgba(243, 235, 225, 0.2);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-medium);
   background: transparent;
   color: var(--color-text);
@@ -100,7 +105,7 @@
 
 .bet-preset[aria-pressed='true'] {
   border-color: var(--color-accent);
-  background: #3a2b22;
+  background: var(--color-surface);
 }
 
 .bet-preset-value {
@@ -119,7 +124,7 @@
   flex: none;
   width: var(--tap-size);
   height: var(--tap-size);
-  border: 1px solid rgba(243, 235, 225, 0.2);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-medium);
   background: transparent;
   color: var(--color-text);
@@ -213,8 +218,8 @@
 .button-hold {
   position: relative;
   overflow: hidden;
-  background: #4a3a30;
-  color: var(--color-text);
+  background: var(--color-action-edge);
+  color: var(--color-action-text);
   touch-action: none;
   user-select: none;
 }

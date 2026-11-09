@@ -39,8 +39,8 @@
   margin: 0;
   padding: 10px 14px;
   border-radius: 16px 16px 16px 4px;
-  background: var(--color-paper);
-  color: #2a2420;
+  background: var(--color-surface);
+  color: var(--color-text);
   font-family: var(--font-voice);
   font-size: 17px;
   font-style: italic;
@@ -113,7 +113,7 @@
   gap: 2px;
   padding: 3px;
   border-radius: var(--radius-medium);
-  background: #1a1413;
+  background: var(--color-surface-alt);
 }
 
 .segment {
@@ -300,7 +300,7 @@
 }
 
 .character-line {
-  color: #d9cdbf;
+  color: var(--color-muted);
   font-size: 12.5px;
   line-height: 1.35;
 }

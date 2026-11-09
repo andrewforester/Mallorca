@@ -8,7 +8,7 @@
   border: 1px solid var(--color-coach-border);
   border-radius: 16px;
   background: var(--color-coach-surface);
-  color: #e3eff4;
+  color: var(--color-coach-text);
   font-size: 14px;
   box-shadow: none;
   -webkit-backdrop-filter: none;
@@ -54,7 +54,7 @@
 .coach-note,
 .coach-status {
   margin: 0;
-  color: #b4ccd6;
+  color: var(--color-coach);
 }
 
 .coach-status {
@@ -63,7 +63,7 @@
 
 .coach-tabs {
   display: flex;
-  border-bottom: 1px solid #26363c;
+  border-bottom: 1px solid var(--color-coach-border);
 }
 
 .coach-tab {
@@ -103,7 +103,7 @@
   aspect-ratio: 1;
   overflow: hidden;
   border-radius: 3px;
-  background: #26363c;
+  background: var(--color-coach-border);
   color: var(--color-text);
   font-family: var(--font-numeric);
   font-size: var(--coach-cell-font);
@@ -112,7 +112,11 @@
 }
 
 .coach-grid-range .coach-cell {
-  background: color-mix(in srgb, var(--color-coach-range) calc(var(--weight, 0) * 100%), #26363c);
+  background: color-mix(
+    in srgb,
+    var(--color-coach-range) calc(var(--weight, 0) * 100%),
+    var(--color-coach-border)
+  );
 }
 
 .coach-cell-dead {
@@ -137,11 +141,11 @@
   gap: var(--space-2);
   min-height: var(--tap-size);
   padding: var(--space-1) 0;
-  border-bottom: 1px solid #26363c;
+  border-bottom: 1px solid var(--color-coach-border);
 }
 
 .coach-number dt {
-  color: #cfe3ec;
+  color: var(--color-coach-text);
 }
 
 .coach-number dd {
@@ -159,7 +163,7 @@
 }
 
 .coach-detail {
-  color: #b4ccd6;
+  color: var(--color-coach);
   font-size: 12.5px;
 }
 
@@ -225,7 +229,7 @@
 }
 
 .coach-class-name {
-  color: #cfe3ec;
+  color: var(--color-coach-text);
 }
 
 .coach-class-bar {
@@ -234,7 +238,7 @@
   background: linear-gradient(
     to right,
     var(--color-coach-range) calc(var(--share, 0) * 100%),
-    #26363c calc(var(--share, 0) * 100%)
+    var(--color-coach-border) calc(var(--share, 0) * 100%)
   );
 }
 
@@ -297,11 +301,11 @@
 }
 
 .coach-grade-rare .coach-review-grade {
-  color: #cfe3ec;
+  color: var(--color-coach-text);
 }
 
 .coach-grade-off {
-  border-color: #5a4330;
+  border-color: var(--color-border);
 }
 
 .coach-grade-off .coach-review-grade {
@@ -321,7 +325,7 @@
   flex-wrap: wrap;
   grid-column: 1 / -1;
   gap: var(--space-1) var(--space-3);
-  color: #b4ccd6;
+  color: var(--color-coach);
   font-size: 12.5px;
   font-family: var(--font-numeric);
 }
