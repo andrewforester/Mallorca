@@ -3,7 +3,10 @@ import subprocess
 from pathlib import Path
 
 from body import body
+from dnafile import load
 from glasses import glasses
+from groom import vertex_normals
+from lbs import push_out, skin_matrices
 from groom import groom
 from head import head
 from pack import check, write
@@ -26,6 +29,9 @@ def main():
     meshes += groom(a.creator, a.archetype, face, out)
     part, extra = body(a.creator, header, face, out)
     header.update(part)
+    cards = next(m for m in meshes if m["name"] == "cards")
+    push_out(cards, extra[1], skin_matrices(load(Path(a.creator) / "head.dna"), header, part))
+    cards["normal"] = vertex_normals(cards["position"], cards["index"].astype("int64")).astype("float32")
     meshes += extra
     glasses(a.glasses, out / "glasses")
     write(header, meshes, out)
