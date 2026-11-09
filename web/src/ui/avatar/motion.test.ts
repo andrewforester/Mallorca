@@ -61,10 +61,30 @@ describe('motion', () => {
     expect(Math.abs(poses.at(-1)!.eyes[0])).toBeLessThan(0.05);
   });
 
-  it('looks up and aside while thinking', () => {
+  it('looks away from the player while thinking', () => {
     const motion = new Motion({ random: half, calm: true });
     motion.setThinking(true);
-    expect(run(motion, 1).at(-1)!.eyes[1]).toBeLessThan(-0.1);
+    const [yaw, pitch] = run(motion, 1).at(-1)!.eyes;
+    expect(Math.hypot(yaw, pitch)).toBeGreaterThan(0.1);
+  });
+
+  it('thinks in a new direction on each decision and holds it while she thinks', () => {
+    const rolls = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 0.99];
+    let i = 0;
+    const motion = new Motion({ random: () => rolls[i++ % rolls.length]!, calm: true });
+    const spots: string[] = [];
+    for (let decision = 0; decision < 6; decision++) {
+      motion.setThinking(true);
+      const poses = run(motion, 1.2);
+      const [early, late] = [poses[45]!.eyes, poses.at(-1)!.eyes];
+      expect(Math.abs(early[0] - late[0])).toBeLessThan(0.05);
+      spots.push(late.map((v) => Math.sign(Math.round(v * 10))).join());
+      motion.setThinking(false);
+      run(motion, 0.5);
+    }
+    expect(new Set(spots).size).toBeGreaterThanOrEqual(4);
+    expect(spots.some((s) => s.startsWith('-1'))).toBe(true);
+    expect(spots.some((s) => s.startsWith('1'))).toBe(true);
   });
 
   it('moves her lips along the visemes of a line', () => {
