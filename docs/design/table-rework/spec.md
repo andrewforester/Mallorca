@@ -6,7 +6,7 @@ follow in their own steps and only pick up the new colour tokens.
 
 The problem it solves: on the shipped table the owner could not tell who did what, how much was bet, or the pot.
 
-Reference: `desktop-flop.jpg` (the agreed desktop screen, flop, she bet 60, you to act) and `scene-light-levels.jpg`
+Reference: `desktop-flop.jpg` and `desktop-flop-dark.jpg` (the agreed desktop screen in both themes, flop, she bet 60, you to act) and `scene-light-levels.jpg`
 (the scene; the middle level is the chosen one).
 
 ## 1. Screen structure (wide screens)
@@ -70,25 +70,26 @@ One component for both seats, mirrored around the board:
 - **Board**: five slots, 62 × 86 px, 14 px gap, centred on the axis; empty slots dashed.
 - Collecting bets into the pot at the end of a street keeps its current animation, with the new positions.
 
-## 5. Colours (light theme)
+## 5. Colours: two themes
 
-The table moves to a light theme. It is the only theme for now; the dark block in `tokens.css` is replaced by the
-same light values, so the system dark mode no longer changes the table.
+Two themes with the same structure: light and dark. The app follows the system setting
+(`prefers-color-scheme`), as `tokens.css` already does; light is the default. Both share the green felt accent.
 
-| Token | Value | Use |
-|---|---|---|
-| `--color-bg` | `#faf8f4` | page background |
-| `--color-surface` | `#ffffff` | seat blocks, pot pill, raise box, Log and Menu buttons |
-| `--color-border` | `#e4e2da` | borders, empty board slots, slider track |
-| `--color-text` | `#1f2a24` | main text |
-| `--color-muted` | `#646e68` | names, captions, `Pot`, hand and blinds line |
-| `--color-accent` | `#2f7a52` | action strip, chips, card backs, Raise, selected size preset |
-| `--color-accent-text` | `#ffffff` | text on the accent |
-| `--color-paper` | `#1f2a24` | Call button and dealer button (dark filled) |
-| `--color-paper-text` | `#ffffff` | text on them |
-| `--color-card-face` | `#ffffff` | card faces, with a hairline edge and a soft shadow |
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--color-bg` | `#faf8f4` | `#0f1a16` | page background |
+| `--color-surface` | `#ffffff` | `#17261f` | seat blocks, pot pill, raise box, Log and Menu buttons |
+| `--color-border` | `#e4e2da` | `#27392f` | borders, empty board slots, slider track |
+| `--color-text` | `#1f2a24` | `#eef2ea` | main text |
+| `--color-muted` | `#646e68` | `#9fb3a6` | names, captions, `Pot`, hand and blinds line |
+| `--color-accent` | `#2f7a52` | `#4fae7c` | action strip, chips, card backs, Raise, selected size preset |
+| `--color-accent-text` | `#ffffff` | `#0f1a16` | text on the accent |
+| `--color-paper` | `#1f2a24` | `#eef2ea` | Call button and dealer button (filled, contrasting with the page) |
+| `--color-paper-text` | `#ffffff` | `#0f1a16` | text on them |
+| `--color-card-face` | `#ffffff` | `#f5f2ea` | card faces, with a hairline edge and a soft shadow |
 
-Checked contrast: text on bg 14.0:1, accent text on accent 5.2:1, muted on surface 5.3:1 and on bg 5.0:1.
+Checked contrast, light: text on bg 14.0:1, accent text on accent 5.2:1, muted on surface 5.3:1 and on bg 5.0:1.
+Dark: text on bg 15.7:1 and on surface 13.9:1, muted on surface 7.1:1, accent text on accent 6.5:1.
 `contrast.test.ts` keeps its pairs; tokens it checks that this table does not use (felt, coach, her surface,
 danger) get light values that pass it.
 
@@ -104,7 +105,7 @@ narrow screen. Until then, phones get the new colours and the new seat block in 
 
 Each step is a branch from `origin/master` and a pull request, with `npm run contact` sheets checked before commit.
 
-1. **Colours:** new light tokens, `contrast.test.ts` green, every screen recoloured as is.
+1. **Colours:** new light and dark tokens, `contrast.test.ts` green in both, every screen recoloured as is.
 2. **Seat block and bets:** the new seat component, bet column, dealer slot, pot left of the board, board centring.
    Unit tests for the strip (no strip on blinds, strip text per action) and for the reserved dealer slot.
 3. **No top bar on wide screens:** hand line, Log and Menu in the right column; e2e ids unchanged.
