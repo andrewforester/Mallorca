@@ -8,6 +8,8 @@ from dnafile import load, positions
 
 Image.MAX_IMAGE_PIXELS = None
 BROW = np.array([40, 28, 22], np.float32)
+BROW_SPREAD = 3
+BROW_GAMMA = 0.8
 HAIR = np.array([38, 26, 20], np.float32)
 LASH = np.array([34, 22, 17], np.float32)
 HAIR_CARDS = ["hair_g0_s0.json", "hair_g1_s0.json"]
@@ -71,10 +73,15 @@ def alpha_of(path, size):
     return np.asarray(Image.open(path).convert("RGBA").getchannel("A").resize(size), np.float32) / 255
 
 
+def brow_alpha(path, size):
+    a = Image.open(path).convert("RGBA").getchannel("A").filter(ImageFilter.MaxFilter(BROW_SPREAD))
+    return (np.asarray(a.resize(size), np.float32) / 255) ** BROW_GAMMA
+
+
 def head_color(src, out):
     base = Image.open(src / "Synth/BASECOLOR").convert("RGB")
     col = np.asarray(base, np.float32)
-    col = paint(col, alpha_of(src / "cards/Eyebrows_M_Natural_baked.tga", base.size), BROW, 1.1, 0.92)
+    col = paint(col, brow_alpha(src / "cards/Eyebrows_M_Natural_baked.tga", base.size), BROW, 1.15, 0.9)
     col = paint(col, alpha_of(src / "cards/Hair_L_StraightBangs_baked.tga", base.size), HAIR, 1.3, 0.95)
     Image.fromarray(col.clip(0, 255).astype(np.uint8)).save(out / "head_color_map.webp", quality=90)
 
