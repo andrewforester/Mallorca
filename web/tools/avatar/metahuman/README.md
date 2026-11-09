@@ -50,7 +50,7 @@ Face project open); they read and write under `C:\mallorca`.
    conforms a new character `/Game/Her/Brunette_<n>` to the mesh and records its path in `current_asset.txt`.
 2. Add the groom `Hair_L_StraightBangs` and the eyebrows `Eyebrows_M_Natural` in the Creator window, then
    `ue/rig.py` requests the auto rig (sign in to Epic once when the editor asks).
-3. `ue/export_dcc.py` writes the DCC export (`head.dna`, `Maps`, `Masks`); `ue/synth.py` draws the skin Creator
+3. `ue/export_dcc.py` writes the DCC export (`head.dna`, `body.dna`, `Maps`, `Masks`); `ue/synth.py` draws the skin Creator
    synthesizes into render targets (`Synth/BASECOLOR`, `Synth/NORMAL`), because those textures live only on the GPU;
    `ue/cards.py` writes the hair cards and their texture to `cards/`.
 4. Copy those folders into one local folder (the Creator export) and run, with the OpenRigLogic Python bindings on
@@ -66,13 +66,21 @@ onto hers. The DNA files of MetaHuman-DNA-Calibration (Ada and others) are not u
 from them to Unreal Engine. The glasses are Poly Haven's
 [Round Spectacles](https://polyhaven.com/a/round_spectacles) (CC0), downloaded as glTF 1k. `--check` decodes the packed
 rig and fails when a position is off by more than 0.005 cm, a blendshape delta by more than 0.03 cm, or the folder
-exceeds 15 MB.
+exceeds 17 MB.
 
 `export/` writes:
 
 - `rig.json` and `rig.bin`: controls, joints, animated maps, wrinkle masks and the meshes. Positions, normals and UVs are
   int16, skin weights and blendshape deltas int8, each with a scale and an offset per component; deltas under 0.01 cm are
   dropped. Hair cards carry no blendshapes: `follow` names the head vertex each card vertex moves with.
+- Her upper body from `body.dna` (`export/body.py`): `body` in `rig.json` holds the body joints the head lacks (no
+  legs), with their parents by name and rest transforms; the `body` mesh is LOD0 above the pelvis without the skin the
+  sweater covers, its colour matched in Lab to her synthesized head skin on the neck (`export/skintone.py`).
+  `export/seated.py` runs RigLogic on `body.dna` for her seated pose and writes `pose.sitting`, the local transforms of
+  the arm joints and every corrective they move. `export/sweater.py` builds the `sweater` mesh: a shell offset from
+  her torso, arms and the base of her head mesh, a crew neckline, ribbed edges and a relaxed surface, tiled with the
+  knit normal map that `export/knit.py` draws. `export/lbs.py` poses her and pushes hair cards out of the sweater, and
+  the export fails if any card vertex stays inside.
 - `behavior.dna` for RigLogic, `masks.r8` (the wrinkle masks, 128 px each, channels in `export/mask_channels.json`),
   `mapping.json` (ARKit and viseme weights to MetaHuman controls, `export/controls.py`), the textures and `glasses/`.
 

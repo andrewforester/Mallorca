@@ -20,18 +20,22 @@ const pose = (over: Partial<Pose> = {}): Pose => ({
 });
 
 let state: RigState;
+let header: RigHeader;
+let mapping: Record<string, Record<string, number>>;
 
-beforeAll(async () => {
-  const header = JSON.parse(readFileSync(her('rig.json'), 'utf8')) as RigHeader;
-  const mapping = JSON.parse(readFileSync(her('mapping.json'), 'utf8')) as Record<
-    string,
-    Record<string, number>
-  >;
-  const rig = await createRig(
+const loadRig = () =>
+  createRig(
     readFileSync(resolve('src/ui/avatar/rig/riglogic.wasm')),
     new Uint8Array(readFileSync(her('behavior.dna'))),
   );
-  state = new RigState({ header, mapping }, rig);
+
+beforeAll(async () => {
+  header = JSON.parse(readFileSync(her('rig.json'), 'utf8')) as RigHeader;
+  mapping = JSON.parse(readFileSync(her('mapping.json'), 'utf8')) as Record<
+    string,
+    Record<string, number>
+  >;
+  state = new RigState({ header, mapping }, await loadRig());
 });
 
 const bone = (name: string) => state.bones.find((b) => b.name === name)!;
@@ -90,5 +94,71 @@ describe('RigState', () => {
     const out = state.update(pose({ weights: { browDownLeft: 1 } }));
     expect(out.blends.some((w) => w > 0)).toBe(true);
     expect(out.maps.some((w) => w > 0)).toBe(true);
+  });
+
+  it('builds her body bones after the face bones', () => {
+    const body = header.body!;
+    expect(state.bones).toHaveLength(header.joints.length + body.joints.length);
+    expect(state.bones[header.joints.length]!.name).toBe(body.joints[0]);
+    expect(bone('lowerarm_l').parent).toBe(bone('upperarm_l'));
+    expect(bone('pelvis').parent).toBe(bone('root'));
+    expect(bone('root').parent).toBe(state.root);
+  });
+
+  it('stands in the DNA pose until the first frame, so meshes bind to it', async () => {
+    const fresh = new RigState({ header, mapping }, await loadRig());
+    const arm = fresh.bone('lowerarm_l')!;
+    const j = header.body!.joints.indexOf('lowerarm_l');
+    const [, , , rx, ry, rz] = header.body!.rest[j]!;
+    const deg = Math.PI / 180;
+    const rest = new THREE.Quaternion().setFromEuler(
+      new THREE.Euler(rx! * deg, ry! * deg, rz! * deg, 'ZYX'),
+    );
+    expect(arm.quaternion.angleTo(rest)).toBeLessThan(1e-5);
+    fresh.update(pose());
+    expect(arm.quaternion.angleTo(rest)).toBeGreaterThan(0.1);
+  });
+
+  it('holds her arms in the seated pose', () => {
+    state.update(pose());
+    for (const name of ['upperarm_l', 'lowerarm_r', 'upperarm_out_l']) {
+      const [, , , rx, ry, rz] = header.pose!.sitting[name]!;
+      const deg = Math.PI / 180;
+      const want = new THREE.Quaternion().setFromEuler(
+        new THREE.Euler(rx! * deg, ry! * deg, rz! * deg, 'ZYX'),
+      );
+      expect(bone(name).quaternion.angleTo(want)).toBeLessThan(1e-5);
+    }
+  });
+
+  it('keeps her body still when she blinks or opens her jaw', () => {
+    const names = [...header.body!.joints, 'upperarm_l', 'upperarm_r'];
+    state.update(pose());
+    const still = snapshot(names);
+    state.update(pose({ weights: { eyeBlinkLeft: 1, eyeBlinkRight: 1, jawOpen: 1 } }));
+    snapshot(names).forEach((row, i) =>
+      row.forEach((v, k) => expect(v).toBeCloseTo(still[i]![k]!, 5)),
+    );
+  });
+
+  it('lowers her shoulders with Pose.shoulder on top of the seated pose', () => {
+    const world = () => {
+      state.root.updateMatrixWorld(true);
+      return bone('clavicle_l').getWorldQuaternion(new THREE.Quaternion());
+    };
+    state.update(pose());
+    const seated = world();
+    state.update(pose({ shoulder: 0.1 }));
+    expect(world().angleTo(seated)).toBeCloseTo(0.1, 3);
+  });
+
+  it('loads a header without a body as before', async () => {
+    const face = { ...header, body: undefined, pose: undefined };
+    const old = new RigState({ header: face, mapping }, await loadRig());
+    expect(old.bones).toHaveLength(header.joints.length);
+    old.update(pose());
+    const rest = old.bone('FACIAL_C_Jaw')!.quaternion.clone();
+    old.update(pose({ weights: { jawOpen: 1 } }));
+    expect(old.bone('FACIAL_C_Jaw')!.quaternion.angleTo(rest)).toBeGreaterThan(0.1);
   });
 });

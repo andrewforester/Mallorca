@@ -5,7 +5,7 @@ import numpy as np
 
 Q16 = (np.int16, 32767)
 Q8 = (np.int8, 127)
-LIMIT_MB = 15.0
+LIMIT_MB = 17.0
 POSITION_TOLERANCE_CM = 0.005
 DELTA_TOLERANCE_CM = 0.03
 
@@ -78,6 +78,12 @@ def check(meshes, out):
         worst = max(worst, float(np.abs(decode(data, s["position"]) - m["position"]).max()))
         for (_, _, d), t in zip(m["targets"], s["targets"]):
             delta = max(delta, float(np.abs(decode(data, t["delta"]) - d).max()))
+    if "body" not in rig:
+        raise SystemExit("check failed: no body skeleton")
+    joints = set(rig["joints"]) | set(rig["body"]["joints"])
+    sitting = rig.get("pose", {}).get("sitting")
+    if not sitting or not set(sitting) <= joints:
+        raise SystemExit("check failed: seated pose missing or names unknown joints")
     size = sum(f.stat().st_size for f in out.rglob("*") if f.is_file()) / 1e6
     print(f"position error {worst:.5f} cm, delta error {delta:.4f} cm, folder {size:.1f} MB")
     if worst > POSITION_TOLERANCE_CM or delta > DELTA_TOLERANCE_CM or size > LIMIT_MB:

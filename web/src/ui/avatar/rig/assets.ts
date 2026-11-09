@@ -32,6 +32,12 @@ export interface MeshSection {
   follow?: Section;
 }
 
+export interface BodySkeleton {
+  joints: string[];
+  parents: string[];
+  rest: number[][];
+}
+
 export interface RigHeader {
   controls: string[];
   joints: string[];
@@ -40,6 +46,8 @@ export interface RigHeader {
   masks: string[];
   maskSize: number;
   meshes: MeshSection[];
+  body?: BodySkeleton;
+  pose?: { sitting: Record<string, number[]> };
 }
 
 export interface RigAssets {

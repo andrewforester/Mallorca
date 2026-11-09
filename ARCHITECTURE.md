@@ -21,7 +21,7 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 | `web/tools/arena/external/`                                         | Matches against external bots over their APIs, see "arena"                         |
 | `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                              |
 | `web/prototypes/emotion-lab/`                                       | Emotion sandbox: the `emotion` engine with a face and a voice, see `docs/emotion`  |
-| `web/public/avatar/`                                                | Her MetaHuman face `her/`, its still `portrait.webp`, the fallback `mallorca.glb`, `LICENSE.md` |
+| `web/public/avatar/`                                                | Her MetaHuman face and upper body `her/`, its still `portrait.webp`, the fallback `mallorca.glb`, `LICENSE.md` |
 | `web/tools/avatar/`                                                 | Blender script that converts the Rocketbox source into `mallorca.glb`, see README  |
 | `web/tools/avatar/metahuman/`                                       | Workstation, Unreal scripts, export to `public/avatar/her/` and the RigLogic wasm, see README |
 | `docs/emotion/`                                                     | Emotion model document, its screenshots and generated tables                       |
@@ -875,8 +875,10 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   `RigAvatar` (`ui/avatar/rig/`) is her MetaHuman from `public/avatar/her/`: `controlsOf` maps the pose's ARKit and
   viseme weights through `mapping.json` to raw MetaHuman controls clamped to [0, 1] and the eye angles to eyeLook;
   RigLogic (`riglogic.wasm`, `createRig`) gives joint deltas, blendshape weights and wrinkle map weights; `RigState`
-  sets the bones (neck joints only from `Pose.neck`) and turns `head`, `neck_01`/`neck_02`, `spine_05` and the
-  clavicles by the pose in world axes; blendshapes and the head's normals are updated on the CPU, hair cards follow
+  sets the bones (neck joints only from `Pose.neck`), adds her body bones (`header.body`, parented by name), holds
+  the arms and their correctives in the baked seated pose (`header.pose.sitting`) from the first frame, after the
+  meshes bind in the DNA pose, and turns `head`, `neck_01`/`neck_02`, `spine_05` and the clavicles by the pose in
+  world axes; her body and knit sweater are skinned meshes on the same skeleton, framed down to under the bust; blendshapes and the head's normals are updated on the CPU, hair cards follow
   their head vertex, and the skin shader blends the wrinkle normal maps by mask. `Motion` (`motion.ts`, no WebGL) eases toward `faceNow()` (read about
   ten times a second), plays new `FaceCue`s once (pulses, gaze with a glance back), blinks, saccades and glances
   away from `idle`, poses the head from the shown PAD and breathes; `thinking` turns her gaze to one of seven spots, drawn anew for each decision (up to either side, up, aside, her cards, the board). It

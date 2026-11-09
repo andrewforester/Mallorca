@@ -1,13 +1,15 @@
 import * as THREE from 'three';
 import type { Angles, Pose } from '../motion.ts';
 import type { RigHeader } from './assets.ts';
+import type { HeldJoint } from './bodyBones.ts';
+import { addBodyBones, heldJoints, hold, keep } from './bodyBones.ts';
 import type { Mapping } from './controls.ts';
 import { controlsOf } from './controls.ts';
 import { jointTransform } from './joints.ts';
 import type { Rig } from './riglogic.ts';
 
 export interface RigData {
-  header: Pick<RigHeader, 'controls' | 'joints' | 'parents'>;
+  header: Pick<RigHeader, 'controls' | 'joints' | 'parents' | 'body' | 'pose'>;
   mapping: Mapping;
 }
 
@@ -50,6 +52,7 @@ export class RigState {
   private readonly turn = new THREE.Quaternion();
   private readonly local = new THREE.Quaternion();
   private readonly lidBones: { bone: THREE.Bone; open: THREE.Quaternion }[] = [];
+  private readonly held: HeldJoint[];
 
   constructor({ header, mapping }: RigData, rig: Rig) {
     this.rig = rig;
@@ -63,11 +66,17 @@ export class RigState {
       (p === j ? this.root : this.bones[p]!).add(this.bones[j]!);
       jointTransform(this.neutral, null, j, this.bones[j]!);
     });
+    if (header.body) this.bones.push(...addBodyBones(header.body, this.root, this.bones));
+    this.held = heldJoints(header.pose?.sitting ?? {}, this.bones);
+    const restore = keep(this.held);
+    hold(this.held);
     this.root.updateMatrixWorld(true);
     for (const name of POSED) {
       const b = this.bones[header.joints.indexOf(name)];
       if (b) this.rest.set(name, b.getWorldQuaternion(new THREE.Quaternion()));
     }
+    restore();
+    this.root.updateMatrixWorld(true);
     for (const name of LIDS) {
       const bone = this.bone(name)!;
       this.lidBones.push({ bone, open: bone.quaternion.clone() });
@@ -83,9 +92,11 @@ export class RigState {
     this.controls.forEach((v, i) => this.rig.set(i, v));
     this.rig.calculate();
     const joints = this.rig.joints();
-    this.bones.forEach((b, j) =>
-      jointTransform(this.neutral, this.frozen[j] ? null : joints, j, b),
-    );
+    this.bones.forEach((b, j) => {
+      if (j < this.frozen.length)
+        jointTransform(this.neutral, this.frozen[j] ? null : joints, j, b);
+    });
+    hold(this.held);
     this.applyPose(poseAngles(pose));
     return { blends: this.rig.blends(), maps: this.rig.maps(), lids: this.lids() };
   }

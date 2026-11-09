@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { FaceRenderer } from '../avatar.ts';
 import type { Pose } from '../motion.ts';
-import { FOV, addLights, createRenderer, frameHead } from '../stage.ts';
+import { FOV, addLights, createRenderer, frameBust } from '../stage.ts';
 import type { RigAssets } from './assets.ts';
 import { loadAssets } from './assets.ts';
 import { NormalTracker, applyBlends, followHead } from './blend.ts';
@@ -79,7 +79,11 @@ export class RigAvatar implements FaceRenderer {
       lids: new THREE.Vector2(),
       eye: eyeCenter(state),
     };
-    const materials = await loadMaterials(this.base, this.layout);
+    const materials = await loadMaterials(
+      this.base,
+      this.layout,
+      assets.header.meshes.map((m) => m.name),
+    );
     this.assets = assets;
     this.state = state;
     this.scene.add(state.root);
@@ -151,7 +155,7 @@ export class RigAvatar implements FaceRenderer {
   private async dress(state: RigState): Promise<void> {
     const world = (name: string) => state.bone(name)!.getWorldPosition(new THREE.Vector3());
     state.root.updateMatrixWorld(true);
-    frameHead(this.camera, world('head'));
+    frameBust(this.camera, world('head'));
     const eyes = [world('FACIAL_L_Eye'), world('FACIAL_R_Eye')] as const;
     await wearGlasses(`${this.base}glasses/glasses.gltf`, this.scene, eyes, state.bone('head')!);
   }
