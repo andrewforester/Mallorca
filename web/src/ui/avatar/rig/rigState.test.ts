@@ -69,6 +69,23 @@ describe('RigState', () => {
     expect(after.x).toBeCloseTo(Math.sin(0.3), 2);
   });
 
+  it('measures each upper lid from open to closed', () => {
+    expect(state.update(pose()).lids).toEqual([0, 0]);
+    const [left, right] = state.update(
+      pose({ weights: { eyeBlinkLeft: 1, eyeBlinkRight: 0.5 } }),
+    ).lids;
+    expect(left).toBeGreaterThan(0.9);
+    expect(right).toBeGreaterThan(0.3);
+    expect(right).toBeLessThan(0.7);
+  });
+
+  it('lowers the lids when she looks down and keeps them open when she looks up', () => {
+    const down = state.update(pose({ eyes: [0, 0.3] })).lids;
+    down.forEach((v) => expect(v).toBeGreaterThan(0.3));
+    const up = state.update(pose({ eyes: [0, -0.3] })).lids;
+    up.forEach((v) => expect(v).toBeLessThan(0.1));
+  });
+
   it('returns blendshape and wrinkle map weights for her rig', () => {
     const out = state.update(pose({ weights: { browDownLeft: 1 } }));
     expect(out.blends.some((w) => w > 0)).toBe(true);

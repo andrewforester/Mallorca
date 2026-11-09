@@ -12,8 +12,9 @@ export interface SkinTextures {
 export interface WrinkleLayout {
   masks: THREE.DataArrayTexture;
   count: number;
-  blink: [number, number];
   weights: THREE.Vector3[];
+  lids: THREE.Vector2;
+  eye: THREE.Vector2;
 }
 
 const SKIN_PARS = `
@@ -57,18 +58,26 @@ export function plain(options: THREE.MeshPhysicalMaterialParameters): THREE.Mesh
   return material;
 }
 
-const wrinklePars = ({ count, blink: [l, r] }: WrinkleLayout) => `
+const wrinklePars = ({ count }: WrinkleLayout) => `
 varying vec3 vRest;
 varying vec3 vRestN;
 uniform highp sampler2DArray uMasks;
 uniform sampler2D uWm1; uniform sampler2D uWm2; uniform sampler2D uWm3;
 uniform vec3 uWm[${count}];
-vec3 wmA; float lidA;
+uniform vec2 uLids;
+uniform vec2 uEye;
+vec3 wmA;
 void wrinkleWeights(vec2 uv) {
   wmA = vec3(0.0);
-  lidA = texture(uMasks, vec3(uv, ${l}.0)).r * uWm[${l}].x + texture(uMasks, vec3(uv, ${r}.0)).r * uWm[${r}].x;
   for (int i = 0; i < ${count}; i++) wmA += texture(uMasks, vec3(uv, float(i))).r * uWm[i];
   wmA = clamp(wmA, 0.0, 1.0);
+}
+float lidFold() {
+  vec2 d = vec2(abs(vRest.x) - uEye.x, vRest.y - uEye.y);
+  float near = 1.0 - smoothstep(2.0, 2.6, length(vec2(d.x, d.y * 1.6)));
+  float above = smoothstep(0.0, 0.3, d.y);
+  float down = smoothstep(-0.05, -0.35, normalize(vRestN).y);
+  return near * above * down * smoothstep(0.0, 0.5, vRest.x > 0.0 ? uLids.x : uLids.y);
 }
 `;
 
@@ -88,7 +97,7 @@ vec3 nn = nb + 4.0 * (wmA.x * (texture2D(uWm1, vNormalMapUv).xyz - nb) + wmA.y *
 vec3 mapN = normalize(nn * 2.0 - 1.0);`;
 
 const LID = `#include <normal_fragment_maps>
-normal = normalize(mix(normal, vec3(0.0, 0.35, 1.0), clamp(lidA, 0.0, 1.0) * 0.6));`;
+normal = normalize(mix(normal, vec3(0.0, 0.35, 1.0), lidFold() * 0.85));`;
 
 function wrinkleShader(shader: Shader, textures: SkinTextures, layout: WrinkleLayout): void {
   skin12(shader);
@@ -101,6 +110,8 @@ function wrinkleShader(shader: Shader, textures: SkinTextures, layout: WrinkleLa
   const [wm1, wm2, wm3] = textures.wrinkles;
   Object.assign(shader.uniforms, {
     uWm: { value: layout.weights },
+    uLids: { value: layout.lids },
+    uEye: { value: layout.eye },
     uMasks: { value: layout.masks },
     uWm1: { value: wm1 },
     uWm2: { value: wm2 },
