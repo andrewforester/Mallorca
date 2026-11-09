@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   readAutoNext,
+  readCharacter,
   readSound,
   readTableStyle,
   readConversation,
   writeAutoNext,
+  writeCharacter,
   writeSound,
   writeTableStyle,
   writeConversation,
@@ -115,5 +117,19 @@ describe('coach preference', () => {
     expect(readCoach()).toBe(true);
     writeCoach(false);
     expect(readCoach()).toBe(false);
+  });
+});
+
+describe('her character', () => {
+  it('is Mallorca until another one is chosen, and remembers the choice', () => {
+    localStorage.clear();
+    expect(readCharacter()).toBe('mallorca');
+    writeCharacter('nina');
+    expect(readCharacter()).toBe('nina');
+  });
+
+  it('ignores an unknown stored character', () => {
+    localStorage.setItem('mallorca.character', 'nobody');
+    expect(readCharacter()).toBe('mallorca');
   });
 });

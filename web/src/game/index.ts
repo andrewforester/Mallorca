@@ -74,3 +74,4 @@ export type {
   TableEvent,
 } from '../persona/index.ts';
 export type { LoadProgress } from './workerProtocol.ts';
+export { CHARACTERS } from './characters.ts';

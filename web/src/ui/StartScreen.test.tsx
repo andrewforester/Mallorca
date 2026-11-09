@@ -82,6 +82,35 @@ describe('StartScreen', () => {
     expect(screen.getByTestId('start-loading').textContent).toContain('10%');
   });
 
+  it('lets the player choose her character among five, with her line and how hard she is', () => {
+    const onCharacter = vi.fn();
+    render(
+      <StartScreen seed={1} onStart={vi.fn()} character="mallorca" onCharacter={onCharacter} />,
+    );
+    const choices = screen.getAllByTestId(/^character-/);
+    expect(choices.map((node) => node.getAttribute('data-testid'))).toEqual([
+      'character-mallorca',
+      'character-mira',
+      'character-ingrid',
+      'character-lola',
+      'character-nina',
+    ]);
+    expect(screen.getByTestId('character-mallorca').getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByTestId('character-ingrid').textContent).toContain(
+      'A professional. Plays to win.',
+    );
+    expect(screen.getByTestId('character-ingrid').textContent).toContain('The toughest');
+    fireEvent.click(screen.getByTestId('character-nina'));
+    expect(onCharacter).toHaveBeenCalledWith('nina');
+  });
+
+  it('greets the player in the words of the chosen character, under her name', () => {
+    render(<StartScreen seed={1} onStart={vi.fn()} character="lola" onCharacter={vi.fn()} />);
+    const frame = screen.getByTestId('tonight-face');
+    expect(frame.textContent).toContain('Finally! Deal me in, I feel lucky.');
+    expect(frame.querySelector('img')?.getAttribute('alt')).toBe('Lola');
+  });
+
   it('hides the coach switch when the coach is not offered', () => {
     render(<StartScreen seed={1} onStart={vi.fn()} />);
     expect(screen.queryByTestId('start-coach')).toBeNull();

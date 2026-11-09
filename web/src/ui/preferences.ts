@@ -1,3 +1,6 @@
+import { CHARACTERS } from '../game/index.ts';
+import type { PersonalityKey } from '../game/index.ts';
+
 export type TableStyle = 'room' | 'simple';
 
 const KEY = 'mallorca.tableStyle';
@@ -119,6 +122,25 @@ export function readVoice(): boolean {
 export function writeVoice(on: boolean): void {
   try {
     localStorage.setItem(VOICE_KEY, on ? 'on' : 'off');
+  } catch {
+    return;
+  }
+}
+
+const CHARACTER_KEY = 'mallorca.character';
+
+export function readCharacter(): PersonalityKey {
+  try {
+    const stored = localStorage.getItem(CHARACTER_KEY);
+    return CHARACTERS.find((key) => key === stored) ?? 'mallorca';
+  } catch {
+    return 'mallorca';
+  }
+}
+
+export function writeCharacter(key: PersonalityKey): void {
+  try {
+    localStorage.setItem(CHARACTER_KEY, key);
   } catch {
     return;
   }

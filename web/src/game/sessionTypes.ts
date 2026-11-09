@@ -71,6 +71,7 @@ export type Session = StoreApi<SessionState & SessionActions>;
 
 export interface SessionOptions {
   bot: BotClient;
+  personality?: PersonalityKey;
   seed: number;
   botDelayMs: number;
   humanSeat: SeatIndex;

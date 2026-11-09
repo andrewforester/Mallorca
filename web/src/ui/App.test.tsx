@@ -49,6 +49,33 @@ function setup(
 }
 
 describe('App release scope', () => {
+  it('passes the chosen character on from Tonight', () => {
+    const onCharacter = vi.fn();
+    const session = createSession({
+      bot: inProcessBot(),
+      seed: 1,
+      botDelayMs: 0,
+      humanSeat: 0,
+      names: ['You', 'Lola'],
+      mode: TOURNAMENT,
+    });
+    render(
+      <App
+        session={session}
+        store={memoryStore()}
+        humanSeat={0}
+        onNewGame={vi.fn()}
+        onLeaveTonight={vi.fn()}
+        character="lola"
+        onCharacter={onCharacter}
+      />,
+    );
+    expect(screen.getByTestId('character-lola').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByTestId('character-ingrid'));
+    expect(onCharacter).toHaveBeenCalledWith('ingrid');
+    session.getState().dispose();
+  });
+
   it('offers no coach anywhere when the coach is off', async () => {
     const off = { coach: false, talk: false, opponents: false };
     const { session } = setup(TOURNAMENT, memoryStore(), false, undefined, off);

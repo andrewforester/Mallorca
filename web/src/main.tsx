@@ -12,7 +12,7 @@ import { App } from './ui/App.tsx';
 import { readFeatures, releaseOpponent } from './ui/features.ts';
 import { createSynthPlayer } from './ui/sound/player.ts';
 import { t } from './ui/i18n.ts';
-import { readFace, readConversation } from './ui/preferences.ts';
+import { readCharacter, readConversation, readFace, writeCharacter } from './ui/preferences.ts';
 import '@fontsource/newsreader/latin-400.css';
 import '@fontsource/newsreader/latin-400-italic.css';
 import '@fontsource/newsreader/latin-500.css';
@@ -84,7 +84,7 @@ if (root === null) {
 
 const nextBot = sharedWorkerBot();
 
-function mount(farewell = false): void {
+function mount(farewell = false, character = readCharacter()): void {
   session?.getState().dispose();
   const seed = nextSeed ?? randomSeed();
   nextSeed = null;
@@ -93,7 +93,8 @@ function mount(farewell = false): void {
     seed,
     botDelayMs: botDelay,
     humanSeat: HUMAN_SEAT,
-    names: [t('seat.you'), t('seat.bot')],
+    names: [t('seat.you'), t(`start.characters.${character}.name`)],
+    personality: character,
     mode: TOURNAMENT,
     connectConversation,
     conversationOn: features.talk && readConversation(),
@@ -116,6 +117,11 @@ function mount(farewell = false): void {
       debugPanel={debugPanel}
       features={features}
       opponent={opponent}
+      character={character}
+      onCharacter={(next) => {
+        writeCharacter(next);
+        mount(farewell, next);
+      }}
       onNewGame={() => mount()}
       onLeaveTonight={() => mount(true)}
     />,

@@ -6,6 +6,7 @@ import type {
   Intent,
   LoadProgress,
   Opponent,
+  PersonalityKey,
   Phase,
   QuickPhrase,
   Session,
@@ -48,6 +49,8 @@ export interface AppProps {
   debugPanel?: ComponentType<{ session: Session }>;
   features?: Features;
   opponent?: Opponent;
+  character?: PersonalityKey;
+  onCharacter?: (character: PersonalityKey) => void;
 }
 
 function useSessionState(session: Session) {
@@ -209,6 +212,8 @@ function Start({
       coach={preferences.coach}
       onToggleCoach={(app.features ?? ALL_FEATURES).coach ? preferences.toggleCoach : undefined}
       opponent={(app.features ?? ALL_FEATURES).opponents ? undefined : (app.opponent ?? 'math')}
+      character={app.character}
+      onCharacter={app.onCharacter}
       onStart={(mode, opponent) => {
         preferences.unlock();
         void app.session.getState().start(mode, opponent);
