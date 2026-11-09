@@ -4,6 +4,7 @@ import type { Preferences } from './usePreferences.ts';
 
 export interface SettingsProps {
   preferences: Preferences;
+  offered?: { coach: boolean; voice: boolean };
   conversation?: boolean;
   conversationOn?: boolean;
   onConversation?: (on: boolean) => void;
@@ -46,7 +47,7 @@ function ConversationSettings({ preferences, conversationOn, onConversation }: S
   );
 }
 
-function FaceSettings({ preferences }: { preferences: Preferences }) {
+function FaceSettings({ preferences, voice }: { preferences: Preferences; voice: boolean }) {
   return (
     <>
       <Toggle
@@ -55,7 +56,7 @@ function FaceSettings({ preferences }: { preferences: Preferences }) {
         checked={preferences.face}
         onChange={preferences.toggleFace}
       />
-      {voiceAvailable() && (
+      {voice && voiceAvailable() && (
         <Toggle
           id="voice"
           label={t('status.voice')}
@@ -69,6 +70,7 @@ function FaceSettings({ preferences }: { preferences: Preferences }) {
 
 export function Settings(props: SettingsProps) {
   const { preferences } = props;
+  const offered = props.offered ?? { coach: true, voice: true };
   return (
     <>
       <Toggle
@@ -77,14 +79,16 @@ export function Settings(props: SettingsProps) {
         checked={preferences.sound}
         onChange={preferences.toggleSound}
       />
-      <FaceSettings preferences={preferences} />
+      <FaceSettings preferences={preferences} voice={offered.voice} />
       {props.conversation === true && <ConversationSettings {...props} />}
-      <Toggle
-        id="coach-mode"
-        label={t('coach.mode')}
-        checked={preferences.coach}
-        onChange={preferences.toggleCoach}
-      />
+      {offered.coach && (
+        <Toggle
+          id="coach-mode"
+          label={t('coach.mode')}
+          checked={preferences.coach}
+          onChange={preferences.toggleCoach}
+        />
+      )}
       <Toggle
         id="auto-next"
         label={t('status.autoNext')}

@@ -97,7 +97,7 @@ test('leaving for tonight returns to a farewell start screen', async ({ page }) 
 });
 
 test('the next hand starts by itself after a fold', async ({ page }) => {
-  await page.goto('/?seed=42&botDelay=0');
+  await page.goto('/?seed=42&botDelay=0&opponent=math');
   await byId(page, 'start-tournament').click();
   await expect(byId(page, 'fold')).toBeEnabled();
   await byId(page, 'fold').click();
@@ -118,7 +118,7 @@ test('reloading in the middle of a hand shows the start screen', async ({ page }
 test('a cash game is played for a hand, left, and the session summary shows one hand', async ({
   page,
 }) => {
-  await page.goto('/?seed=3&botDelay=0');
+  await page.goto('/?seed=3&botDelay=0&opponent=math');
   await byId(page, 'start-cash').click();
   await expect(byId(page, 'session-result')).toBeVisible();
   await expect(byId(page, 'leave')).toBeDisabled();
@@ -158,7 +158,7 @@ async function downloadJson(page: Page, id: string): Promise<unknown[]> {
 }
 
 test('hand history is exported, persists across a reload and is cleared', async ({ page }) => {
-  await page.goto('/?seed=3&botDelay=0');
+  await page.goto('/?seed=3&botDelay=0&opponent=math');
   await byId(page, 'start-cash').click();
   await playHandToEnd(page);
   await byId(page, 'next-hand').click();
@@ -178,7 +178,7 @@ test('hand history is exported, persists across a reload and is cleared', async 
 });
 
 test('a cash hand moves on by itself and Wait keeps the result', async ({ page }) => {
-  await page.goto('/?seed=42&botDelay=0');
+  await page.goto('/?seed=42&botDelay=0&opponent=math');
   await byId(page, 'start-cash').click();
   await expect(byId(page, 'passive')).toBeEnabled();
   await byId(page, 'fold').click();

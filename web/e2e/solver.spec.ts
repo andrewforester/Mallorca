@@ -1,5 +1,5 @@
 import type { BrowserContext, Page } from '@playwright/test';
-import { byId, expect, FAST_URL, test, waitForWaypoint } from './fixtures.ts';
+import { byId, expect, LAB_URL, test, waitForWaypoint } from './fixtures.ts';
 
 const SOLVER_TIMEOUT_MS = 120_000;
 
@@ -16,7 +16,7 @@ async function playAgainst(page: Page, context: BrowserContext, opponent: string
       loaded.push(path.endsWith('.wasm') ? 'wasm' : (path.split('/').pop() ?? path));
     }
   });
-  await page.goto(FAST_URL);
+  await page.goto(LAB_URL);
   await byId(page, `opponent-${opponent}`).click();
   await expect(byId(page, `opponent-${opponent}`)).toHaveAttribute('aria-pressed', 'true');
   await byId(page, 'start-cash').click();
@@ -70,7 +70,7 @@ test('the v2 solver loads its own file and plays cash hands on desktop', async (
 
 test('a phone is not offered the v2 solver', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'a phone check');
-  await page.goto(FAST_URL);
+  await page.goto(LAB_URL);
   await expect(byId(page, 'opponent-cfr')).toBeVisible();
   await expect(byId(page, 'opponent-cfr-v2')).toHaveCount(0);
 });

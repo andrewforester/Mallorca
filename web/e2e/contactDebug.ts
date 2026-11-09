@@ -87,7 +87,7 @@ async function captureView(browser: Browser, view: View): Promise<Shot[]> {
   const { viewport, isMobile, hasTouch, label } = view;
   const context = await browser.newContext({ viewport, isMobile, hasTouch });
   const page = await context.newPage();
-  await page.goto(`${BASE}?seed=42&botDelay=0&autoNext=off`);
+  await page.goto(`${BASE}?seed=42&botDelay=0&autoNext=off&features=opponents,coach,talk`);
   await byId(page, 'opponent-cfr').click();
   await byId(page, 'start-cash').click();
   await waitForWaypoint(page);

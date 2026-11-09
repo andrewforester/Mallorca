@@ -25,7 +25,7 @@ async function capture(browser: Browser, sheet: Sheet): Promise<Shot[]> {
   const open = async (query: string) => {
     const context = await browser.newContext({ viewport, isMobile, hasTouch });
     const page = await context.newPage();
-    await page.goto(`${BASE}?${query}`);
+    await page.goto(`${BASE}?${query}&opponent=math&features=opponents,coach,talk`);
     return page;
   };
 
@@ -111,7 +111,7 @@ async function captureConversation(browser: Browser, sheet: Sheet): Promise<Shot
           : {},
   }));
   const page = await context.newPage();
-  await page.goto(`${BASE}?seed=42&botDelay=0&autoNext=off`);
+  await page.goto(`${BASE}?seed=42&botDelay=0&autoNext=off&features=opponents,coach,talk`);
   await byId(page, 'opponent-cfr').click();
   await byId(page, 'start-cash').click();
   const bubble = byId(page, 'bubble-mallorca');
