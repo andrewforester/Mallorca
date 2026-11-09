@@ -13,8 +13,8 @@ import riglogic
 
 IN, FWD = (0.0, 1.0, 0.0), (0.0, 0.0, -1.0)
 SEATED = {
-    "clavicle": [(FWD, 4.0)],
-    "upperarm": [(IN, 22.0), (FWD, 12.0)],
+    "clavicle": [(FWD, 4.0), (IN, 6.0)],
+    "upperarm": [(IN, 16.0), (FWD, 12.0)],
     "lowerarm": [(FWD, 25.0)],
 }
 MIN_MOVE_CM = 0.01

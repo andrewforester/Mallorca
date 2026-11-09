@@ -101,4 +101,29 @@ describe('motion', () => {
     expect(Math.abs(calm.at(-1)!.head[1])).toBeLessThan(1e-6);
     expect(Math.abs(lively.at(-1)!.head[1])).toBeGreaterThan(1e-3);
   });
+
+  it('breathes visibly in her chest and shoulders, gentler when calm', () => {
+    const range = (values: number[]) => Math.max(...values) - Math.min(...values);
+    const breathing = (calm: boolean) => {
+      const poses = run(new Motion({ random: half, calm }), 10);
+      return {
+        chest: range(poses.map((p) => p.spine[0])),
+        shoulders: range(poses.map((p) => p.shoulder)),
+      };
+    };
+    const lively = breathing(false);
+    expect(lively.chest).toBeGreaterThan(0.02);
+    expect(lively.shoulders).toBeGreaterThan(0.02);
+    const calm = breathing(true);
+    expect(calm.chest).toBeGreaterThan(0.01);
+    expect(calm.chest).toBeLessThan(lively.chest);
+  });
+
+  it('keeps her head still while her chest breathes under it', () => {
+    const range = (values: number[]) => Math.max(...values) - Math.min(...values);
+    const poses = run(new Motion({ random: half, calm: false }), 10);
+    const chest = range(poses.map((p) => p.spine[0]));
+    const underHead = range(poses.map((p) => p.spine[0] + p.neck[0]));
+    expect(underHead).toBeLessThan(chest * 0.2);
+  });
 });

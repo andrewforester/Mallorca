@@ -141,15 +141,15 @@ describe('RigState', () => {
     );
   });
 
-  it('lowers her shoulders with Pose.shoulder on top of the seated pose', () => {
+  it('keeps her arms hanging the same way when her shoulders rise', () => {
     const world = () => {
       state.root.updateMatrixWorld(true);
-      return bone('clavicle_l').getWorldQuaternion(new THREE.Quaternion());
+      return bone('upperarm_l').getWorldQuaternion(new THREE.Quaternion());
     };
     state.update(pose());
     const seated = world();
-    state.update(pose({ shoulder: 0.1 }));
-    expect(world().angleTo(seated)).toBeCloseTo(0.1, 3);
+    state.update(pose({ shoulder: 0.06 }));
+    expect(world().angleTo(seated)).toBeLessThan(1e-4);
   });
 
   it('loads a header without a body as before', async () => {
@@ -160,5 +160,16 @@ describe('RigState', () => {
     const rest = old.bone('FACIAL_C_Jaw')!.quaternion.clone();
     old.update(pose({ weights: { jawOpen: 1 } }));
     expect(old.bone('FACIAL_C_Jaw')!.quaternion.angleTo(rest)).toBeGreaterThan(0.1);
+  });
+
+  it('raises her shoulders by about a centimetre as she breathes in', () => {
+    const height = () => {
+      state.root.updateMatrixWorld(true);
+      return bone('clavicle_l').getWorldPosition(new THREE.Vector3()).y;
+    };
+    state.update(pose());
+    const rest = height();
+    state.update(pose({ shoulder: 0.06 }));
+    expect(height() - rest).toBeGreaterThan(0.008);
   });
 });
