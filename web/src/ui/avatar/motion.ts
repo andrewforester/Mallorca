@@ -246,7 +246,7 @@ export class Motion {
     const breath = Math.sin((t * 2 * Math.PI) / (4.2 - 1.2 * nervous)) * (this.calm ? 0.03 : 0.06);
     return {
       head: [this.head[1] * 0.6 + sway[1], this.head[0] * 0.6 + sway[0], this.head[2] + sway[2]],
-      neck: [this.head[1] * 0.4, this.head[0] * 0.4, 0],
+      neck: [this.head[1] * 0.4 + breath, this.head[0] * 0.4, 0],
       spine: [-breath + 0.03 * Math.max(0, -d), 0, 0],
       shoulder: breath,
     };
