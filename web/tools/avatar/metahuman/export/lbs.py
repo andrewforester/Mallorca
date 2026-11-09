@@ -5,7 +5,7 @@ from seated import rotation
 
 GAP_CM = 0.3
 REACH_CM = 3.0
-PASSES = 6
+PASSES = 12
 EXTRA_CM = 0.02
 
 
@@ -53,8 +53,8 @@ def inside(cards, cloth):
     near = nearest(cards, cloth["at"])
     offset = cards - cloth["at"][near]
     depth = (offset * cloth["normal"][near]).sum(1)
-    close = np.linalg.norm(offset, axis=1) < REACH_CM
-    return near, depth, close & (depth < GAP_CM)
+    gap = np.linalg.norm(offset, axis=1)
+    return near, depth, (gap < REACH_CM) & ((depth < 0) | (gap < GAP_CM))
 
 
 def push_out(cards, sweater, skins):
@@ -66,6 +66,9 @@ def push_out(cards, sweater, skins):
         near, depth, hit = inside(hair, cloth)
         hair[hit] += cloth["normal"][near[hit]] * (GAP_CM + EXTRA_CM - depth[hit])[:, None]
         moved |= hit
+    near, _, hit = inside(hair, cloth)
+    hair[hit] = cloth["at"][near[hit]] + cloth["normal"][near[hit]] * (GAP_CM + EXTRA_CM)
+    moved |= hit
     back = np.einsum("vab,vb->va", np.linalg.inv(blend[moved]), np.c_[hair[moved], np.ones(moved.sum())])[:, :3]
     cards["position"][moved] = back.astype(np.float32)
     left = inside(posed(cards, skins)[0], cloth)[2].sum()

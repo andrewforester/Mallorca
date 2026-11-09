@@ -1,7 +1,7 @@
 import numpy as np
 
-TORSO_CM = 1.2
-SLEEVE_CM = 0.8
+TORSO_CM = 0.9
+SLEEVE_CM = 0.4
 NECKLINE_CM = 0.4
 EASE_CM = 3.0
 RIB_CM = 1.5
