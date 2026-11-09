@@ -145,16 +145,16 @@ export function mouthMaterial(map: THREE.Texture, normalMap: THREE.Texture): THR
   material.onBeforeCompile = (shader) => {
     skin12(shader);
     shader.vertexShader =
-      'varying float vDepth;\n' +
+      'varying float vDepth;\nvarying float vSide;\n' +
       shader.vertexShader.replace(
         '#include <begin_vertex>',
-        '#include <begin_vertex>\nvDepth = position.z - (10.2 - 0.33 * position.x * position.x);',
+        '#include <begin_vertex>\nvDepth = position.z - (10.2 - 0.33 * position.x * position.x);\nvSide = abs(position.x);',
       );
     shader.fragmentShader =
-      'varying float vDepth;\n' +
+      'varying float vDepth;\nvarying float vSide;\n' +
       shader.fragmentShader.replace(
         '#include <map_fragment>',
-        '#include <map_fragment>\ndiffuseColor.rgb *= mix(0.08, 1.0, smoothstep(-1.6, -0.4, vDepth));',
+        '#include <map_fragment>\ndiffuseColor.rgb *= mix(0.08, 1.0, smoothstep(-1.6, -0.4, vDepth)) * (1.0 - 0.6 * smoothstep(0.9, 2.0, vSide));',
       );
   };
   return material;
