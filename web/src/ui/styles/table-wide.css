@@ -45,11 +45,6 @@
     background: radial-gradient(ellipse 60% 60% at 50% 38%, #5a4436 0%, #33261f 55%, #241b18 100%);
   }
 
-  .face-frame-off {
-    flex-basis: 120px;
-    min-height: 120px;
-  }
-
   .seat-top {
     padding: 0 4px;
     --back-width: 50px;

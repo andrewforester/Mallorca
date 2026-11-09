@@ -125,6 +125,7 @@
 
 .face-frame {
   position: relative;
+  isolation: isolate;
   flex: 0 1 var(--face-basis);
   min-height: 120px;
   margin: 0 10px;
@@ -138,17 +139,45 @@
   --face-basis: 430px;
 }
 
-.face-frame-off {
-  display: flex;
-  flex: 0 0 96px;
-  align-items: center;
-  min-height: 96px;
-  padding-left: 20px;
+.face-room,
+.face-rail {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 130%;
+  max-width: none;
+  transform: translate(-50%, -49.2%);
+  pointer-events: none;
+  user-select: none;
 }
 
-.face-frame-name {
+.face-room {
+  z-index: 0;
+}
+
+.table-centre .face-frame > .face-seat {
+  z-index: 1;
+  inset: auto;
+  top: 0.5%;
+  left: 7.8%;
+  width: 86.6%;
+  height: 114.8%;
+}
+
+.face-rail {
+  z-index: 2;
+  clip-path: inset(48.4% 0 0 0);
+}
+
+.table-centre .face-frame-name {
+  position: absolute;
+  top: 14px;
+  left: 20px;
+  z-index: 3;
+  color: #ffffff;
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 22px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
 }
 
 .table-board {

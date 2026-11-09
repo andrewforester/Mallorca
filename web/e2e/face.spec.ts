@@ -54,3 +54,23 @@ test('can be turned off and stays off across a reload', async ({ page }) => {
   await expect(byId(page, 'passive')).toBeVisible();
   await expect(byId(page, 'face-seat')).toHaveCount(0);
 });
+
+test('the table rail is drawn over her face inside the frame', async ({ page }) => {
+  await page.goto(FAST_URL);
+  await byId(page, 'start-cash').click();
+  await expect(byId(page, 'passive')).toBeEnabled();
+  const frame = byId(page, 'face-frame');
+  const layers = await frame.evaluate((node) => {
+    const z = (selector: string) => {
+      const found = node.querySelector(selector);
+      return found === null ? null : Number(getComputedStyle(found).zIndex);
+    };
+    return { room: z('.face-room'), seat: z('.face-seat'), rail: z('.face-rail') };
+  });
+  expect(layers.room).toBeLessThan(layers.seat ?? -1);
+  expect(layers.seat).toBeLessThan(layers.rail ?? -1);
+  const rail = await frame
+    .locator('.face-rail')
+    .evaluate((node) => getComputedStyle(node).clipPath);
+  expect(rail).toContain('inset');
+});
