@@ -1,4 +1,5 @@
 mod bias;
+mod bluff;
 mod decision;
 mod order;
 mod range;
@@ -14,8 +15,9 @@ use crate::strategy::{StrategyError, StrategyFile};
 use crate::tree::{ActionKind, Node, NodeId, Street};
 use bias::choose;
 pub use bias::{
-    reweight, sample_weighted, shift, Bias, Situation, AGGRESSIVE_SHIFT, LOOSE_SHIFT, STICKY_SHIFT,
+    reweight, sample_weighted, shift, Bias, AGGRESSIVE_SHIFT, LOOSE_SHIFT, STICKY_SHIFT,
 };
+pub use bluff::{BLUFF_PULL, BLUFF_ZONE};
 pub use decision::DecisionView;
 use order::Order;
 use translate::{fraction, nearest, pseudo_harmonic, scaled_raise};

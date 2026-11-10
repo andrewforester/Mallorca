@@ -56,7 +56,7 @@ const layer = (
 };
 
 const ARENA_MESSAGE =
-  'tools/arena may import from src only cards, engine, brains, cfr, persona, conversation and game/records';
+  'tools/arena may import from src only cards, engine, brains, cfr, persona, conversation, equity and game/records';
 const VIEWER_MESSAGE = 'tools/arena/ui may import from src only game/records and types from engine';
 const GAME_OUTSIDE_RECORDS = '(^|/)src/game(/(?!records/)|$)';
 
@@ -71,7 +71,7 @@ const arenaLayer = {
       'error',
       {
         patterns: [
-          { regex: '(^|/)src/(ui|equity|main\\.tsx)(/|$)', message: ARENA_MESSAGE },
+          { regex: '(^|/)src/(ui|main\\.tsx)(/|$)', message: ARENA_MESSAGE },
           { regex: GAME_OUTSIDE_RECORDS, message: ARENA_MESSAGE },
         ],
       },

@@ -1744,3 +1744,55 @@ fn aggression_moves_every_check_its_own_way_and_keeps_the_order_of_checks() {
         }
     }
 }
+
+fn bet_share(weights: &[f64], spot: &Spot<'_>) -> f64 {
+    let bets: f64 = weights
+        .iter()
+        .zip(spot.actions)
+        .filter(|(_, a)| super::bluff::is_bet(a.0))
+        .map(|(w, _)| w)
+        .sum();
+    bets / weights.iter().sum::<f64>()
+}
+
+#[test]
+fn a_bluffer_bets_weak_hands_checked_to_after_the_flop_and_leaves_the_rest() {
+    let bluffer = Bias {
+        bluff: 2.0,
+        ..Bias::NEUTRAL
+    };
+    let honest = Bias {
+        bluff: 0.5,
+        ..Bias::NEUTRAL
+    };
+    let mut weak = 0;
+    for id in 0..model().file.tree.nodes().len() as NodeId {
+        let Some(spot) = model().spot(id) else {
+            continue;
+        };
+        if spot.street == Street::Preflop || !spot.actions.iter().any(|a| super::bluff::is_bet(a.0))
+        {
+            continue;
+        }
+        for bucket in 0..model().file.tree.buckets()[spot.street.as_index()] {
+            let p = model().file.probabilities(id, bucket);
+            let base = bet_share(&biased(model(), &spot, p, bucket, &Bias::NEUTRAL), &spot);
+            let up = bet_share(&biased(model(), &spot, p, bucket, &bluffer), &spot);
+            let down = bet_share(&biased(model(), &spot, p, bucket, &honest), &spot);
+            let facing = spot.actions.iter().any(|a| a.0 == ActionKind::Fold);
+            let low = model().order(spot.street).percentile(bucket) < super::bluff::BLUFF_ZONE;
+            if low && !facing {
+                weak += 1;
+                let pull = super::bluff::BLUFF_PULL;
+                assert!(
+                    (up - (base + pull * (1.0 - base))).abs() < 1e-9,
+                    "{id} {bucket}"
+                );
+                assert!((down - base * (1.0 - pull)).abs() < 1e-9, "{id} {bucket}");
+            } else {
+                assert!((up - base).abs() < 1e-12 && (down - base).abs() < 1e-12);
+            }
+        }
+    }
+    assert!(weak > 100, "{weak} weak rows");
+}
