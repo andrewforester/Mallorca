@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ActionBar, HOLD_MS } from './ActionBar.tsx';
+import { NUDGE_MS } from './useHold.ts';
 import { viewModel } from './fixtures.ts';
 
 afterEach(() => {
@@ -11,6 +12,19 @@ afterEach(() => {
 function bar(overrides = {}, onAct = vi.fn()) {
   const view = render(<ActionBar controls={viewModel(overrides).controls} onAct={onAct} />);
   return { onAct, view };
+}
+
+function onlyAllIn() {
+  const base = viewModel().controls;
+  const raise = {
+    ...base.raise!,
+    min: 1208,
+    max: 1208,
+    presets: { halfPot: 1208, pot: 1208, allIn: 1208 },
+  };
+  const onAct = vi.fn();
+  render(<ActionBar controls={{ ...base, raise }} onAct={onAct} />);
+  return onAct;
 }
 
 function value(): number {
@@ -94,6 +108,51 @@ describe('ActionBar', () => {
       vi.advanceTimersByTime(HOLD_MS);
     });
     expect(onAct.mock.calls).toEqual([[{ kind: 'raise', to: 2000 }]]);
+  });
+
+  it('shudders after a short press on the all-in and does not act', () => {
+    vi.useFakeTimers();
+    const { onAct } = bar();
+    fireEvent.click(screen.getByTestId('preset-allin'));
+    const raise = screen.getByTestId('raise');
+    expect(raise.classList.contains('button-nudge')).toBe(false);
+    fireEvent.pointerDown(raise);
+    expect(raise.classList.contains('button-holding')).toBe(true);
+    act(() => {
+      vi.advanceTimersByTime(HOLD_MS / 4);
+    });
+    fireEvent.pointerUp(raise);
+    fireEvent.pointerLeave(raise);
+    expect(raise.classList.contains('button-holding')).toBe(false);
+    expect(raise.classList.contains('button-nudge')).toBe(true);
+    act(() => {
+      vi.advanceTimersByTime(NUDGE_MS);
+    });
+    expect(raise.classList.contains('button-nudge')).toBe(false);
+    expect(onAct).not.toHaveBeenCalled();
+  });
+
+  it('does not shudder after a completed hold', () => {
+    vi.useFakeTimers();
+    bar();
+    fireEvent.click(screen.getByTestId('preset-allin'));
+    const raise = screen.getByTestId('raise');
+    fireEvent.pointerDown(raise);
+    act(() => {
+      vi.advanceTimersByTime(HOLD_MS);
+    });
+    fireEvent.pointerUp(raise);
+    expect(raise.classList.contains('button-nudge')).toBe(false);
+  });
+
+  it('goes all-in on one click when all-in is the only raise', () => {
+    const onAct = onlyAllIn();
+    const raise = screen.getByTestId('raise');
+    expect(raise.textContent).toContain('All-in 1208');
+    expect(raise.textContent).not.toContain('Hold');
+    expect(raise.classList.contains('button-hold')).toBe(false);
+    fireEvent.click(raise);
+    expect(onAct.mock.calls).toEqual([[{ kind: 'raise', to: 1208 }]]);
   });
 
   it('shows Check when nothing is owed and folds and calls at once', () => {
@@ -194,6 +253,12 @@ describe('ActionBar keyboard', () => {
       vi.advanceTimersByTime(HOLD_MS);
     });
     expect(onAct.mock.calls).toEqual([[{ kind: 'raise', to: 2000 }]]);
+  });
+
+  it('goes all-in with one press of r when all-in is the only raise', () => {
+    const onAct = onlyAllIn();
+    fireEvent.keyDown(document, { key: 'r' });
+    expect(onAct.mock.calls).toEqual([[{ kind: 'raise', to: 1208 }]]);
   });
 
   it('ignores the keys when not enabled', () => {

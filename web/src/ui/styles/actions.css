@@ -237,6 +237,43 @@
   position: relative;
 }
 
+.button-nudge::before {
+  transform: scaleX(0.18);
+}
+
+@keyframes hold-nudge {
+  0%,
+  100% {
+    translate: 0;
+  }
+
+  20% {
+    translate: -5px;
+  }
+
+  40% {
+    translate: 5px;
+  }
+
+  60% {
+    translate: -3px;
+  }
+
+  80% {
+    translate: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .button-hold::before {
+    transition: transform 240ms ease-out;
+  }
+
+  .button-nudge {
+    animation: hold-nudge 360ms ease-in-out;
+  }
+}
+
 .button-holding {
   color: var(--color-accent-text);
 }

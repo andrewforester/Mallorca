@@ -194,7 +194,7 @@ Why Notebook rather than three sections: history, review and analysis answer one
 - Video is the Close-up framing inside the table, not a separate screen.
 - Leave table without confirmation; a tournament is saved and paused.
 - Desktop layers open as side columns; phone layers from the bottom.
-- Error protection: Fold when a free check is available needs a second tap; all-in via the button or slider at max requires a 0.6 s hold with fill; bet size by presets plus a full-width slider.
+- Error protection: Fold when a free check is available needs a second tap; all-in via the button or slider at max requires a 0.6 s hold with fill, and a press released early makes the button shudder while the fill falls back; when all-in is the only legal raise the button reads "All-in 1208" and acts on one tap; bet size by presets plus a full-width slider.
 - Coach "peek": on Off and After, "Show strategy" in the coach layer opens the hint for this move without changing the level. Review timing setting: After every hand · Only when I slip · End of session (default Only when I slip). Coach layer states: The coach is counting · Approximate spot · Words are on their way (server text) · Coach unavailable offline.
 - When a feature is missing it vanishes completely or explains itself in one sentence; no broken buttons (table in 2.6).
 
