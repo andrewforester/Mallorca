@@ -10,7 +10,7 @@ import {
 } from '../../engine/testDeck.ts';
 import { CASH } from '../../engine/index.ts';
 import type { Action } from '../../engine/index.ts';
-import { toPokerStars } from './pokerstars.ts';
+import { toFeelingsText, toPokerStars } from './pokerstars.ts';
 import { handRecord, MATH_BOT } from './record.ts';
 import type { HandRecord } from './record.ts';
 
@@ -183,5 +183,57 @@ describe('toPokerStars', () => {
     const text = toPokerStars([record, record]);
     const single = toPokerStars([record]);
     expect(text).toBe(`${single}\n\n\n${single}`);
+  });
+});
+
+describe('toFeelingsText', () => {
+  const plain = recordOf([2000, 2000], 'Ah Kd', '7c 2s', 'Qh Jd 4c 9s 3h', [raiseTo(60), fold]);
+  const raiseIndex = plain.events.findIndex((e) => e.type === 'acted');
+  const felt: HandRecord = {
+    ...plain,
+    feelings: [
+      {
+        eventIndex: raiseIndex,
+        journalId: 12,
+        event: { kind: 'opponentBet', sizeBb: 3, equity: 0.31, raise: true },
+        impulses: [{ emotion: 'fear', amount: 0.31, reason: 'his raise' }],
+        words: ['tense'],
+      },
+    ],
+  };
+  const text = toFeelingsText([felt], (id) => (id === 12 ? 'We will see.' : null));
+
+  it('deals both hands and puts her feelings right after the action that made them', () => {
+    expect(text).toContain('Dealt to Mallorca [Ah Kd]');
+    const lines = text.split('\n');
+    const raise = lines.findIndex(
+      (l) => l.startsWith('Mallorca: raises') || l.startsWith('You: raises'),
+    );
+    expect(lines[raise + 1]).toContain('fear +0.31 his raise');
+    expect(lines[raise + 1]).toContain('mood: tense');
+    expect(lines[raise + 1]).toContain('says "We will see."');
+  });
+
+  it('leaves out a quiet street but keeps a quiet answer to the player', () => {
+    const quiet = { journalId: 13, impulses: [], words: [] };
+    const both: HandRecord = {
+      ...plain,
+      feelings: [
+        {
+          ...quiet,
+          eventIndex: raiseIndex,
+          event: { kind: 'street', equity: 0.5, potBb: 2, investedBb: 1 },
+        },
+        { ...quiet, eventIndex: raiseIndex, event: { kind: 'chat', signal: 'tease' } },
+      ],
+    };
+    const lines = toFeelingsText([both]).split('\n');
+    expect(lines.filter((l) => l.includes('she feels'))).toEqual([
+      '  ~ she feels (player says tease): no impulse | mood: none',
+    ]);
+  });
+
+  it('leaves the plain PokerStars text without feelings', () => {
+    expect(toPokerStars([felt])).not.toContain('his raise');
   });
 });

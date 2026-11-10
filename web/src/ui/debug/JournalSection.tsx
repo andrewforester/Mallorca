@@ -1,8 +1,9 @@
-import type { DebugView } from '../../game/index.ts';
+import type { DebugView, HandStore, Session } from '../../game/index.ts';
 import { COPY } from './copy.ts';
 import { f2 } from './format.ts';
 import { describeEvent } from './events.ts';
 import { TALK } from './conversationCopy.ts';
+import { copyHistory } from './history.ts';
 
 function lineOf(view: DebugView, id: number): number | null {
   const fed = view.conversation.entries.find(
@@ -11,10 +12,19 @@ function lineOf(view: DebugView, id: number): number | null {
   return fed?.id ?? null;
 }
 
-export function JournalSection({ view }: { view: DebugView }) {
+interface JournalProps {
+  view: DebugView;
+  store: HandStore;
+  session: Session;
+}
+
+export function JournalSection({ view, store, session }: JournalProps) {
   return (
     <section class="debug-section">
       <h3>{COPY.sections.journal}</h3>
+      <button type="button" class="debug-reset" onClick={() => void copyHistory(store, session)}>
+        {COPY.journal.copy}
+      </button>
       {view.journal.length === 0 && <p class="debug-note">{COPY.journal.empty}</p>}
       <ol class="debug-journal" data-testid="debug-journal">
         {view.journal.map((entry, k) => (

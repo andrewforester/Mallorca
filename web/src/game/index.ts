@@ -27,7 +27,7 @@ export { groupHand } from './handLog.ts';
 export type { RaiseControl, SeatView, ConversationView, ViewModel } from './viewModel.ts';
 export { toViewModel } from './viewModel.ts';
 export type { HandRecord, HandStore } from './records/index.ts';
-export { memoryStore, openHandStore, toPokerStars } from './records/index.ts';
+export { memoryStore, openHandStore, toFeelingsText, toPokerStars } from './records/index.ts';
 export type {
   ChatTurn,
   PlanLinePayload,

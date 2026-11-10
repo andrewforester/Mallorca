@@ -130,7 +130,7 @@ function record(rt: Runtime, events: EngineEvent[], opens = false): void {
   rt.recorder.observe(events);
   rt.coach.observe(events);
   rt.bot.observe(toObservations(events, rt.botSeat));
-  observeHer(rt, events);
+  rt.recorder.felt(rt.persona.current(), observeHer(rt, events));
   for (const event of events) {
     if (event.type === 'toppedUp' && event.seat === rt.humanSeat) {
       rt.topUps += event.amount;

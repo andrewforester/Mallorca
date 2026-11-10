@@ -708,8 +708,13 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   (`{ id, version }`), `holeCards` of both seats and `board` as two-character strings, every engine `events` of
   the hand from `toppedUp` on, and `decisions` (`{ eventIndex, solverChoice, evByAction }`, a non-finite EV
   stored as null since JSON has no infinity) and, when the player was coached, `coach`: each `CoachDecision` with the
-  `eventIndex` of the player's `acted` event. `handRecord(events, decisions, meta)` is pure; the caller passes
-  the time in `meta.playedAt`.
+  `eventIndex` of the player's `acted` event, and, when she felt anything, `feelings`: her journal entries of the
+  hand (`RecordedFeeling`: `eventIndex`, `journalId`, the `TableEvent`, its `impulses` and her mood `words`).
+  `handRecord(events, decisions, meta, { coach, feelings })` is pure; the caller passes the time in
+  `meta.playedAt`.
+- `feelings.ts`: the recorder's `felt(persona, moments)` runs after each batch of events and takes the journal
+  entries after its own cursor. An entry of a moment points at that moment's event; an entry made between batches
+  (a chat signal, a narrowed range) points at the event before it, and one from before the hand is dropped.
 - `toPokerStars(records)` (`pokerstars.ts`) returns PokerStars hand history text, hands separated by two blank
   lines. The hand number is `Date.parse(playedAt) * 1000 + handNumber % 1000`. Seat `n + 1` is seat index `n`;
   the hero (`Dealt to`) is `humanSeat`, or seat 0 when it is null. Amounts carry no currency, the blinds read
@@ -718,6 +723,11 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   Top-ups are not printed; the seat line shows the stack after the top-up. The bot's cards appear only under
   `*** SHOW DOWN ***`. The summary holds the total pot, `Rake 0`, the board and one line per seat; a split pot
   prints `collected` for each seat with its share.
+- `toFeelingsText(records, said)` is the same text with both hands dealt under `*** HOLE CARDS ***` and, after
+  each event, one `~ she feels (...)` line per recorded feeling (a deal, street or own move without impulses is left
+  out): the event, the impulses with their reasons, the
+  mood words and, when `said(journalId)` gives it, her line. The debug panel copies it; the menu offers only the
+  plain text, which never shows her folded cards.
 - `HandStore` (`store.ts`) has `add`, `list(sessionId?)` and `clear`. `list` returns records by `handNumber`
   ascending within one session; without a session id it returns every record. `memoryStore()` is a map.
   `indexedDbStore()` uses database `mallorca` version 1, object store `hands` keyed by `id` with index
@@ -827,7 +837,8 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   the derived traits), state (`debug-emotions`, `debug-mood` with the octant and the default mood marked,
   `debug-load`), play bias (`debug-bias`, the five multipliers around 1 and the bias sent), the last decision
   (`debug-decision`, her cards, each move with its blueprint and biased probability, the chosen one marked) and the
-  journal (`debug-journal`, newest first). Its colours follow `ui/styles/tokens.css`.
+  journal (`debug-journal`, newest first, and Copy history: `toFeelingsText` of the session's finished hands from the
+  `HandStore` passed to the panel, with her lines from the conversation trace). Its colours follow `ui/styles/tokens.css`.
 - `scripts/check-dist.ts` (over `distTraces` in `scripts/distTraces.ts`, tested under `npm test`) runs at the end
   of `npm run build` and fails when any file in `dist` contains
   `emotion-debug` (the panel and its copy), `sentBias` (the session's debug state) or `engineBias`

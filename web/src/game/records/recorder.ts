@@ -1,6 +1,9 @@
 import type { BotBias, Decision } from '../../brains/index.ts';
 import type { CoachDecision } from '../../coach/index.ts';
 import type { EngineEvent, SeatIndex, TableMode } from '../../engine/index.ts';
+import type { Moment, PersonaReader } from '../../persona/index.ts';
+import { feelingCollector } from './feelings.ts';
+import type { RecordedFeeling } from './feelings.ts';
 import { handRecord, MATH_BOT, recordDecision } from './record.ts';
 import type { RecordedCoach, RecordedDecision, RecordMeta } from './record.ts';
 import type { HandStore } from './store.ts';
@@ -21,6 +24,7 @@ export interface HandRecorder {
   observe(events: EngineEvent[]): void;
   decided(decision: Decision, events: EngineEvent[], bias?: BotBias): void;
   coached(decision: CoachDecision, events: EngineEvent[]): void;
+  felt(her: PersonaReader | null, moments: readonly Moment[]): void;
   save(mode: TableMode, bot?: RecordMeta['bot']): void;
 }
 
@@ -36,6 +40,8 @@ export function handRecorder(records: RecordsOptions | undefined, seating: Seati
   let events: EngineEvent[] = [];
   let decisions: RecordedDecision[] = [];
   let coach: RecordedCoach[] = [];
+  let feelings: RecordedFeeling[] = [];
+  const collect = feelingCollector();
   const actedAt = (next: EngineEvent[]) => {
     const index = next.findIndex((event) => event.type === 'acted');
     return index < 0 ? null : events.length + index;
@@ -45,6 +51,7 @@ export function handRecorder(records: RecordsOptions | undefined, seating: Seati
       events = [];
       decisions = [];
       coach = [];
+      feelings = [];
     },
     observe(next) {
       events = [...events, ...next];
@@ -59,6 +66,11 @@ export function handRecorder(records: RecordsOptions | undefined, seating: Seati
       const eventIndex = actedAt(next);
       if (eventIndex !== null) {
         coach = [...coach, { ...decision, eventIndex }];
+      }
+    },
+    felt(her, moments) {
+      if (her !== null) {
+        feelings = [...feelings, ...collect(her, moments, events.length - moments.length)];
       }
     },
     save(mode, bot = MATH_BOT) {
@@ -77,7 +89,7 @@ export function handRecorder(records: RecordsOptions | undefined, seating: Seati
             bot,
             playedAt: records.now(),
           },
-          coach,
+          { coach, feelings },
         ),
       );
     },

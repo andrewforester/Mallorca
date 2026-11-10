@@ -2,6 +2,8 @@ import type { BettingStreet, DealtStreet, EngineEvent, SeatIndex } from '../../e
 import type { HandCategory } from '../../equity/index.ts';
 import { formatCard } from '../cards.ts';
 import type { HandRecord } from './record.ts';
+import { feelingLine, worthALine } from './feelings.ts';
+import type { Said } from './feelings.ts';
 
 const CATEGORY_TEXT: Record<HandCategory, string> = {
   'high-card': 'high card',
@@ -41,7 +43,12 @@ function allInSuffix(allIn: boolean): string {
 
 type Started = Extract<EngineEvent, { type: 'handStarted' }>;
 
-interface Writer {
+interface Extras {
+  after: (index: number) => string[];
+  both: boolean;
+}
+
+interface Writer extends Extras {
   record: HandRecord;
   button: SeatIndex;
   stacks: Pair;
@@ -54,6 +61,8 @@ interface Writer {
   lastActedIndex: number;
   returnedFlushed: boolean;
 }
+
+const PLAIN: Extras = { after: () => [], both: false };
 
 function header(record: HandRecord, started: Started): string[] {
   const { names } = record;
@@ -97,6 +106,10 @@ function onBlind(w: Writer, event: Extract<EngineEvent, { type: 'blindPosted' }>
   if (event.seat !== w.button) {
     const hero = humanSeat ?? 0;
     w.lines.push('*** HOLE CARDS ***', `Dealt to ${names[hero]} [${holeCards[hero].join(' ')}]`);
+    if (w.both) {
+      const her = other(hero);
+      w.lines.push(`Dealt to ${names[her]} [${holeCards[her].join(' ')}]`);
+    }
   }
 }
 
@@ -202,7 +215,7 @@ function summary(w: Writer): string[] {
   return lines;
 }
 
-function formatHand(record: HandRecord): string {
+function formatHand(record: HandRecord, extras: Extras = PLAIN): string {
   const { events } = record;
   const started = events.find((event) => event.type === 'handStarted');
   if (started === undefined) {
@@ -220,11 +233,30 @@ function formatHand(record: HandRecord): string {
     street: 'preflop',
     lastActedIndex: lastActed(events),
     returnedFlushed: false,
+    ...extras,
   };
-  events.forEach((event, index) => onEvent(w, event, index));
+  events.forEach((event, index) => {
+    onEvent(w, event, index);
+    w.lines.push(...w.after(index));
+  });
   return [...w.lines, ...summary(w)].join('\n');
 }
 
 export function toPokerStars(records: HandRecord[]): string {
-  return records.map(formatHand).join('\n\n\n');
+  return records.map((record) => formatHand(record)).join('\n\n\n');
+}
+
+function feelingsExtras(record: HandRecord, said: Said): Extras {
+  const feelings = record.feelings ?? [];
+  return {
+    after: (index) =>
+      feelings
+        .filter((f) => f.eventIndex === index && worthALine(f))
+        .map((f) => feelingLine(f, said)),
+    both: true,
+  };
+}
+
+export function toFeelingsText(records: HandRecord[], said: Said = () => null): string {
+  return records.map((record) => formatHand(record, feelingsExtras(record, said))).join('\n\n\n');
 }
