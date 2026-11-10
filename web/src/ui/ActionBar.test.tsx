@@ -147,6 +147,38 @@ describe('ActionBar keyboard', () => {
     ]);
   });
 
+  it('picks the half pot, pot and all-in sizes with h, p and a without acting', () => {
+    const { onAct } = bar();
+    for (const [key, id] of [
+      ['h', 'preset-half'],
+      ['a', 'preset-allin'],
+      ['p', 'preset-pot'],
+    ]) {
+      fireEvent.keyDown(document, { key });
+      expect(screen.getByTestId(id as string).getAttribute('aria-pressed')).toBe('true');
+    }
+    expect(value()).toBe(400);
+    expect(onAct).not.toHaveBeenCalled();
+  });
+
+  it('keeps the size on p when the pot preset is replaced by Min', () => {
+    const base = viewModel().controls;
+    const raise = { ...base.raise!, max: 380, presets: { halfPot: 250, pot: 380, allIn: 380 } };
+    render(<ActionBar controls={{ ...base, raise }} onAct={vi.fn()} />);
+    fireEvent.keyDown(document, { key: 'h' });
+    fireEvent.keyDown(document, { key: 'p' });
+    expect(value()).toBe(250);
+  });
+
+  it('steps the size with plus and minus', () => {
+    bar();
+    fireEvent.keyDown(document, { key: '+' });
+    fireEvent.keyDown(document, { key: '=' });
+    expect(value()).toBe(440);
+    fireEvent.keyDown(document, { key: '-' });
+    expect(value()).toBe(420);
+  });
+
   it('needs r held for an all-in', () => {
     vi.useFakeTimers();
     const { onAct } = bar();

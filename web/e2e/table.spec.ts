@@ -220,3 +220,21 @@ test('the board cards sit close together on wide screens', async ({ page }) => {
   const gap = await byId(page, 'board').evaluate((node) => getComputedStyle(node).columnGap);
   expect(parseFloat(gap)).toBeLessThanOrEqual(10);
 });
+
+test('her action strip stays above the board', async ({ page }) => {
+  await page.goto(FAST_URL);
+  await byId(page, 'start-tournament').click();
+  const strip = byId(page, 'action-1');
+  const cards = byId(page, 'board').getByTestId('card');
+  for (let step = 0; step < 60; step += 1) {
+    const waypoint = await waitForWaypoint(page);
+    if (waypoint === 'tournament-over') break;
+    if ((await strip.isVisible()) && (await cards.count()) >= 3) break;
+    await byId(page, waypoint === 'act' ? 'passive' : 'next-hand').click();
+  }
+  const [action, board] = await Promise.all([strip.boundingBox(), cards.first().boundingBox()]);
+  if (action === null || board === null) {
+    throw new Error('she never acted on a dealt board');
+  }
+  expect(action.y + action.height).toBeLessThanOrEqual(board.y);
+});

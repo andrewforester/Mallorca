@@ -3,6 +3,7 @@ import type { Intent, RaiseControl, ViewModel } from '../game/index.ts';
 import { BetSlider, defaultSize } from './BetSlider.tsx';
 import { t } from './i18n.ts';
 import { useKeyboard } from './keyboard.ts';
+import type { PresetKey } from './keyboard.ts';
 import { useHold } from './useHold.ts';
 import type { Hold } from './useHold.ts';
 
@@ -137,7 +138,14 @@ function useSize(controls: ViewModel['controls']) {
   const step = (direction: 1 | -1) => {
     if (raise !== null) setChosen(clamp(amount + direction * raise.step));
   };
-  return { amount, setChosen, step };
+  const pick = (id: PresetKey) => {
+    if (raise === null) return;
+    const { halfPot, pot, allIn } = raise.presets;
+    if (id === 'half') setChosen(halfPot);
+    if (id === 'allin') setChosen(allIn);
+    if (id === 'pot' && pot < raise.max) setChosen(pot);
+  };
+  return { amount, setChosen, step, pick };
 }
 
 export function ActionBar({ controls, onAct }: ActionBarProps) {
@@ -158,6 +166,7 @@ export function ActionBar({ controls, onAct }: ActionBarProps) {
       else raiseTo();
     },
     adjust: size.step,
+    preset: size.pick,
     release: hold.stop,
   });
   return (

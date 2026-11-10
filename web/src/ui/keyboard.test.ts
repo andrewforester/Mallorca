@@ -8,6 +8,7 @@ function handlers(enabled: boolean) {
     passive: vi.fn(),
     raise: vi.fn(),
     adjust: vi.fn(),
+    preset: vi.fn(),
     confirm: vi.fn(() => true),
     back: vi.fn(() => true),
   };
@@ -37,6 +38,29 @@ describe('handleKey', () => {
     handleKey({ key: 'ArrowRight' }, h);
     handleKey({ key: 'ArrowDown' }, h);
     expect(h.adjust.mock.calls).toEqual([[1], [-1]]);
+  });
+
+  it('maps plus and minus to slider steps', () => {
+    const h = handlers(true);
+    for (const key of ['+', '=', '-', '_']) {
+      expect(handleKey({ key }, h)).toBe(true);
+    }
+    expect(h.adjust.mock.calls).toEqual([[1], [1], [-1], [-1]]);
+  });
+
+  it('maps h, p and a to the half pot, pot and all-in presets', () => {
+    const h = handlers(true);
+    for (const key of ['h', 'P', 'a', 'H', 'p', 'A']) {
+      expect(handleKey({ key }, h)).toBe(true);
+    }
+    expect(h.preset.mock.calls).toEqual([
+      ['half'],
+      ['pot'],
+      ['allin'],
+      ['half'],
+      ['pot'],
+      ['allin'],
+    ]);
   });
 
   it('does nothing when disabled', () => {
