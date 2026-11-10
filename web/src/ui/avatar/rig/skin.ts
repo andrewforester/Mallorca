@@ -152,10 +152,15 @@ export function mouthMaterial(map: THREE.Texture, normalMap: THREE.Texture): THR
       );
     shader.fragmentShader =
       'varying float vDepth;\nvarying float vSide;\n' +
-      shader.fragmentShader.replace(
-        '#include <map_fragment>',
-        '#include <map_fragment>\ndiffuseColor.rgb *= mix(0.08, 1.0, smoothstep(-1.6, -0.4, vDepth)) * (1.0 - 0.6 * smoothstep(0.9, 2.0, vSide));',
-      );
+      shader.fragmentShader
+        .replace(
+          '#include <map_fragment>',
+          '#include <map_fragment>\nfloat mouthShade = mix(0.08, 1.0, smoothstep(-1.6, -0.4, vDepth)) * (1.0 - 0.6 * smoothstep(0.9, 2.0, vSide));',
+        )
+        .replace(
+          '#include <opaque_fragment>',
+          'outgoingLight *= mouthShade;\n#include <opaque_fragment>',
+        );
   };
   return material;
 }
