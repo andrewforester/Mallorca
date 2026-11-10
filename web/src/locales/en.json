@@ -53,6 +53,10 @@
       }
     }
   },
+  "menu": {
+    "settings": "Settings",
+    "history": "History"
+  },
   "status": {
     "blindsWord": "Blinds",
     "blinds": "{{small}}/{{big}}",
@@ -175,6 +179,32 @@
       "win": "{{name}} wins {{amount}}",
       "toppedUp": "{{name}} tops up {{amount}}",
       "winTournament": "{{name}} wins the tournament"
+    },
+    "row": {
+      "you": {
+        "post": "post",
+        "fold": "fold",
+        "check": "check",
+        "call": "call",
+        "raise": "raise to",
+        "bet": "bet",
+        "allIn": "all-in",
+        "show": "· {{hand}}",
+        "returned": "bet returned",
+        "toppedUp": "top up"
+      },
+      "other": {
+        "post": "posts",
+        "fold": "folds",
+        "check": "checks",
+        "call": "calls",
+        "raise": "raises to",
+        "bet": "bets",
+        "allIn": "all-in",
+        "show": "· {{hand}}",
+        "returned": "bet returned",
+        "toppedUp": "tops up"
+      }
     }
   },
   "coach": {
