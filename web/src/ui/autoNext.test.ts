@@ -5,7 +5,7 @@ import { fixtureResult } from './fixtures.ts';
 describe('nextHandDelay', () => {
   it('waits one second after a hand won without a showdown', () => {
     const vm = fixtureResult();
-    vm.result = { winner: 1, category: null, amount: 30 };
+    vm.result = { winner: 1, category: null, amount: 30, cards: [] };
     expect(nextHandDelay(vm)).toBe(1000);
   });
 
@@ -15,7 +15,7 @@ describe('nextHandDelay', () => {
 
   it('waits two seconds after a split pot', () => {
     const vm = fixtureResult();
-    vm.result = { winner: null, category: 'pair', amount: 60 };
+    vm.result = { winner: null, category: 'pair', amount: 60, cards: [] };
     expect(nextHandDelay(vm)).toBe(2000);
   });
 
@@ -29,7 +29,7 @@ describe('nextHandDelay', () => {
     const vm = fixtureResult();
     vm.mode = 'cash';
     expect(nextHandDelay(vm)).toBe(2000);
-    vm.result = { winner: 1, category: null, amount: 30 };
+    vm.result = { winner: 1, category: null, amount: 30, cards: [] };
     expect(nextHandDelay(vm)).toBe(1000);
   });
 

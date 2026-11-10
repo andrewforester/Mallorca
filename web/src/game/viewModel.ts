@@ -46,7 +46,12 @@ export interface ViewModel {
   session: { hands: number; netBb: number; bbPer100: number | null };
   blinds: { small: number; big: number };
   handNumber: number;
-  result: { winner: SeatIndex | null; category: HandCategory | null; amount: number } | null;
+  result: {
+    winner: SeatIndex | null;
+    category: HandCategory | null;
+    amount: number;
+    cards: Card[];
+  } | null;
   tournamentWinner: SeatIndex | null;
   conversation: ConversationView;
   face: FaceState;
@@ -114,7 +119,12 @@ function resultView(result: SessionState['result']): ViewModel['result'] {
   if (result === null) {
     return null;
   }
-  return { winner: result.winner, category: result.category, amount: result.amount };
+  return {
+    winner: result.winner,
+    category: result.category,
+    amount: result.amount,
+    cards: result.cards,
+  };
 }
 
 function sessionView(session: SessionState['session'], bigBlind: number): ViewModel['session'] {

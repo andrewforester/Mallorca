@@ -125,7 +125,7 @@ storage (`localStorage`, `indexedDB`). ESLint enforces it with `no-restricted-gl
 - `equityVsHand(hero, villain, board)` enumerates the rest of the board exactly; `equityVsRange(hero, range, board,
 { rng, samples })` is exact on the turn and the river and samples before that. `persona` uses them for her strength
   class and her luck.
-- `index.ts` exports `pheEvaluator`, `HandCategory`, `WeightedHands`, `EquityOptions`, `equityVsHand` and
+- `index.ts` exports `pheEvaluator`, `bestFive`, `HandCategory`, `WeightedHands`, `EquityOptions`, `equityVsHand` and
   `equityVsRange`.
 - `npm run bench` (`evaluator.bench.test.ts`, outside `npm test`) ranks one million seven-card hands and expects
   under 1500 ms outside CI.

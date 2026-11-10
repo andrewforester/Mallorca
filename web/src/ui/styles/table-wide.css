@@ -71,11 +71,21 @@
     justify-self: end;
   }
 
-  .result-text {
-    position: absolute;
-    right: 0;
-    bottom: 8px;
-    left: 0;
+  .result-pill {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+    min-height: 36px;
+    border-radius: 18px;
+    white-space: nowrap;
+  }
+
+  .result-amount {
+    font-size: 16px;
+  }
+
+  .result-detail {
+    font-size: 14px;
   }
 
   .pot {

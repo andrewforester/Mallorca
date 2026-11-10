@@ -1,5 +1,5 @@
 import type { ComponentChildren } from 'preact';
-import type { Intent, Phase, QuickPhrase, SeatIndex, ViewModel } from '../game/index.ts';
+import type { Card, Intent, Phase, QuickPhrase, SeatIndex, ViewModel } from '../game/index.ts';
 import { ActionBar } from './ActionBar.tsx';
 import { BoardRow } from './BoardRow.tsx';
 import { Bubble } from './Bubble.tsx';
@@ -8,6 +8,7 @@ import type { ChatProps } from './Chat.tsx';
 import { t } from './i18n.ts';
 import { handName } from './phrases.ts';
 import attic from './scene/attic-portrait.webp';
+import { ResultPill } from './ResultPill.tsx';
 import { Seat } from './Seat.tsx';
 import { useHeldActions } from './useHeldActions.ts';
 import type { HeldActions } from './useHeldActions.ts';
@@ -62,6 +63,11 @@ function resultText(vm: ViewModel, humanSeat: SeatIndex): string | null {
     : t('result.winsWith', { name, amount: result.amount, hand: handName(result.category) });
 }
 
+function playedOf(vm: ViewModel): Card[] | null {
+  const cards = vm.result?.cards ?? [];
+  return cards.length === 0 ? null : cards;
+}
+
 function chipsDirection(winner: SeatIndex | null, humanSeat: SeatIndex): string {
   if (winner === null) {
     return 'split';
@@ -94,12 +100,12 @@ function TableBoard({
 }) {
   return (
     <div class="table-board" data-testid="table-board">
-      <BoardRow pot={text === null ? vm.pot : null} board={vm.board} />
-      {text !== null && (
-        <p class="result-text" data-testid="result">
-          {text}
-        </p>
-      )}
+      <BoardRow
+        pot={text === null ? vm.pot : null}
+        board={vm.board}
+        played={playedOf(vm)}
+        result={text === null ? null : <ResultPill vm={vm} humanSeat={humanSeat} text={text} />}
+      />
       <ResultChips vm={vm} humanSeat={humanSeat} />
     </div>
   );
@@ -236,6 +242,7 @@ function HerSeat({ vm, humanSeat, held, thinking, chat, bets }: SeatsProps) {
       winner={(vm.result?.winner ?? null) === botSeat}
       position="top"
       bet={seatBet(vm, botSeat, bets)}
+      played={playedOf(vm)}
     >
       {chat !== null && <Bubble line={vm.conversation.herBubble} />}
     </Seat>
@@ -252,6 +259,7 @@ function YourSeat({ vm, humanSeat, held, chat, bets }: SeatsProps) {
       winner={(vm.result?.winner ?? null) === humanSeat}
       position="bottom"
       bet={seatBet(vm, humanSeat, bets)}
+      played={playedOf(vm)}
     >
       {chat !== null && <Bubble line={vm.conversation.playerBubble} />}
     </Seat>

@@ -155,12 +155,45 @@
   font-weight: 600;
 }
 
-.result-text {
-  margin: 0;
-  padding: 0 var(--space-4);
-  font-size: 14px;
+.result-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  font-family: var(--font-body);
+  line-height: 1.15;
+}
+
+.result-pill-you {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  box-shadow: 0 4px 12px rgba(47, 122, 82, 0.3);
+}
+
+.result-pill-her {
+  background: var(--color-paper);
+  color: var(--color-paper-text);
+}
+
+.result-pill-split {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.result-amount {
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.result-detail {
+  font-size: 12px;
   font-weight: 500;
-  text-align: center;
 }
 
 .result-chips {
@@ -247,6 +280,13 @@
 
 .seat-active .seat-block {
   border-color: var(--color-accent);
+}
+
+.seat-winner .seat-block {
+  border-color: var(--color-accent);
+  box-shadow:
+    0 0 0 1px var(--color-accent),
+    0 0 0 5px rgba(47, 122, 82, 0.12);
 }
 
 .seat-side {
@@ -398,9 +438,9 @@
   fill: var(--color-suit-clubs);
 }
 
-.card-highlight .card-body {
-  stroke: var(--color-highlight);
-  stroke-width: 14;
+.card-dim {
+  opacity: 0.35;
+  transition: opacity 300ms ease;
 }
 
 @media (prefers-reduced-motion: no-preference) {

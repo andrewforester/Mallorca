@@ -77,7 +77,7 @@
 
   .seat-top .seat-side {
     display: grid;
-    grid-template-rows: 24px var(--dealer-size);
+    grid-template-rows: var(--dealer-size) 24px;
     row-gap: 8px;
     align-items: center;
     justify-items: start;
@@ -87,11 +87,11 @@
   }
 
   .seat-top .seat-side .bet-chips {
-    grid-row: 1;
+    grid-row: 2;
   }
 
   .seat-top .seat-side .dealer-slot {
-    grid-row: 2;
+    grid-row: 1;
   }
 
   .seat-block {
@@ -136,11 +136,18 @@
   }
 
   .pot {
-    height: 32px;
-    padding: 0 12px;
-    gap: 6px;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    min-height: 32px;
+    padding: 4px 10px;
     border-radius: 16px;
+    line-height: 1.2;
+  }
+
+  .pot:has(> span + span) {
+    border-radius: 14px;
   }
 
   .pot-amount,
@@ -152,9 +159,13 @@
     font-size: 12px;
   }
 
+  .pot-block:has(.result-pill) {
+    max-width: calc(50% - var(--hole-width) - 26px);
+  }
+
   .seat-bottom {
     padding-top: 24px;
-    padding-bottom: 16px;
+    padding-bottom: 40px;
   }
 
   .seat-bottom .seat-cards {
@@ -185,6 +196,11 @@
     padding: 0 16px max(34px, env(safe-area-inset-bottom));
     border-radius: 0;
     background: transparent;
+  }
+
+  .table-layout:not(.table-layer-open) .action-panel {
+    justify-content: flex-end;
+    min-height: calc(168px + max(34px, env(safe-area-inset-bottom)));
   }
 
   .action-bar {
@@ -323,7 +339,6 @@
 
   .table-layer-log .table-board,
   .table-layer-log .seat-bottom,
-  .table-layer-open .result-text,
   .table-layer-open .seat-bottom .seat-block,
   .table-layer-open .seat-bottom .seat-side {
     display: none;

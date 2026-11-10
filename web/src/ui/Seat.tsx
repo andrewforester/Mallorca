@@ -1,8 +1,8 @@
 import type { ComponentChildren } from 'preact';
-import type { LogEntry, SeatView } from '../game/index.ts';
+import type { Card as CardValue, LogEntry, SeatView } from '../game/index.ts';
 import { ActionBubble } from './ActionBubble.tsx';
 import { BetChips } from './BetChips.tsx';
-import { Card } from './Card.tsx';
+import { Card, playedOut } from './Card.tsx';
 import { DealerButton } from './DealerButton.tsx';
 
 export interface SeatProps {
@@ -13,14 +13,15 @@ export interface SeatProps {
   winner: boolean;
   position: 'top' | 'bottom';
   bet?: { amount: number; sweeping: boolean };
+  played?: readonly CardValue[] | null;
   children?: ComponentChildren;
 }
 
-function Cards({ view, winner }: { view: SeatView; winner: boolean }) {
+function Cards({ view, played }: { view: SeatView; played: readonly CardValue[] | null }) {
   return (
     <div class="seat-cards">
       {view.cards.map((card, slot) => (
-        <Card key={slot} card={card} highlight={winner && card !== 'back'} />
+        <Card key={slot} card={card} dim={playedOut(card, played)} />
       ))}
     </div>
   );
@@ -48,7 +49,7 @@ function Side({ index, view, bet }: SeatProps) {
 }
 
 export function Seat(props: SeatProps) {
-  const { index, view, winner, position, children } = props;
+  const { index, view, winner, position, played = null, children } = props;
   const shown = position === 'top' && view.cards.some((card) => card !== 'back');
   const className = [
     'seat',
@@ -61,7 +62,7 @@ export function Seat(props: SeatProps) {
     .join(' ');
   return (
     <section class={className} data-testid={`seat-${index}`} data-winner={winner}>
-      <Cards view={view} winner={winner} />
+      <Cards view={view} played={played} />
       <Block {...props} />
       <Side {...props} />
       {children}

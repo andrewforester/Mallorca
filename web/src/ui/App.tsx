@@ -333,6 +333,8 @@ function GameOver({ props, vm, phase, sessionId }: GameOverProps) {
     return (
       <TournamentOver
         won={vm.tournamentWinner === props.humanSeat}
+        winner={vm.seats[vm.tournamentWinner ?? 0].name}
+        hands={vm.handNumber}
         onPlayAgain={props.onNewGame}
         onLeave={props.onLeaveTonight}
       />

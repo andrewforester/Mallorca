@@ -59,7 +59,7 @@ describe('Table result and announcements', () => {
 
   it('words a split with each share', () => {
     const vm = fixtureResult();
-    vm.result = { winner: null, category: null, amount: 60 };
+    vm.result = { winner: null, category: null, amount: 60, cards: [] };
     table(vm, 'handOver');
     expect(screen.getByTestId('result').textContent).toContain('Split pot 60 each');
   });
@@ -201,7 +201,7 @@ describe('Table result and announcements', () => {
     expect(chips?.getAttribute('aria-hidden')).toBe('true');
     cleanup();
     const split = fixtureResult();
-    split.result = { winner: null, category: null, amount: 60 };
+    split.result = { winner: null, category: null, amount: 60, cards: [] };
     const view = table(split, 'handOver');
     expect(view.container.querySelector('.result-chips-split')).not.toBeNull();
   });

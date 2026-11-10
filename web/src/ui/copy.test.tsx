@@ -97,7 +97,7 @@ describe('copy', () => {
     expect(screen.getByTestId('result').textContent).toContain('Mallorca wins 120 with Two pair');
     cleanup();
     const youWin = fixtureResult();
-    youWin.result = { winner: 0, category: 'flush', amount: 120 };
+    youWin.result = { winner: 0, category: 'flush', amount: 120, cards: [] };
     const won = render(
       <Table vm={youWin} phase="handOver" humanSeat={0} onAct={vi.fn()} onNextHand={vi.fn()} />,
     );
@@ -126,11 +126,20 @@ describe('copy', () => {
     );
     cleanup();
     expectFromLocale(
-      render(<TournamentOver won onPlayAgain={vi.fn()} onLeave={vi.fn()} />).container,
+      render(<TournamentOver won winner="You" hands={4} onPlayAgain={vi.fn()} onLeave={vi.fn()} />)
+        .container,
     );
     cleanup();
     expectFromLocale(
-      render(<TournamentOver won={false} onPlayAgain={vi.fn()} onLeave={vi.fn()} />).container,
+      render(
+        <TournamentOver
+          won={false}
+          winner="Mallorca"
+          hands={4}
+          onPlayAgain={vi.fn()}
+          onLeave={vi.fn()}
+        />,
+      ).container,
     );
     cleanup();
     expectFromLocale(

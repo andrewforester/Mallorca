@@ -99,3 +99,73 @@ test('the whole table fits one screen without scrolling', async ({ page }) => {
     viewport.height,
   );
 });
+
+test('the table stays put while she acts and when a hand ends', async ({ page }) => {
+  const viewport = page.viewportSize();
+  test.skip(viewport === null || viewport.width >= viewport.height, 'phones only');
+  await page.goto(FAST_URL.replace('botDelay=0', 'botDelay=400'));
+  await byId(page, 'start-tournament').click();
+  await expect(byId(page, 'passive')).toBeEnabled();
+  const top = async () => (await box(page, '[data-testid="board"]')).y;
+  const resting = await top();
+  for (let step = 0; step < 6; step += 1) {
+    const next = byId(page, 'next-hand');
+    await ((await next.isVisible()) ? next : byId(page, 'passive')).click();
+    for (let sample = 0; sample < 6; sample += 1) {
+      expect(Math.abs((await top()) - resting)).toBeLessThan(1);
+      await page.waitForTimeout(120);
+    }
+    await expect(byId(page, 'passive').and(page.locator(':enabled')).or(next)).toBeVisible();
+  }
+});
+
+test('a pot with bets puts Total on the line under Pot, each in one line', async ({ page }) => {
+  await startOnPhone(page);
+  await page.evaluate(() => {
+    const pot = document.querySelector('[data-testid="pot"]');
+    if (pot !== null) {
+      pot.innerHTML =
+        '<span class="pot-amount">Pot 1240</span><span class="pot-total">Total 1980</span>';
+    }
+  });
+  const amount = await box(page, '[data-testid="pot"] .pot-amount');
+  const total = await box(page, '[data-testid="pot"] .pot-total');
+  expect(total.y).toBeGreaterThanOrEqual(amount.y + amount.height - 1);
+  expect(amount.height).toBeLessThan(26);
+  expect(total.height).toBeLessThan(22);
+  const pot = await box(page, '[data-testid="pot"]');
+  const cards = await box(page, '[data-testid="seat-0"] .seat-cards');
+  expect(pot.x + pot.width).toBeLessThanOrEqual(cards.x - 8);
+});
+
+test('a pot with only Total keeps it on one line', async ({ page }) => {
+  await startOnPhone(page);
+  const pot = await box(page, '[data-testid="pot"]');
+  expect(pot.height).toBeLessThanOrEqual(34);
+  await expect(byId(page, 'pot')).toHaveText(/^Total \d+$/);
+});
+
+test('your action strip stays in full view above the raise sizing', async ({ page }) => {
+  await startOnPhone(page);
+  await byId(page, 'passive').click();
+  const strip = byId(page, 'action-0');
+  await expect(strip).toBeVisible();
+  const found = await box(page, '[data-testid="action-0"]');
+  const presets = await box(page, '.action-panel');
+  expect(found.y + found.height).toBeLessThanOrEqual(presets.y);
+  await expect(strip).toBeInViewport({ ratio: 1 });
+});
+
+test('her dealer button stands above her bet', async ({ page }) => {
+  await startOnPhone(page);
+  await byId(page, 'fold').click();
+  await byId(page, 'next-hand').click();
+  await expect(byId(page, 'seat-1').locator('.dealer-slot > *')).toBeVisible();
+  const dealer = await box(page, '[data-testid="seat-1"] .dealer-slot > *');
+  const bet = await box(page, '[data-testid="bet-1"]');
+  expect(dealer.y + dealer.height).toBeLessThanOrEqual(bet.y + 1);
+  const block = await box(page, '[data-testid="seat-1"] .seat-block');
+  const middle = dealer.y + dealer.height / 2;
+  expect(middle).toBeGreaterThan(block.y);
+  expect(middle).toBeLessThan(block.y + block.height);
+});
