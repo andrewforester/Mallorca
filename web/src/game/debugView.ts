@@ -1,4 +1,4 @@
-import { EMOTIONS, BIAS_KEYS, PLAY_AXES, PUSH_GAIN, styleOf } from '../persona/index.ts';
+import { EMOTIONS, BIAS_KEYS, pushOf, styleOf } from '../persona/index.ts';
 import type { BigFive, Emotion, Pad, Part, Snapshot, Bias, BiasKey } from '../persona/index.ts';
 import { personalityOf } from './debug.ts';
 import type { ConversationTrace } from './conversationTrace.ts';
@@ -30,6 +30,7 @@ export interface DebugView {
   emotions: [Emotion, number][];
   mood: Pad | null;
   approach: number | null;
+  certainty: number | null;
   defaultMood: Pad | null;
   octant: Snapshot['octant'] | null;
   load: DebugLoad | null;
@@ -62,14 +63,9 @@ function loadOf(s: Snapshot): DebugLoad {
   return { intensity, composure, overload, reach, parts };
 }
 
-function pushOf(s: Snapshot): [BiasKey, number][] {
-  const { intensity, reach } = s.load;
-  const a = s.affect;
-  return BIAS_KEYS.map((k) => {
-    const w = PLAY_AXES[k];
-    const along = w[0] * a[0] + w[1] * a[1] + w[2] * a[2];
-    return [k, intensity === 0 ? 0 : (PUSH_GAIN * reach * along) / intensity];
-  });
+function pushRows(s: Snapshot): [BiasKey, number][] {
+  const push = pushOf(s.affect, s.load.reach, s.load.intensity);
+  return BIAS_KEYS.map((k) => [k, push[k]]);
 }
 
 type FeelingPart = Pick<
@@ -78,6 +74,7 @@ type FeelingPart = Pick<
   | 'emotions'
   | 'mood'
   | 'approach'
+  | 'certainty'
   | 'defaultMood'
   | 'octant'
   | 'load'
@@ -92,6 +89,7 @@ const CALM: FeelingPart = {
   emotions: EMOTIONS.map((e) => [e, 0]),
   mood: null,
   approach: null,
+  certainty: null,
   defaultMood: null,
   octant: null,
   load: null,
@@ -107,13 +105,14 @@ function feelingOf(s: Snapshot): FeelingPart {
     emotions: EMOTIONS.map((e) => [e, s.emotions[e]]),
     mood: s.mood,
     approach: s.approach,
+    certainty: s.certainty,
     defaultMood: s.traits.defaultMood,
     octant: s.octant,
     load: loadOf(s),
     sessionNetBb: s.sessionNetBb,
     pressure: s.pressure,
     engineBias: BIAS_KEYS.map((k) => [k, s.bias[k]]),
-    push: pushOf(s),
+    push: pushRows(s),
   };
 }
 

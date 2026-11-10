@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   APPROACH,
   ATTACK_S,
+  CERTAINTY,
   EMOTIONS,
   EMOTION_PAD,
   addImpulse,
@@ -12,7 +13,7 @@ import {
 } from './emotions.ts';
 import type { Emotions } from './emotions.ts';
 import { createEngine } from './engine.ts';
-import { GAME_MOOD, emotionCenter, octantOf, stepApproach, stepMood } from './mood.ts';
+import { GAME_MOOD, emotionCenter, octantOf, stepAxis, stepMood } from './mood.ts';
 import { defaultMoodOf, traitsOf } from './personality.ts';
 import type { Personality } from './personality.ts';
 import { MALLORCA } from './profiles.ts';
@@ -222,28 +223,49 @@ describe('mood', () => {
   });
 });
 
-describe('approach', () => {
-  const held = (e: Partial<Emotions>, seconds: number, start = 0): number => {
-    let approach = start;
+describe('approach and certainty of the mood', () => {
+  const held = (e: Partial<Emotions>, seconds: number, weights = APPROACH): number => {
+    let value = 0;
     for (let t = 0; t < seconds; t++) {
-      approach = stepApproach(approach, withEmotions(e), 1, GAME_MOOD);
+      value = stepAxis(value, withEmotions(e), 1, { ...GAME_MOOD, weights });
     }
-    return approach;
+    return value;
   };
 
-  it('leans in under steady anger and pulls back under steady shame', () => {
-    expect(held({ anger: 0.8 }, 600)).toBeGreaterThan(0.2);
-    expect(held({ shame: 0.8 }, 600)).toBeLessThan(-0.2);
+  it('lets small emotions lose to the pull to rest', () => {
+    expect(Math.abs(held({ joy: 0.06 }, 600))).toBeLessThan(0.02);
+    expect(Math.abs(held({ anger: 0.8 }, 600))).toBeLessThan(0.02);
+  });
+
+  it('lets strong emotions win over the pull to rest', () => {
+    expect(held({ anger: 1 }, 600)).toBeGreaterThan(0.1);
+    expect(held({ fear: 1 }, 600, CERTAINTY)).toBeLessThan(-0.1);
   });
 
   it('returns to zero without emotions and never overshoots', () => {
     const seconds = Math.ceil((GAME_MOOD.returnTimeS / Math.sqrt(3)) * 0.5);
-    let approach = 0.5;
+    let value = 0.5;
     for (let t = 0; t < seconds; t++) {
-      approach = stepApproach(approach, noEmotions(), 1, GAME_MOOD);
-      expect(approach).toBeGreaterThanOrEqual(0);
+      value = stepAxis(value, noEmotions(), 1, { ...GAME_MOOD, weights: CERTAINTY });
+      expect(value).toBeGreaterThanOrEqual(0);
     }
-    expect(approach).toBe(0);
+    expect(value).toBe(0);
+  });
+
+  it('gives every emotion the certainty of the addendum', () => {
+    expect(CERTAINTY).toEqual({
+      anger: 0.6,
+      pride: 0.6,
+      joy: 0.5,
+      relief: 0.4,
+      injustice: 0.3,
+      disappointment: 0,
+      distress: -0.1,
+      shame: -0.2,
+      hope: -0.2,
+      surprise: -0.6,
+      fear: -0.7,
+    });
   });
 });
 

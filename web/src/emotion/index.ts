@@ -1,5 +1,5 @@
 export type { ChatSignal, Impulse, Money, Prospect, TableEvent } from './appraisal.ts';
-export { EMOTIONS, EMOTION_PAD, REACTION_S } from './emotions.ts';
+export { APPROACH, CERTAINTY, EMOTIONS, EMOTION_PAD, REACTION_S } from './emotions.ts';
 export type { Emotion, Emotions, Pad } from './emotions.ts';
 export { createEngine } from './engine.ts';
 export type { Engine, Snapshot } from './engine.ts';
@@ -9,10 +9,11 @@ export {
   PUSH_GAIN,
   URGENCY_PUSH,
   affectOf,
+  pushOf,
   partsOf,
   playOf,
 } from './play.ts';
-export type { LoadReading, Part, PlayReading } from './play.ts';
+export type { Affect, LoadReading, MoodShift, Part, PlayReading } from './play.ts';
 export { OVERLOAD_MASK_LOSS, maskOf } from './mask.ts';
 export { GAME_MOOD } from './mood.ts';
 export type { MoodConfig, Octant } from './mood.ts';

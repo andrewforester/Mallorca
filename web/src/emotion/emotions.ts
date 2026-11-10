@@ -97,6 +97,20 @@ export const APPROACH: Readonly<Record<Emotion, number>> = {
   surprise: -0.1,
 };
 
+export const CERTAINTY: Readonly<Record<Emotion, number>> = {
+  anger: 0.6,
+  pride: 0.6,
+  joy: 0.5,
+  relief: 0.4,
+  injustice: 0.3,
+  disappointment: 0,
+  distress: -0.1,
+  shame: -0.2,
+  hope: -0.2,
+  surprise: -0.6,
+  fear: -0.7,
+};
+
 export const ATTACK_S = 0.5;
 export const REACTION_S = 1;
 const MAX_IMPULSE = 0.999999;

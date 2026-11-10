@@ -1,16 +1,16 @@
 import { appraise } from './appraisal.ts';
 import type { Impulse, Prospect, TableEvent } from './appraisal.ts';
 import { RELEASE_S, tensionTargets } from './tension.ts';
-import { decay, noEmotions, queue, rise } from './emotions.ts';
+import { APPROACH, CERTAINTY, decay, noEmotions, queue, rise } from './emotions.ts';
 import type { Pending } from './emotions.ts';
 import type { Emotions, Pad } from './emotions.ts';
-import { GAME_MOOD, octantOf, stepApproach, stepMood } from './mood.ts';
+import { GAME_MOOD, octantOf, stepAxis, stepMood } from './mood.ts';
 import type { MoodConfig } from './mood.ts';
 import { traitsOf } from './personality.ts';
 import type { Personality, Traits } from './personality.ts';
 import type { PlayBias } from './biasKeys.ts';
 import { affectOf, partsOf, playOf } from './play.ts';
-import type { LoadReading } from './play.ts';
+import type { Affect, LoadReading } from './play.ts';
 
 export const PROSPECT_HALF_LIFE_S = 0.8;
 export const PROSPECT_DROP_HALF_LIFE_S = 0.25;
@@ -22,12 +22,13 @@ export interface Snapshot {
   emotions: Emotions;
   mood: Pad;
   approach: number;
+  certainty: number;
   octant: ReturnType<typeof octantOf>;
   prospect: Prospect | null;
   sessionNetBb: number;
   pressure: number;
   load: LoadReading;
-  affect: Pad;
+  affect: Affect;
   bias: PlayBias;
 }
 
@@ -62,6 +63,7 @@ class EmotionEngine implements Engine {
   private pending: Pending = {};
   private mood: Pad;
   private approach = 0;
+  private certainty = 0;
   private prospect: Prospect | null = null;
   private sessionNetBb = 0;
   private pressure = 0;
@@ -125,7 +127,14 @@ class EmotionEngine implements Engine {
       ...this.config,
       defaultMood: this.traits.defaultMood,
     });
-    this.approach = stepApproach(this.approach, this.emotions, dt, this.config);
+    this.approach = stepAxis(this.approach, this.emotions, dt, {
+      ...this.config,
+      weights: APPROACH,
+    });
+    this.certainty = stepAxis(this.certainty, this.emotions, dt, {
+      ...this.config,
+      weights: CERTAINTY,
+    });
     this.pressure *= 0.5 ** (dt / PRESSURE_HALF_LIFE_S);
   }
 
@@ -151,8 +160,9 @@ class EmotionEngine implements Engine {
   snapshot(): Snapshot {
     const base = this.traits.defaultMood;
     const shift: Pad = [this.mood[0] - base[0], this.mood[1] - base[1], this.mood[2] - base[2]];
-    const { traits, emotions, approach } = this;
-    const affect = affectOf(emotions, shift, approach, traits.urgency);
+    const { traits, emotions, approach, certainty } = this;
+    const moodShift = { shift, approach, certainty };
+    const affect = affectOf(emotions, moodShift, traits.urgency);
     const play = playOf(affect, traits);
     return {
       time: this.time,
@@ -160,6 +170,7 @@ class EmotionEngine implements Engine {
       emotions: this.emotions,
       mood: this.mood,
       approach: this.approach,
+      certainty: this.certainty,
       octant: octantOf(this.mood),
       prospect: this.prospect,
       sessionNetBb: this.sessionNetBb,
@@ -170,7 +181,7 @@ class EmotionEngine implements Engine {
         reach: play.reach,
         composure: traits.composure,
         discipline: traits.discipline,
-        parts: partsOf(emotions, shift, approach),
+        parts: partsOf(emotions, moodShift),
       },
       affect,
       bias: play.bias,
@@ -178,10 +189,10 @@ class EmotionEngine implements Engine {
   }
 
   ahead(dt: number): Snapshot {
-    const { time, emotions, pending, mood, approach, prospect, pressure } = this;
+    const { time, emotions, pending, mood, approach, certainty, prospect, pressure } = this;
     this.step(dt);
     const later = this.snapshot();
-    Object.assign(this, { time, emotions, pending, mood, approach, prospect, pressure });
+    Object.assign(this, { time, emotions, pending, mood, approach, certainty, prospect, pressure });
     return later;
   }
 
@@ -195,6 +206,7 @@ class EmotionEngine implements Engine {
     this.pending = {};
     this.mood = this.traits.defaultMood;
     this.approach = 0;
+    this.certainty = 0;
     this.prospect = null;
     this.sessionNetBb = 0;
     this.pressure = 0;

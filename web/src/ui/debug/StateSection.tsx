@@ -55,6 +55,9 @@ function Mood({ view }: { view: DebugView }) {
       {view.approach !== null && (
         <p class="debug-note">{`${COPY.mood.approach} ${f2(view.approach)}`}</p>
       )}
+      {view.certainty !== null && (
+        <p class="debug-note">{`${COPY.mood.certainty} ${f2(view.certainty)}`}</p>
+      )}
     </div>
   );
 }

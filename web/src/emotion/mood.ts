@@ -1,5 +1,5 @@
-import { APPROACH, EMOTIONS, EMOTION_PAD, clamp } from './emotions.ts';
-import type { Emotions, Pad } from './emotions.ts';
+import { EMOTIONS, EMOTION_PAD, clamp } from './emotions.ts';
+import type { Emotion, Emotions, Pad } from './emotions.ts';
 
 export interface MoodConfig {
   changeTimeS: number;
@@ -93,14 +93,17 @@ export function stepMood(mood: Pad, e: Emotions, dt: number, frame: MoodFrame): 
   return clampPad(next);
 }
 
-function approachCenter(e: Emotions): { center: number; intensity: number } | null {
+function axisCenter(
+  e: Emotions,
+  weights: Readonly<Record<Emotion, number>>,
+): { center: number; intensity: number } | null {
   let sum = 0;
   let weight = 0;
   let count = 0;
   for (const name of EMOTIONS) {
     const v = e[name];
     if (v >= ACTIVE) {
-      sum += v * APPROACH[name];
+      sum += v * weights[name];
       weight += v;
       count++;
     }
@@ -112,21 +115,30 @@ function toward(from: number, to: number, distance: number): number {
   return Math.abs(to - from) <= distance ? to : from + Math.sign(to - from) * distance;
 }
 
-export function stepApproach(
-  approach: number,
+function pushed(
+  value: number,
   e: Emotions,
-  dt: number,
-  config: MoodConfig,
+  weights: Readonly<Record<Emotion, number>>,
+  step: number,
 ): number {
-  const c = approachCenter(e);
+  const c = axisCenter(e, weights);
   if (!c) {
-    return toward(approach, 0, (SQRT3 / config.returnTimeS) * dt);
+    return value;
   }
-  const step = (c.intensity / config.changeTimeS) * dt;
-  if (approach * c.center < c.center * c.center) {
-    return clamp(toward(approach, c.center, step));
+  const distance = c.intensity * step;
+  if (value * c.center < c.center * c.center) {
+    return toward(value, c.center, distance);
   }
-  return clamp(approach + Math.sign(c.center) * step);
+  return value + Math.sign(c.center) * distance;
+}
+
+export interface AxisFrame extends MoodConfig {
+  weights: Readonly<Record<Emotion, number>>;
+}
+
+export function stepAxis(value: number, e: Emotions, dt: number, frame: AxisFrame): number {
+  const moved = pushed(value, e, frame.weights, dt / frame.changeTimeS);
+  return clamp(toward(moved, 0, (SQRT3 / frame.returnTimeS) * dt));
 }
 
 export function octantOf(p: Pad): {

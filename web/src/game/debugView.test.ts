@@ -54,6 +54,7 @@ describe('toDebugView', () => {
     expect(view.load?.overload).toBe(load?.overload);
     expect(view.load?.composure).toBe(load?.composure);
     expect(view.approach).toBe(state().snapshot?.approach);
+    expect(view.certainty).toBe(state().snapshot?.certainty);
     expect(view.push.map(([k]) => k)).toEqual([...BIAS_KEYS]);
     expect(view.engineBias.map(([k]) => k)).toEqual([...BIAS_KEYS]);
     expect(view.baseline).toEqual(
@@ -69,6 +70,7 @@ describe('toDebugView', () => {
     expect(view.load).toBeNull();
     expect(view.mood).toBeNull();
     expect(view.approach).toBeNull();
+    expect(view.certainty).toBeNull();
     expect(view.push.every(([, v]) => v === 0)).toBe(true);
     expect(view.emotions.every(([, v]) => v === 0)).toBe(true);
     expect(view.engineBias.every(([, v]) => v === 1)).toBe(true);

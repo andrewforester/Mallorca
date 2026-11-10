@@ -146,6 +146,7 @@ describe('EmotionDebug', () => {
     expect(strain.getByText(COPY.part.mood)).toBeTruthy();
     expect(strain.getByText(COPY.emotion.fear)).toBeTruthy();
     expect(within(screen.getByTestId('debug-mood')).getByText(/^Approach /)).toBeTruthy();
+    expect(within(screen.getByTestId('debug-mood')).getByText(/^Certainty /)).toBeTruthy();
     const bias = screen.getByTestId('debug-bias');
     expect(
       within(screen.getByTestId('debug-bias-now')).getByText(COPY.bias.looseness),

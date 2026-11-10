@@ -57,6 +57,7 @@ export const COPY = {
     current: 'Mood now',
     rest: 'Default mood',
     approach: 'Approach',
+    certainty: 'Certainty',
   },
   octant: {
     exuberant: 'exuberant',

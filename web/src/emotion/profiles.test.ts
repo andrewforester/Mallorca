@@ -129,7 +129,7 @@ describe('PERSONALITIES', () => {
 
 describe('setPersonality', () => {
   it('keeps emotions, mood, approach, pressure and the impulses still rising', () => {
-    const engine = createEngine(MALLORCA);
+    const engine = createEngine(MALLORCA, { changeTimeS: 20, returnTimeS: 1200 });
     engine.event({ kind: 'chat', signal: 'tease' });
     engine.event({
       kind: 'opponentBet',
@@ -137,8 +137,8 @@ describe('setPersonality', () => {
       equity: 0.5,
       raise: true,
     });
-    engine.step(120);
-    engine.event({ kind: 'bluff', succeeded: false, potBb: 40 });
+    engine.step(20);
+    engine.event({ kind: 'result', netBb: -40, lastEquity: 0.3 });
     const before = engine.snapshot();
     engine.setPersonality(PERSONALITIES.lola);
     const after = engine.snapshot();
@@ -146,6 +146,7 @@ describe('setPersonality', () => {
       emotions,
       mood,
       approach,
+      certainty,
       pressure,
       prospect,
       sessionNetBb,
@@ -154,12 +155,14 @@ describe('setPersonality', () => {
       emotions,
       mood,
       approach,
+      certainty,
       pressure,
       prospect,
       sessionNetBb,
       time,
     });
     expect(before.approach).not.toBe(0);
+    expect(before.certainty).not.toBe(0);
     expect(keep(after)).toEqual(keep(before));
     engine.step(2);
     expect(engine.snapshot().emotions.shame).toBeGreaterThan(before.emotions.shame + 0.3);
