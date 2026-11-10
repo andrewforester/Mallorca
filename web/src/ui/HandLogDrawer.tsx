@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'preact/hooks';
-import type { LogEntry, SeatIndex, StreetGroup } from '../game/index.ts';
+import type { HandCategory, LogEntry, SeatIndex, StreetGroup } from '../game/index.ts';
 import { groupHand } from '../game/index.ts';
 import { t } from './i18n.ts';
-import { logKind, logLine } from './phrases.ts';
+import { handName, logKind, logLine } from './phrases.ts';
 import { suitFace } from './suits.ts';
 
 export interface HandLogDrawerProps {
@@ -40,17 +40,62 @@ function Street({ group, names, humanSeat }: StreetProps) {
           <span class="hand-log-pot">{t('pot.amount', { amount: group.pot })}</span>
         )}
       </header>
-      <div class="hand-log-tokens">
+      <div class="hand-log-rows">
         {group.entries.map((entry, index) => (
-          <span
-            key={index}
-            class={`log-token${logKind(entry) === 'aggressive' ? ' log-token-aggressive' : ''}`}
-          >
-            {logLine(entry, names, humanSeat)}
-          </span>
+          <LogRow key={index} entry={entry} names={names} humanSeat={humanSeat} />
         ))}
       </div>
     </section>
+  );
+}
+
+const RESULTS = new Set(['win', 'winTournament']);
+
+interface RowProps {
+  entry: LogEntry;
+  names: [string, string];
+  humanSeat: SeatIndex;
+}
+
+function What({ entry, person }: { entry: LogEntry; person: 'you' | 'other' }) {
+  const { category, cards } = entry.params;
+  const hand = category === undefined ? '' : handName(category as HandCategory);
+  return (
+    <span class="log-what" aria-hidden="true">
+      {typeof cards === 'string' &&
+        cards.split(' ').map((card) => <LogCard key={card} text={card} />)}
+      {t(`log.row.${person}.${entry.key}`, { hand })}
+    </span>
+  );
+}
+
+function LogRow({ entry, names, humanSeat }: RowProps) {
+  const seat = entry.params.seat as SeatIndex | undefined;
+  const line = logLine(entry, names, humanSeat);
+  if (seat === undefined) {
+    return <p class="log-row log-row-plain">{line}</p>;
+  }
+  const person = seat === humanSeat ? 'you' : 'other';
+  if (RESULTS.has(entry.key)) {
+    return <p class={`log-result log-result-${person === 'you' ? 'you' : 'her'}`}>{line}</p>;
+  }
+  const amount = entry.params.amount;
+  const classes = [
+    'log-row',
+    person === 'you' ? 'log-row-you' : '',
+    logKind(entry) === 'aggressive' ? 'log-row-aggressive' : '',
+  ];
+  return (
+    <p class={classes.filter(Boolean).join(' ')}>
+      <span class="log-who" aria-hidden="true">
+        {names[seat]}
+      </span>
+      <What entry={entry} person={person} />
+      <span class="log-amount" aria-hidden="true">
+        {amount ?? ''}
+      </span>
+      <span class="log-line visually-hidden">{line}</span>
+    </p>
   );
 }
 

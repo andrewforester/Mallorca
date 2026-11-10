@@ -19,8 +19,8 @@
 .hand-log-heading {
   margin: 0;
   font-family: var(--font-display);
-  font-size: var(--font-size-large);
-  font-weight: 400;
+  font-size: 22px;
+  font-weight: 500;
 }
 
 .hand-log-close {
@@ -40,37 +40,40 @@
 .hand-log-body {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: 12px;
   min-height: 0;
   overflow-y: auto;
 }
 
 .hand-log-street-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--space-2);
-  margin-bottom: var(--space-2);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .hand-log-street-name {
   margin: 0;
   font-family: var(--font-body);
-  font-size: var(--font-size-small);
+  font-size: 14px;
   font-weight: 600;
-  color: var(--color-accent);
+  color: var(--color-text);
 }
 
 .hand-log-pot {
   margin-left: auto;
-  font-family: var(--font-numeric);
-  font-size: var(--font-size-small);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
   color: var(--color-muted);
 }
 
 .log-card {
-  font-family: var(--font-numeric);
-  font-size: var(--font-size-small);
-  font-weight: 500;
+  margin-right: 4px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .log-card-spades {
@@ -89,28 +92,83 @@
   color: var(--color-suit-clubs);
 }
 
-.hand-log-tokens {
+.hand-log-rows {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
+  flex-direction: column;
 }
 
-.log-token {
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--color-token);
-  font-size: var(--font-size-small);
+.log-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  align-items: center;
+  min-height: 28px;
+  margin: 0;
+  padding-left: 10px;
+  font-size: 14px;
 }
 
-.log-token-aggressive {
-  background: var(--color-token-aggressive);
+.log-row-plain {
+  display: block;
+  color: var(--color-muted);
+}
+
+.log-who {
+  color: var(--color-muted);
+}
+
+.log-amount {
+  font-weight: 600;
+}
+
+.log-row-you::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 0;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--color-accent);
+}
+
+.log-row-you .log-who {
   color: var(--color-accent);
+  font-weight: 600;
+}
+
+.log-row-aggressive .log-what {
+  font-weight: 600;
+}
+
+.log-result {
+  align-self: flex-start;
+  margin: 10px 0 0;
+  padding: 6px 12px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.log-result-you {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.log-result-her {
+  background: var(--color-paper);
+  color: var(--color-paper-text);
 }
 
 @media (min-aspect-ratio: 1/1) {
   .hand-log-drawer {
     margin-top: 20px;
-    border: 1px solid var(--color-hairline);
+    border: 1px solid var(--color-border);
     border-radius: 16px;
+  }
+
+  .log-row {
+    grid-template-columns: 72px 1fr auto;
+    font-size: 13px;
   }
 }

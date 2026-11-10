@@ -57,19 +57,51 @@ describe('HandLogDrawer', () => {
     expect(flop?.textContent).toContain('Pot 120');
   });
 
-  it('words tokens with the log line and marks aggression', () => {
+  it('writes one row per action with who, what and how much, and marks aggression', () => {
     setup();
-    expect(screen.getByText('You bet 80')).not.toBeNull();
-    const raise = screen.getByText('You raise to 60');
-    expect(raise.classList.contains('log-token-aggressive')).toBe(true);
-    const call = screen.getByText('Mallorca calls 40');
-    expect(call.classList.contains('log-token-aggressive')).toBe(false);
+    const rows = [...document.querySelectorAll('.log-row')];
+    const raise = rows.find(
+      (row) => row.querySelector('.log-line')?.textContent === 'You raise to 60',
+    );
+    expect(raise?.querySelector('.log-who')?.textContent).toBe('You');
+    expect(raise?.querySelector('.log-what')?.textContent).toBe('raise to');
+    expect(raise?.querySelector('.log-amount')?.textContent).toBe('60');
+    expect(raise?.classList.contains('log-row-you')).toBe(true);
+    expect(raise?.classList.contains('log-row-aggressive')).toBe(true);
+    const call = rows.find(
+      (row) => row.querySelector('.log-line')?.textContent === 'Mallorca calls 40',
+    );
+    expect(call?.querySelector('.log-who')?.textContent).toBe('Mallorca');
+    expect(call?.querySelector('.log-what')?.textContent).toBe('calls');
+    expect(call?.classList.contains('log-row-you')).toBe(false);
+    expect(call?.classList.contains('log-row-aggressive')).toBe(false);
+  });
+
+  it('shows the cards and the hand at a showdown and closes with the result', () => {
+    setup(vi.fn(), [
+      ...HAND,
+      e('show', { seat: 1, cards: 'Qd 5h', category: 'two-pair' }),
+      e('win', { seat: 0, amount: 120 }),
+    ]);
+    const show = [...document.querySelectorAll('.log-row')].at(-1);
+    expect(
+      [...(show?.querySelectorAll('.log-card') ?? [])].map((card) => card.textContent),
+    ).toEqual(['Q♦', '5♥']);
+    expect(show?.querySelector('.log-what')?.textContent).toContain('Two pair');
+    const result = document.querySelector('.log-result');
+    expect(result?.textContent).toBe('You win 120');
+    expect(result?.classList.contains('log-result-you')).toBe(true);
+  });
+
+  it('uses no monospace for the pot', () => {
+    setup();
+    expect(document.querySelector('.hand-log-pot')?.textContent).toBe('Pot 120');
   });
 
   it('shows only the current hand', () => {
     setup();
     expect(screen.queryByText('Hand 1')).toBeNull();
-    expect(document.querySelectorAll('.log-token').length).toBe(6);
+    expect(document.querySelectorAll('.log-row').length).toBe(6);
   });
 
   it('is a named region with no scrim, so the table stays in play', () => {

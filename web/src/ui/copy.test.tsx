@@ -159,7 +159,7 @@ describe('copy', () => {
     const { container } = render(
       <HandLogDrawer entries={log} names={['You', 'Mallorca']} humanSeat={0} onClose={vi.fn()} />,
     );
-    const lines = [...container.querySelectorAll('.log-token')].map((token) => token.textContent);
+    const lines = [...container.querySelectorAll('.log-line')].map((line) => line.textContent);
     expect(lines).toContain('Uncalled bet of 40 returned to Mallorca');
     expect(lines).toContain('You are all-in');
     expect(visibleStrings(container)).toEqual(expect.arrayContaining(lines));
