@@ -69,6 +69,18 @@ function Traits({ view }: { view: DebugView }) {
           <td>{COPY.traits.discipline}</td>
           <td>{f2(t.discipline)}</td>
         </tr>
+        <tr>
+          <td>{COPY.traits.selfBlame}</td>
+          <td>{f2(t.selfBlame)}</td>
+        </tr>
+        <tr>
+          <td>{COPY.traits.coping}</td>
+          <td>{f2(t.coping)}</td>
+        </tr>
+        <tr>
+          <td>{COPY.traits.urgency}</td>
+          <td>{f2(t.urgency)}</td>
+        </tr>
         {t.gains.map(([emotion, gain]) => (
           <tr key={emotion}>
             <td>{`${COPY.traits.gain} ${COPY.emotion[emotion]}`}</td>

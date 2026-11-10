@@ -3,7 +3,7 @@ import { MALLORCA, createEngine } from '../emotion/index.ts';
 import type { Impulse, Personality, Snapshot } from '../emotion/index.ts';
 import { ANCHORS, blendOf, faceOf } from './anchors.ts';
 import { maskOf, pulsesFor, pulsesOf, shownPadOf } from './expression.ts';
-import { faceFrame } from './frame.ts';
+import { faceFrame, nervousOf } from './frame.ts';
 import { MALLORCA_LOOK } from './look.ts';
 import type { FaceLook } from './look.ts';
 import { prosodyOf, speechOf } from './prosody.ts';
@@ -152,6 +152,18 @@ describe('frame', () => {
     expect(hot.shown[0]).toBeLessThan(-0.2);
     expect(Math.abs(cold.shown[0])).toBeLessThan(Math.abs(hot.shown[0]) / 2);
     expect(cold.mask).toBeGreaterThan(hot.mask);
+  });
+
+  it('grows nervous when her mood pulls back, without any fear', () => {
+    const calm = createEngine(MALLORCA).snapshot();
+    expect(nervousOf(calm)).toBeCloseTo(0);
+    const withdrawn: Snapshot = {
+      ...calm,
+      approach: -0.5,
+      mood: [calm.mood[0], calm.mood[1], 0.5],
+    };
+    expect(withdrawn.emotions.fear).toBe(0);
+    expect(nervousOf(withdrawn)).toBeCloseTo(0.15, 12);
   });
 
   it('keeps nervousness from the felt state behind a bluffing face', () => {

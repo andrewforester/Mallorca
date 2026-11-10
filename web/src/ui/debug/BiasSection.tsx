@@ -23,6 +23,21 @@ function Sent({ bias }: { bias: Bias | null }) {
   );
 }
 
+function Pushes({ rows }: { rows: [BiasKey, number][] }) {
+  return (
+    <table class="debug-table" data-testid="debug-push">
+      <tbody>
+        {rows.map(([key, value]) => (
+          <tr key={key}>
+            <td>{COPY.bias[key]}</td>
+            <td>{f2(value)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 function Bars({ testId, rows }: { testId: string; rows: [BiasKey, number][] }) {
   return (
     <div data-testid={testId}>
@@ -37,9 +52,12 @@ export function BiasSection({ view }: { view: DebugView }) {
   return (
     <section class="debug-section" data-testid="debug-bias">
       <h3>{COPY.sections.bias}</h3>
+      <h4>{COPY.nowTitle}</h4>
       <Bars testId="debug-bias-now" rows={view.engineBias} />
       <h4>{COPY.styleTitle}</h4>
       <Bars testId="debug-style" rows={view.baseline} />
+      <h4>{COPY.pushTitle}</h4>
+      <Pushes rows={view.push} />
       <h4>{COPY.sentTitle}</h4>
       <Sent bias={view.sentBias} />
     </section>

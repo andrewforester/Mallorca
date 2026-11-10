@@ -16,8 +16,7 @@ import { GAME_MOOD, emotionCenter, octantOf, stepApproach, stepMood } from './mo
 import { defaultMoodOf, traitsOf } from './personality.ts';
 import type { Personality } from './personality.ts';
 import { MALLORCA } from './profiles.ts';
-import { BIAS_KEYS, BIAS_RANGE, biasOf, driversOf } from './bias.ts';
-import { LEAK_FLOOR, loadOf } from './load.ts';
+import { BIAS_KEYS } from './biasKeys.ts';
 
 const average: Personality = {
   bigFive: { openness: 0, conscientiousness: 0, extraversion: 0, agreeableness: 0, neuroticism: 0 },
@@ -252,86 +251,6 @@ describe('approach', () => {
   });
 });
 
-describe('load', () => {
-  const traits = traitsOf(average);
-
-  it('adds up the negative emotions, the bad mood and the session loss', () => {
-    const reading = loadOf(withEmotions({ anger: 0.5, shame: 0.5 }), [-0.4, 0, 0], -200, traits);
-    expect(reading.parts.anger).toBeCloseTo(0.5);
-    expect(reading.parts.shame).toBeCloseTo(0.4);
-    expect(reading.parts.mood).toBeCloseTo(0.2);
-    expect(reading.parts.desperation).toBeGreaterThan(0.5);
-    expect(reading.load).toBeCloseTo(Object.values(reading.parts).reduce((a, b) => a + b, 0));
-  });
-
-  it('does not call a single lost pot desperation', () => {
-    expect(loadOf(noEmotions(), [0, 0, 0], -60, traits).parts.desperation).toBeLessThan(0.15);
-  });
-
-  it('lets a calm player leak only the floor and an overloaded one almost everything', () => {
-    const calm = loadOf(withEmotions({ distress: 0.2 }), [0, 0, 0], 0, traits);
-    const boiling = loadOf(withEmotions({ anger: 1, injustice: 1 }), [0, 0, 0], 0, traits);
-    expect(calm.overload).toBeLessThan(0.05);
-    expect(calm.leakage).toBeCloseTo((1 - traits.discipline) * LEAK_FLOOR, 1);
-    expect(boiling.overload).toBeGreaterThan(0.95);
-    expect(boiling.leakage).toBeCloseTo(1 - traits.discipline, 1);
-  });
-
-  it('names the emotion that feeds the load most', () => {
-    expect(loadOf(withEmotions({ anger: 0.9 }), [0, 0, 0], 0, traits).dominant).toBe('anger');
-    expect(loadOf(noEmotions(), [0, 0, 0], -400, traits).dominant).toBe('desperation');
-  });
-});
-
-describe('bias', () => {
-  it('is neutral when calm', () => {
-    const bias = biasOf(driversOf(noEmotions(), [0, 0, 0], 0), 0.3);
-    expect(Object.values(bias).every((v) => Math.abs(v - 1) < 1e-9)).toBe(true);
-  });
-
-  it('plays fear tighter and anger more aggressively, with more bluffs', () => {
-    const fear = biasOf(driversOf(withEmotions({ fear: 0.8 }), [0, 0, 0], 0), 0.8);
-    const anger = biasOf(driversOf(withEmotions({ anger: 0.8 }), [0, 0, 0], 0), 0.8);
-    expect(fear.aggression).toBeLessThan(1);
-    expect(fear.looseness).toBeLessThan(1);
-    expect(anger.aggression).toBeGreaterThan(1.3);
-    expect(anger.bluff).toBeGreaterThan(anger.aggression);
-  });
-
-  it('plays a big session loss loose and sticky', () => {
-    const bias = biasOf(driversOf(noEmotions(), [0, 0, 0], -300), 0.8);
-    expect(bias.looseness).toBeGreaterThan(1.2);
-    expect(bias.stickiness).toBeGreaterThan(1.2);
-  });
-
-  it('multiplies her baseline', () => {
-    const calm = driversOf(noEmotions(), [0, 0, 0], 0);
-    const ones = Object.fromEntries(BIAS_KEYS.map((k) => [k, 1])) as Record<
-      (typeof BIAS_KEYS)[number],
-      number
-    >;
-    expect(biasOf(calm, 0.3, { ...ones, aggression: 1.2 }).aggression).toBeCloseTo(1.2, 9);
-  });
-
-  it('clamps the baseline times the emotional part', () => {
-    const angry = driversOf(withEmotions({ anger: 0.8 }), [0, 0, 0], 0);
-    const ones = Object.fromEntries(BIAS_KEYS.map((k) => [k, 1])) as Record<
-      (typeof BIAS_KEYS)[number],
-      number
-    >;
-    expect(biasOf(angry, 0.8, { ...ones, aggression: 1.8 }).aggression).toBe(BIAS_RANGE[1]);
-  });
-
-  it('starts a neutral character from a neutral baseline', () => {
-    expect(Object.values(traitsOf(average).baseline)).toEqual(BIAS_KEYS.map(() => 1));
-  });
-
-  it('holds the bias near neutral with little leakage', () => {
-    const drivers = driversOf(withEmotions({ fear: 0.8 }), [0, 0, 0], 0);
-    expect(Math.abs(biasOf(drivers, 0.05).aggression - 1)).toBeLessThan(0.03);
-  });
-});
-
 describe('engine', () => {
   const badBeat = (personality: Personality) => {
     const engine = createEngine(personality);
@@ -394,6 +313,10 @@ describe('engine', () => {
     engine.step(2);
     expect(engine.snapshot().prospect).toBeNull();
     expect(engine.snapshot().emotions.hope).toBe(0);
+  });
+
+  it('starts a neutral character from the blueprint', () => {
+    expect(Object.values(traitsOf(average).baseline)).toEqual(BIAS_KEYS.map(() => 1));
   });
 
   it('plays her natural style while calm, whatever her default mood', () => {

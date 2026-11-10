@@ -8,10 +8,9 @@ import { GAME_MOOD, octantOf, stepApproach, stepMood } from './mood.ts';
 import type { MoodConfig } from './mood.ts';
 import { traitsOf } from './personality.ts';
 import type { Personality, Traits } from './personality.ts';
-import { biasOf, driversOf } from './bias.ts';
-import type { Drivers, PlayBias } from './bias.ts';
-import { loadOf } from './load.ts';
-import type { LoadReading } from './load.ts';
+import type { PlayBias } from './biasKeys.ts';
+import { affectOf, partsOf, playOf } from './play.ts';
+import type { LoadReading } from './play.ts';
 
 export const PROSPECT_HALF_LIFE_S = 0.8;
 export const PROSPECT_DROP_HALF_LIFE_S = 0.25;
@@ -28,7 +27,7 @@ export interface Snapshot {
   sessionNetBb: number;
   pressure: number;
   load: LoadReading;
-  drivers: Drivers;
+  affect: Pad;
   bias: PlayBias;
 }
 
@@ -152,8 +151,9 @@ class EmotionEngine implements Engine {
   snapshot(): Snapshot {
     const base = this.traits.defaultMood;
     const shift: Pad = [this.mood[0] - base[0], this.mood[1] - base[1], this.mood[2] - base[2]];
-    const load = loadOf(this.emotions, shift, this.sessionNetBb, this.traits);
-    const drivers = driversOf(this.emotions, shift, this.sessionNetBb);
+    const { traits, emotions, approach } = this;
+    const affect = affectOf(emotions, shift, approach, traits.urgency);
+    const play = playOf(affect, traits);
     return {
       time: this.time,
       traits: this.traits,
@@ -164,9 +164,16 @@ class EmotionEngine implements Engine {
       prospect: this.prospect,
       sessionNetBb: this.sessionNetBb,
       pressure: this.pressure,
-      load,
-      drivers,
-      bias: biasOf(drivers, load.leakage, this.traits.baseline),
+      load: {
+        intensity: play.intensity,
+        overload: play.overload,
+        reach: play.reach,
+        composure: traits.composure,
+        discipline: traits.discipline,
+        parts: partsOf(emotions, shift, approach),
+      },
+      affect,
+      bias: play.bias,
     };
   }
 

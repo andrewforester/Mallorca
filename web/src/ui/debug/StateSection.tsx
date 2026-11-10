@@ -52,23 +52,26 @@ function Mood({ view }: { view: DebugView }) {
       {defaultMood !== null && (
         <p class="debug-note">{`${COPY.mood.rest}: ${padText(defaultMood)}`}</p>
       )}
+      {view.approach !== null && (
+        <p class="debug-note">{`${COPY.mood.approach} ${f2(view.approach)}`}</p>
+      )}
     </div>
   );
 }
 
-const NO_LOAD: DebugLoad = { total: 0, sources: [], overload: 0, composure: 0, leakage: 0 };
+const NO_LOAD: DebugLoad = { intensity: 0, composure: 0, overload: 0, reach: 0, parts: [] };
 
 function Load({ view }: { view: DebugView }) {
   const load = view.load ?? NO_LOAD;
   return (
     <div data-testid="debug-load" class="debug-block">
       <h4>{COPY.load.title}</h4>
-      <Bar label={COPY.load.overload} value={load.overload} text={pct(load.overload)} />
-      <Bar label={COPY.load.total} value={load.total / 2} text={f2(load.total)} />
+      <Bar label={COPY.load.intensity} value={load.intensity / 2} text={f2(load.intensity)} />
       <Bar label={COPY.load.composure} value={load.composure / 2} text={f2(load.composure)} />
-      <Bar label={COPY.load.leakage} value={load.leakage} text={pct(load.leakage)} />
-      {load.sources.map(([source, value]) => (
-        <Bar key={source} label={COPY.source[source]} value={value} text={f2(value)} />
+      <Bar label={COPY.load.overload} value={load.overload} text={pct(load.overload)} />
+      <Bar label={COPY.load.reach} value={load.reach} text={pct(load.reach)} />
+      {load.parts.map(([part, value]) => (
+        <Bar key={part} label={COPY.part[part]} value={value} text={f2(value)} />
       ))}
       <p class="debug-note">{`${COPY.load.session}: ${bb(view.sessionNetBb)}`}</p>
       <p class="debug-note">{`${COPY.load.pressure}: ${f2(view.pressure)}`}</p>

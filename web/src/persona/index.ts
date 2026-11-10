@@ -21,11 +21,11 @@ export { classOf, strengthOf } from './strength.ts';
 export { toBotBias, wordsOf } from './view.ts';
 export {
   BIAS_KEYS,
-  BIAS_RANGE,
   EMOTIONS,
-  LOAD_SOURCES,
   MALLORCA,
   PERSONALITIES,
+  PLAY_AXES,
+  PUSH_GAIN,
   styleOf,
 } from '../emotion/index.ts';
 export type {
@@ -33,8 +33,8 @@ export type {
   BigFive,
   Emotion,
   Impulse,
-  LoadSource,
   Octant,
+  Part,
   Pad,
   Personality,
   PersonalityKey,

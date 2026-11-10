@@ -5,7 +5,7 @@ import type { ProfileId } from './profiles.ts';
 import { writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { mulberry32 } from '../../src/cards/index.ts';
-import { BIAS_LABEL, LOAD_LABEL } from './ui/labels.ts';
+import { BIAS_LABEL, strainText } from './ui/labels.ts';
 import { loadBlueprint } from './scenes/blueprint.ts';
 import { createRunner } from './scenes/runner.ts';
 import type { RunnerHooks } from './scenes/runner.ts';
@@ -112,7 +112,7 @@ function sceneLog(sceneId: string, profileId: ProfileId): string[] {
         (e) => `${EMOTION_LABEL[e]} ${f2(s.emotions[e])}`,
       );
       log.push(
-        `- **${scene.moment} с, ключевой момент**: ${top.join(', ')}; настроение ${pad(s.mood)}; перегрузка ${f2(s.load.overload)}${s.load.dominant && s.load.overload > 0.05 ? ` (в основном ${LOAD_LABEL[s.load.dominant]})` : ''}, до игры доходит ${Math.round(s.load.leakage * 100)}%; перекос ${BIAS_KEYS.map((k) => `${k} ×${f2(s.bias[k])}`).join(', ')}`,
+        `- **${scene.moment} с, ключевой момент**: ${top.join(', ')}; настроение ${pad(s.mood)}; ${strainText(s.load)}; перекос ${BIAS_KEYS.map((k) => `${k} ×${f2(s.bias[k])}`).join(', ')}`,
       );
     }
   }

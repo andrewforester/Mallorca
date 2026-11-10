@@ -1,13 +1,5 @@
-import { EMOTIONS, LOAD_SOURCES, BIAS_KEYS, styleOf } from '../persona/index.ts';
-import type {
-  BigFive,
-  Emotion,
-  LoadSource,
-  Pad,
-  Snapshot,
-  Bias,
-  BiasKey,
-} from '../persona/index.ts';
+import { EMOTIONS, BIAS_KEYS, PLAY_AXES, PUSH_GAIN, styleOf } from '../persona/index.ts';
+import type { BigFive, Emotion, Pad, Part, Snapshot, Bias, BiasKey } from '../persona/index.ts';
 import { personalityOf } from './debug.ts';
 import type { ConversationTrace } from './conversationTrace.ts';
 import type { DebugDecision, DebugEntry, DebugState, PersonalityChoice } from './debug.ts';
@@ -16,15 +8,18 @@ export interface DebugTraits {
   defaultMood: Pad;
   composure: number;
   discipline: number;
+  selfBlame: number;
+  coping: number;
+  urgency: number;
   gains: [Emotion, number][];
 }
 
 export interface DebugLoad {
-  total: number;
-  sources: [LoadSource, number][];
-  overload: number;
+  intensity: number;
   composure: number;
-  leakage: number;
+  overload: number;
+  reach: number;
+  parts: [Part, number][];
 }
 
 export interface DebugView {
@@ -35,12 +30,14 @@ export interface DebugView {
   traits: DebugTraits | null;
   emotions: [Emotion, number][];
   mood: Pad | null;
+  approach: number | null;
   defaultMood: Pad | null;
   octant: Snapshot['octant'] | null;
   load: DebugLoad | null;
   sessionNetBb: number;
   pressure: number;
   engineBias: [BiasKey, number][];
+  push: [BiasKey, number][];
   baseline: [BiasKey, number][];
   sentBias: Bias | null;
   decision: DebugDecision | null;
@@ -49,19 +46,31 @@ export interface DebugView {
 }
 
 function traitsOf(s: Snapshot): DebugTraits {
-  const { defaultMood, composure, discipline, gains } = s.traits;
-  return { defaultMood, composure, discipline, gains: EMOTIONS.map((e) => [e, gains[e]]) };
+  const { defaultMood, composure, discipline, selfBlame, coping, urgency, gains } = s.traits;
+  return {
+    defaultMood,
+    composure,
+    discipline,
+    selfBlame,
+    coping,
+    urgency,
+    gains: EMOTIONS.map((e) => [e, gains[e]]),
+  };
 }
 
 function loadOf(s: Snapshot): DebugLoad {
-  const { load, overload, leakage, parts } = s.load;
-  return {
-    total: load,
-    sources: LOAD_SOURCES.map((source) => [source, parts[source]]),
-    overload,
-    composure: s.traits.composure,
-    leakage,
-  };
+  const { intensity, composure, overload, reach, parts } = s.load;
+  return { intensity, composure, overload, reach, parts };
+}
+
+function pushOf(s: Snapshot): [BiasKey, number][] {
+  const { intensity, reach } = s.load;
+  const a = s.affect;
+  return BIAS_KEYS.map((k) => {
+    const w = PLAY_AXES[k];
+    const along = w[0] * a[0] + w[1] * a[1] + w[2] * a[2];
+    return [k, intensity === 0 ? 0 : (PUSH_GAIN * reach * along) / intensity];
+  });
 }
 
 type FeelingPart = Pick<
@@ -69,24 +78,28 @@ type FeelingPart = Pick<
   | 'traits'
   | 'emotions'
   | 'mood'
+  | 'approach'
   | 'defaultMood'
   | 'octant'
   | 'load'
   | 'sessionNetBb'
   | 'pressure'
   | 'engineBias'
+  | 'push'
 >;
 
 const CALM: FeelingPart = {
   traits: null,
   emotions: EMOTIONS.map((e) => [e, 0]),
   mood: null,
+  approach: null,
   defaultMood: null,
   octant: null,
   load: null,
   sessionNetBb: 0,
   pressure: 0,
   engineBias: BIAS_KEYS.map((k) => [k, 1]),
+  push: BIAS_KEYS.map((k) => [k, 0]),
 };
 
 function feelingOf(s: Snapshot): FeelingPart {
@@ -94,12 +107,14 @@ function feelingOf(s: Snapshot): FeelingPart {
     traits: traitsOf(s),
     emotions: EMOTIONS.map((e) => [e, s.emotions[e]]),
     mood: s.mood,
+    approach: s.approach,
     defaultMood: s.traits.defaultMood,
     octant: s.octant,
     load: loadOf(s),
     sessionNetBb: s.sessionNetBb,
     pressure: s.pressure,
     engineBias: BIAS_KEYS.map((k) => [k, s.bias[k]]),
+    push: pushOf(s),
   };
 }
 

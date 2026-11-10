@@ -1,11 +1,11 @@
-import { EMOTIONS, LOAD_SOURCES, BIAS_KEYS, createEngine } from '../../src/emotion/index.ts';
+import { EMOTIONS, BIAS_KEYS, createEngine } from '../../src/emotion/index.ts';
 import type { Pad, Personality, Snapshot } from '../../src/emotion/index.ts';
 import { LAB_MOOD, LAB_SPEEDUP, clamp01 } from './lab.ts';
 import { PROFILES } from './profiles.ts';
 import type { Profile, ProfileId } from './profiles.ts';
 import { OCTANT_LABEL, BIAS_LABEL } from './ui/labels.ts';
 import { mulberry32 } from '../../src/cards/index.ts';
-import { ANCHOR_LABEL, LOAD_LABEL } from './ui/labels.ts';
+import { ANCHOR_LABEL, PART_LABEL, strainText } from './ui/labels.ts';
 import {
   ANCHORS,
   PULSE_FACES,
@@ -206,7 +206,7 @@ const emotionBars = createBars(
 );
 const loadBars = createBars(
   $('tiltParts'),
-  LOAD_SOURCES.map((k) => ({ key: k, label: LOAD_LABEL[k], negative: true })),
+  [...EMOTIONS, 'mood' as const].map((k) => ({ key: k, label: PART_LABEL[k], negative: true })),
 );
 const biasBars = createBars(
   $('bias'),
@@ -231,11 +231,9 @@ function renderPanels(s: Snapshot, mix: number[]): void {
   $('mix').textContent =
     `лицо: ${top.map(({ w, a }) => `${ANCHOR_LABEL[a.id] ?? a.id} ${Math.round(w * 100)}%`).join(', ')}`;
   ($('tiltBar') as HTMLElement).style.width = `${s.load.overload * 100}%`;
-  const dominant =
-    s.load.dominant && s.load.overload > 0.05 ? `, в основном ${LOAD_LABEL[s.load.dominant]}` : '';
   $('tiltText').textContent =
-    `перегрузка ${s.load.overload.toFixed(2)}${dominant}\nнагрузка ${s.load.load.toFixed(2)} при самообладании ${s.traits.composure.toFixed(2)}\nдо игры доходит ${Math.round(s.load.leakage * 100)}% эмоций (дисциплина ${s.traits.discipline.toFixed(2)}), давление рейзами ${s.pressure.toFixed(1)}, сессия ${s.sessionNetBb} бб`;
-  loadBars(s.load.parts);
+    `${strainText(s.load)}\nподход ${f2(s.approach)}, давление рейзами ${s.pressure.toFixed(1)}, сессия ${s.sessionNetBb} бб`;
+  loadBars(Object.fromEntries(s.load.parts));
   biasBars(s.bias, (v) => `×${v.toFixed(2)}`);
   $('faceText').textContent =
     `покерфейс ${lab.mask.toFixed(2)} (привычка ${s.traits.mask.toFixed(2)}, усилие ${lab.effort.toFixed(2)}, перегрузка снимает ${(0.6 * s.load.overload).toFixed(2)})\nвыразительность ${s.traits.expressiveness.toFixed(2)}\nголос ${voice.name()}: темп ${lab.prosody.rate.toFixed(2)}, высота ${lab.prosody.pitch.toFixed(2)}, громкость ${lab.prosody.volume.toFixed(2)}`;

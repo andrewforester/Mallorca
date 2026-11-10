@@ -104,6 +104,14 @@ describe('EmotionDebug', () => {
     );
   });
 
+  it('shows whom she blames, how she copes and how rash she gets, and no experience', async () => {
+    await opened(await seated());
+    for (const label of ['Blames herself', 'Coping', 'Urgency']) {
+      expect(screen.getByText(label)).toBeTruthy();
+    }
+    expect(screen.queryByLabelText('Poker experience')).toBeNull();
+  });
+
   it('carries her self-control slider into a custom personality', async () => {
     const session = await seated();
     const setPersonality = vi.spyOn(session.getState(), 'setPersonality');
@@ -124,14 +132,23 @@ describe('EmotionDebug', () => {
     const emotions = screen.getByTestId('debug-emotions');
     expect(within(emotions).getByText(COPY.emotion.anger)).toBeTruthy();
     expect(within(screen.getByTestId('debug-mood')).getAllByText(/^P [-\d.]+/)[0]).toBeTruthy();
-    expect(within(screen.getByTestId('debug-load')).getByText(COPY.load.overload)).toBeTruthy();
+    const strain = within(screen.getByTestId('debug-load'));
+    for (const label of ['Intensity', 'Composure', 'Overload', 'Reaches the play']) {
+      expect(strain.getByText(label)).toBeTruthy();
+    }
+    expect(strain.getByText(COPY.part.mood)).toBeTruthy();
+    expect(strain.getByText(COPY.emotion.fear)).toBeTruthy();
+    expect(within(screen.getByTestId('debug-mood')).getByText(/^Approach /)).toBeTruthy();
     const bias = screen.getByTestId('debug-bias');
     expect(
       within(screen.getByTestId('debug-bias-now')).getByText(COPY.bias.looseness),
     ).toBeTruthy();
     expect(within(bias).getByText(COPY.sent.tightness)).toBeTruthy();
-    expect(within(bias).getByText(COPY.styleTitle)).toBeTruthy();
+    for (const title of ['Now', 'Nature at rest', 'Push of her state', 'Sent to the bot']) {
+      expect(within(bias).getByText(title)).toBeTruthy();
+    }
     expect(within(screen.getByTestId('debug-style')).getByText(COPY.bias.looseness)).toBeTruthy();
+    expect(within(screen.getByTestId('debug-push')).getByText(COPY.bias.looseness)).toBeTruthy();
   });
 
   it('shows the last decision with the blueprint and the biased shares', async () => {

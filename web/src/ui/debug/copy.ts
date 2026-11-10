@@ -1,11 +1,4 @@
-import type {
-  BigFive,
-  Emotion,
-  LoadSource,
-  PersonalityKey,
-  Bias,
-  BiasKey,
-} from '../../game/index.ts';
+import type { BigFive, Emotion, Part, PersonalityKey, Bias, BiasKey } from '../../game/index.ts';
 
 type Octant =
   'exuberant' | 'bored' | 'dependent' | 'disdainful' | 'relaxed' | 'anxious' | 'docile' | 'hostile';
@@ -45,6 +38,9 @@ export const COPY = {
     defaultMood: 'Default mood',
     composure: 'Composure',
     discipline: 'Discipline',
+    selfBlame: 'Blames herself',
+    coping: 'Coping',
+    urgency: 'Urgency',
     gain: 'Gain',
   },
   emotion: {
@@ -68,6 +64,7 @@ export const COPY = {
     calm: 'calm',
     current: 'Mood now',
     rest: 'Default mood',
+    approach: 'Approach',
   },
   octant: {
     exuberant: 'exuberant',
@@ -82,23 +79,27 @@ export const COPY = {
   strength: { slightly: 'slightly', moderately: 'moderately', fully: 'fully' },
   load: {
     title: 'Strain',
-    overload: 'Overload',
-    total: 'Load',
+    intensity: 'Intensity',
     composure: 'Composure',
-    leakage: 'Reaches the play',
+    overload: 'Overload',
+    reach: 'Reaches the play',
     session: 'Session result',
     pressure: 'Raise pressure',
   },
-  source: {
+  part: {
+    hope: 'hope',
+    fear: 'fear',
+    joy: 'joy',
+    distress: 'distress',
+    relief: 'relief',
+    disappointment: 'disappointment',
+    pride: 'pride',
+    shame: 'shame',
     anger: 'anger',
     injustice: 'injustice',
-    shame: 'shame',
-    distress: 'distress',
-    disappointment: 'disappointment',
-    fear: 'fear',
-    mood: 'bad mood',
-    desperation: 'session loss',
-  } satisfies Record<LoadSource, string>,
+    surprise: 'surprise',
+    mood: 'mood',
+  } satisfies Record<Part, string>,
   bias: {
     aggression: 'Aggression',
     looseness: 'Looseness',
@@ -106,7 +107,9 @@ export const COPY = {
     sizing: 'Bet size',
     stickiness: 'Stickiness',
   } satisfies Record<BiasKey, string>,
-  styleTitle: 'Natural style',
+  nowTitle: 'Now',
+  styleTitle: 'Nature at rest',
+  pushTitle: 'Push of her state',
   sentTitle: 'Sent to the bot',
   notSent: 'No bias sent yet',
   sent: {

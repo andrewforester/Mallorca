@@ -1,13 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseCards } from '../cards/index.ts';
-import {
-  BIAS_KEYS,
-  EMOTIONS,
-  LOAD_SOURCES,
-  PERSONALITIES,
-  createPersona,
-  styleOf,
-} from '../persona/index.ts';
+import { BIAS_KEYS, EMOTIONS, PERSONALITIES, createPersona, styleOf } from '../persona/index.ts';
 import { mulberry32 } from '../cards/index.ts';
 import type { DebugState } from './debug.ts';
 import { EMPTY_TRACE } from './conversationTrace.ts';
@@ -37,13 +30,24 @@ describe('toDebugView', () => {
     expect('experience' in view).toBe(false);
     expect(view.control).toBe(PERSONALITIES.lola.control);
     expect(view.traits?.gains.map(([e]) => e)).toEqual([...EMOTIONS]);
+    const traits = state().snapshot?.traits;
+    expect(view.traits?.selfBlame).toBe(traits?.selfBlame);
+    expect(view.traits?.coping).toBe(traits?.coping);
+    expect(view.traits?.urgency).toBe(traits?.urgency);
   });
 
-  it('lists the emotions, the load sources and the bias in their fixed order', () => {
+  it('lists the emotions, the parts of the strain and the bias in their fixed order', () => {
     const view = toDebugView(state());
     expect(view.emotions.map(([e]) => e)).toEqual([...EMOTIONS]);
     expect(view.emotions.find(([e]) => e === 'anger')?.[1]).toBeGreaterThan(0);
-    expect(view.load?.sources.map(([s]) => s)).toEqual([...LOAD_SOURCES]);
+    expect(view.load?.parts.map(([s]) => s)).toEqual([...EMOTIONS, 'mood']);
+    const load = state().snapshot?.load;
+    expect(view.load?.intensity).toBe(load?.intensity);
+    expect(view.load?.reach).toBe(load?.reach);
+    expect(view.load?.overload).toBe(load?.overload);
+    expect(view.load?.composure).toBe(load?.composure);
+    expect(view.approach).toBe(state().snapshot?.approach);
+    expect(view.push.map(([k]) => k)).toEqual([...BIAS_KEYS]);
     expect(view.engineBias.map(([k]) => k)).toEqual([...BIAS_KEYS]);
     expect(view.baseline).toEqual(
       BIAS_KEYS.map((k) => [k, styleOf(PERSONALITIES.lola.bigFive)[k]]),
@@ -57,6 +61,8 @@ describe('toDebugView', () => {
     expect(view.traits).toBeNull();
     expect(view.load).toBeNull();
     expect(view.mood).toBeNull();
+    expect(view.approach).toBeNull();
+    expect(view.push.every(([, v]) => v === 0)).toBe(true);
     expect(view.emotions.every(([, v]) => v === 0)).toBe(true);
     expect(view.engineBias.every(([, v]) => v === 1)).toBe(true);
     expect(view.baseline.map(([k]) => k)).toEqual([...BIAS_KEYS]);
@@ -91,5 +97,16 @@ describe('toDebugView', () => {
     const custom = { ...PERSONALITIES.nina, suppression: 1 };
     const view = toDebugView(state({ personality: { key: 'custom', personality: custom } }));
     expect(view.suppression).toBe(1);
+  });
+});
+
+describe('the push of her state', () => {
+  it('is the exponent that moves her nature to the bias she plays now', () => {
+    const view = toDebugView(state());
+    const s = state().snapshot;
+    for (const [k, push] of view.push) {
+      const nature = s?.traits.nature[k] ?? 0;
+      expect(2 ** Math.tanh(Math.atanh(0.8) * nature + push)).toBeCloseTo(s?.bias[k] ?? 0, 9);
+    }
   });
 });
