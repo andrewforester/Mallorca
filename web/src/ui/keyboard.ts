@@ -1,11 +1,14 @@
 import { useEffect } from 'preact/hooks';
 
+export type PresetKey = 'half' | 'pot' | 'allin';
+
 export interface KeyHandlers {
   enabled: boolean;
   fold: () => void;
   passive: () => void;
   raise: () => void;
   adjust: (direction: 1 | -1) => void;
+  preset?: (id: PresetKey) => void;
   confirm?: () => boolean;
   back?: () => boolean;
   release?: () => void;
@@ -26,6 +29,9 @@ const passive: Binding = (handlers) => handlers.passive();
 const raise: Binding = (handlers) => handlers.raise();
 const up: Binding = (handlers) => handlers.adjust(1);
 const down: Binding = (handlers) => handlers.adjust(-1);
+const half: Binding = (handlers) => handlers.preset?.('half');
+const pot: Binding = (handlers) => handlers.preset?.('pot');
+const allIn: Binding = (handlers) => handlers.preset?.('allin');
 const confirm: Binding = (handlers) => handlers.confirm?.() ?? false;
 const back: Binding = (handlers) => handlers.back?.() ?? false;
 
@@ -36,6 +42,16 @@ const BINDINGS = new Map<string, Binding>([
   ['C', passive],
   ['r', raise],
   ['R', raise],
+  ['h', half],
+  ['H', half],
+  ['p', pot],
+  ['P', pot],
+  ['a', allIn],
+  ['A', allIn],
+  ['+', up],
+  ['=', up],
+  ['-', down],
+  ['_', down],
   ['ArrowRight', up],
   ['ArrowUp', up],
   ['ArrowLeft', down],
