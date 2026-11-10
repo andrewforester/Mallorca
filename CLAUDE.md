@@ -27,6 +27,9 @@
   Every run is saved to `web/arena-out` of the main checkout (shared by all worktrees). `npm run arena:ui` browses
   them locally; `npm run arena:publish -- <run>` copies a run into the committed `web/arena-results/`, served at
   `<site>/arena/`.
+- Style check: `npm run style-check -- <history file>` replays her decisions from a history copied in the debug panel
+  and shows, per decision, the blueprint, her style and each bias axis alone, with the rules the axes keep. The
+  `style-check` skill in `.claude/skills/` describes the input and how to read the report.
 - Screenshots: `npm run contact` builds, plays a seeded game and writes one contact sheet per device,
   `web/e2e/contact/phone.png` and `web/e2e/contact/desktop.png` (gitignored). After a UI change, look at each
   sheet once, as one image, before committing.
