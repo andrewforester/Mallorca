@@ -62,6 +62,45 @@ pub fn shift(bias: &Bias, street: Street, kinds: &[ActionKind]) -> f64 {
     }
 }
 
+pub fn fold_only(real: &[f64], shifted: &[f64], kinds: &[ActionKind], delta: f64) -> Vec<f64> {
+    let Some(fold) = kinds.iter().position(|&k| k == ActionKind::Fold) else {
+        return shifted.to_vec();
+    };
+    let (total, shifted_total) = (real.iter().sum::<f64>(), shifted.iter().sum::<f64>());
+    if total <= 0.0 || shifted_total <= 0.0 {
+        return shifted.to_vec();
+    }
+    let target = shifted[fold] * total / shifted_total;
+    let fold_weight = if delta > 0.0 {
+        target.min(real[fold])
+    } else {
+        target.max(real[fold])
+    };
+    let mut row = real.to_vec();
+    row[fold] = fold_weight;
+    if fold_weight < real[fold] {
+        let passive = kinds
+            .iter()
+            .position(|&k| matches!(k, ActionKind::Call | ActionKind::Check));
+        let Some(passive) = passive else {
+            return shifted.to_vec();
+        };
+        row[passive] += real[fold] - fold_weight;
+        return row;
+    }
+    let rest = total - real[fold];
+    if rest <= 0.0 {
+        return real.to_vec();
+    }
+    let scale = (total - fold_weight) / rest;
+    for (i, w) in row.iter_mut().enumerate() {
+        if i != fold {
+            *w *= scale;
+        }
+    }
+    row
+}
+
 pub fn sample_weighted(weights: &[f64], draw: f64) -> usize {
     let total: f64 = weights.iter().sum();
     let target = draw * total;
@@ -114,7 +153,13 @@ pub(super) fn biased(
 ) -> Vec<f64> {
     let kinds: Vec<ActionKind> = spot.actions.iter().map(|a| a.0).collect();
     let delta = shift(bias, spot.street, &kinds);
-    let row = shifted_row(model, spot, probabilities, bucket, delta);
+    let real: Vec<f64> = probabilities.iter().map(|&p| f64::from(p)).collect();
+    let row = fold_only(
+        &real,
+        &shifted_row(model, spot, probabilities, bucket, delta),
+        &kinds,
+        delta,
+    );
     let late = matches!(spot.street, Street::Turn | Street::River);
     let buckets = model.file.tree.buckets()[spot.street.as_index()];
     let low = f64::from(bucket) < 0.35 * f64::from(buckets);
@@ -257,6 +302,55 @@ mod tests {
             assert_eq!(shift(&hot, street, &facing), 0.0);
         }
         assert_eq!(shift(&Bias::NEUTRAL, Street::Turn, &open), 0.0);
+    }
+
+    #[test]
+    fn a_loose_shift_moves_only_folds_into_the_call() {
+        let kinds = [Fold, Call, RaiseTo(60), AllIn];
+        let real = [100.0, 60.0, 30.0, 10.0];
+        let shifted = [20.0, 30.0, 120.0, 30.0];
+        assert_eq!(
+            fold_only(&real, &shifted, &kinds, 0.1),
+            vec![20.0, 140.0, 30.0, 10.0]
+        );
+        let pure_fold = [200.0, 0.0, 0.0, 0.0];
+        assert_eq!(
+            fold_only(&pure_fold, &shifted, &kinds, 0.1),
+            vec![20.0, 180.0, 0.0, 0.0]
+        );
+        let folds_more = [100.0, 50.0, 50.0];
+        let real = [0.0, 50.0, 150.0];
+        assert_eq!(
+            fold_only(&real, &folds_more, &kinds[..3], 0.1),
+            real.to_vec()
+        );
+    }
+
+    #[test]
+    fn a_tight_shift_folds_more_and_keeps_the_continuing_mix() {
+        let kinds = [Fold, Call, RaiseTo(60)];
+        let real = [40.0, 40.0, 120.0];
+        let shifted = [100.0, 50.0, 50.0];
+        assert_eq!(
+            fold_only(&real, &shifted, &kinds, -0.1),
+            vec![100.0, 25.0, 75.0]
+        );
+        let folds_less = [0.0, 100.0, 100.0];
+        assert_eq!(fold_only(&real, &folds_less, &kinds, -0.1), real.to_vec());
+    }
+
+    #[test]
+    fn without_a_fold_the_shifted_row_stays() {
+        let open = [Check, RaiseTo(60)];
+        assert_eq!(
+            fold_only(&[50.0, 50.0], &[10.0, 90.0], &open, 0.1),
+            vec![10.0, 90.0]
+        );
+        let no_call = [Fold, AllIn];
+        assert_eq!(
+            fold_only(&[50.0, 50.0], &[10.0, 90.0], &no_call, 0.1),
+            vec![10.0, 90.0]
+        );
     }
 
     #[test]
