@@ -1,12 +1,15 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { CHARACTERS } from '../../game/index.ts';
+import { CHARACTERS, PERSONALITIES } from '../../game/index.ts';
 import { HAIR, HAIRSTYLES, hairBase, portraitOf } from './hair.ts';
 
 describe('HAIR', () => {
   it('gives every character one of her hairstyles', () => {
     for (const character of CHARACTERS) expect(HAIRSTYLES).toContain(HAIR[character]);
+    for (const key of Object.keys(PERSONALITIES) as (keyof typeof PERSONALITIES)[]) {
+      expect(HAIRSTYLES).toContain(HAIR[key]);
+    }
   });
 
   it('keeps the side-swept fringe for Mallorca', () => {
