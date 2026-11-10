@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const FIT = 0.8;
-const FORWARD = 0.026;
+const FORWARD = 0.03;
 const DOWN = 0.003;
 const FRAME_SHADE = 0.55;
 const LENS_ORDER = 5;
