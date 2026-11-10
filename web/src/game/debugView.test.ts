@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { parseCards } from '../cards/index.ts';
-import { BIAS_KEYS, EMOTIONS, PERSONALITIES, createPersona, styleOf } from '../persona/index.ts';
+import {
+  BIAS_KEYS,
+  EMOTIONS,
+  PERSONALITIES,
+  STYLE_SHARE,
+  createPersona,
+  styleOf,
+} from '../persona/index.ts';
 import { mulberry32 } from '../cards/index.ts';
 import type { DebugState } from './debug.ts';
 import { EMPTY_TRACE } from './conversationTrace.ts';
@@ -106,7 +113,10 @@ describe('the push of her state', () => {
     const s = state().snapshot;
     for (const [k, push] of view.push) {
       const nature = s?.traits.nature[k] ?? 0;
-      expect(2 ** Math.tanh(Math.atanh(0.8) * nature + push)).toBeCloseTo(s?.bias[k] ?? 0, 9);
+      expect(2 ** Math.tanh(Math.atanh(STYLE_SHARE) * nature + push)).toBeCloseTo(
+        s?.bias[k] ?? 0,
+        9,
+      );
     }
   });
 });

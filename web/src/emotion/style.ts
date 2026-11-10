@@ -2,47 +2,26 @@ import { BIAS_KEYS } from './biasKeys.ts';
 import type { BiasKey, PlayBias } from './biasKeys.ts';
 import type { BigFive } from './personality.ts';
 
-export const STYLE_COEFFICIENTS: Readonly<Record<BiasKey, Readonly<BigFive>>> = {
-  aggression: {
-    openness: 0.15,
-    conscientiousness: -0.15,
-    extraversion: 0.3,
-    agreeableness: -0.2,
-    neuroticism: -0.25,
-  },
-  looseness: {
-    openness: 0.25,
-    conscientiousness: -0.3,
-    extraversion: 0.2,
-    agreeableness: 0,
-    neuroticism: 0.1,
-  },
-  bluff: {
-    openness: 0.2,
-    conscientiousness: -0.1,
-    extraversion: 0.25,
-    agreeableness: -0.25,
-    neuroticism: -0.3,
-  },
-  sizing: {
-    openness: 0.1,
-    conscientiousness: 0,
-    extraversion: 0.15,
-    agreeableness: -0.2,
-    neuroticism: -0.15,
-  },
-  stickiness: {
-    openness: 0.15,
-    conscientiousness: -0.2,
-    extraversion: 0.1,
-    agreeableness: 0.15,
-    neuroticism: 0.3,
-  },
+const weights = ([o, c, e, a, n]: readonly [number, number, number, number, number]): BigFive => ({
+  openness: o,
+  conscientiousness: c,
+  extraversion: e,
+  agreeableness: a,
+  neuroticism: n,
+});
+
+export const STYLE_WEIGHTS: Readonly<Record<BiasKey, Readonly<BigFive>>> = {
+  aggression: weights([0.05, 0, 1, -0.15, -0.25]),
+  looseness: weights([1, -0.2, 0.15, 0, 0.1]),
+  bluff: weights([0.15, -0.2, 0, -1, -0.1]),
+  stickiness: weights([0.15, -0.1, 0, -0.2, -1]),
+  sizing: weights([0.05, -1, 0.2, -0.2, -0.15]),
 };
 
-const TRAITS = Object.keys(STYLE_COEFFICIENTS.aggression) as (keyof BigFive)[];
+const TRAITS = Object.keys(STYLE_WEIGHTS.aggression) as (keyof BigFive)[];
 
-export const STYLE_SHARE = 0.8;
+export const STYLE_SHARE = 0.7;
+export const EXTREME_TRAIT = 0.8;
 
 const NATURE_SCALE = Math.atanh(STYLE_SHARE);
 
@@ -52,12 +31,12 @@ const byAxis = (value: (key: BiasKey) => number): Record<BiasKey, number> =>
 export function natureOf(bigFive: BigFive): Record<BiasKey, number> {
   return byAxis((key) => {
     let sum = 0;
-    let scale = 0;
+    let lead = 0;
     for (const t of TRAITS) {
-      sum += STYLE_COEFFICIENTS[key][t] * bigFive[t];
-      scale += Math.abs(STYLE_COEFFICIENTS[key][t]);
+      sum += STYLE_WEIGHTS[key][t] * bigFive[t];
+      lead = Math.max(lead, Math.abs(STYLE_WEIGHTS[key][t]));
     }
-    return sum / scale;
+    return sum / (EXTREME_TRAIT * lead);
   });
 }
 

@@ -14,6 +14,7 @@ import {
   playOf,
 } from './play.ts';
 import { MALLORCA, PERSONALITIES } from './profiles.ts';
+import { STYLE_SHARE } from './style.ts';
 
 const persona = (bigFive: BigFive): Personality => ({ bigFive, suppression: 0.3 });
 
@@ -123,7 +124,10 @@ describe('playOf', () => {
     const intensity = Math.hypot(...a);
     const w = PLAY_AXES.bluff;
     const push = (2 * r.reach * (w[0] * a[0] + w[1] * a[1] + w[2] * a[2])) / intensity;
-    expect(r.bias.bluff).toBeCloseTo(2 ** Math.tanh(Math.atanh(0.8) * t.nature.bluff + push), 12);
+    expect(r.bias.bluff).toBeCloseTo(
+      2 ** Math.tanh(Math.atanh(STYLE_SHARE) * t.nature.bluff + push),
+      12,
+    );
   });
 
   it('plays anger up for the brash and fear down for the anxious', () => {

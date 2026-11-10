@@ -27,6 +27,7 @@ export {
   PLAY_AXES,
   PUSH_GAIN,
   REACTION_S,
+  STYLE_SHARE,
   styleOf,
 } from '../emotion/index.ts';
 export type {
