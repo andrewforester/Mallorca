@@ -331,22 +331,25 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   bias of a decision read her view that much later;
   `snapshot()` reads the state; `ahead(dt)` is the snapshot `dt` seconds later without changing the engine;
   `reset()` starts a session over. The engine holds no clock and no randomness.
-- `Personality` is the Big Five in [-1, 1] plus `suppression` (habitual poker face) and `control` (self-control),
-  both in [0, 1]. `traitsOf` derives the default mood (Mehrabian's weights, as in ALMA), the gain and the half-life
-  factor of every emotion, `composure` and `discipline` (from C, N and `control`), `expressiveness`, `mask`,
-  `talkativeness`, three stances (logistic, in (0, 1), and one clamp): `selfBlame` (whom she blames for a loss),
-  `coping` (the stance the spec calls control: whether pressure is a challenge or a threat) and `urgency` (negative
-  urgency of UPPS, `clamp01(0.5 N - 0.5 C)`), her `nature` per axis (`natureOf`, the sum of `STYLE_COEFFICIENTS *
-  trait` over the sum of their absolute values, in [-1, 1]) and `baseline`, her natural style:
-  `styleOf(bigFive) = styleFrom(nature, 0)` (`style.ts`), and `styleFrom(nature, push) =
-  2^tanh(atanh(STYLE_SHARE) * nature + push)` per axis, so the most extreme character reaches 80% of the log range
-  and every style stays strictly inside (0.5, 2).
+- `Personality` is the Big Five in [-1, 1] plus `suppression` (habitual poker face) in [0, 1]. `traitsOf` derives
+  the default mood (Mehrabian's weights, as in ALMA), the gain and the half-life factor of every emotion,
+  `composure = clamp(0.55 - 0.35 N + 0.1 C, 0.15, 1.1)` (emotional stability), `discipline = clamp(0.45 + 0.4 C -
+  0.1 N, 0, 0.95)` (conscientiousness), `expressiveness`, `mask`, `talkativeness`, three stances (logistic, in (0, 1),
+  and one clamp): `selfBlame` (whom she blames for a loss), `coping` (`σ(-1.2 N + 0.6 E - 0.5 A)`, whether pressure
+  is a challenge or a threat) and `urgency` (negative urgency of UPPS, `clamp01(0.5 N - 0.5 C)`), her `nature` per
+  axis and `baseline`, her natural style (`style.ts`): every axis has one leading trait in `STYLE_WEIGHTS`
+  (aggression E, looseness O, bluff low A, stickiness low N, sizing low C) and small others, `natureOf` is
+  `Σ w · trait / (0.8 · max |w|)`, `styleFrom(nature, push) = 2^tanh(atanh(STYLE_SHARE) * nature + push)` with
+  `STYLE_SHARE = 0.7`, and `styleOf(bigFive) = styleFrom(nature, 0)`: a person with every trait at ±0.8 reaches
+  about 70% of the log range on the corner axes, the 32 such people cover all 16 corners of aggression, looseness,
+  bluff and stickiness, and every style stays strictly inside (0.5, 2).
   `MALLORCA` is the personality of the shipped opponent. `PERSONALITIES` (`profiles.ts`) maps a `PersonalityKey` to
-  a personality: the nine characters of the start screen (`mallorca`, `ingrid`, `mira`, `nina`, `lola`, `sol`,
-  `rita`, `vera`, `greta`) and `neutral`, the average reference of the debug panel. The sandbox imports them from
+  a personality: 34 in all, the nine of the start screen (`mallorca`, `ingrid`, `mira`, `nina`, `lola`, `sol`,
+  `rita`, `vera`, `greta`), sixteen extremes (every trait ±0.8, one per poker style), eight intermediate people and
+  `neutral`, the average reference of the debug panel. Their sheets live in `persona`. The sandbox imports them from
   here and keeps only their names, descriptions and face looks.
 - `setPersonality(p)` changes the traits from the next event or step and keeps the emotions, the impulses still
-  rising, mood, approach, session result and pressure; `reset()` then starts the feeling over at the new default mood.
+  rising, mood, approach, certainty, her fold chance, session result and pressure; `reset()` then starts the feeling over at the new default mood.
 - Eleven emotions in [0, 1] (`EMOTIONS`): ten OCC types with their PAD point from ALMA and `injustice` and
   `surprise` of our own; every emotion also has an `APPROACH`, its dominance except anger 0.6 and injustice 0.4.
   An impulse is queued (`queue`) as `-ln(1 - amount)` and lands in `step` with a half-life of `ATTACK_S = 0.5` s
@@ -359,21 +362,30 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   fear held; a good prospect hope; surprise is `unexpected`) times her gains. No event kind names an emotion.
   `TableEvent`s: `deal` and `street` (her perceived equity and the money: pot, invested, stack behind, streets
   left; every change of equity is felt, with no threshold), `opponentBet` (with `raise` for a raise against her,
-  which also builds a session `pressure`; felt through `leaningOf(coping, equity)`), `result` (judged by her equity
-  before the deciding card), `bluff`, `mistake`, `ownMove` (her bet: fear behind a weak hand, joy and pride with a
-  strong one; her fold: a loss caused by the opponent, felt by how much she believed in the hand) and `chat` (a
-  `ChatSignal`, the opponent's, realized or prospective). A `street` after the hand is over is ignored.
+  which also builds a session `pressure`; felt through `leaningOf(coping, equity)`), `opponentCall`, `ownMove` (her
+  bet with the pot before it), `result` with `decided` (`heFolded`: hers, pride by coping, no luck; `showdown`:
+  luck by how unexpected, the rest by self-blame or coping; `sheFolded`: pushed off by her belief in the hand,
+  relief otherwise) and `chat` (a `ChatSignal`, the opponent's, realized or prospective). Her bet and his call
+  have no impulses of their own. A `street` after the hand is over is ignored.
+- Belief (`tension.ts`): her bet sets `foldChanceOf(bet, pot) = bet / (pot + bet)`; his call or bet, a deal and
+  a result reset it to 0. `beliefOf(equity, foldChance) = foldChance + (1 - foldChance) equity` replaces the
+  equity in the tension, the leaning and the expectation of a result; `Snapshot.belief` is the belief now (null
+  between hands).
 - Tension (`tension.ts`): while a hand runs hope and fear track `tensionTargets`, the tension `sat(atStake / 20) *
   4 eq (1 - eq)` split by the leaning `σ(logit coping + 0.5 logit eq)`, where `atStake = pot / 2 + future |2 eq -
   1| / 2`; hope rises with a half-life of 0.8 s, fear of 0.25 s, and both fade with `RELEASE_S = 1.5` s once the
   hand ends.
 - Mood is a PAD point moved by ALMA's pull and push toward the intensity weighted centre of the active emotions and
-  back to the default mood when none is active (`GAME_MOOD`: 600 s to change, 1200 s to return). `approach` is a
-  fourth dimension beside it with the same rules and a rest of 0 (`stepApproach`), `Snapshot.approach`.
-- Play (`play.ts`): `affectOf` is the sum of every emotion's (P, A, approach) plus `MOOD_WEIGHT = 2` times the mood
-  shift and the approach, with `URGENCY_PUSH * urgency * max(0, arousal)` added to approach. `playOf(affect,
-  traits)` gives `intensity = |affect|`, `overload = I² / (I² + composure²)`, `reach = (1 - discipline) overload`
-  and the bias `styleFrom(nature, PUSH_GAIN * reach * (PLAY_AXES[k] · affect) / I)`. `Snapshot.load` is `{
+  back to the default mood when none is active (`GAME_MOOD`: 600 s to change, 1200 s to return). Every emotion has
+  an `APPROACH` and a `CERTAINTY`; the mood holds both beside PAD with a rest of 0 (`Snapshot.approach`,
+  `Snapshot.certainty`), and `stepAxis` moves them every step toward the centre of the active emotions at
+  `intensity / changeTimeS` and always back toward 0 at `√3 / returnTimeS`, so small emotions lose to the pull.
+- Play (`play.ts`): `affectOf(emotions, { shift, approach, certainty }, urgency)` is the `Affect` of four numbers,
+  the sum of every emotion's (P, A, approach, certainty) plus `MOOD_WEIGHT = 2` times the mood shift, approach and
+  certainty, with `URGENCY_PUSH * urgency * max(0, arousal)` added to approach. `playOf(affect, traits)` gives
+  `intensity = |(P, A, approach)|`, `overload = I² / (I² + composure²)`, `reach = (1 - discipline) overload`
+  and the bias `styleFrom(nature, pushOf(affect, reach, I))`, `PUSH_GAIN * reach * (PLAY_AXES[k] · affect) / I`
+  with four weights per axis. `Snapshot.load` is `{
   intensity, overload, reach, composure, discipline, parts }` (`partsOf`: the length of each emotion's contribution
   and the mood's), `Snapshot.affect` the affect and `Snapshot.bias` the `PlayBias` of five multipliers
   (`aggression`, `looseness`, `bluff`, `sizing`, `stickiness`) that tilt the blueprint's action probabilities at one
@@ -427,9 +439,11 @@ speech, the face, the voice and the bias only read it through a `PersonaReader`.
   her perceived equity (against the player's range until he shows, then against his cards) and the money (pot,
   invested, stack behind, streets left), a raise of the player as `opponentBet` (`raise` when it answers her own bet
   or raise on that street), the hand end as `result` judged by her equity against his shown cards on the board when
-  the money went in (0.5 without a showdown), a weak late bet caught or through as `bluff` (a caught one is not also a `mistake`), her own bet, raise or
-  fold as `ownMove`, a river call with a weak class lost at showdown as `mistake` (its cost), and the signals of
-  `hear(signals)` as `chat`.
+  the money went in at a showdown, with `decided` (showdown, he folded or she folded), her bet or raise as `ownMove`
+  with the pot before it, a call of the player as `opponentCall`, and the signals of `hear(signals)` as `chat`.
+- `characters.ts`: `CHARACTER_SHEETS` gives every `PersonalityKey` a `CharacterSheet`: `name`, `short` (who she is
+  in a few words), `about` (the person) and `poker` (how she plays). The debug panel labels its characters with them;
+  the start screen keeps its own copy for its nine.
 - `view(nowMs)` reads her at `nowMs` without moving her (the engine's `ahead`; a time at or before the last
   `observe` reads the current state): `personality`, `snapshot`, `hand`, `presenting`, what she acts, or null:
   `{ stance: 'bluff', shows: 'strong', effort: 0.6 }` after her bet or raise with a weak class until the street or the
@@ -717,11 +731,11 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   `setPersonality(key | personality)` (applied to the running persona and to every persona a later `start` makes) and
   `resetFeeling()` (the persona's `reset`) do nothing without it. Opening or closing the panel calls nothing on the session.
 - `toDebugView(debug)` returns the `DebugView`, plain data for the panel: `personality` and the `bigFive`,
-  `suppression`, `control`, `baseline` (her natural style as `[key, value]` in `BIAS_KEYS` order) and the derived `traits` (default mood, composure, discipline, `selfBlame`, `coping`, `urgency`, the gain of each
-  emotion); `emotions` as `[emotion, value]` in `EMOTIONS` order; `mood`, `approach`, `defaultMood` and `octant`;
+  `suppression`, `baseline` (her natural style as `[key, value]` in `BIAS_KEYS` order) and the derived `traits` (default mood, composure, discipline, `selfBlame`, `coping`, `urgency`, the gain of each
+  emotion); `emotions` as `[emotion, value]` in `EMOTIONS` order; `mood`, `approach`, `certainty`, `defaultMood` and `octant`;
   `load` with the `intensity`, `composure`, `overload`, `reach` and the `parts` in `EMOTIONS` order then `mood`;
   `sessionNetBb` and `pressure`; `engineBias` (the five `PlayBias` multipliers in `BIAS_KEYS` order, all ones
-  without a feeling), `push` (the push of her state per axis, zeros without a feeling) and `sentBias` (the `BotBias`,
+  without a feeling), `push` (the push of her state per axis from `pushOf`, zeros without a feeling) and `sentBias` (the `BotBias`,
   `tightness = 1 / looseness`, or null); `decision`; `journal`; and `conversation`. The panel has two tabs, Feelings
   and Conversation (`mallorca.debugTab`); the Conversation tab shows the totals, every trace entry and a button that
   copies the trace as JSON, and a journal entry and the trace entry it fed link to each other.
@@ -1102,10 +1116,10 @@ imports `engine`, `brains`, `cards`, `cfr`, `persona` and `game/records/record.t
   kinds, a raise to the minimum, from its seeded `Rng`). `cfr:<play file>` plays any play file the same way and is
   labelled `cfr-<file name>` in the report (`botLabel`).
 - `profileBots.ts`: `profileOfName(name)` reads `style:<profile>` and `persona:<profile>` of `PERSONALITIES`, with
-  overrides after `@` (`persona:lola@suppression=0.9,control=0.1`: Big Five traits in [-1, 1], `suppression`
-  and `control` in [0, 1]; anything else is not a bot name), labelled `persona-lola-suppression0.9-control0.1`.
+  overrides after `@` (`persona:lola@suppression=0.9,openness=0.1`: Big Five traits in [-1, 1] and `suppression`
+  in [0, 1]; anything else is not a bot name), labelled `persona-lola-suppression0.9-openness0.1`.
   A `style:` bot is cfr with the constant bias of her natural style without emotion,
-  `toBotBias(styleOf(bigFive))`, `2^tanh(atanh(0.8) nature)` per axis; a `persona:` bot is
+  `toBotBias(styleOf(bigFive))`, `2^tanh(atanh(0.7) nature)` per axis; a `persona:` bot is
   `createPersonaBot` over a cfr brain and a persona of that personality at the bot's seat.
 - `personaBot.ts`: `createPersonaBot(brain, persona, seat)` feeds the persona every step's engine events on a model
   clock (8 s for every `handStarted`, 6 s for every `acted`; nothing waits), narrows her view of his range with the

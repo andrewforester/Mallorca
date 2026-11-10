@@ -10,10 +10,11 @@ npm run arena -- --a math --b always-call --pairs 2000
 Flags: `--a`, `--b` (`math`, `cfr`, `cfr:<play file>`, a cfr bot with a bias after `@` such as `cfr:src/cfr/v2.mlcs.gz@sizing=1.5,stickiness=1.4` (axes `aggression`, `bluff`, `tightness`, `sizing`, `stickiness`, the rest 1; labelled `cfr-v2-sizing1.5-stickiness1.4`), `cfr-tilted`, `cfr-confident`, `cfr-cautious`, `cfr-talk-obvious`, `cfr-talk-subtle`, `cfr-talk-hidden`, `reader`, `tilt-exploiter`, `always-call`, `always-raise`, `min-bettor`, `random`), `--pairs` (1000), `--seed` (1), `--workers` (available cores), `--dir <path>` (results directory), `--out <file>` (JSON report), `--save-hands <file>` (JSONL hand records), `--no-hands`, `--stats` (adds `styleStats` of bot A to the report and prints it).
 
 Character bots: `style:<character>` plays cfr with the constant bias of her natural style without emotion
-(`2^tanh(atanh(0.8) nature)` per axis, strictly inside 0.5 to 2), and `persona:<character>` plays cfr with her
-persona feeling the session, for every key of `PERSONALITIES` (`mallorca`, `ingrid`, `mira`, `nina`, `lola`, `sol`,
-`rita`, `vera`, `greta`, `neutral`). Overrides follow `@`: Big Five traits in -1 to 1, `suppression` and `control`
-in 0 to 1, for example `persona:nina@neuroticism=0.4,control=0.6`.
+(`2^tanh(atanh(0.7) nature)` per axis, strictly inside 0.5 to 2), and `persona:<character>` plays cfr with her
+persona feeling the session, for every one of the 34 keys of `PERSONALITIES` (the nine of the start screen such as
+`mallorca` or `rita`, the extremes such as `boldSchemer` or `timidStickler`, the intermediate such as `plainRealist`,
+and `neutral`). Overrides follow `@`: Big Five traits in -1 to 1 and `suppression` in 0 to 1, for example
+`persona:nina@neuroticism=0.4,suppression=0.6`.
 
 Every run is saved. The report goes to `<dir>/<a>-<b>-<pairs>-s<seed>-<YYYYMMDD-HHMMSS>.json` and the hands next to
 it as `.jsonl`, unless `--out` or `--save-hands` name other paths; `--no-hands` skips the hands. The default
