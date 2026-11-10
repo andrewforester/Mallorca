@@ -62,7 +62,7 @@
   border: none;
   border-radius: 10px;
   background: transparent;
-  color: #e9dfd3;
+  color: var(--color-text);
   cursor: pointer;
   font-size: 14px;
   list-style: none;
@@ -101,7 +101,7 @@
   position: fixed;
   inset: 0;
   z-index: 20;
-  background: rgba(15, 11, 10, 0.35);
+  background: var(--color-overlay);
 }
 
 .menu-body {
@@ -129,7 +129,7 @@
   height: 4px;
   margin-bottom: var(--space-2);
   border-radius: 2px;
-  background: #4a3d36;
+  background: var(--color-border);
 }
 
 .menu-body > span {

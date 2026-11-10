@@ -5,7 +5,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(15, 11, 10, 0.45);
+  background: var(--color-overlay);
 }
 
 .dialog {

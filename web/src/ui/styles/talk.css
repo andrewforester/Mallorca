@@ -35,8 +35,8 @@
   padding: 10px 14px;
   border: none;
   border-radius: 16px 16px 16px 4px;
-  background-color: var(--color-paper);
-  color: #2a2420;
+  background-color: var(--color-surface);
+  color: var(--color-text);
   font-family: var(--font-voice);
   font-size: 17px;
   font-style: italic;
@@ -73,8 +73,8 @@
   min-height: 0;
   margin-top: 10px;
   padding: 4px 16px 12px;
-  border-top: 1px solid rgba(243, 235, 225, 0.07);
-  background: #231b19;
+  border-top: 1px solid var(--color-hairline);
+  background: var(--color-surface);
   color: var(--color-text);
 }
 
@@ -89,7 +89,7 @@
   padding: 0 var(--space-2);
   border: none;
   background: transparent;
-  color: #e9dfd3;
+  color: var(--color-text);
   cursor: pointer;
   font-size: 14px;
 }
@@ -135,8 +135,8 @@
   max-width: 80%;
   padding: var(--space-2) var(--space-3);
   border-radius: 14px 14px 14px 4px;
-  background: var(--color-paper);
-  color: #2a2420;
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .chat-line-mallorca .chat-text {
@@ -147,7 +147,7 @@
 }
 
 .chat-line-mallorca .chat-speaker {
-  color: #6e6359;
+  color: var(--color-muted);
 }
 
 .chat-line-player {
@@ -177,9 +177,9 @@
 .chat-quick .chat-chip {
   min-height: 36px;
   padding: 0 var(--space-3);
-  border: 1px solid rgba(243, 235, 225, 0.2);
+  border: 1px solid var(--color-border);
   border-radius: 18px;
-  color: #e9dfd3;
+  color: var(--color-text);
   font-size: 13.5px;
   font-weight: 400;
 }
@@ -194,9 +194,9 @@
   min-width: 0;
   min-height: var(--tap-size);
   padding: 0 var(--space-4);
-  border: 1px solid rgba(243, 235, 225, 0.2);
+  border: 1px solid var(--color-border);
   border-radius: 22px;
-  background: #1a1413;
+  background: var(--color-surface-alt);
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: 15px;
@@ -225,7 +225,7 @@
   padding: 16px;
   border: 1px solid var(--color-hairline);
   border-radius: 16px;
-  background: #231b19;
+  background: var(--color-surface);
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;

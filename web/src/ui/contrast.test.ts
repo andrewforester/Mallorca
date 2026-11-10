@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const css = readFileSync('src/ui/styles/tokens.css', 'utf8');
-const darkStart = css.indexOf('@media (prefers-color-scheme: dark)');
 
 function tokens(block: string): Map<string, string> {
   const found = new Map<string, string>();
@@ -23,11 +22,11 @@ function contrast(a: string, b: string): number {
   return ((hi as number) + 0.05) / ((lo as number) + 0.05);
 }
 
-const light = tokens(css.slice(0, darkStart));
-const dark = new Map([...light, ...tokens(css.slice(darkStart))]);
+const light = tokens(css);
 
 const pairs = [
   ['color-accent', 'color-accent-text'],
+  ['color-action', 'color-action-text'],
   ['color-danger', 'color-danger-text'],
   ['color-felt', 'color-felt-text'],
   ['color-bg', 'color-text'],
@@ -40,15 +39,14 @@ const pairs = [
 ] as const;
 
 describe('colour tokens', () => {
-  for (const [theme, values] of [
-    ['light', light],
-    ['dark', dark],
-  ] as const) {
-    for (const [background, text] of pairs) {
-      it(`${text} on ${background} reaches 4.5:1 in the ${theme} theme`, () => {
-        const ratio = contrast(values.get(background) as string, values.get(text) as string);
-        expect(ratio).toBeGreaterThanOrEqual(4.5);
-      });
-    }
+  it('has one theme', () => {
+    expect(css.includes('prefers-color-scheme')).toBe(false);
+  });
+
+  for (const [background, text] of pairs) {
+    it(`${text} on ${background} reaches 4.5:1`, () => {
+      const ratio = contrast(light.get(background) as string, light.get(text) as string);
+      expect(ratio).toBeGreaterThanOrEqual(4.5);
+    });
   }
 });
