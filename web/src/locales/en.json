@@ -106,6 +106,7 @@
     "less": "Smaller",
     "more": "Bigger",
     "holdAllIn": "Hold for all-in {{amount}}",
+    "allInTo": "All-in {{amount}}",
     "raiseVerb": "Raise to",
     "betVerb": "Bet",
     "keyFold": "F",

@@ -23,8 +23,13 @@ function KeyHint({ letter }: { letter: string }) {
 
 function raiseLabel(raise: RaiseControl | null, amount: number): string {
   if (raise === null) return t('actions.raise');
+  if (raise.min >= raise.max) return t('actions.allInTo', { amount });
   if (amount >= raise.max) return t('actions.holdAllIn', { amount });
   return t(raise.kind === 'bet' ? 'actions.bet' : 'actions.raiseTo', { amount });
+}
+
+function needsHold(raise: RaiseControl | null, amount: number): boolean {
+  return raise !== null && raise.min < raise.max && amount >= raise.max;
 }
 
 function passiveLabel(passive: ViewModel['controls']['passive']): string {
@@ -42,12 +47,13 @@ interface RaiseButtonProps {
 
 function RaiseButton({ controls, amount, hold, onRaise }: RaiseButtonProps) {
   const { enabled, raise } = controls;
-  const allIn = raise !== null && amount >= raise.max;
+  const allIn = needsHold(raise, amount);
   const classes = [
     'button',
     'button-raise',
     allIn ? 'button-hold' : '',
     hold.holding ? 'button-holding' : '',
+    allIn && hold.nudged ? 'button-nudge' : '',
   ];
   return (
     <button
@@ -145,7 +151,7 @@ export function ActionBar({ controls, onAct }: ActionBarProps) {
   const size = useSize(controls);
   const raiseTo = () => onAct({ kind: 'raise', to: size.amount });
   const hold = useHold(HOLD_MS, raiseTo);
-  const allIn = raise !== null && size.amount >= raise.max;
+  const allIn = needsHold(raise, size.amount);
   const doFold = () => onAct({ kind: 'fold' });
   const doPassive = () => onAct({ kind: 'passive' });
   useKeyboard({
