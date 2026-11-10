@@ -183,6 +183,33 @@ What moves most: stickiness now follows calm. Ingrid no longer folds to pressure
 The reference numbers of the PR #171 design (dynamics) were computed with the old natural style; section 6 replaces
 them.
 
+### All characters in the code (decided)
+
+The code keeps every character below as a profile; which go to the start screen, and their names, the owner decides
+separately. The neutral profile stays the debug reference.
+
+| Group                              | Count | Keys                                                                                     |
+| ---------------------------------- | ----- | ---------------------------------------------------------------------------------------- |
+| extremes, one per poker style      | 16    | the table "Sixteen extremes" above                                                       |
+| intermediate                       | 8     | the table "Eight intermediate characters" above                                          |
+| the characters of PR #171          | 9     | mallorca, ingrid, mira, nina, lola, sol, rita, vera, greta, with their own Big Five        |
+| reference                          | 1     | neutral                                                                                  |
+| total                              | 34    |                                                                                          |
+
+No two of them coincide. The closest pairs, by the largest difference of one style axis in log2 (0.20 is about ×1.15):
+
+| Pair                                  | Style difference | Largest trait difference |
+| ------------------------------------- | ---------------- | ------------------------ |
+| boldSchemer and rita                  | 0.20             | 0.40                     |
+| softMiddle and neutral                | 0.25             | 0.24                     |
+| plainRealist and neutral              | 0.25             | 0.25                     |
+| quietTidy and reservedConservative    | 0.27             | 0.25                     |
+| mallorca and mira                     | 0.27             | 0.40                     |
+| reservedConservative and greta        | 0.28             | 0.40                     |
+
+Rita is a milder maniac in the same corner as boldSchemer, and Greta a milder rock next to reservedConservative; all
+are kept.
+
 ## 4. Bluff and certainty (decided)
 
 The PR #171 design left her own bluff out of scope. The owner decided both directions below.
@@ -311,8 +338,8 @@ What the rows show:
    proposal in section 1 unless the owner chooses otherwise.
 2. Replace `STYLE_COEFFICIENTS` and the nature normalisation by section 2; update the style tests (order at rest,
    values inside (0.5, 2)) to the new rest styles.
-3. Characters: the owner chooses which of the 16 extremes and 8 intermediates go to the start screen and their names;
-   until then they live as profiles for the debug panel and the arena.
+3. Characters: all 34 profiles of section 3 live in the code, for the debug panel and the arena; the owner chooses
+   which go to the start screen and their names.
 4. Bluff and certainty by section 4: remove the `bluff` and `mistake` events, add belief and who decided, certainty on
    emotions and in the mood, the four-weight axes.
 5. The mood pull of section 5.
