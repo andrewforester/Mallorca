@@ -216,80 +216,59 @@ describe('a persona at the table', () => {
   const entries = (persona: Persona, kind: string) =>
     persona.journal().filter((e) => e.event.kind === kind);
 
-  it('feels her own weak bet as a risk', () => {
+  it('sends her bet with the pot before it, and feels nothing for the bet itself', () => {
     const played = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
     played.act(call, 500);
     played.act(raiseTo(60), 1000);
     const [bet] = entries(played.persona, 'ownMove');
-    expect(bet?.event).toMatchObject({ kind: 'ownMove', move: 'bet', amountBb: 2 });
-    expect(Object.keys(bet?.event ?? {}).sort()).toEqual(['amountBb', 'equity', 'kind', 'move']);
-    expect(bet?.impulses.some((i) => i.emotion === 'fear')).toBe(true);
+    expect(bet?.event).toMatchObject({ kind: 'ownMove', move: 'bet', amountBb: 2, potBb: 2 });
+    expect(Object.keys(bet?.event ?? {}).sort()).toEqual([
+      'amountBb',
+      'equity',
+      'kind',
+      'move',
+      'potBb',
+    ]);
+    expect(bet?.impulses).toEqual([]);
   });
 
-  it('is angered to fold a strong hand to his bet', () => {
+  it('tells her feeling when he calls her bet', () => {
+    const played = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
+    [call, raiseTo(60)].forEach((action, k) => played.act(action, (k + 1) * 500));
+    const limped = entries(played.persona, 'opponentCall').length;
+    played.act(call, 1500);
+    expect(entries(played.persona, 'opponentCall')).toHaveLength(limped + 1);
+  });
+
+  it('ends a hand she folds as decided by her, with no fold event of its own', () => {
     const played = deal('Kh Qd', '7c 6c', 'Kc 8d 4s 2h 3c');
     [call, check, check, raiseTo(40)].forEach((action, k) => played.act(action, (k + 1) * 500));
     played.act({ kind: 'fold' }, 3000);
-    const [fold] = entries(played.persona, 'ownMove');
-    expect(fold?.event).toMatchObject({ kind: 'ownMove', move: 'fold', facingBb: 2 });
-    expect(Object.keys(fold?.event ?? {}).sort()).toEqual(['equity', 'facingBb', 'kind', 'move']);
-    expect(fold?.impulses.some((i) => i.emotion === 'anger')).toBe(true);
+    expect(entries(played.persona, 'ownMove')).toEqual([]);
+    const [end] = entries(played.persona, 'result');
+    expect(end?.event).toMatchObject({ kind: 'result', decided: 'sheFolded' });
   });
 
-  it('feels a lost river call with a weak hand as a mistake', () => {
+  it('ends a hand he folds to her bet as decided by him', () => {
     const played = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
-    [call, check, check, check, check, check, check, raiseTo(60)].forEach((action, k) =>
-      played.act(action, (k + 1) * 500),
-    );
-    played.act(call, 5000);
-    expect(entries(played.persona, 'mistake')[0]?.event).toEqual({ kind: 'mistake', costBb: 3 });
+    [call, raiseTo(60)].forEach((action, k) => played.act(action, (k + 1) * 500));
+    played.act({ kind: 'fold' }, 2000);
+    const [end] = entries(played.persona, 'result');
+    expect(end?.event).toMatchObject({ kind: 'result', decided: 'heFolded' });
+    expect(end?.impulses.some((i) => i.emotion === 'pride')).toBe(true);
   });
 
-  it('feels a bluff caught after her river call once, as a caught bluff and not also a mistake', () => {
+  it('feels a bluff caught at showdown through the general rule, never as a bluff event', () => {
     const played = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
     [call, check, check, check, raiseTo(40), call, check, raiseTo(60)].forEach((action, k) =>
       played.act(action, (k + 1) * 500),
     );
     played.act(call, 5000);
-    expect(entries(played.persona, 'bluff').map((e) => e.event)).toMatchObject([
-      { kind: 'bluff', succeeded: false },
-    ]);
+    const [end] = entries(played.persona, 'result');
+    expect(end?.event).toMatchObject({ kind: 'result', decided: 'showdown' });
+    expect(end?.impulses.some((i) => i.emotion === 'shame' || i.emotion === 'anger')).toBe(true);
+    expect(entries(played.persona, 'bluff')).toEqual([]);
     expect(entries(played.persona, 'mistake')).toEqual([]);
-  });
-
-  it('folds to what she has left to call after his re-raise', () => {
-    const played = deal('Kh Qd', '7c 6c', 'Kc 8d 4s 2h 3c');
-    [call, check, raiseTo(40), raiseTo(120)].forEach((action, k) =>
-      played.act(action, (k + 1) * 500),
-    );
-    played.act({ kind: 'fold' }, 3000);
-    expect(entries(played.persona, 'ownMove')[0]?.event).toMatchObject({
-      move: 'fold',
-      facingBb: 4,
-    });
-  });
-
-  it('folds to the bet of this street only', () => {
-    const played = deal('Kh Qd', '7c 6c', 'Kc 8d 4s 2h 3c');
-    [call, check, check, raiseTo(40), call, check, raiseTo(60)].forEach((action, k) =>
-      played.act(action, (k + 1) * 500),
-    );
-    played.act({ kind: 'fold' }, 4000);
-    expect(entries(played.persona, 'ownMove')[0]?.event).toMatchObject({
-      move: 'fold',
-      facingBb: 3,
-    });
-  });
-
-  it('sees no mistake in a weak river call that wins or a strong one that loses', () => {
-    const river = [call, check, check, check, check, check, check, raiseTo(60)];
-    const weakWins = deal('7c 2d', '5c 3d', 'Qs Jh 8d 4c 9h');
-    const strongLoses = deal('As Ah', '9s 9h', 'Kc 9d 2s 3h Qh');
-    for (const played of [weakWins, strongLoses]) {
-      river.forEach((action, k) => played.act(action, (k + 1) * 500));
-      played.act(call, 5000);
-      expect(entries(played.persona, 'mistake')).toEqual([]);
-    }
   });
 });
 

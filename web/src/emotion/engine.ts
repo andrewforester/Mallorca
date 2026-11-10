@@ -1,6 +1,6 @@
 import { appraise } from './appraisal.ts';
 import type { Impulse, Prospect, TableEvent } from './appraisal.ts';
-import { RELEASE_S, tensionTargets } from './tension.ts';
+import { RELEASE_S, beliefOf, foldChanceOf, tensionTargets } from './tension.ts';
 import { APPROACH, CERTAINTY, decay, noEmotions, queue, rise } from './emotions.ts';
 import type { Pending } from './emotions.ts';
 import type { Emotions, Pad } from './emotions.ts';
@@ -23,6 +23,7 @@ export interface Snapshot {
   mood: Pad;
   approach: number;
   certainty: number;
+  belief: number | null;
   octant: ReturnType<typeof octantOf>;
   prospect: Prospect | null;
   sessionNetBb: number;
@@ -64,6 +65,7 @@ class EmotionEngine implements Engine {
   private mood: Pad;
   private approach = 0;
   private certainty = 0;
+  private foldChance = 0;
   private prospect: Prospect | null = null;
   private sessionNetBb = 0;
   private pressure = 0;
@@ -97,7 +99,7 @@ class EmotionEngine implements Engine {
       return { ...e, previousEquity: e.previousEquity ?? p.equity };
     }
     if (e.kind === 'result') {
-      return { ...e, lastEquity: e.lastEquity ?? lastEquityOf(p) };
+      return { ...e, lastEquity: e.lastEquity ?? beliefOf(lastEquityOf(p), this.foldChance) };
     }
     return e;
   }
@@ -115,6 +117,18 @@ class EmotionEngine implements Engine {
       this.prospect = null;
       this.sessionNetBb += e.netBb;
     }
+    this.foldChance =
+      e.kind === 'ownMove' ? foldChanceOf(e.amountBb, e.potBb) : this.keptFoldChance(e);
+  }
+
+  private keptFoldChance(e: TableEvent): number {
+    const resets = ['deal', 'opponentBet', 'opponentCall', 'result'];
+    return resets.includes(e.kind) ? 0 : this.foldChance;
+  }
+
+  private believed(): Prospect | null {
+    const p = this.prospect;
+    return p === null ? null : { ...p, equity: beliefOf(p.equity, this.foldChance) };
   }
 
   step(dt: number): void {
@@ -148,7 +162,7 @@ class EmotionEngine implements Engine {
       };
       return;
     }
-    const target = tensionTargets(this.prospect, this.traits);
+    const target = tensionTargets(this.believed() ?? this.prospect, this.traits);
     const { hope, fear } = this.emotions;
     this.emotions = {
       ...this.emotions,
@@ -171,6 +185,7 @@ class EmotionEngine implements Engine {
       mood: this.mood,
       approach: this.approach,
       certainty: this.certainty,
+      belief: this.believed()?.equity ?? null,
       octant: octantOf(this.mood),
       prospect: this.prospect,
       sessionNetBb: this.sessionNetBb,
@@ -189,10 +204,21 @@ class EmotionEngine implements Engine {
   }
 
   ahead(dt: number): Snapshot {
-    const { time, emotions, pending, mood, approach, certainty, prospect, pressure } = this;
+    const { time, emotions, pending, mood, approach, certainty, prospect, pressure, foldChance } =
+      this;
     this.step(dt);
     const later = this.snapshot();
-    Object.assign(this, { time, emotions, pending, mood, approach, certainty, prospect, pressure });
+    Object.assign(this, {
+      time,
+      emotions,
+      pending,
+      mood,
+      approach,
+      certainty,
+      prospect,
+      pressure,
+      foldChance,
+    });
     return later;
   }
 
@@ -207,6 +233,7 @@ class EmotionEngine implements Engine {
     this.mood = this.traits.defaultMood;
     this.approach = 0;
     this.certainty = 0;
+    this.foldChance = 0;
     this.prospect = null;
     this.sessionNetBb = 0;
     this.pressure = 0;

@@ -40,3 +40,12 @@ export function tensionTargets(p: Prospect, traits: Traits): { hope: number; fea
     fear: clamp01(tension * (1 - leaning) * traits.gains.fear),
   };
 }
+
+export function foldChanceOf(betBb: number, potBb: number): number {
+  const total = potBb + betBb;
+  return total > 0 ? Math.max(0, betBb) / total : 0;
+}
+
+export function beliefOf(equity: number, foldChance: number): number {
+  return clamp01(foldChance + (1 - foldChance) * equity);
+}

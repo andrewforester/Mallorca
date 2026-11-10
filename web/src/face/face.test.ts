@@ -42,7 +42,7 @@ function badBeat(personality: Personality): Snapshot {
   engine.event({ kind: 'deal', equity: 0.8, ...money, streetsLeft: 3 });
   engine.event({ kind: 'street', equity: 0.95, ...money, streetsLeft: 1 });
   engine.event({ kind: 'street', equity: 0, ...money });
-  engine.event({ kind: 'result', netBb: -30, lastEquity: 0.95 });
+  engine.event({ kind: 'result', netBb: -30, lastEquity: 0.95, decided: 'showdown' });
   engine.step(1);
   return engine.snapshot();
 }

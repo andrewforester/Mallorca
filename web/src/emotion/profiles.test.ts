@@ -138,10 +138,25 @@ describe('setPersonality', () => {
       raise: true,
     });
     engine.step(20);
-    engine.event({ kind: 'result', netBb: -40, lastEquity: 0.3 });
+    engine.event({ kind: 'result', netBb: -40, lastEquity: 0.3, decided: 'showdown' });
     const before = engine.snapshot();
     engine.setPersonality(PERSONALITIES.lola);
     const after = engine.snapshot();
+    engine.event({
+      kind: 'deal',
+      equity: 0.3,
+      potBb: 20,
+      investedBb: 10,
+      stackBb: 90,
+      streetsLeft: 1,
+    });
+    engine.event({ kind: 'ownMove', move: 'bet', amountBb: 15, potBb: 20, equity: 0.3 });
+    const believed = engine.snapshot();
+    engine.setPersonality(PERSONALITIES.nina);
+    engine.setPersonality(PERSONALITIES.lola);
+    expect(engine.ahead(0).prospect).toEqual(believed.prospect);
+    expect(engine.snapshot().belief).toBe(believed.belief);
+    expect(believed.belief).toBeGreaterThan(0.3);
     const keep = ({
       emotions,
       mood,
@@ -170,7 +185,7 @@ describe('setPersonality', () => {
 
   it('keeps the feeling and changes the traits, and reset starts at the new default mood', () => {
     const engine = createEngine(MALLORCA);
-    engine.event({ kind: 'result', netBb: -40, lastEquity: 0.9 });
+    engine.event({ kind: 'result', netBb: -40, lastEquity: 0.9, decided: 'showdown' });
     const before = engine.snapshot();
     engine.setPersonality(PERSONALITIES.lola);
     const after = engine.snapshot();

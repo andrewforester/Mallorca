@@ -3,6 +3,8 @@ import { traitsOf } from './personality.ts';
 import type { Traits } from './personality.ts';
 import { MALLORCA, PERSONALITIES } from './profiles.ts';
 import {
+  beliefOf,
+  foldChanceOf,
   EQUITY_LEANING,
   RELEASE_S,
   STAKE_BB,
@@ -91,5 +93,17 @@ describe('tensionTargets', () => {
       expect(target.hope).toBeLessThan(0.06);
       expect(target.fear).toBeLessThan(0.06);
     }
+  });
+});
+
+describe('belief in winning the pot', () => {
+  it('adds the chance that he folds to her bet, the break-even of a bluff', () => {
+    expect(foldChanceOf(15, 20)).toBeCloseTo(15 / 35, 12);
+    expect(foldChanceOf(0, 0)).toBe(0);
+    expect(foldChanceOf(0, 20)).toBe(0);
+    expect(beliefOf(0.1, 15 / 35)).toBeCloseTo(0.4857, 4);
+    expect(beliefOf(0, 0.5)).toBe(0.5);
+    expect(beliefOf(1, 0.5)).toBe(1);
+    expect(beliefOf(0.3, 0)).toBe(0.3);
   });
 });

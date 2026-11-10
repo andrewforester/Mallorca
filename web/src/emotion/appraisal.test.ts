@@ -44,7 +44,12 @@ const felt = (
 };
 
 describe('a lost pot', () => {
-  const badBeat: TableEvent = { kind: 'result', netBb: -100, lastEquity: 0.91 };
+  const badBeat: TableEvent = {
+    kind: 'result',
+    netBb: -100,
+    lastEquity: 0.91,
+    decided: 'showdown',
+  };
 
   it('gives the cards the share of how far ahead she was', () => {
     const a = axes(badBeat);
@@ -66,7 +71,7 @@ describe('a lost pot', () => {
   });
 
   it('blames the opponent with anger or herself with shame by her stance', () => {
-    const loss: TableEvent = { kind: 'result', netBb: -40, lastEquity: 0.35 };
+    const loss: TableEvent = { kind: 'result', netBb: -40, lastEquity: 0.35, decided: 'showdown' };
     const proud = felt(loss, stance(0.75, 0.1));
     expect(proud.anger).toBeGreaterThan(proud.shame);
     expect(proud.disappointment).toBeLessThan(0.15);
@@ -78,14 +83,17 @@ describe('a lost pot', () => {
 
 describe('a won pot', () => {
   it('surprises her when she won from behind, and gives the cards the credit', () => {
-    const won = felt({ kind: 'result', netBb: 30, lastEquity: 0.2 }, traitsOf(MALLORCA));
+    const won = felt(
+      { kind: 'result', netBb: 30, lastEquity: 0.2, decided: 'showdown' },
+      traitsOf(MALLORCA),
+    );
     expect(won.surprise).toBeGreaterThan(0.4);
     expect(won.pride).toBeLessThan(won.joy * 0.5);
   });
 
   it('turns the fear she holds into relief', () => {
     const t = traitsOf(MALLORCA);
-    const won = felt({ kind: 'result', netBb: 30, lastEquity: 0.5 }, t, {
+    const won = felt({ kind: 'result', netBb: 30, lastEquity: 0.5, decided: 'showdown' }, t, {
       ...noEmotions(),
       fear: 0.5,
     });
@@ -183,63 +191,57 @@ describe('the deal', () => {
   });
 });
 
-describe('her own moves', () => {
-  const t = traitsOf(MALLORCA);
+describe('her own bet', () => {
+  it('gives no feeling of its own: belief carries it', () => {
+    const bet: TableEvent = { kind: 'ownMove', move: 'bet', amountBb: 15, potBb: 20, equity: 0.1 };
+    expect(appraise(bet, noEmotions(), ctx(traitsOf(MALLORCA)))).toEqual([]);
+    expect(appraise({ kind: 'opponentCall' }, noEmotions(), ctx(traitsOf(MALLORCA)))).toEqual([]);
+  });
+});
 
-  it('frightens her by what she risks when she bets behind a weak hand', () => {
-    const bluff = { kind: 'ownMove', move: 'bet', amountBb: 20, equity: 0.3 } as const;
-    const a = axes(bluff);
-    expect(a.realized).toBe(false);
-    expect(a.self).toBe(1);
-    expect(a.value).toBeCloseTo(-0.5 * scaled(20) * 0.7, 12);
-    expect(felt(bluff, t).fear).toBeGreaterThan(0.2);
-    expect(felt(bluff, t).pride).toBe(0);
+describe('who decided the outcome', () => {
+  it('gives her the credit when he folds to her bet, pride by her coping', () => {
+    const t = stance(0.75);
+    const through: TableEvent = { kind: 'result', netBb: 20, lastEquity: 0, decided: 'heFolded' };
+    const a = axes(through, t);
+    expect([a.luck, a.unexpected]).toEqual([0, 0]);
+    expect(a.self).toBeCloseTo(0.75, 12);
+    const won = felt(through, t);
+    expect(won.pride).toBeCloseTo(scaled(20) * 0.75 * t.gains.pride, 12);
+    expect(won.surprise).toBe(0);
+    expect(Object.values(won).every(Number.isFinite)).toBe(true);
   });
 
-  it('makes her a little proud when she takes the lead with a strong hand', () => {
-    const value = { kind: 'ownMove', move: 'bet', amountBb: 20, equity: 0.85 } as const;
-    const a = axes(value);
-    expect(a.realized).toBe(true);
-    expect(a.value).toBeCloseTo(0.2 * scaled(20) * smoothstep(0.7, 0.9, 0.85), 12);
-    expect(felt(value, t).pride).toBeGreaterThan(0.05);
-    expect(felt(value, t).fear).toBe(0);
+  it('makes a caught bluff a showdown loss: shame for the self-blaming, anger for the others', () => {
+    const caught: TableEvent = { kind: 'result', netBb: -15, lastEquity: 0.1, decided: 'showdown' };
+    const humble = felt(caught, stance(0.18, 0.89));
+    expect(humble.shame).toBeGreaterThan(humble.anger);
+    const proud = felt(caught, stance(0.75, 0.1));
+    expect(proud.anger).toBeGreaterThan(proud.shame);
   });
 
-  it('leaves a small bet with a middling hand unfelt', () => {
-    const plain = { kind: 'ownMove', move: 'bet', amountBb: 2, equity: 0.55 } as const;
-    expect(appraise(plain, noEmotions(), ctx(t))).toEqual([]);
-  });
-
-  it('feels a fold of a hand she believed in as anger or distress by her coping', () => {
-    const fold = { kind: 'ownMove', move: 'fold', facingBb: 20, equity: 0.7 } as const;
+  it('feels being pushed off a hand she believed in by her coping', () => {
+    const fold: TableEvent = { kind: 'result', netBb: -20, lastEquity: 0.7, decided: 'sheFolded' };
     expect(axes(fold).value).toBeCloseTo(-0.35 * scaled(20) * smoothstep(0.35, 0.75, 0.7), 12);
+    expect(axes(fold).opponent).toBe(1);
     const calm = felt(fold, stance(0.75));
     expect(calm.anger).toBeGreaterThan(calm.distress);
     const lost = felt(fold, stance(0.18));
     expect(lost.distress).toBeGreaterThan(lost.anger);
   });
 
-  it('relieves the fear she holds when she folds junk', () => {
-    const junk = { kind: 'ownMove', move: 'fold', facingBb: 20, equity: 0.1 } as const;
-    expect(axes(junk).resolved).toBe(1);
-    expect(felt(junk, t, { ...noEmotions(), fear: 0.5 }).relief).toBeCloseTo(
-      0.5 * t.gains.relief,
-      12,
-    );
-  });
-});
-
-describe('bluffs and mistakes', () => {
-  it('makes a bluff that got through her own success and a caught one her shame', () => {
-    const through = axes({ kind: 'bluff', succeeded: true, potBb: 20 });
-    expect(through.value).toBeCloseTo(0.8 * scaled(20), 12);
-    expect(through.self).toBe(1);
-    const caught = felt({ kind: 'bluff', succeeded: false, potBb: 20 }, traitsOf(MALLORCA));
-    expect(caught.shame).toBeGreaterThan(0.5);
-  });
-
-  it('weighs a mistake by its cost', () => {
-    expect(axes({ kind: 'mistake', costBb: 10 }).value).toBeCloseTo(-scaled(10), 12);
+  it('feels no loss when she folds junk, only relief of the fear she holds', () => {
+    const t = traitsOf(MALLORCA);
+    const junk: TableEvent = {
+      kind: 'result',
+      netBb: -0.5,
+      lastEquity: 0.35,
+      decided: 'sheFolded',
+    };
+    const felt0 = felt(junk, t, { ...noEmotions(), fear: 0.5 });
+    expect(felt0.distress).toBe(0);
+    expect(felt0.shame).toBe(0);
+    expect(felt0.relief).toBeCloseTo(0.5 * t.gains.relief, 12);
   });
 });
 

@@ -17,12 +17,12 @@ export type TableEvent =
   | ({ kind: 'deal'; equity: number } & Money)
   | ({ kind: 'street'; equity: number; previousEquity?: number } & Money)
   | { kind: 'opponentBet'; sizeBb: number; equity: number; raise?: boolean; pressure?: number }
-  | { kind: 'result'; netBb: number; lastEquity?: number }
-  | { kind: 'bluff'; succeeded: boolean; potBb: number }
-  | { kind: 'mistake'; costBb: number }
-  | { kind: 'ownMove'; move: 'bet'; amountBb: number; equity: number }
-  | { kind: 'ownMove'; move: 'fold'; facingBb: number; equity: number }
+  | { kind: 'opponentCall' }
+  | { kind: 'result'; netBb: number; decided: Decided; lastEquity?: number }
+  | { kind: 'ownMove'; move: 'bet'; amountBb: number; potBb: number; equity: number }
   | { kind: 'chat'; signal: ChatSignal };
+
+export type Decided = 'showdown' | 'heFolded' | 'sheFolded';
 
 export interface AppraisalContext {
   prospect: Prospect | null;
@@ -83,46 +83,54 @@ function opponentBet(e: Extract<TableEvent, { kind: 'opponentBet' }>, c: Apprais
   };
 }
 
-function result(e: Extract<TableEvent, { kind: 'result' }>, traits: Traits): Axes {
-  const expected = e.lastEquity ?? 0.5;
-  const lost = e.netBb < 0;
+function heFolded(netBb: number, traits: Traits): Axes {
+  return {
+    ...BLANK,
+    value: scaled(netBb),
+    resolved: 1,
+    self: traits.coping,
+    opponent: 1 - traits.coping,
+    reason: `he folded to her, she won ${Math.abs(netBb)} bb`,
+  };
+}
+
+function sheFolded(netBb: number, belief: number): Axes {
+  return {
+    ...BLANK,
+    opponent: 1,
+    resolved: 1,
+    expected: belief,
+    value: -0.35 * scaled(netBb) * smoothstep(0.35, 0.75, belief),
+    reason: `she folded, ${Math.abs(netBb)} bb gone, belief ${pct(belief)}`,
+  };
+}
+
+function showdown(netBb: number, expected: number, traits: Traits): Axes {
+  const lost = netBb < 0;
   const luck = lost ? smoothstep(0.5, 0.95, expected) : smoothstep(0.5, 0.9, 1 - expected);
   const mine = lost ? traits.selfBlame : traits.coping;
   return {
     ...BLANK,
-    value: lost ? -scaled(e.netBb) : scaled(e.netBb),
+    value: lost ? -scaled(netBb) : scaled(netBb),
     resolved: 1,
     expected,
     luck,
     unexpected: luck,
     self: (1 - luck) * mine,
     opponent: (1 - luck) * (1 - mine),
-    reason: `${lost ? 'lost' : 'won'} ${Math.abs(e.netBb)} bb with equity ${pct(expected)}`,
+    reason: `${lost ? 'lost' : 'won'} ${Math.abs(netBb)} bb at showdown, equity ${pct(expected)}`,
   };
 }
 
-function ownMove(e: Extract<TableEvent, { kind: 'ownMove' }>): Axes {
-  const { equity } = e;
-  if (e.move === 'fold') {
-    return {
-      ...BLANK,
-      opponent: 1,
-      resolved: 1,
-      expected: equity,
-      value: -0.35 * scaled(e.facingBb) * smoothstep(0.35, 0.75, equity),
-      reason: `she folds to ${e.facingBb} bb with equity ${pct(equity)}`,
-    };
+function result(e: Extract<TableEvent, { kind: 'result' }>, traits: Traits): Axes {
+  const expected = e.lastEquity ?? 0.5;
+  if (e.decided === 'heFolded') {
+    return heFolded(e.netBb, traits);
   }
-  const label = `she bets ${e.amountBb} bb with equity ${pct(equity)}`;
-  if (equity < WEAK_EQUITY) {
-    const value = -0.5 * scaled(e.amountBb) * (1 - equity);
-    return { ...BLANK, realized: false, self: 1, value, reason: `${label}: at risk` };
-  }
-  const value = 0.2 * scaled(e.amountBb) * smoothstep(0.7, 0.9, equity);
-  return { ...BLANK, self: 1, value, reason: `${label}: she takes the lead` };
+  return e.decided === 'sheFolded'
+    ? sheFolded(e.netBb, expected)
+    : showdown(e.netBb, expected, traits);
 }
-
-export const WEAK_EQUITY = 0.45;
 
 const CHAT: Readonly<Record<ChatSignal, readonly [number, boolean]>> = {
   tease: [-0.25, true],
@@ -148,20 +156,9 @@ function axesOf(e: TableEvent, c: AppraisalContext): Axes | null {
       return opponentBet(e, c);
     case 'result':
       return result(e, c.traits);
-    case 'bluff': {
-      const value = e.succeeded ? 0.8 * scaled(e.potBb) : -scaled(e.potBb);
-      const reason = e.succeeded ? 'the bluff got through' : 'the bluff was caught';
-      return { ...BLANK, self: 1, value, reason };
-    }
-    case 'mistake':
-      return {
-        ...BLANK,
-        self: 1,
-        value: -scaled(e.costBb),
-        reason: `the mistake cost ${e.costBb} bb`,
-      };
     case 'ownMove':
-      return ownMove(e);
+    case 'opponentCall':
+      return null;
     case 'chat':
       return chat(e.signal);
   }

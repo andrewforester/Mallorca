@@ -5,8 +5,7 @@ import { bb, pct } from './format.ts';
 const E = COPY.event;
 
 function describeOwn(e: Extract<TableEvent, { kind: 'ownMove' }>): string {
-  const [label, size] = e.move === 'bet' ? [E.herBet, e.amountBb] : [E.herFold, e.facingBb];
-  return `${label} ${size.toFixed(1)} bb, ${E.equity} ${pct(e.equity)}`;
+  return `${E.herBet} ${e.amountBb.toFixed(1)} bb ${E.into} ${e.potBb.toFixed(1)} bb, ${E.equity} ${pct(e.equity)}`;
 }
 
 export function describeEvent(e: TableEvent): string {
@@ -17,12 +16,10 @@ export function describeEvent(e: TableEvent): string {
       return `${E.street}, ${E.equity} ${pct(e.equity)}, ${E.pot} ${e.potBb.toFixed(1)} bb`;
     case 'opponentBet':
       return `${e.raise === true ? E.opponentRaise : E.opponentBet} ${e.sizeBb.toFixed(1)} bb`;
+    case 'opponentCall':
+      return E.opponentCall;
     case 'result':
-      return `${E.result}, ${bb(e.netBb)}`;
-    case 'bluff':
-      return `${e.succeeded ? E.bluffThrough : E.bluffCaught}, ${E.pot} ${e.potBb.toFixed(1)} bb`;
-    case 'mistake':
-      return `${E.mistake}, ${bb(-e.costBb)}`;
+      return `${E.result}, ${E.decided[e.decided]}, ${bb(e.netBb)}`;
     case 'ownMove':
       return describeOwn(e);
     case 'chat':

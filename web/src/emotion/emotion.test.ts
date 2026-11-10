@@ -16,7 +16,7 @@ import { createEngine } from './engine.ts';
 import { GAME_MOOD, emotionCenter, octantOf, stepAxis, stepMood } from './mood.ts';
 import { defaultMoodOf, traitsOf } from './personality.ts';
 import type { Personality } from './personality.ts';
-import { MALLORCA } from './profiles.ts';
+import { MALLORCA, PERSONALITIES } from './profiles.ts';
 import { BIAS_KEYS } from './biasKeys.ts';
 
 const average: Personality = {
@@ -280,7 +280,7 @@ describe('engine', () => {
     engine.step(2);
     engine.event({ kind: 'street', equity: 0, potBb: 120, investedBb: 60 });
     engine.step(0.5);
-    engine.event({ kind: 'result', netBb: -60 });
+    engine.event({ kind: 'result', netBb: -60, decided: 'showdown' });
     engine.step(6);
     return engine.snapshot();
   };
@@ -320,14 +320,14 @@ describe('engine', () => {
     engine.event({ kind: 'deal', equity: 0.8, potBb: 120, investedBb: 60 });
     engine.event({ kind: 'street', equity: 0.86, potBb: 120, investedBb: 60 });
     engine.event({ kind: 'street', equity: 0, potBb: 120, investedBb: 60 });
-    const impulses = engine.event({ kind: 'result', netBb: -60 });
+    const impulses = engine.event({ kind: 'result', netBb: -60, decided: 'showdown' });
     expect(impulses.some((i) => i.emotion === 'injustice' && i.amount > 0.3)).toBe(true);
   });
 
   it('ignores cards shown after the hand is over', () => {
     const engine = createEngine(MALLORCA);
     engine.event({ kind: 'deal', equity: 0.7, potBb: 40, investedBb: 20 });
-    engine.event({ kind: 'result', netBb: -20 });
+    engine.event({ kind: 'result', netBb: -20, decided: 'showdown' });
     engine.event({ kind: 'street', equity: 0.9, potBb: 40, investedBb: 20 });
     engine.step(2);
     expect(engine.snapshot().prospect).toBeNull();
@@ -358,7 +358,7 @@ describe('engine', () => {
     engine.step(3);
     const during = engine.snapshot().emotions;
     expect(during.hope + during.fear).toBeGreaterThan(0.3);
-    engine.event({ kind: 'result', netBb: -60 });
+    engine.event({ kind: 'result', netBb: -60, decided: 'showdown' });
     expect(engine.snapshot().prospect).toBeNull();
     expect(engine.snapshot().sessionNetBb).toBe(-60);
     engine.step(0.5);
@@ -370,10 +370,68 @@ describe('engine', () => {
   });
 });
 
+describe('her belief while she bets', () => {
+  const riverBluff = (key: 'nina' | 'rita') => {
+    const engine = createEngine(PERSONALITIES[key]);
+    engine.event({
+      kind: 'deal',
+      equity: 0.1,
+      potBb: 20,
+      investedBb: 10,
+      stackBb: 90,
+      streetsLeft: 0,
+    });
+    engine.step(5);
+    const before = engine.snapshot().emotions;
+    engine.event({ kind: 'ownMove', move: 'bet', amountBb: 15, potBb: 20, equity: 0.1 });
+    engine.event({
+      kind: 'street',
+      equity: 0.1,
+      potBb: 35,
+      investedBb: 25,
+      stackBb: 75,
+      streetsLeft: 0,
+    });
+    engine.step(5);
+    return { engine, before, after: engine.snapshot().emotions };
+  };
+
+  it('frightens the anxious and excites the bold with the same bluff', () => {
+    const nina = riverBluff('nina');
+    expect(nina.after.fear).toBeGreaterThan(nina.before.fear + 0.1);
+    const rita = riverBluff('rita');
+    expect(rita.after.hope).toBeGreaterThan(rita.before.hope + 0.1);
+  });
+
+  it('goes back to her equity when he calls', () => {
+    const { engine } = riverBluff('nina');
+    const held = engine.snapshot().emotions.fear;
+    engine.event({ kind: 'opponentCall' });
+    engine.step(5);
+    expect(engine.snapshot().emotions.fear).toBeLessThan(held);
+  });
+
+  it('changes nothing when he calls without a bet of hers', () => {
+    const engine = createEngine(MALLORCA);
+    engine.event({
+      kind: 'deal',
+      equity: 0.4,
+      potBb: 20,
+      investedBb: 10,
+      stackBb: 90,
+      streetsLeft: 1,
+    });
+    engine.step(3);
+    const before = engine.snapshot();
+    engine.event({ kind: 'opponentCall' });
+    expect(engine.snapshot()).toEqual(before);
+  });
+});
+
 describe('looking ahead', () => {
   it('reads the snapshot a step later without moving the engine', () => {
     const engine = createEngine(MALLORCA);
-    engine.event({ kind: 'bluff', succeeded: false, potBb: 40 });
+    engine.event({ kind: 'result', netBb: -40, lastEquity: 0.1, decided: 'showdown' });
     engine.step(10);
     const before = engine.snapshot();
     const ahead = engine.ahead(3);
