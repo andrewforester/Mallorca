@@ -81,6 +81,17 @@ export function faceNormals(pos: Float32Array, index: ArrayLike<number>, out: Fl
   normalize(out);
 }
 
+const FACING_MIN = 0.6;
+
+function outward(authored: Float32Array, faces: Float32Array): Float32Array {
+  const out = authored.slice();
+  for (let o = 0; o < out.length; o += 3) {
+    const facing = out[o]! * faces[o]! + out[o + 1]! * faces[o + 1]! + out[o + 2]! * faces[o + 2]!;
+    if (facing < FACING_MIN) out.set(faces.subarray(o, o + 3), o);
+  }
+  return out;
+}
+
 export class NormalTracker {
   private readonly rest: Float32Array;
   private readonly restFaces: Float32Array;
@@ -89,10 +100,10 @@ export class NormalTracker {
 
   constructor(rest: Float32Array, restPos: Float32Array, index: ArrayLike<number>) {
     this.index = index;
-    this.rest = rest.slice();
     this.restFaces = new Float32Array(rest.length);
     this.now = new Float32Array(rest.length);
     faceNormals(restPos, index, this.restFaces);
+    this.rest = outward(rest, this.restFaces);
   }
 
   update(pos: Float32Array, out: Float32Array): void {
