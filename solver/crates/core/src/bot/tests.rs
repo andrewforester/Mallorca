@@ -1674,3 +1674,73 @@ fn a_tight_bias_drops_the_weakest_hands_the_blueprint_continues_with_first() {
         }
     }
 }
+
+fn check_spots(model: &Model) -> Vec<NodeId> {
+    let all: Vec<NodeId> = (0..model.file.tree.nodes().len() as NodeId)
+        .filter(|&id| {
+            model
+                .spot(id)
+                .is_some_and(|s| s.actions.iter().any(|a| a.0 == ActionKind::Check))
+        })
+        .collect();
+    let step = (all.len() / 150).max(1);
+    all.into_iter().step_by(step).collect()
+}
+
+fn check_shares(model: &Model, node: NodeId, bias: &Bias) -> Vec<(f64, f64)> {
+    let spot = model.spot(node).unwrap();
+    let check = spot
+        .actions
+        .iter()
+        .position(|a| a.0 == ActionKind::Check)
+        .unwrap();
+    let buckets = model.file.tree.buckets()[spot.street.as_index()];
+    (0..buckets)
+        .filter_map(|b| {
+            let p = model.file.try_probabilities(node, b)?;
+            let total: f64 = p.iter().map(|&x| f64::from(x)).sum();
+            let w = biased(model, &spot, p, b, bias);
+            Some((
+                f64::from(p[check]) / total,
+                w[check] / w.iter().sum::<f64>(),
+            ))
+        })
+        .collect()
+}
+
+#[test]
+fn aggression_moves_every_check_its_own_way_and_keeps_the_order_of_checks() {
+    let model = shipped();
+    let spots = check_spots(model);
+    assert!(spots.len() > 100, "{} spots", spots.len());
+    for aggression in [0.6, 1.6] {
+        let bias = Bias {
+            aggression,
+            ..Bias::NEUTRAL
+        };
+        for &node in &spots {
+            let shares = check_shares(model, node, &bias);
+            for &(real, checked) in &shares {
+                let moved = if aggression < 1.0 {
+                    checked >= real - 1e-9
+                } else {
+                    checked <= real + 1e-9
+                };
+                assert!(
+                    moved,
+                    "aggression {aggression}, node {node}: {real} -> {checked}"
+                );
+            }
+            for &(real_a, checked_a) in &shares {
+                for &(real_b, checked_b) in &shares {
+                    if super::bias::purified(real_a) > super::bias::purified(real_b) + 1e-9 {
+                        assert!(
+                            checked_a >= checked_b - 1e-9,
+                            "aggression {aggression}, node {node}: {real_a} -> {checked_a}, {real_b} -> {checked_b}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
