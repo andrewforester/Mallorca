@@ -65,7 +65,9 @@ export function StatusBar({
   return (
     <header class="status-bar">
       <div class="status-info">
+        <span data-testid="hand-number">{t('status.hand', { number: vm.handNumber })}</span>
         <span data-testid="blinds">
+          <span class="blinds-word">{`${t('status.blindsWord')} `}</span>
           {t('status.blinds', { small: vm.blinds.small, big: vm.blinds.big })}
         </span>
         {vm.mode === 'cash' && (
@@ -73,7 +75,6 @@ export function StatusBar({
             {t('status.result', { sign: net.sign, bb: net.value })}
           </span>
         )}
-        <span data-testid="hand-number">{t('status.hand', { number: vm.handNumber })}</span>
       </div>
       <div class="status-actions">
         {talk}

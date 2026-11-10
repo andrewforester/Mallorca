@@ -54,7 +54,8 @@
     }
   },
   "status": {
-    "blinds": "Blinds {{small}}/{{big}}",
+    "blindsWord": "Blinds",
+    "blinds": "{{small}}/{{big}}",
     "hand": "Hand {{number}}",
     "seed": "Seed {{seed}}",
     "menu": "Menu",
