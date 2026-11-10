@@ -302,10 +302,6 @@
   --seat-cards-height: calc(var(--back-width, 40px) * 1.4);
 }
 
-.seat-shown {
-  --seat-cards-height: calc(var(--shown-width) * 1.4);
-}
-
 .seat-bottom {
   padding-bottom: 12px;
   --seat-cards-height: calc(var(--hole-width) * 1.4);
@@ -359,10 +355,18 @@
   height: var(--dealer-size);
 }
 
+.seat-block:has(.seat-strip) {
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
 .seat-strip {
-  margin: 5px -12px -5px;
+  position: absolute;
+  top: 100%;
+  right: -1px;
+  left: -1px;
   padding: 4px 12px;
-  border-radius: 0 0 11px 11px;
+  border-radius: 0 0 var(--radius-medium) var(--radius-medium);
   background: var(--color-accent);
   color: var(--color-accent-text);
   font-family: var(--font-body);
@@ -415,6 +419,11 @@
   z-index: 1;
   display: flex;
   gap: 3px;
+}
+
+.seat-top .seat-cards {
+  align-items: flex-end;
+  height: var(--seat-cards-height);
 }
 
 .card {
@@ -493,11 +502,11 @@
   }
 
   .seat-top .bet-sweep {
-    transform: translateY(var(--sweep-distance));
+    transform: translate(var(--sweep-x, 0), var(--sweep-distance));
   }
 
   .seat-bottom .bet-sweep {
-    transform: translateY(calc(-1 * var(--sweep-distance)));
+    transform: translate(var(--sweep-x, 0), calc(-1 * var(--sweep-distance)));
   }
 }
 

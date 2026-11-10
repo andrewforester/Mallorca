@@ -13,15 +13,11 @@
     --card-width: 62px;
     --hole-width: 56px;
     --shown-width: 56px;
-    --board-gap: clamp(6px, calc((min(680px, 50vw) - 470px) / 4), 14px);
+    --board-gap: clamp(6px, calc((min(680px, 50vw) - 470px) / 4), 10px);
     --chip-dot-size: 28px;
     --bet-font: 24px;
     --dealer-size: 36px;
     --face-basis: 440px;
-  }
-
-  .table-showdown {
-    --face-basis: 560px;
   }
 
   .table-left {
@@ -73,6 +69,13 @@
 
   .pot-block {
     justify-self: end;
+  }
+
+  .result-text {
+    position: absolute;
+    right: 0;
+    bottom: 8px;
+    left: 0;
   }
 
   .pot {
@@ -266,6 +269,11 @@
 }
 
 @media (min-aspect-ratio: 1/1) and (min-height: 561px) {
+  .table-layout {
+    --sweep-x: -370px;
+    --sweep-distance: 110px;
+  }
+
   .seat-top .seat-cards {
     margin-top: -45px;
   }

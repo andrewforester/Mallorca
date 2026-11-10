@@ -58,6 +58,7 @@ describe('Seat block', () => {
     const strip = container.querySelector('.seat-block [data-testid="action-1"]');
     expect(strip?.classList.contains('seat-strip')).toBe(true);
     expect(strip?.textContent).toBe('Bet 60');
+    expect(strip?.classList.contains('bubble')).toBe(false);
   });
 
   it('shows no strip without an action', () => {

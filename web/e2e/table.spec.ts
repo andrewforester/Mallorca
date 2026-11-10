@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { byId, expect, FAST_URL, test } from './fixtures.ts';
+import { byId, expect, FAST_URL, test, waitForWaypoint } from './fixtures.ts';
 
 test('the table marks stay inside the viewport on the first turn', async ({ page }) => {
   const viewport = page.viewportSize();
@@ -170,4 +170,53 @@ test('her cards never cover her face on a short landscape screen', async ({ page
     throw new Error('the table is not laid out');
   }
   expect(cards.y).toBeGreaterThanOrEqual(frame.y + frame.height - 1);
+});
+
+test('the board stays put when her cards are shown on wide screens', async ({ page }) => {
+  const viewport = page.viewportSize();
+  test.skip(viewport === null || viewport.width < viewport.height || viewport.height < 561);
+  await page.goto(FAST_URL);
+  await byId(page, 'start-tournament').click();
+  let before: number | null = null;
+  for (let step = 0; step < 30; step += 1) {
+    const waypoint = await waitForWaypoint(page);
+    if (waypoint === 'next-hand') break;
+    before = (await byId(page, 'board').boundingBox())?.y ?? null;
+    if (waypoint === 'act') await byId(page, 'passive').click();
+  }
+  const shown = await page.locator('[data-testid="seat-1"] [data-testid="card"]').count();
+  test.skip(shown === 0 || before === null, 'the hand ended without a showdown');
+  const after = (await byId(page, 'board').boundingBox())?.y ?? 0;
+  expect(Math.abs(after - (before ?? 0))).toBeLessThanOrEqual(1);
+});
+
+test('bet chips sweep toward the pot on wide screens', async ({ page }) => {
+  const viewport = page.viewportSize();
+  test.skip(viewport === null || viewport.width < viewport.height || viewport.height < 561);
+  await page.goto(FAST_URL);
+  await byId(page, 'start-tournament').click();
+  await expect(byId(page, 'passive')).toBeEnabled();
+  const shift = async (seat: string) =>
+    byId(page, seat).evaluate((node) => {
+      node.style.transition = 'none';
+      node.classList.add('bet-sweep');
+      const matrix = new DOMMatrix(getComputedStyle(node).transform);
+      return { x: matrix.m41, y: matrix.m42 };
+    });
+  const top = await shift('bet-1');
+  const bottom = await shift('bet-0');
+  expect(top.x).toBeLessThan(-150);
+  expect(bottom.x).toBeLessThan(-150);
+  expect(top.y).toBeGreaterThan(0);
+  expect(bottom.y).toBeLessThan(0);
+});
+
+test('the board cards sit close together on wide screens', async ({ page }) => {
+  const viewport = page.viewportSize();
+  test.skip(viewport === null || viewport.width < viewport.height || viewport.height < 561);
+  await page.goto(FAST_URL);
+  await byId(page, 'start-tournament').click();
+  await expect(byId(page, 'passive')).toBeEnabled();
+  const gap = await byId(page, 'board').evaluate((node) => getComputedStyle(node).columnGap);
+  expect(parseFloat(gap)).toBeLessThanOrEqual(10);
 });

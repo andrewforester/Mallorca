@@ -11,7 +11,7 @@ export interface ActionBubbleProps {
 export function ActionBubble({ seat, entry, thinking }: ActionBubbleProps) {
   if (thinking) {
     return (
-      <span class="seat-strip bubble bubble-thinking" data-testid={`thinking-${seat}`}>
+      <span class="seat-strip bubble-thinking" data-testid={`thinking-${seat}`}>
         {t('seat.thinking')}
       </span>
     );
@@ -20,7 +20,7 @@ export function ActionBubble({ seat, entry, thinking }: ActionBubbleProps) {
     return null;
   }
   return (
-    <span class={`seat-strip bubble bubble-${actionKind(entry)}`} data-testid={`action-${seat}`}>
+    <span class={`seat-strip bubble-${actionKind(entry)}`} data-testid={`action-${seat}`}>
       {actionTag(entry)}
     </span>
   );
