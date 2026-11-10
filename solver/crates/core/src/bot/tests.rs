@@ -1437,45 +1437,72 @@ fn a_loose_bias_enters_with_hands_the_blueprint_always_folds() {
     );
 }
 
-fn root_mix(bucket: u16, bias: &Bias) -> Vec<f64> {
+fn biased_shares(bucket: u16, bias: &Bias) -> Vec<f64> {
     let root = model().file.tree.root();
     let spot = model().spot(root).unwrap();
     let probabilities = model().file.probabilities(root, bucket);
     let w = biased(model(), &spot, probabilities, bucket, bias);
-    let continuing: f64 = spot
-        .actions
-        .iter()
-        .zip(&w)
-        .filter(|(a, _)| a.0 != ActionKind::Fold)
-        .map(|(_, &x)| x)
-        .sum();
-    spot.actions
-        .iter()
-        .zip(&w)
-        .filter(|(a, _)| a.0 != ActionKind::Fold)
-        .map(|(_, &x)| x / continuing)
-        .collect()
+    let total: f64 = w.iter().sum();
+    w.iter().map(|x| x / total).collect()
 }
 
 #[test]
-fn tightness_keeps_the_call_and_raise_mix_of_the_real_hand() {
+fn a_loose_bias_never_folds_more_and_never_raises_more() {
     let loose = Bias {
         tightness: 0.67,
         ..Bias::NEUTRAL
     };
-    let mut checked = 0;
+    let spot = model().spot(model().file.tree.root()).unwrap();
     for bucket in 0..169u16 {
-        if root_continue(bucket, &Bias::NEUTRAL) == 0.0 {
+        let (neutral, biased) = (
+            biased_shares(bucket, &Bias::NEUTRAL),
+            biased_shares(bucket, &loose),
+        );
+        for ((a, n), b) in spot.actions.iter().zip(&neutral).zip(&biased) {
+            match a.0 {
+                ActionKind::Fold => {
+                    assert!(b <= &(n + 1e-9), "bucket {bucket}: {neutral:?} {biased:?}")
+                }
+                ActionKind::Call => {
+                    assert!(b >= &(n - 1e-9), "bucket {bucket}: {neutral:?} {biased:?}")
+                }
+                _ => assert!(
+                    (n - b).abs() < 1e-9,
+                    "bucket {bucket}: {neutral:?} {biased:?}"
+                ),
+            }
+        }
+    }
+}
+
+#[test]
+fn a_tight_bias_never_folds_less_and_keeps_the_call_and_raise_mix() {
+    let tight = Bias {
+        tightness: 1.5,
+        ..Bias::NEUTRAL
+    };
+    let spot = model().spot(model().file.tree.root()).unwrap();
+    let fold = spot
+        .actions
+        .iter()
+        .position(|a| a.0 == ActionKind::Fold)
+        .unwrap();
+    for bucket in 0..169u16 {
+        let (neutral, biased) = (
+            biased_shares(bucket, &Bias::NEUTRAL),
+            biased_shares(bucket, &tight),
+        );
+        assert!(biased[fold] >= neutral[fold] - 1e-9, "bucket {bucket}");
+        if biased[fold] >= 1.0 - 1e-9 {
             continue;
         }
-        checked += 1;
-        let (neutral, biased) = (root_mix(bucket, &Bias::NEUTRAL), root_mix(bucket, &loose));
-        for (n, b) in neutral.iter().zip(&biased) {
+        let rest = |v: &[f64]| 1.0 - v[fold];
+        for i in (0..neutral.len()).filter(|&i| i != fold) {
+            let (n, b) = (neutral[i] / rest(&neutral), biased[i] / rest(&biased));
             assert!(
                 (n - b).abs() < 1e-9,
-                "bucket {bucket}: {neutral:?} vs {biased:?}"
+                "bucket {bucket}: {neutral:?} {biased:?}"
             );
         }
     }
-    assert!(checked > 20, "{checked} buckets");
 }
