@@ -273,6 +273,54 @@ the turn with air takes many of those pots before the river. Raise frequency and
 moves only because she faces fewer bets. Neither edge costs a measurable amount against `cfr-v2`, which does not
 exploit either; a player who calls too much would punish 2, and one who folds too much would punish 0.5.
 
+### Poker statistics of the axes
+
+`--stats` also adds `pokerStats` of bot A to the report, each a rate with its number of chances (`of`): `steal` and
+`limp` (her first move on the button), `bigBlindDefence` (a call or raise against an open), `threeBet` (a raise
+against a single raise), `foldToThreeBet`, `continuationBet` (a bet on the flop as the last raiser before it, when no
+bet was made), `foldToContinuationBet`, `donkBet` (a bet out of position on the flop into the raiser),
+`checkRaise`, `foldToFlopBet`, `foldToTurnBet`, `foldToRiverBet`, `wentToShowdown` (of the hands that saw a flop)
+and `wonAtShowdown` (the share of the showdown pots she took).
+
+Each axis and some mixes against `cfr-v2`, after #161, seed 2, 10000 pairs (20000 hands) each; every run plays the
+same decks, frequencies with a few hundred chances or more are known to about ±1 to 2 points, and bb/100 is noise
+at this size. Mixes: `screenshot` aggression 0.78, bluff 0.66, tightness 0.74, sizing 0.83, stickiness 1.44;
+`tight` tightness 1.35, stickiness 0.69, aggression 0.78; `TAG` the same with aggression 1.4; `LAG` tightness 0.74,
+stickiness 1.44, aggression 1.4; `nit` tightness 1.8, stickiness 0.5, bluff 0.7; `station` tightness 0.6,
+stickiness 2, aggression 0.6, bluff 0.5; `maniac` aggression 1.4, bluff 1.6, tightness 0.8, sizing 1.2; `rock`
+tightness 2, stickiness 0.5, aggression 0.5, bluff 0.5; `whale` tightness 0.5, stickiness 2, aggression 0.5.
+
+| Profile        | bb/100       | VPIP | PFR  | steal | limp | BB def | 3-bet | F 3-bet | c-bet | F c-bet | donk | x/r  | F flop | F turn | F river | AF   | bet  | size | river bluff | WTSD | W$SD |
+| -------------- | ------------ | ---- | ---- | ----- | ---- | ------ | ----- | ------- | ----- | ------- | ---- | ---- | ------ | ------ | ------- | ---- | ---- | ---- | ----------- | ---- | ---- |
+| blueprint      | +3.3 ± 13.7  | 74.3 | 42.6 | 59.3  | 33.9 | 71.3   | 18.0  | 50.9    | 59.1  | 39.7    | 10.0 | 13.9 | 40.0   | 40.7   | 45.6    | 2.28 | 29.4 | 0.81 | 23.5        | 33.2 | 49.1 |
+| tightness-0.5  | -0.6 ± 15.4  | 80.6 | 42.6 | 59.3  | 38.1 | 85.4   | 17.6  | 22.9    | 59.1  | 43.3    | 10.3 | 13.6 | 42.2   | 41.3   | 45.9    | 2.25 | 29.0 | 0.80 | 24.5        | 32.6 | 48.9 |
+| tightness-2    | -3.0 ± 13.0  | 62.8 | 39.0 | 54.7  | 28.5 | 49.5   | 14.5  | 70.2    | 58.7  | 34.8    | 8.6  | 13.9 | 37.9   | 39.2   | 43.9    | 2.27 | 29.6 | 0.82 | 20.6        | 34.6 | 49.8 |
+| stickiness-0.5 | +1.1 ± 12.5  | 74.3 | 42.6 | 59.3  | 33.9 | 71.3   | 18.0  | 50.9    | 59.1  | 50.2    | 10.0 | 11.2 | 51.2   | 50.5   | 56.8    | 2.73 | 28.7 | 0.78 | 19.0        | 28.5 | 51.9 |
+| stickiness-2   | -1.8 ± 15.7  | 74.3 | 42.6 | 59.3  | 33.9 | 71.3   | 18.0  | 50.9    | 59.1  | 24.4    | 10.0 | 13.4 | 26.8   | 31.1   | 36.1    | 1.76 | 28.9 | 0.81 | 25.7        | 39.3 | 47.3 |
+| aggression-0.5 | -2.7 ± 11.7  | 70.4 | 26.8 | 39.3  | 53.9 | 71.3   | 11.2  | 48.1    | 30.8  | 37.0    | 1.6  | 11.2 | 38.0   | 38.1   | 41.9    | 0.89 | 13.6 | 1.10 | 11.5        | 44.4 | 53.8 |
+| aggression-2   | +5.7 ± 17.6  | 79.1 | 58.6 | 74.6  | 18.6 | 71.3   | 30.1  | 53.1    | 84.8  | 44.7    | 29.1 | 18.1 | 40.7   | 45.6   | 52.5    | 5.26 | 51.8 | 0.75 | 28.5        | 23.2 | 42.6 |
+| sizing-0.5     | +2.3 ± 13.5  | 74.3 | 42.6 | 59.3  | 33.9 | 71.3   | 18.0  | 50.8    | 60.0  | 39.6    | 9.9  | 14.1 | 39.2   | 40.2   | 44.5    | 2.30 | 30.4 | 0.61 | 23.7        | 36.5 | 51.6 |
+| sizing-2       | -2.2 ± 16.0  | 74.3 | 42.6 | 59.3  | 33.9 | 71.3   | 18.0  | 51.3    | 56.8  | 39.8    | 10.0 | 13.9 | 40.9   | 42.8   | 47.6    | 2.25 | 27.9 | 1.19 | 23.1        | 30.1 | 47.9 |
+| screenshot     | -4.9 ± 14.2  | 75.9 | 36.7 | 52.4  | 43.1 | 78.5   | 15.0  | 36.7    | 40.3  | 31.4    | 3.6  | 12.7 | 31.6   | 34.5   | 40.3    | 1.18 | 18.8 | 0.84 | 12.8        | 44.4 | 49.2 |
+| tight          | +8.6 ± 11.6  | 68.1 | 35.9 | 51.6  | 38.2 | 61.7   | 14.2  | 59.7    | 47.7  | 43.2    | 3.7  | 11.6 | 45.1   | 44.5   | 49.4    | 1.76 | 22.0 | 0.87 | 16.2        | 34.8 | 53.6 |
+| TAG            | -5.7 ± 13.9  | 72.0 | 49.1 | 66.4  | 23.4 | 61.7   | 21.0  | 62.7    | 73.2  | 46.8    | 18.0 | 12.8 | 45.8   | 48.4   | 55.1    | 3.84 | 39.7 | 0.74 | 23.4        | 26.0 | 47.0 |
+| LAG            | -6.0 ± 17.2  | 79.8 | 50.6 | 67.5  | 28.0 | 78.5   | 23.3  | 38.5    | 73.1  | 34.6    | 18.0 | 15.2 | 34.2   | 37.5   | 44.4    | 2.97 | 39.2 | 0.76 | 27.6        | 30.6 | 44.5 |
+| nit            | -1.3 ± 11.8  | 65.0 | 39.6 | 55.6  | 29.8 | 53.2   | 15.1  | 67.4    | 51.4  | 46.1    | 8.0  | 11.3 | 48.3   | 51.0   | 57.4    | 2.44 | 25.8 | 0.79 | 11.1        | 30.9 | 51.5 |
+| station        | -6.9 ± 15.0  | 76.4 | 30.7 | 44.8  | 52.0 | 82.5   | 12.2  | 27.9    | 27.5  | 25.0    | 2.0  | 11.1 | 25.6   | 30.2   | 35.8    | 0.69 | 12.8 | 1.04 | 2.8         | 51.8 | 49.5 |
+| maniac         | -1.0 ± 18.5  | 79.1 | 50.6 | 67.5  | 27.5 | 76.9   | 23.3  | 41.9    | 76.9  | 34.2    | 36.6 | 18.2 | 38.6   | 40.7   | 46.9    | 4.10 | 47.3 | 0.86 | 32.5        | 24.3 | 46.7 |
+| rock           | -11.2 ± 10.2 | 59.0 | 24.7 | 36.4  | 46.8 | 49.5   | 10.0  | 65.2    | 24.5  | 42.0    | 1.1  | 9.3  | 47.0   | 46.8   | 50.2    | 0.94 | 12.0 | 1.16 | 0.2         | 40.9 | 56.4 |
+| whale          | -6.7 ± 14.6  | 76.7 | 26.7 | 39.3  | 58.1 | 85.4   | 10.8  | 20.5    | 30.8  | 25.5    | 1.7  | 9.8  | 26.3   | 29.8   | 34.4    | 0.67 | 12.9 | 1.08 | 13.9        | 51.5 | 51.1 |
+
+Each axis moves its own statistics and leaves the rest: tightness moves the big blind defence (50% to 85%) and the
+fold to a 3-bet (70% to 23%), stickiness the folds after the flop (fold to a flop bet 51% to 27%), aggression the
+raises and bets (PFR 27% to 59%, c-bet 31% to 85%, af 0.89 to 5.26), sizing only the bet size (0.61 to 1.19 pot).
+Statistics of a later decision also move with the hands that reach it, so an axis can shift them a little without
+touching that decision (aggression 2 folds more to a c-bet, most likely because it reaches the flop with other hands and more 3-bet pots).
+Two things stand out: a passive bot bets fewer times but bigger (bet size 1.10 at aggression 0.5, 0.81 neutral),
+because the small bets of the blueprint go to the check first; and the tightest preflop profiles still play 59% to
+65% of hands, since the blueprint plays 74% heads-up and the shift moves the odds of continuing, not a share of the
+range.
+
 ## Managing runs
 
 Local runs live in the results directory (`web/arena-out` of the main checkout), each as `<name>.json` and
