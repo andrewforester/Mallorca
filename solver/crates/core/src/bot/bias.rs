@@ -1,4 +1,3 @@
-use super::order::Order;
 use super::translate::sample;
 use super::{Model, Spot};
 use crate::tree::{ActionKind, Street};
@@ -63,29 +62,25 @@ pub fn shift(bias: &Bias, street: Street, kinds: &[ActionKind]) -> f64 {
     }
 }
 
-pub fn fold_only(real: &[f64], shifted: &[f64], kinds: &[ActionKind], delta: f64) -> Vec<f64> {
+pub fn fold_only(real: &[f64], target: f64, kinds: &[ActionKind], delta: f64) -> Vec<f64> {
     let Some(fold) = kinds.iter().position(|&k| k == ActionKind::Fold) else {
-        return shifted.to_vec();
+        return real.to_vec();
     };
-    let (total, shifted_total) = (real.iter().sum::<f64>(), shifted.iter().sum::<f64>());
-    if total <= 0.0 || shifted_total <= 0.0 {
-        return shifted.to_vec();
+    let total: f64 = real.iter().sum();
+    if total <= 0.0 {
+        return real.to_vec();
     }
-    let target = shifted[fold] * total / shifted_total;
     let fold_weight = if delta > 0.0 {
-        target.min(real[fold])
+        (target * total).min(real[fold])
     } else {
-        target.max(real[fold])
+        (target * total).max(real[fold])
     };
     let mut row = real.to_vec();
     row[fold] = fold_weight;
-    if fold_weight < real[fold] {
-        let passive = kinds
-            .iter()
-            .position(|&k| matches!(k, ActionKind::Call | ActionKind::Check));
-        let Some(passive) = passive else {
-            return shifted.to_vec();
-        };
+    let passive = kinds
+        .iter()
+        .position(|&k| matches!(k, ActionKind::Call | ActionKind::Check));
+    if let (true, Some(passive)) = (fold_weight < real[fold], passive) {
         row[passive] += real[fold] - fold_weight;
         return row;
     }
@@ -100,6 +95,28 @@ pub fn fold_only(real: &[f64], shifted: &[f64], kinds: &[ActionKind], delta: f64
         }
     }
     row
+}
+
+pub const NOISE: f64 = 0.1;
+
+pub fn purified(share: f64) -> f64 {
+    if share < NOISE {
+        0.0
+    } else if share > 1.0 - NOISE {
+        1.0
+    } else {
+        share
+    }
+}
+
+const EDGE: f64 = 1e-3;
+
+pub fn widened(fold: f64, shift: f64) -> f64 {
+    let odds = |p: f64| (p / (1.0 - p)).ln();
+    let continuing = (1.0 - fold).clamp(EDGE, 1.0 - EDGE);
+    let moved = odds(continuing) + 4.0 * shift;
+    let target = 1.0 / (1.0 + (-moved).exp());
+    (target - continuing).clamp(fold - 1.0, fold)
 }
 
 pub fn sample_weighted(weights: &[f64], draw: f64) -> usize {
@@ -118,7 +135,16 @@ pub fn sample_weighted(weights: &[f64], draw: f64) -> usize {
         .unwrap_or(weights.len() - 1)
 }
 
-fn fold_order(model: &Model, spot: &Spot<'_>, width: usize) -> Option<Order> {
+fn fold_target(
+    model: &Model,
+    spot: &Spot<'_>,
+    probabilities: &[u8],
+    bucket: u16,
+    delta: f64,
+) -> Option<f64> {
+    if delta == 0.0 {
+        return None;
+    }
     let fold = spot.actions.iter().position(|a| a.0 == ActionKind::Fold)?;
     let buckets = model.file.tree.buckets()[spot.street.as_index()];
     let folds: Vec<Option<f64>> = (0..buckets)
@@ -126,12 +152,18 @@ fn fold_order(model: &Model, spot: &Spot<'_>, width: usize) -> Option<Order> {
             let row = model
                 .file
                 .try_probabilities(spot.id, b)
-                .filter(|r| r.len() == width)?;
+                .filter(|r| r.len() == probabilities.len())?;
             let total: f64 = row.iter().map(|&p| f64::from(p)).sum();
             (total > 0.0).then(|| f64::from(row[fold]) / total)
         })
         .collect();
-    Some(model.order(spot.street).by_fold(&folds))
+    let pure: Vec<Option<f64>> = folds.iter().map(|f| f.map(purified)).collect();
+    let order = model.order(spot.street).by_fold(&pure);
+    let moved = widened(order.mean(&pure), delta);
+    let q = (order.percentile(bucket) + moved).clamp(0.0, 1.0);
+    let (lo, hi, t) = order.around(q);
+    let at = |b: u16| pure[usize::from(b)].unwrap_or(0.0);
+    Some((1.0 - t) * at(lo) + t * at(hi))
 }
 
 pub(super) fn shifted_row(
@@ -144,8 +176,7 @@ pub(super) fn shifted_row(
     if delta == 0.0 {
         return probabilities.iter().map(|&p| f64::from(p)).collect();
     }
-    let order = fold_order(model, spot, probabilities.len());
-    let order = order.as_ref().unwrap_or_else(|| model.order(spot.street));
+    let order = model.order(spot.street);
     let q = (order.percentile(bucket) + delta).clamp(0.0, 1.0);
     let (lo, hi, t) = order.around(q);
     let row = |b: u16| {
@@ -172,12 +203,10 @@ pub(super) fn biased(
     let kinds: Vec<ActionKind> = spot.actions.iter().map(|a| a.0).collect();
     let delta = shift(bias, spot.street, &kinds);
     let real: Vec<f64> = probabilities.iter().map(|&p| f64::from(p)).collect();
-    let row = fold_only(
-        &real,
-        &shifted_row(model, spot, probabilities, bucket, delta),
-        &kinds,
-        delta,
-    );
+    let row = match fold_target(model, spot, probabilities, bucket, delta) {
+        Some(target) => fold_only(&real, target, &kinds, delta),
+        None => shifted_row(model, spot, probabilities, bucket, delta),
+    };
     let late = matches!(spot.street, Street::Turn | Street::River);
     let buckets = model.file.tree.buckets()[spot.street.as_index()];
     let low = f64::from(bucket) < 0.35 * f64::from(buckets);
@@ -326,49 +355,58 @@ mod tests {
     fn a_loose_shift_moves_only_folds_into_the_call() {
         let kinds = [Fold, Call, RaiseTo(60), AllIn];
         let real = [100.0, 60.0, 30.0, 10.0];
-        let shifted = [20.0, 30.0, 120.0, 30.0];
         assert_eq!(
-            fold_only(&real, &shifted, &kinds, 0.1),
+            fold_only(&real, 0.1, &kinds, 0.1),
             vec![20.0, 140.0, 30.0, 10.0]
         );
         let pure_fold = [200.0, 0.0, 0.0, 0.0];
         assert_eq!(
-            fold_only(&pure_fold, &shifted, &kinds, 0.1),
+            fold_only(&pure_fold, 0.1, &kinds, 0.1),
             vec![20.0, 180.0, 0.0, 0.0]
         );
-        let folds_more = [100.0, 50.0, 50.0];
         let real = [0.0, 50.0, 150.0];
-        assert_eq!(
-            fold_only(&real, &folds_more, &kinds[..3], 0.1),
-            real.to_vec()
-        );
+        assert_eq!(fold_only(&real, 0.5, &kinds[..3], 0.1), real.to_vec());
     }
 
     #[test]
     fn a_tight_shift_folds_more_and_keeps_the_continuing_mix() {
         let kinds = [Fold, Call, RaiseTo(60)];
         let real = [40.0, 40.0, 120.0];
-        let shifted = [100.0, 50.0, 50.0];
-        assert_eq!(
-            fold_only(&real, &shifted, &kinds, -0.1),
-            vec![100.0, 25.0, 75.0]
-        );
-        let folds_less = [0.0, 100.0, 100.0];
-        assert_eq!(fold_only(&real, &folds_less, &kinds, -0.1), real.to_vec());
+        assert_eq!(fold_only(&real, 0.5, &kinds, -0.1), vec![100.0, 25.0, 75.0]);
+        assert_eq!(fold_only(&real, 0.0, &kinds, -0.1), real.to_vec());
     }
 
     #[test]
-    fn without_a_fold_the_shifted_row_stays() {
+    fn without_a_call_a_loose_shift_scales_the_continuing_actions() {
         let open = [Check, RaiseTo(60)];
-        assert_eq!(
-            fold_only(&[50.0, 50.0], &[10.0, 90.0], &open, 0.1),
-            vec![10.0, 90.0]
-        );
+        assert_eq!(fold_only(&[50.0, 50.0], 0.1, &open, 0.1), vec![50.0, 50.0]);
         let no_call = [Fold, AllIn];
         assert_eq!(
-            fold_only(&[50.0, 50.0], &[10.0, 90.0], &no_call, 0.1),
+            fold_only(&[50.0, 50.0], 0.1, &no_call, 0.1),
             vec![10.0, 90.0]
         );
+    }
+
+    #[test]
+    fn purification_drops_noise_at_both_ends() {
+        assert_eq!(purified(0.02), 0.0);
+        assert_eq!(purified(0.97), 1.0);
+        assert_eq!(purified(0.4), 0.4);
+    }
+
+    #[test]
+    fn a_balanced_spot_moves_by_the_shift_and_a_lopsided_one_by_less() {
+        assert!((widened(0.5, 0.01) - 0.01).abs() < 1e-5);
+        assert!((widened(0.5, -0.01) + 0.01).abs() < 1e-5);
+        let tight = -LOOSE_SHIFT * 1.35f64.ln();
+        assert!(widened(0.92, tight).abs() < 0.03);
+        assert!(widened(0.07, -tight) < 0.03);
+        let middle = widened(0.42, tight);
+        assert!(middle < 0.0 && middle > 1.2 * tight, "{middle}");
+        for fold in [0.0, 0.3, 1.0] {
+            let w = widened(fold, 0.2);
+            assert!(w >= 0.0 && 1.0 - fold + w <= 1.0, "{fold} {w}");
+        }
     }
 
     #[test]

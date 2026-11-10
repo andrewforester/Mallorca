@@ -1526,7 +1526,7 @@ fn fold_shares(node: NodeId, bias: &Bias) -> Vec<(f64, f64)> {
 }
 
 #[test]
-fn a_fold_axis_keeps_the_blueprint_order_of_folds() {
+fn a_fold_axis_keeps_the_blueprint_order_of_clearly_different_folds() {
     let root = model().file.tree.root();
     let raise = model()
         .spot(root)
@@ -1545,12 +1545,130 @@ fn a_fold_axis_keeps_the_blueprint_order_of_folds() {
             let shares = fold_shares(node, &bias);
             for &(real_a, biased_a) in &shares {
                 for &(real_b, biased_b) in &shares {
-                    if real_a > real_b + 1e-9 {
+                    if super::bias::purified(real_a) > super::bias::purified(real_b) + 1e-9 {
                         assert!(
                             biased_a >= biased_b - 1e-9,
                             "tightness {tightness}, node {node}: {real_a} -> {biased_a}, {real_b} -> {biased_b}"
                         );
                     }
+                }
+            }
+        }
+    }
+}
+
+fn shipped() -> &'static Model {
+    static M: OnceLock<Model> = OnceLock::new();
+    M.get_or_init(|| {
+        use std::io::Read;
+        let gz = include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../../web/src/cfr/v1.mlcs.gz"
+        ));
+        let mut bytes = Vec::new();
+        flate2::read::GzDecoder::new(&gz[..])
+            .read_to_end(&mut bytes)
+            .unwrap();
+        Model::new(crate::strategy::StrategyFile::from_bytes(&bytes).unwrap()).unwrap()
+    })
+}
+
+fn spot_fold_rate(model: &Model, node: NodeId, bias: &Bias) -> f64 {
+    let spot = model.spot(node).unwrap();
+    let fold = spot
+        .actions
+        .iter()
+        .position(|a| a.0 == ActionKind::Fold)
+        .unwrap();
+    let indexer = &crate::iso::street_indexers()[0];
+    let (mut folded, mut total) = (0.0, 0.0);
+    for b in 0..169u16 {
+        let Some(p) = model.file.try_probabilities(node, b) else {
+            continue;
+        };
+        let mass = f64::from(indexer.class_weight(0, u64::from(b)));
+        let w = biased(model, &spot, p, b, bias);
+        folded += mass * super::bias::purified(w[fold] / w.iter().sum::<f64>());
+        total += mass;
+    }
+    folded / total
+}
+
+#[test]
+fn a_fold_axis_moves_the_purified_fold_rate_of_a_spot_along_its_odds() {
+    let model = shipped();
+    let spots: Vec<NodeId> = (0..model.file.tree.nodes().len() as NodeId)
+        .filter(|&id| {
+            model.spot(id).is_some_and(|s| {
+                s.street == Street::Preflop && s.actions.iter().any(|a| a.0 == ActionKind::Fold)
+            })
+        })
+        .collect();
+    let lopsided = spots
+        .iter()
+        .filter(|&&id| !(0.1..=0.9).contains(&spot_fold_rate(model, id, &Bias::NEUTRAL)))
+        .count();
+    assert!(
+        lopsided >= 2,
+        "{lopsided} lopsided of {} spots",
+        spots.len()
+    );
+    for node in spots {
+        let base = spot_fold_rate(model, node, &Bias::NEUTRAL);
+        for tightness in [0.5, 0.67, 1.5, 2.0] {
+            let bias = Bias {
+                tightness,
+                ..Bias::NEUTRAL
+            };
+            let odds = |p: f64| (p / (1.0 - p)).ln();
+            let continuing = (1.0 - base).clamp(1e-3, 1.0 - 1e-3);
+            let moved = odds(continuing) + 4.0 * LOOSE_SHIFT * (1.0 / tightness).ln();
+            let expected = 1.0 / (1.0 + moved.exp());
+            let rate = spot_fold_rate(model, node, &bias);
+            assert!(
+                (rate - expected).abs() < 0.03,
+                "node {node}, tightness {tightness}: base {base}, expected {expected}, got {rate}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_tight_bias_drops_the_weakest_hands_the_blueprint_continues_with_first() {
+    let model = shipped();
+    let order = model.order(Street::Preflop);
+    let nit = Bias {
+        tightness: 2.0,
+        ..Bias::NEUTRAL
+    };
+    for node in 0..model.file.tree.nodes().len() as NodeId {
+        let Some(spot) = model.spot(node) else {
+            continue;
+        };
+        let Some(fold) = spot.actions.iter().position(|a| a.0 == ActionKind::Fold) else {
+            continue;
+        };
+        if spot.street != Street::Preflop {
+            continue;
+        }
+        let shares: Vec<(f64, f64)> = (0..169u16)
+            .filter_map(|b| {
+                let p = model.file.try_probabilities(node, b)?;
+                let total: f64 = p.iter().map(|&x| f64::from(x)).sum();
+                if f64::from(p[fold]) / total >= 0.05 {
+                    return None;
+                }
+                let w = biased(model, &spot, p, b, &nit);
+                Some((order.percentile(b), w[fold] / w.iter().sum::<f64>()))
+            })
+            .collect();
+        for &(strong, strong_fold) in &shares {
+            for &(weak, weak_fold) in &shares {
+                if strong > weak && strong_fold > 0.05 {
+                    assert!(
+                        strong_fold <= weak_fold + 1e-9,
+                        "node {node}: {strong} folds {strong_fold}, {weak} folds {weak_fold}"
+                    );
                 }
             }
         }

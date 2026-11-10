@@ -47,6 +47,21 @@ impl Order {
         Order::from_sorted(sorted, &self.mass)
     }
 
+    pub(super) fn mean(&self, values: &[Option<f64>]) -> f64 {
+        let (mut sum, mut total) = (0.0, 0.0);
+        for (b, v) in values.iter().enumerate() {
+            if let Some(v) = v {
+                sum += self.mass[b] * v;
+                total += self.mass[b];
+            }
+        }
+        if total > 0.0 {
+            sum / total
+        } else {
+            0.0
+        }
+    }
+
     pub(super) fn uniform(buckets: u16) -> Order {
         let strength: Vec<f64> = (0..buckets).map(f64::from).collect();
         Order::by_strength(&strength, &vec![1.0; usize::from(buckets)])
@@ -165,6 +180,13 @@ mod tests {
         assert!((order.percentile(0) - 5.0 / 6.0).abs() < 1e-12);
         assert_eq!(order.around(0.0), (2, 2, 0.0));
         assert_eq!(order.around(1.0), (0, 0, 0.0));
+    }
+
+    #[test]
+    fn a_mean_weighs_values_by_mass_and_skips_missing_buckets() {
+        let order = Order::by_strength(&[0.9, 0.1, 0.5], &[1.0, 3.0, 5.0]);
+        assert!((order.mean(&[Some(1.0), Some(0.0), None]) - 0.25).abs() < 1e-12);
+        assert_eq!(order.mean(&[None, None, None]), 0.0);
     }
 
     #[test]
