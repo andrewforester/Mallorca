@@ -5,7 +5,7 @@ import numpy as np
 
 Q16 = (np.int16, 32767)
 Q8 = (np.int8, 127)
-LIMIT_MB = 17.0
+LIMIT_MB = 23.0
 POSITION_TOLERANCE_CM = 0.005
 DELTA_TOLERANCE_CM = 0.03
 

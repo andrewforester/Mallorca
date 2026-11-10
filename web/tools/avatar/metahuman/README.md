@@ -66,7 +66,7 @@ onto hers. The DNA files of MetaHuman-DNA-Calibration (Ada and others) are not u
 from them to Unreal Engine. The glasses are Poly Haven's
 [Round Spectacles](https://polyhaven.com/a/round_spectacles) (CC0), downloaded as glTF 1k. `--check` decodes the packed
 rig and fails when a position is off by more than 0.005 cm, a blendshape delta by more than 0.03 cm, or the folder
-exceeds 17 MB.
+exceeds 23 MB.
 
 `export/` writes:
 
