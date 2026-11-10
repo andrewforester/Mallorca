@@ -5,9 +5,8 @@ import type { HairKey } from './hair.ts';
 import { Motion } from './motion.ts';
 import { RigAvatar } from './rig/RigAvatar.ts';
 
-export const rigRenderer =
-  (base: string, hair: HairKey) => (): FaceRenderer =>
-    new RigAvatar(base, hair);
+export const rigRenderer = (base: string, hair: HairKey) => (): FaceRenderer =>
+  new RigAvatar(base, hair);
 export const glbRenderer = (url: string) => (): FaceRenderer => new Avatar(url);
 
 export interface LiveOptions {

@@ -3,10 +3,10 @@
     "title": "Mallorca"
   },
   "start": {
-    "heading": "Tonight",
     "tagline": "Heads-up hold'em, just the two of you. No money, no account needed.",
     "cash": "Cash game, 100 big blinds",
-    "tournament": "Tournament",
+    "tournament": "Play a tournament",
+    "sit": "Sit down",
     "farewell": "The table will be here.",
     "opponent": "Opponent",
     "opponents": {

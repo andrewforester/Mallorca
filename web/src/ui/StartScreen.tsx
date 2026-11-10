@@ -1,19 +1,19 @@
+import type { ComponentChildren } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { CASH, CHARACTERS, opponentsFor, TOURNAMENT } from '../game/index.ts';
 import type { LoadProgress, Opponent, PersonalityKey, TableMode } from '../game/index.ts';
 import { t } from './i18n.ts';
+import { ATTIC_URL, FaceFrame } from './FaceFrame.tsx';
 import { Scene } from './Scene.tsx';
-import { portraitFor } from './avatar/FaceSeat.tsx';
 
 export interface StartScreenProps {
   onStart: (mode: TableMode, opponent: Opponent) => void;
-  seed: number;
   farewell?: boolean;
   simple?: boolean;
   finePointer?: boolean;
   coach?: boolean;
   onToggleCoach?: () => void;
-  face?: boolean;
+  face?: ComponentChildren;
   onChoose?: (opponent: Opponent) => void;
   progress?: LoadProgress | null;
   opponent?: Opponent;
@@ -70,7 +70,7 @@ function CoachChoice({ coach, onToggle }: { coach: boolean; onToggle?: () => voi
 function LoadLine({ percent }: { percent: number | null }) {
   return (
     <div class="start-load">
-      <p class="start-seed" role="status" data-testid="start-loading">
+      <p class="start-load-line" role="status" data-testid="start-loading">
         {percent === null ? t('start.loading') : t('start.loadingPercent', { percent })}
       </p>
       <span
@@ -83,14 +83,6 @@ function LoadLine({ percent }: { percent: number | null }) {
         style={{ '--load': `${percent ?? 0}%` }}
       />
     </div>
-  );
-}
-
-function SeedLine({ loading, seed }: { loading: number | null | false; seed: number }) {
-  return loading === false ? (
-    <p class="start-seed">{t('status.seed', { seed })}</p>
-  ) : (
-    <LoadLine percent={loading} />
   );
 }
 
@@ -126,9 +118,11 @@ function CharacterChoice({
             data-testid={`character-${key}`}
             onClick={() => onChange(key)}
           >
-            <span class="character-name">{t(`start.characters.${key}.name`)}</span>
+            <span class="character-top">
+              <span class="character-name">{t(`start.characters.${key}.name`)}</span>
+              <span class="character-hard">{t(`start.characters.${key}.hard`)}</span>
+            </span>
             <span class="character-line">{t(`start.characters.${key}.line`)}</span>
-            <span class="character-hard">{t(`start.characters.${key}.hard`)}</span>
           </button>
         ))}
       </div>
@@ -137,7 +131,7 @@ function CharacterChoice({
 }
 
 interface TonightFaceProps {
-  face: boolean;
+  face: ComponentChildren;
   farewell: boolean;
   character: PersonalityKey | undefined;
 }
@@ -147,15 +141,9 @@ function TonightFace({ face, farewell, character }: TonightFaceProps) {
   const hello =
     character === undefined ? t('start.greeting') : t(`start.characters.${character}.hello`);
   return (
-    <div
-      class={face ? 'face-frame tonight-face' : 'face-frame face-frame-off tonight-face'}
-      data-testid="tonight-face"
-    >
-      {face ? (
-        <img class="face-portrait" src={portraitFor(character)} alt={name} draggable={false} />
-      ) : (
-        <span class="face-frame-name">{name}</span>
-      )}
+    <div class="tonight-scene" data-testid="tonight-face">
+      <img class="face-blur" src={ATTIC_URL} alt="" aria-hidden="true" decoding="async" />
+      <FaceFrame name={name} face={face} />
       <p class="tonight-line">{farewell ? t('start.farewellTitle') : hello}</p>
     </div>
   );
@@ -220,15 +208,16 @@ function StartActions({ onStart }: { onStart: (mode: TableMode) => void }) {
     <div class="start-actions">
       <button
         type="button"
-        class="button button-passive"
+        class="start-main"
         data-testid="start-cash"
         onClick={() => onStart(CASH)}
       >
-        {t('start.cash')}
+        <span class="start-main-label">{t('start.sit')}</span>
+        <span class="start-main-detail">{t('start.cash')}</span>
       </button>
       <button
         type="button"
-        class="button"
+        class="start-second"
         data-testid="start-tournament"
         onClick={() => onStart(TOURNAMENT)}
       >
@@ -244,13 +233,12 @@ function hasFinePointer(): boolean {
 
 export function StartScreen({
   onStart,
-  seed,
   farewell = false,
   simple = false,
   finePointer = hasFinePointer(),
   coach = false,
   onToggleCoach,
-  face = true,
+  face,
   onChoose,
   progress = null,
   opponent: fixed,
@@ -263,28 +251,28 @@ export function StartScreen({
     setStarting(true);
     onStart(mode, opponent);
   };
+  const loading = loadShown(opponent, starting, progress);
   return (
     <Scene dimmed simple={simple}>
       <main class="start-screen tonight">
-        <header class="tonight-head">
-          <h1 class="start-title">{t('start.heading')}</h1>
-        </header>
         <TonightFace face={face} farewell={farewell} character={character} />
         <div class="tonight-body">
-          <Tagline farewell={farewell} />
           {onCharacter !== undefined && (
             <CharacterChoice value={character ?? 'mallorca'} onChange={onCharacter} />
           )}
-          <Choices
-            fixed={fixed}
-            opponent={opponent}
-            onOpponent={choose}
-            coach={coach}
-            onToggleCoach={onToggleCoach}
-            finePointer={finePointer}
-          />
-          <SeedLine loading={loadShown(opponent, starting, progress)} seed={seed} />
-          <StartActions onStart={start} />
+          <div class="tonight-go">
+            <Choices
+              fixed={fixed}
+              opponent={opponent}
+              onOpponent={choose}
+              coach={coach}
+              onToggleCoach={onToggleCoach}
+              finePointer={finePointer}
+            />
+            {loading !== false && <LoadLine percent={loading} />}
+            <Tagline farewell={farewell} />
+            <StartActions onStart={start} />
+          </div>
         </div>
       </main>
     </Scene>

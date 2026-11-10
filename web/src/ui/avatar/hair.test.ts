@@ -21,7 +21,9 @@ describe('HAIR', () => {
     const files = ['hair.json', 'hair.bin', 'hair_cards.webp', 'scalp.webp'];
     for (const key of HAIRSTYLES) {
       for (const file of files)
-        expect(existsSync(resolve('public/avatar/her/hair', key, file)), `${key}/${file}`).toBe(true);
+        expect(existsSync(resolve('public/avatar/her/hair', key, file)), `${key}/${file}`).toBe(
+          true,
+        );
       expect(existsSync(resolve('public/avatar/portraits', `${key}.webp`)), key).toBe(true);
     }
   });
