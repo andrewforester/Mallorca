@@ -118,6 +118,9 @@
   border-radius: var(--radius-large) var(--radius-large) 0 0;
   background: var(--color-surface);
   color: var(--color-text);
+  font-size: 16px;
+  font-weight: 400;
+  text-shadow: none;
   white-space: normal;
 }
 
@@ -132,14 +135,67 @@
   background: var(--color-border);
 }
 
-.menu-body > span {
-  margin-top: var(--space-3);
-  color: var(--color-faint);
-  font-size: 12px;
+.menu-primary {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 8px;
+  margin-bottom: 24px;
 }
 
-.menu-body .button-small {
-  margin-top: var(--space-2);
+.menu-primary .button {
+  min-height: 48px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.menu-group + .menu-group {
+  margin-top: 20px;
+}
+
+.menu-group-title {
+  margin: 0 0 4px;
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.menu-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.menu-link {
+  min-height: var(--tap-size);
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-accent);
+  cursor: pointer;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.menu-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.menu-link-danger {
+  color: var(--color-danger);
+}
+
+.menu-seed {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  color: var(--color-muted);
+  font-size: 13px;
 }
 
 .menu-toggle {
@@ -148,9 +204,13 @@
   justify-content: space-between;
   gap: var(--space-3);
   min-height: 48px;
-  border-bottom: 1px solid var(--color-hairline);
+  border-bottom: 1px solid var(--color-border);
   cursor: pointer;
-  font-size: 15px;
+  font-size: 16px;
+}
+
+.menu-toggle:last-child {
+  border-bottom: none;
 }
 
 .menu-toggle input {
@@ -160,7 +220,7 @@
   height: 26px;
   margin: 0;
   border-radius: 13px;
-  background: var(--color-surface-alt);
+  background: var(--color-outline);
   cursor: pointer;
   appearance: none;
   transition: background 150ms ease;
@@ -174,7 +234,8 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: var(--color-paper);
+  background: var(--color-surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   transition: left 150ms ease;
 }
 
@@ -191,10 +252,8 @@
   outline-offset: 2px;
 }
 
-.menu-leave {
-  min-height: 52px;
-  margin-top: var(--space-3);
-  border-radius: 14px;
+.menu-leave:disabled {
+  opacity: 0.5;
 }
 
 @media (min-aspect-ratio: 1/1) {
