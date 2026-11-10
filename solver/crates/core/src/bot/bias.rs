@@ -1,5 +1,5 @@
 use super::bluff::{bluffed, is_bet, pull};
-use super::translate::sample;
+use super::translate::{fraction, sample};
 use super::{Model, Spot};
 use crate::tree::{ActionKind, Street};
 
@@ -141,6 +141,38 @@ pub fn check_only(
     rebalance(real, check, target, delta, &receivers)
 }
 
+pub const SIZE_TILT: f64 = 2.0;
+pub const SIZE_SCALE: f64 = 0.25;
+
+pub fn tilted(row: &[f64], sizes: &[Option<f64>], sizing: f64) -> Vec<f64> {
+    let power = SIZE_TILT * sizing.ln();
+    let raised: f64 = row
+        .iter()
+        .zip(sizes)
+        .filter(|(_, s)| s.is_some())
+        .map(|(w, _)| w)
+        .sum();
+    let weighted: Vec<f64> = row
+        .iter()
+        .zip(sizes)
+        .map(|(&w, s)| s.map_or(w, |f| w * f.max(f64::MIN_POSITIVE).powf(power)))
+        .collect();
+    let after: f64 = weighted
+        .iter()
+        .zip(sizes)
+        .filter(|(_, s)| s.is_some())
+        .map(|(w, _)| w)
+        .sum();
+    if power == 0.0 || after <= 0.0 {
+        return row.to_vec();
+    }
+    weighted
+        .iter()
+        .zip(sizes)
+        .map(|(&w, s)| if s.is_some() { w * raised / after } else { w })
+        .collect()
+}
+
 pub const NOISE: f64 = 0.1;
 
 pub fn purified(share: f64) -> f64 {
@@ -268,7 +300,18 @@ pub(super) fn biased(
     } else {
         Vec::new()
     };
-    bluffed(&row, &kinds, t, &fallback)
+    let sizes: Vec<Option<f64>> = kinds
+        .iter()
+        .map(|&kind| match kind {
+            ActionKind::RaiseTo(to) => Some(fraction(
+                to,
+                spot.street_bets[1 - spot.seat],
+                spot.pot_after_call(),
+            )),
+            _ => None,
+        })
+        .collect();
+    tilted(&bluffed(&row, &kinds, t, &fallback), &sizes, bias.sizing)
 }
 
 fn node_mix(model: &Model, spot: &Spot<'_>, width: usize) -> Vec<f64> {
@@ -498,6 +541,21 @@ mod tests {
             check_only(&real, 0.0, &kinds, -0.1, &shifted),
             real.to_vec()
         );
+    }
+
+    #[test]
+    fn sizing_moves_the_raise_mass_between_sizes_and_keeps_the_rest() {
+        let row = [10.0, 40.0, 30.0, 20.0, 50.0];
+        let sizes = [None, None, Some(0.33), Some(1.0), None];
+        assert_eq!(tilted(&row, &sizes, 1.0), row.to_vec());
+        for (sizing, bigger) in [(2.0, true), (0.5, false)] {
+            let w = tilted(&row, &sizes, sizing);
+            assert_eq!([w[0], w[1], w[4]], [10.0, 40.0, 50.0]);
+            assert!((w[2] + w[3] - 50.0).abs() < 1e-9, "{w:?}");
+            assert_eq!(w[3] > 20.0, bigger, "{sizing}: {w:?}");
+        }
+        let one = [10.0, 0.0, 30.0, 0.0, 50.0];
+        assert_eq!(tilted(&one, &sizes, 2.0), one.to_vec());
     }
 
     #[test]
