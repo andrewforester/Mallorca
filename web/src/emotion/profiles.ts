@@ -9,7 +9,6 @@ export const MALLORCA: Personality = {
     neuroticism: 0.1,
   },
   suppression: 0.35,
-  control: 0.7,
 };
 
 export const PERSONALITIES = {
@@ -23,7 +22,6 @@ export const PERSONALITIES = {
       neuroticism: -0.8,
     },
     suppression: 0.85,
-    control: 0.8,
   },
   mira: {
     bigFive: {
@@ -34,7 +32,6 @@ export const PERSONALITIES = {
       neuroticism: 0.1,
     },
     suppression: 0.3,
-    control: 0.5,
   },
   nina: {
     bigFive: {
@@ -45,7 +42,6 @@ export const PERSONALITIES = {
       neuroticism: 0.8,
     },
     suppression: 0.55,
-    control: 0.3,
   },
   lola: {
     bigFive: {
@@ -56,7 +52,6 @@ export const PERSONALITIES = {
       neuroticism: 0.8,
     },
     suppression: 0.08,
-    control: 0.1,
   },
   sol: {
     bigFive: {
@@ -67,7 +62,6 @@ export const PERSONALITIES = {
       neuroticism: -0.2,
     },
     suppression: 0.2,
-    control: 0.4,
   },
   rita: {
     bigFive: {
@@ -78,7 +72,6 @@ export const PERSONALITIES = {
       neuroticism: -0.4,
     },
     suppression: 0.2,
-    control: 0.3,
   },
   vera: {
     bigFive: {
@@ -89,7 +82,6 @@ export const PERSONALITIES = {
       neuroticism: 0.6,
     },
     suppression: 0.5,
-    control: 0.2,
   },
   greta: {
     bigFive: {
@@ -100,7 +92,6 @@ export const PERSONALITIES = {
       neuroticism: 0.2,
     },
     suppression: 0.6,
-    control: 0.6,
   },
   neutral: {
     bigFive: {
@@ -111,7 +102,6 @@ export const PERSONALITIES = {
       neuroticism: 0,
     },
     suppression: 0.3,
-    control: 0.5,
   },
 } satisfies Record<string, Personality>;
 

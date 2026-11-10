@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { mulberry32 } from '../cards/index.ts';
-import { PERSONALITIES, REACTION_S } from '../persona/index.ts';
+import { PERSONALITIES, REACTION_S, toBotBias } from '../persona/index.ts';
 import { applyAction } from '../engine/hand.ts';
 import { call, deckOf, raiseTo, startHand } from '../engine/testDeck.ts';
 import type { Step } from '../engine/types.ts';
@@ -39,7 +39,8 @@ describe('her persona in the session', () => {
     clock.ms += 4000;
     expect(REACTION_S).toBe(1);
     expect(her.bias()).toEqual(her.current()?.view(clock.ms + 1000).bias);
-    expect(her.bias()?.tightness).toBeLessThan(1);
+    const rest = toBotBias(her.current()!.view(0).snapshot.traits.baseline);
+    expect(Math.abs((her.bias()?.tightness ?? 1) - rest.tightness)).toBeGreaterThan(0.02);
   });
 
   it('decides on a raise with the feeling the raise gave her', () => {

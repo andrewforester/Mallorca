@@ -21,7 +21,6 @@ import { BIAS_KEYS } from './biasKeys.ts';
 const average: Personality = {
   bigFive: { openness: 0, conscientiousness: 0, extraversion: 0, agreeableness: 0, neuroticism: 0 },
   suppression: 0.3,
-  control: 0.5,
 };
 
 const FAST_MOOD = { changeTimeS: 20, returnTimeS: 40 };
@@ -35,7 +34,6 @@ const hot: Personality = {
     neuroticism: 0.5,
   },
   suppression: 0.08,
-  control: 0.2,
 };
 
 const cold: Personality = {
@@ -47,7 +45,6 @@ const cold: Personality = {
     neuroticism: -0.6,
   },
   suppression: 0.85,
-  control: 0.9,
 };
 
 const withEmotions = (values: Partial<Emotions>): Emotions => ({ ...noEmotions(), ...values });
@@ -74,13 +71,14 @@ describe('personality', () => {
     expect(anxious.composure).toBeLessThan(calm.composure);
   });
 
-  it('takes composure and discipline from conscientiousness, neuroticism and self-control', () => {
-    const b = MALLORCA.bigFive;
+  it('takes composure from stability and discipline from conscientiousness', () => {
     const t = traitsOf(MALLORCA);
-    const composure = 0.45 + 0.15 * b.conscientiousness - 0.25 * b.neuroticism + 0.2 * 0.7;
-    const discipline = 0.25 + 0.2 * b.conscientiousness - 0.15 * b.neuroticism + 0.5 * 0.7;
-    expect(t.composure).toBeCloseTo(composure, 12);
-    expect(t.discipline).toBeCloseTo(discipline, 12);
+    expect(t.composure).toBeCloseTo(0.55 - 0.35 * 0.1 + 0.1 * 0.2, 12);
+    expect(t.discipline).toBeCloseTo(0.45 + 0.4 * 0.2 - 0.1 * 0.1, 12);
+    const shaky = { ...average.bigFive, neuroticism: 1, conscientiousness: -1 };
+    expect(traitsOf({ ...average, bigFive: shaky }).composure).toBe(0.15);
+    const steady = { ...average.bigFive, neuroticism: -1, conscientiousness: 1 };
+    expect(traitsOf({ ...average, bigFive: steady }).discipline).toBe(0.95);
   });
 
   it('derives whom she blames, how she copes and how rash she gets', () => {
@@ -92,7 +90,7 @@ describe('personality', () => {
     const e = b.extraversion;
     const t = traitsOf(MALLORCA);
     expect(t.selfBlame).toBeCloseTo(s(1.2 * c + 0.8 * n + 0.8 * a - 0.6 * e), 12);
-    expect(t.coping).toBeCloseTo(s(-1.2 * n + 0.6 * e - 0.5 * a + 0.7 - 0.5), 12);
+    expect(t.coping).toBeCloseTo(s(-1.2 * n + 0.6 * e - 0.5 * a), 12);
     expect(t.urgency).toBe(0);
     const rash = { ...average.bigFive, neuroticism: 0.8, conscientiousness: -0.6 };
     expect(traitsOf({ ...average, bigFive: rash }).urgency).toBeCloseTo(0.7, 12);
@@ -100,22 +98,20 @@ describe('personality', () => {
 
   it('keeps the stances inside zero and one at the corners', () => {
     for (const sign of [-1, 1]) {
-      for (const control of [0, 1]) {
-        const corner = {
-          openness: sign,
-          conscientiousness: sign,
-          extraversion: -sign,
-          agreeableness: sign,
-          neuroticism: sign,
-        };
-        const t = traitsOf({ ...average, bigFive: corner, control });
-        for (const v of [t.coping, t.selfBlame]) {
-          expect(v).toBeGreaterThan(0);
-          expect(v).toBeLessThan(1);
-        }
-        expect(t.urgency).toBeGreaterThanOrEqual(0);
-        expect(t.urgency).toBeLessThanOrEqual(1);
+      const corner = {
+        openness: sign,
+        conscientiousness: sign,
+        extraversion: -sign,
+        agreeableness: sign,
+        neuroticism: sign,
+      };
+      const t = traitsOf({ ...average, bigFive: corner });
+      for (const v of [t.coping, t.selfBlame]) {
+        expect(v).toBeGreaterThan(0);
+        expect(v).toBeLessThan(1);
       }
+      expect(t.urgency).toBeGreaterThanOrEqual(0);
+      expect(t.urgency).toBeLessThanOrEqual(1);
     }
   });
 
@@ -271,8 +267,9 @@ describe('engine', () => {
     const lola = badBeat(hot);
     const ingrid = badBeat(cold);
     expect(lola.emotions.injustice).toBeGreaterThan(ingrid.emotions.injustice);
-    expect(lola.load.overload).toBeGreaterThan(0.9);
+    expect(lola.load.overload).toBeGreaterThan(0.85);
     expect(ingrid.load.overload).toBeLessThan(lola.load.overload);
+    expect(lola.load.reach).toBeGreaterThan(4 * ingrid.load.reach);
     expect(lola.bias.looseness).toBeGreaterThan(ingrid.bias.looseness);
   });
 

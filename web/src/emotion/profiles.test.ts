@@ -23,16 +23,16 @@ describe('PERSONALITIES', () => {
 
   it('gives every character the traits of the spec', () => {
     const table: Record<string, number[]> = {
-      mallorca: [0.4, 0.2, 0.4, 0.5, 0.1, 0.7, 0.35],
-      ingrid: [0.2, 0.8, -0.2, -0.4, -0.8, 0.8, 0.85],
-      mira: [0.3, 0.2, 0.2, 0.9, 0.1, 0.5, 0.3],
-      nina: [-0.3, 0.8, -0.4, 0.3, 0.8, 0.3, 0.55],
-      lola: [0.5, -0.6, 0.7, 0.2, 0.8, 0.1, 0.08],
-      sol: [0.8, -0.5, 0.9, 0.5, -0.2, 0.4, 0.2],
-      rita: [0.8, -0.7, 0.9, -0.6, -0.4, 0.3, 0.2],
-      vera: [-0.4, 0.8, 0.4, -0.5, 0.6, 0.2, 0.5],
-      greta: [-0.6, 0.5, -0.8, 0.2, 0.2, 0.6, 0.6],
-      neutral: [0, 0, 0, 0, 0, 0.5, 0.3],
+      mallorca: [0.4, 0.2, 0.4, 0.5, 0.1, 0.35],
+      ingrid: [0.2, 0.8, -0.2, -0.4, -0.8, 0.85],
+      mira: [0.3, 0.2, 0.2, 0.9, 0.1, 0.3],
+      nina: [-0.3, 0.8, -0.4, 0.3, 0.8, 0.55],
+      lola: [0.5, -0.6, 0.7, 0.2, 0.8, 0.08],
+      sol: [0.8, -0.5, 0.9, 0.5, -0.2, 0.2],
+      rita: [0.8, -0.7, 0.9, -0.6, -0.4, 0.2],
+      vera: [-0.4, 0.8, 0.4, -0.5, 0.6, 0.5],
+      greta: [-0.6, 0.5, -0.8, 0.2, 0.2, 0.6],
+      neutral: [0, 0, 0, 0, 0, 0.3],
     };
     for (const [key, p] of Object.entries(PERSONALITIES)) {
       const b = p.bigFive;
@@ -42,7 +42,6 @@ describe('PERSONALITIES', () => {
         b.extraversion,
         b.agreeableness,
         b.neuroticism,
-        p.control,
         p.suppression,
       ]).toEqual(table[key]);
     }
@@ -55,15 +54,8 @@ describe('PERSONALITIES', () => {
       }
       expect(p.suppression).toBeGreaterThanOrEqual(0);
       expect(p.suppression).toBeLessThanOrEqual(1);
-      expect(p.control).toBeGreaterThanOrEqual(0);
-      expect(p.control).toBeLessThanOrEqual(1);
+      expect(Object.keys(p).sort()).toEqual(['bigFive', 'suppression']);
     }
-  });
-
-  it('takes composure and discipline from self-control', () => {
-    const p = PERSONALITIES.mira;
-    expect(traitsOf({ ...p, control: 1 }).discipline).toBeGreaterThan(traitsOf(p).discipline);
-    expect(traitsOf({ ...p, control: 1 }).composure).toBeGreaterThan(traitsOf(p).composure);
   });
 
   it('plays the natural style of the character at rest', () => {

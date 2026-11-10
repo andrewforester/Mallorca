@@ -203,8 +203,10 @@ describe('what the feeling gives the rest of conversation', () => {
     hand.act(call, 3000);
     hand.feeling.advance(8000);
     const bias = botBiasOf(hand.feeling.snapshot());
-    expect(bias.tightness).toBeLessThan(1);
-    expect(bias.stickiness).toBeGreaterThan(1);
+    const rest = toBotBias(hand.feeling.snapshot().traits.baseline);
+    expect(hand.feeling.snapshot().load.reach).toBeGreaterThan(0.1);
+    expect(Math.abs(bias.tightness - rest.tightness)).toBeGreaterThan(0.01);
+    expect(Math.abs(bias.stickiness - rest.stickiness)).toBeGreaterThan(0.01);
     expect(bias.tightness * hand.feeling.snapshot().bias.looseness).toBeCloseTo(1, 12);
   });
 });

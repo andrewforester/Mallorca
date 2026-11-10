@@ -28,7 +28,7 @@ describe('toDebugView', () => {
     expect(view.bigFive).toEqual(PERSONALITIES.lola.bigFive);
     expect(view.suppression).toBe(PERSONALITIES.lola.suppression);
     expect('experience' in view).toBe(false);
-    expect(view.control).toBe(PERSONALITIES.lola.control);
+    expect('control' in view).toBe(false);
     expect(view.traits?.gains.map(([e]) => e)).toEqual([...EMOTIONS]);
     const traits = state().snapshot?.traits;
     expect(view.traits?.selfBlame).toBe(traits?.selfBlame);

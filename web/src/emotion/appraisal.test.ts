@@ -127,7 +127,6 @@ describe('a bet against her', () => {
         neuroticism: 0,
       },
       suppression: 0.3,
-      control: 0.5,
     };
     const rude = traitsOf({ ...average, bigFive: { ...average.bigFive, agreeableness: -0.8 } });
     const anxious = traitsOf({ ...average, bigFive: { ...average.bigFive, neuroticism: 0.8 } });

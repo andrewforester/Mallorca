@@ -14,7 +14,6 @@ export interface BigFive {
 export interface Personality {
   bigFive: BigFive;
   suppression: number;
-  control: number;
 }
 
 export interface Traits {
@@ -84,7 +83,7 @@ function stancesOf(p: Personality): { selfBlame: number; coping: number; urgency
   const e = b.extraversion;
   return {
     selfBlame: sigmoid(1.2 * c + 0.8 * n + 0.8 * a - 0.6 * e),
-    coping: sigmoid(-1.2 * n + 0.6 * e - 0.5 * a + (p.control - 0.5)),
+    coping: sigmoid(-1.2 * n + 0.6 * e - 0.5 * a),
     urgency: clamp01(0.5 * n - 0.5 * c),
   };
 }
@@ -95,16 +94,8 @@ export function traitsOf(p: Personality): Traits {
     defaultMood: defaultMoodOf(b),
     gains: gainsOf(b),
     halfLifeFactor: halfLifeFactorOf(b),
-    composure: clamp(
-      0.45 + 0.15 * b.conscientiousness - 0.25 * b.neuroticism + 0.2 * p.control,
-      0.1,
-      1.2,
-    ),
-    discipline: clamp(
-      0.25 + 0.2 * b.conscientiousness - 0.15 * b.neuroticism + 0.5 * p.control,
-      0,
-      0.95,
-    ),
+    composure: clamp(0.55 - 0.35 * b.neuroticism + 0.1 * b.conscientiousness, 0.15, 1.1),
+    discipline: clamp(0.45 + 0.4 * b.conscientiousness - 0.1 * b.neuroticism, 0, 0.95),
     expressiveness: clamp(0.85 + 0.35 * b.extraversion + 0.1 * b.neuroticism, 0.3, 1.4),
     mask: clamp(p.suppression, 0, 1),
     talkativeness: clamp(0.5 + 0.4 * b.extraversion, 0.1, 1),

@@ -11,10 +11,14 @@ describe('profileOfName', () => {
       personality: PERSONALITIES.lola,
       label: 'style-lola',
     });
-    expect(profileOfName('persona:nina@suppression=0.9,control=0.1')).toEqual({
+    expect(profileOfName('persona:nina@suppression=0.9,neuroticism=0.1')).toEqual({
       kind: 'persona',
-      personality: { ...PERSONALITIES.nina, suppression: 0.9, control: 0.1 },
-      label: 'persona-nina-suppression0.9-control0.1',
+      personality: {
+        ...PERSONALITIES.nina,
+        suppression: 0.9,
+        bigFive: { ...PERSONALITIES.nina.bigFive, neuroticism: 0.1 },
+      },
+      label: 'persona-nina-suppression0.9-neuroticism0.1',
     });
     expect(profileOfName('persona:ingrid@neuroticism=-0.5')?.personality.bigFive).toEqual({
       ...PERSONALITIES.ingrid.bigFive,
@@ -27,9 +31,10 @@ describe('profileOfName', () => {
     'persona:lola@luck=1',
     'persona:lola@suppression=1.5',
     'persona:lola@experience=0.5',
-    'persona:lola@control=-0.1',
+    'persona:lola@control=0.5',
+    'persona:lola@suppression=-0.1',
     'persona:lola@neuroticism=2',
-    'persona:lola@control=',
+    'persona:lola@suppression=',
     'persona:',
     'cfr',
   ])('does not read %s', (name) => {
@@ -37,11 +42,11 @@ describe('profileOfName', () => {
   });
 
   it('makes the bot names known to the arena', () => {
-    expect(isBotName('persona:lola@suppression=0.9,control=0.1')).toBe(true);
+    expect(isBotName('persona:lola@suppression=0.9,openness=0.1')).toBe(true);
     expect(isBotName('style:mallorca')).toBe(true);
     expect(isBotName('persona:lola@suppression=2')).toBe(false);
-    expect(botLabel('persona:lola@suppression=0.9,control=0.1')).toBe(
-      'persona-lola-suppression0.9-control0.1',
+    expect(botLabel('persona:lola@suppression=0.9,openness=0.1')).toBe(
+      'persona-lola-suppression0.9-openness0.1',
     );
   });
 });

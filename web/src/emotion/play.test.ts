@@ -15,42 +15,29 @@ import {
 } from './play.ts';
 import { MALLORCA, PERSONALITIES } from './profiles.ts';
 
-const persona = (bigFive: BigFive, control: number): Personality => ({
-  bigFive,
-  suppression: 0.3,
-  control,
-});
+const persona = (bigFive: BigFive): Personality => ({ bigFive, suppression: 0.3 });
 
-const BRASH = persona(
-  {
-    openness: 0.8,
-    conscientiousness: -0.7,
-    extraversion: 0.9,
-    agreeableness: -0.6,
-    neuroticism: -0.4,
-  },
-  0.3,
-);
-const ANXIOUS = persona(
-  {
-    openness: -0.3,
-    conscientiousness: 0.8,
-    extraversion: -0.4,
-    agreeableness: 0.3,
-    neuroticism: 0.8,
-  },
-  0.3,
-);
-const IMPULSIVE = persona(
-  {
-    openness: 0.5,
-    conscientiousness: -0.6,
-    extraversion: 0.7,
-    agreeableness: 0.2,
-    neuroticism: 0.8,
-  },
-  0.1,
-);
+const BRASH = persona({
+  openness: 0.8,
+  conscientiousness: -0.7,
+  extraversion: 0.9,
+  agreeableness: -0.6,
+  neuroticism: -0.4,
+});
+const ANXIOUS = persona({
+  openness: -0.3,
+  conscientiousness: 0.8,
+  extraversion: -0.4,
+  agreeableness: 0.3,
+  neuroticism: 0.8,
+});
+const IMPULSIVE = persona({
+  openness: 0.5,
+  conscientiousness: -0.6,
+  extraversion: 0.7,
+  agreeableness: 0.2,
+  neuroticism: 0.8,
+});
 const STILL: Pad = [0, 0, 0];
 
 const feeling = (values: Partial<Emotions>): Emotions => ({ ...noEmotions(), ...values });

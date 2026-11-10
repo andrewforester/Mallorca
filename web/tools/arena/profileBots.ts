@@ -16,7 +16,7 @@ export interface ProfileBot {
 
 const KINDS: readonly ProfileKind[] = ['style', 'persona'];
 const TRAITS = Object.keys(PERSONALITIES.mallorca.bigFive) as (keyof Personality['bigFive'])[];
-const HABITS = ['suppression', 'control'] as const;
+const HABITS = ['suppression'] as const;
 type Habit = (typeof HABITS)[number];
 
 const isTrait = (key: string): key is keyof Personality['bigFive'] =>

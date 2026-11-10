@@ -31,13 +31,6 @@ function slidersOf(view: DebugView): Slider[] {
       value: view.suppression,
       put: (p, v) => ({ ...p, suppression: v }),
     },
-    {
-      id: 'control',
-      label: COPY.control,
-      min: 0,
-      value: view.control,
-      put: (p, v) => ({ ...p, control: v }),
-    },
   ];
 }
 
@@ -45,7 +38,6 @@ function current(view: DebugView): Personality {
   return {
     bigFive: view.bigFive,
     suppression: view.suppression,
-    control: view.control,
   };
 }
 

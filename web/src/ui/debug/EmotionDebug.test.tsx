@@ -99,7 +99,7 @@ describe('EmotionDebug', () => {
     expect(setPersonality).toHaveBeenCalledWith(
       expect.objectContaining({
         bigFive: expect.objectContaining({ neuroticism: 0.9 }),
-        control: expect.any(Number),
+        suppression: expect.any(Number),
       }),
     );
   });
@@ -112,12 +112,10 @@ describe('EmotionDebug', () => {
     expect(screen.queryByLabelText('Poker experience')).toBeNull();
   });
 
-  it('carries her self-control slider into a custom personality', async () => {
-    const session = await seated();
-    const setPersonality = vi.spyOn(session.getState(), 'setPersonality');
-    await opened(session);
-    fireEvent.input(screen.getByLabelText(COPY.control), { target: { value: '0.1' } });
-    expect(setPersonality).toHaveBeenCalledWith(expect.objectContaining({ control: 0.1 }));
+  it('has no self-control slider, a character is her Big Five and her poker face habit', async () => {
+    await opened(await seated());
+    expect(screen.queryByLabelText('Self-control')).toBeNull();
+    expect(screen.getByLabelText(COPY.suppression)).toBeTruthy();
   });
 
   it('says no bias was sent before her first decision', async () => {

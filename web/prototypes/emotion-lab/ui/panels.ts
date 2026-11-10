@@ -237,12 +237,6 @@ export function createPersonalityEditor(
     (p) => p.suppression,
     (p, v) => ({ ...p, suppression: v }),
   );
-  slider(
-    'Сдержанность',
-    0,
-    (p) => p.control,
-    (p, v) => ({ ...p, control: v }),
-  );
   return (p) => {
     current = p;
     inputs.forEach((i) => i.set(p));
