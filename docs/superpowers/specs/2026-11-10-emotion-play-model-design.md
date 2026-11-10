@@ -213,34 +213,35 @@ The four presets take the Big Five of the archetype closest to them, four new ch
 own. All nine are on the start screen, in the current layout. The neutral profile stays in the debug panel only, as
 a reference.
 
-| Key      | Name     | Archetype                         | O    | C    | E    | A    | N    | control | suppression |
-| -------- | -------- | --------------------------------- | ---- | ---- | ---- | ---- | ---- | ------- | ----------- |
-| mallorca | Mallorca | warm and calm, as today           | 0.4  | 0.2  | 0.4  | 0.5  | 0.1  | 0.7     | 0.35        |
-| ingrid   | Ingrid   | cold, organised, unflappable      | 0.2  | 0.8  | −0.2 | −0.4 | −0.8 | 0.8     | 0.85        |
-| mira     | Mira     | gentle, kind, easy-going          | 0.3  | 0.2  | 0.2  | 0.9  | 0.1  | 0.5     | 0.3         |
-| nina     | Nina     | anxious perfectionist             | −0.3 | 0.8  | −0.4 | 0.3  | 0.8  | 0.3     | 0.55        |
-| lola     | Lola     | impulsive and touchy              | 0.5  | −0.6 | 0.7  | 0.2  | 0.8  | 0.1     | 0.08        |
-| sol      | Sol      | cheerful outgoing adventurer      | 0.8  | −0.5 | 0.9  | 0.5  | −0.2 | 0.4     | 0.2         |
-| rita     | Rita     | brash, quarrelsome, thick-skinned | 0.8  | −0.7 | 0.9  | −0.6 | −0.4 | 0.3     | 0.2         |
-| vera     | Vera     | sharp-tongued but nervous pedant  | −0.4 | 0.8  | 0.4  | −0.5 | 0.6  | 0.2     | 0.5         |
-| greta    | Greta    | reserved and cautious             | −0.6 | 0.5  | −0.8 | 0.2  | 0.2  | 0.6     | 0.6         |
-| neutral  | (debug)  | average in every trait            | 0    | 0    | 0    | 0    | 0    | 0.5     | 0.3         |
+| Key      | Name     | Archetype                          | O    | C    | E    | A    | N    | control | suppression |
+| -------- | -------- | ---------------------------------- | ---- | ---- | ---- | ---- | ---- | ------- | ----------- |
+| mallorca | Mallorca | warm, curious and steady, as today | 0.4  | 0.2  | 0.4  | 0.5  | 0.1  | 0.7     | 0.35        |
+| ingrid   | Ingrid   | cold, organised, unflappable       | 0.2  | 0.8  | −0.2 | −0.4 | −0.8 | 0.8     | 0.85        |
+| mira     | Mira     | gentle, kind, easy-going           | 0.3  | 0.2  | 0.2  | 0.9  | 0.1  | 0.5     | 0.3         |
+| nina     | Nina     | anxious perfectionist              | −0.3 | 0.8  | −0.4 | 0.3  | 0.8  | 0.3     | 0.55        |
+| lola     | Lola     | impulsive and touchy               | 0.5  | −0.6 | 0.7  | 0.2  | 0.8  | 0.1     | 0.08        |
+| sol      | Sol      | cheerful outgoing adventurer       | 0.8  | −0.5 | 0.9  | 0.5  | −0.2 | 0.4     | 0.2         |
+| rita     | Rita     | brash, quarrelsome, thick-skinned  | 0.8  | −0.7 | 0.9  | −0.6 | −0.4 | 0.3     | 0.2         |
+| vera     | Vera     | sharp-tongued but nervous pedant   | −0.4 | 0.8  | 0.4  | −0.5 | 0.6  | 0.2     | 0.5         |
+| greta    | Greta    | reserved and cautious              | −0.6 | 0.5  | −0.8 | 0.2  | 0.2  | 0.6     | 0.6         |
+| neutral  | (debug)  | average in every trait             | 0    | 0    | 0    | 0    | 0    | 0.5     | 0.3         |
 
 Suppression is kept for the existing four and chosen to fit the new ones; it shapes only the face.
 
 Start screen copy (English, no capitals for emphasis, no dashes as punctuation). The difficulty labels are
 provisional until the arena measures them.
 
-| Key    | Line                                          | Label          | Hello                                       |
-| ------ | --------------------------------------------- | -------------- | ------------------------------------------- |
-| ingrid | A professional. Nothing rattles her.          | The toughest   | Your blind.                                 |
-| mira   | Kind and easy-going.                          | Comfortable    | Shall we? No hurry.                         |
-| nina   | Anxious and exacting. Hates her own mistakes. | A gentle start | Um, hi. Go easy on me?                      |
-| lola   | Quick to laugh, quick to take offence.        | A wild ride    | Finally! Deal me in, I feel lucky.          |
-| sol    | Cheerful and bold. Loves a gamble.            | Lively         | Ooh, a new face! Let's make it interesting. |
-| rita   | Brash and stubborn. Never backs down.         | Relentless     | Sit down. I'm not going easy on you.        |
-| vera   | Sharp-tongued, but her nerves betray her.     | Prickly        | You're late. Shuffle properly, please.      |
-| greta  | Quiet and careful. Waits for her moment.      | Patient        | Good evening. Let's begin.                  |
+| Key      | Line                                                | Label          | Hello                                       |
+| -------- | --------------------------------------------------- | -------------- | ------------------------------------------- |
+| mallorca | Warm and curious. Opens up when the cards are kind. | A real game    | Oh, it's you. Sit, I'll deal.               |
+| ingrid   | A professional. Nothing rattles her.                | The toughest   | Your blind.                                 |
+| mira     | Kind and easy-going.                                | Comfortable    | Shall we? No hurry.                         |
+| nina     | Anxious and exacting. Hates her own mistakes.       | A gentle start | Um, hi. Go easy on me?                      |
+| lola     | Quick to laugh, quick to take offence.              | A wild ride    | Finally! Deal me in, I feel lucky.          |
+| sol      | Cheerful and bold. Loves a gamble.                  | Lively         | Ooh, a new face! Let's make it interesting. |
+| rita     | Brash and stubborn. Never backs down.               | Relentless     | Sit down. I'm not going easy on you.        |
+| vera     | Sharp-tongued, but her nerves betray her.           | Prickly        | You're late. Shuffle properly, please.      |
+| greta    | Quiet and careful. Waits for her moment.            | Patient        | Good evening. Let's begin.                  |
 
 ## Reference numbers
 
@@ -250,6 +251,7 @@ a suckout of 60 bb, a compliment. Columns: aggression, looseness, bluff, sizing,
 
 | Character | At rest                  | Bad beat +15 s           | After the losses         | 5 min of quiet hands     | Heater peak              |
 | --------- | ------------------------ | ------------------------ | ------------------------ | ------------------------ | ------------------------ |
+| mallorca  | 1.02 1.12 1.00 0.98 1.15 | 1.01 1.10 1.10 1.15 1.08 | 0.85 0.92 0.92 0.96 0.91 | 1.01 1.10 1.01 1.00 1.12 | 1.29 1.42 1.30 1.26 1.42 |
 | ingrid    | 1.10 0.77 1.18 1.26 0.71 | 1.12 0.78 1.22 1.30 0.71 | 1.10 0.76 1.20 1.28 0.70 | 1.12 0.78 1.20 1.28 0.71 | 1.14 0.80 1.23 1.31 0.73 |
 | sol       | 1.33 1.49 1.28 1.20 1.30 | 1.56 1.61 1.66 1.64 1.41 | 1.45 1.39 1.53 1.48 1.24 | 1.64 1.68 1.62 1.51 1.57 | 1.78 1.84 1.77 1.69 1.75 |
 | rita      | 1.55 1.53 1.54 1.54 1.12 | 1.83 1.73 1.88 1.89 1.41 | 1.87 1.66 1.90 1.87 1.43 | 1.90 1.82 1.90 1.86 1.65 | 1.89 1.87 1.90 1.88 1.68 |
