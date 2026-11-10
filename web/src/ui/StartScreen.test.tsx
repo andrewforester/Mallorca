@@ -9,7 +9,7 @@ afterEach(cleanup);
 describe('StartScreen', () => {
   it('starts a cash game or a tournament', () => {
     const onStart = vi.fn();
-    render(<StartScreen seed={42} onStart={onStart} />);
+    render(<StartScreen onStart={onStart} />);
     fireEvent.click(screen.getByTestId('start-cash'));
     expect(onStart).toHaveBeenLastCalledWith(CASH, 'math');
     fireEvent.click(screen.getByTestId('start-tournament'));
@@ -18,7 +18,7 @@ describe('StartScreen', () => {
 
   it('starts against the chosen opponent', () => {
     const onStart = vi.fn();
-    render(<StartScreen seed={42} onStart={onStart} />);
+    render(<StartScreen onStart={onStart} />);
     expect(screen.getByTestId('opponent-math').getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByTestId('opponent-cfr'));
     expect(screen.getByTestId('opponent-cfr').getAttribute('aria-pressed')).toBe('true');
@@ -29,11 +29,7 @@ describe('StartScreen', () => {
 
   it('shows the download of the chosen solver as a line and a bar', () => {
     render(
-      <StartScreen
-        seed={1}
-        onStart={vi.fn()}
-        progress={{ opponent: 'cfr', received: 42, total: 100 }}
-      />,
+      <StartScreen onStart={vi.fn()} progress={{ opponent: 'cfr', received: 42, total: 100 }} />,
     );
     expect(screen.queryByTestId('start-loading')).toBeNull();
     fireEvent.click(screen.getByTestId('opponent-cfr'));
@@ -46,11 +42,7 @@ describe('StartScreen', () => {
 
   it('shows the line without a number when the size is unknown', () => {
     render(
-      <StartScreen
-        seed={1}
-        onStart={vi.fn()}
-        progress={{ opponent: 'cfr', received: 42, total: 0 }}
-      />,
+      <StartScreen onStart={vi.fn()} progress={{ opponent: 'cfr', received: 42, total: 0 }} />,
     );
     fireEvent.click(screen.getByTestId('opponent-cfr'));
     expect(screen.getByTestId('start-loading').textContent).toBe(
@@ -62,7 +54,7 @@ describe('StartScreen', () => {
   it('plays a fixed opponent without a choice and starts loading it at once', () => {
     const onStart = vi.fn();
     const onChoose = vi.fn();
-    render(<StartScreen seed={1} onStart={onStart} onChoose={onChoose} opponent="cfr-v2" />);
+    render(<StartScreen onStart={onStart} onChoose={onChoose} opponent="cfr-v2" />);
     expect(screen.queryByTestId('opponent-math')).toBeNull();
     expect(screen.queryByTestId('opponent-cfr-v2')).toBeNull();
     expect(onChoose).toHaveBeenCalledWith('cfr-v2');
@@ -73,7 +65,6 @@ describe('StartScreen', () => {
   it('shows the download of a fixed opponent without a choice', () => {
     render(
       <StartScreen
-        seed={1}
         onStart={vi.fn()}
         opponent="cfr"
         progress={{ opponent: 'cfr', received: 10, total: 100 }}
@@ -84,9 +75,7 @@ describe('StartScreen', () => {
 
   it('lets the player choose her character among five, with her line and how hard she is', () => {
     const onCharacter = vi.fn();
-    render(
-      <StartScreen seed={1} onStart={vi.fn()} character="mallorca" onCharacter={onCharacter} />,
-    );
+    render(<StartScreen onStart={vi.fn()} character="mallorca" onCharacter={onCharacter} />);
     const choices = screen.getAllByTestId(/^character-/);
     expect(choices.map((node) => node.getAttribute('data-testid'))).toEqual([
       'character-mallorca',
@@ -104,28 +93,28 @@ describe('StartScreen', () => {
     expect(onCharacter).toHaveBeenCalledWith('nina');
   });
 
-  it('greets the player in the words of the chosen character, under her name', () => {
-    render(<StartScreen seed={1} onStart={vi.fn()} character="lola" onCharacter={vi.fn()} />);
-    const frame = screen.getByTestId('tonight-face');
-    expect(frame.textContent).toContain('Finally! Deal me in, I feel lucky.');
-    expect(frame.querySelector('img')?.getAttribute('alt')).toBe('Lola');
+  it('greets the player in the words of the chosen character', () => {
+    render(<StartScreen onStart={vi.fn()} character="lola" onCharacter={vi.fn()} />);
+    expect(screen.getByTestId('tonight-face').textContent).toContain(
+      'Finally! Deal me in, I feel lucky.',
+    );
   });
 
   it('hides the coach switch when the coach is not offered', () => {
-    render(<StartScreen seed={1} onStart={vi.fn()} />);
+    render(<StartScreen onStart={vi.fn()} />);
     expect(screen.queryByTestId('start-coach')).toBeNull();
   });
 
   it('tells which opponent was chosen as soon as it is chosen', () => {
     const onChoose = vi.fn();
-    render(<StartScreen seed={42} onStart={vi.fn()} onChoose={onChoose} finePointer />);
+    render(<StartScreen onStart={vi.fn()} onChoose={onChoose} finePointer />);
     fireEvent.click(screen.getByTestId('opponent-cfr-v2'));
     expect(onChoose).toHaveBeenCalledWith('cfr-v2');
   });
 
   it('offers the v2 solver where a fine pointer is present', () => {
     const onStart = vi.fn();
-    render(<StartScreen seed={42} onStart={onStart} finePointer />);
+    render(<StartScreen onStart={onStart} finePointer />);
     fireEvent.click(screen.getByTestId('opponent-cfr-v2'));
     expect(screen.getByTestId('opponent-cfr-v2').textContent).toBe(en.start.opponents['cfr-v2']);
     fireEvent.click(screen.getByTestId('start-cash'));
@@ -134,45 +123,79 @@ describe('StartScreen', () => {
   });
 
   it('hides the v2 solver on a touch screen', () => {
-    render(<StartScreen seed={42} onStart={vi.fn()} finePointer={false} />);
+    render(<StartScreen onStart={vi.fn()} finePointer={false} />);
     expect(screen.queryByTestId('opponent-cfr-v2')).toBeNull();
     expect(screen.getByTestId('opponent-cfr')).toBeTruthy();
   });
 
   it('says good night with a title and a line in place of the tagline', () => {
-    const { container } = render(<StartScreen seed={1} onStart={vi.fn()} farewell />);
+    const { container } = render(<StartScreen onStart={vi.fn()} farewell />);
     const farewell = screen.getByTestId('farewell');
     expect(farewell.querySelector('.tonight-farewell-title')?.textContent).toBe('Sleep well.');
     expect(farewell.textContent).toContain('The table will be here.');
     expect(container.textContent).not.toContain(en.start.tagline);
   });
 
-  it('is Tonight: her face in a frame with her greeting, the opponent and the coach', () => {
-    render(<StartScreen seed={1} onStart={vi.fn()} onToggleCoach={vi.fn()} />);
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Tonight');
+  it('has no heading, only her in the attic with her greeting and the coach', () => {
+    render(
+      <StartScreen
+        onStart={vi.fn()}
+        onToggleCoach={vi.fn()}
+        face={<div data-testid="face-seat" />}
+      />,
+    );
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
     const frame = screen.getByTestId('tonight-face');
-    expect(frame.querySelector('img')?.getAttribute('alt')).toBe('Mallorca');
+    expect(frame.querySelector('.face-room')).not.toBeNull();
+    expect(frame.querySelector('.face-rail')).not.toBeNull();
+    expect(frame.querySelector('.face-blur')).not.toBeNull();
+    expect(frame.querySelector('[data-testid="face-seat"]')).not.toBeNull();
     expect(frame.textContent).toContain("Hi. I'm Mallorca.");
     expect((screen.getByTestId('start-coach') as HTMLInputElement).getAttribute('role')).toBe(
       'switch',
     );
   });
 
-  it('frames her name instead of her face when the face is off', () => {
-    render(<StartScreen seed={1} onStart={vi.fn()} face={false} />);
+  it('shows the empty room with her name when the face is off', () => {
+    render(<StartScreen onStart={vi.fn()} character="ingrid" onCharacter={vi.fn()} />);
     const frame = screen.getByTestId('tonight-face');
-    expect(frame.querySelector('img')).toBeNull();
-    expect(frame.textContent).toContain('Mallorca');
+    expect(frame.querySelector('.face-room')).not.toBeNull();
+    expect(frame.querySelector('[data-testid="face-seat"]')).toBeNull();
+    expect(frame.querySelector('.face-frame-name')?.textContent).toBe('Ingrid');
+  });
+
+  it('asks to sit down to a cash game, with the tournament as the quieter choice', () => {
+    render(<StartScreen onStart={vi.fn()} />);
+    const sit = screen.getByTestId('start-cash');
+    expect(sit.querySelector('.start-main-label')?.textContent).toBe(en.start.sit);
+    expect(sit.querySelector('.start-main-detail')?.textContent).toBe(en.start.cash);
+    expect(sit.classList.contains('start-main')).toBe(true);
+    const tournament = screen.getByTestId('start-tournament');
+    expect(tournament.textContent).toBe(en.start.tournament);
+    expect(tournament.classList.contains('start-second')).toBe(true);
+  });
+
+  it('shows no seed', () => {
+    const { container } = render(<StartScreen onStart={vi.fn()} />);
+    expect(container.querySelector('.start-seed')).toBeNull();
+    expect(container.textContent).not.toContain('Seed');
+  });
+
+  it('puts the name and how hard she is on one line of each character card', () => {
+    render(<StartScreen onStart={vi.fn()} character="mallorca" onCharacter={vi.fn()} />);
+    const top = screen.getByTestId('character-ingrid').querySelector('.character-top');
+    expect(top?.querySelector('.character-name')?.textContent).toBe('Ingrid');
+    expect(top?.querySelector('.character-hard')?.textContent).toBe('The toughest');
   });
 
   it('shows the tagline by default', () => {
-    const { container } = render(<StartScreen seed={1} onStart={vi.fn()} />);
+    const { container } = render(<StartScreen onStart={vi.fn()} />);
     expect(screen.queryByTestId('farewell')).toBeNull();
     expect(container.textContent).toContain(en.start.tagline);
   });
 
   it('sits over the dimmed room', () => {
-    render(<StartScreen seed={1} onStart={vi.fn()} />);
+    render(<StartScreen onStart={vi.fn()} />);
     expect(screen.getByTestId('scene').classList.contains('scene-dimmed')).toBe(true);
   });
 });

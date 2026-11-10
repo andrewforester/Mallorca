@@ -81,7 +81,7 @@ test('with her face off the start screen shows her name in large light type', as
   await page.locator('.menu-summary').click();
   await byId(page, 'face').click();
   await page.reload();
-  const name = page.locator('.tonight-face .face-frame-name');
+  const name = page.locator('.tonight-scene .face-frame-name');
   await expect(name).toBeVisible();
   const style = await name.evaluate((node) => {
     const computed = getComputedStyle(node);
