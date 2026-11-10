@@ -20,23 +20,24 @@ interesting look and chose three grooms of the MetaHuman library from a sheet of
   loads only the hairstyle of its character.
 - **`head_color_map.webp` no longer carries painted hair.** The scalp under the hair is darkened in the skin shader by
   the hairstyle's `scalp.webp`, with the tone the export painted before. The brows stay painted.
-- **The scalp mask is generated, not taken from Unreal.** Only some grooms ship a `_baked` texture, so every hairstyle
-  gets the same treatment: the head vertices closer than a few millimetres to a card vertex are rasterized into the
-  head UV and blurred.
+- **The scalp mask comes from the roots of the groom.** Only some grooms ship a `_baked` texture, but every groom has
+  `<groom>_RooUVSeedCoverage`, the head UV of the root of each texel of its card atlas. The density of those root UVs
+  over the head UV is the scalp mask; for `Hair_L_StraightBangs` it matches its `_baked` texture.
 - **Each groom is fitted onto the archetype head.** Some grooms are modelled for a taller head (`Hair_M_SideSweptFringe`
-  sits about 14 cm too high). The export finds a translation that lays the cards nearest the skin onto the archetype
-  scalp; grooms that already fit get a translation near zero.
-- **The folder limit rises from 17 MB to 20 MB** if three hairstyles need it, in its own commit.
+  sits about 13 cm too high). The export finds a translation that lays the cards nearest the skin 2.5 mm above the
+  archetype scalp. Grooms modelled on the archetype come out within 1.5 cm of where they are, so a translation under
+  3 cm is dropped and those grooms stay as modelled.
+- **The folder limit rises from 17 MB to 23 MB**, in its own commit: a game loads the rig and one hairstyle, about what it loaded before, while the folder holds three.
 - Out of scope: switching hairstyles in the game, hair colour per character, other grooms.
 
 ## Export: `web/tools/avatar/metahuman/`
 
 - `ue/cards.py` exports the grooms listed in `export/hairstyles.json` (key to groom name), each into
-  `cards/<groom>/`: the card sections `hair_g<group>_s<section>.json` of the lowest LOD of every group and
-  `<groom>_CardsAtlas_Attribute.tga`.
+  `cards/<groom>/`: the card sections `hair_g<group>_s<section>.json` of the lowest LOD of every group and the groom's
+  textures, `<groom>_CardsAtlas_Attribute.tga` and `<groom>_RooUVSeedCoverage.tga` among them.
 - `export/groom.py`: for each hairstyle, read its cards, fit the translation (trimmed nearest-point iterations,
   translation only, starting from the tops of the hair and of the head), transfer the cards onto her head as today
-  (`follow`), draw `hair_cards.webp` from the attribute atlas and `scalp.webp` (512 px, one channel).
+  (`follow`), draw `hair_cards.webp` from the attribute atlas and `scalp.webp` (512 px) from the root UVs.
 - `export/build.py`: the rig once, then each hairstyle pushed out of the sweater in the seated pose (`lbs.py`) and
   written by `pack.py` into `hair/<key>/`: `hair.json` is `{ "mesh": MeshSection }` over `hair.bin`.
 - `--check` decodes every hairstyle too, prints its fit translation, and fails when a translation exceeds 20 cm, a card

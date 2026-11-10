@@ -48,11 +48,13 @@ Face project open); they read and write under `C:\mallorca`.
 1. `ue/conform_prep.py` imports `C:\mallorca\ue\brunette_body.fbx` (the glb's merged body and head, exported from
    Blender) as a static mesh and places a camera on its face; `ue/conform.py` tracks the face contours in that render,
    conforms a new character `/Game/Her/Brunette_<n>` to the mesh and records its path in `current_asset.txt`.
-2. Add the groom `Hair_L_StraightBangs` and the eyebrows `Eyebrows_M_Natural` in the Creator window, then
+2. Add the groom `Hair_L_StraightBangs` (the hair the rig was made with) and the eyebrows `Eyebrows_M_Natural` in the
+   Creator window, then
    `ue/rig.py` requests the auto rig (sign in to Epic once when the editor asks).
 3. `ue/export_dcc.py` writes the DCC export (`head.dna`, `body.dna`, `Maps`, `Masks`); `ue/synth.py` draws the skin Creator
    synthesizes into render targets (`Synth/BASECOLOR`, `Synth/NORMAL`), because those textures live only on the GPU;
-   `ue/cards.py` writes the hair cards and their texture to `cards/`.
+   `ue/cards.py` writes the eyebrows to `cards/` and the card sections and textures of every groom in
+   `export/hairstyles.json` (copied to `C:\mallorca\ue`) to `cards/<groom>/`.
 4. Copy those folders into one local folder (the Creator export) and run, with the OpenRigLogic Python bindings on
    `ORL_PYTHON` and `pip install -r export/requirements.txt`:
 
@@ -72,7 +74,13 @@ exceeds 23 MB.
 
 - `rig.json` and `rig.bin`: controls, joints, animated maps, wrinkle masks and the meshes. Positions, normals and UVs are
   int16, skin weights and blendshape deltas int8, each with a scale and an offset per component; deltas under 0.01 cm are
-  dropped. Hair cards carry no blendshapes: `follow` names the head vertex each card vertex moves with.
+  dropped. The hair is not in the rig.
+- `hair/<key>/` for every hairstyle of `export/hairstyles.json`: `hair.json` and `hair.bin` hold its cards mesh in the
+  same packing, with no blendshapes: `follow` names the head vertex each card vertex moves with. A groom modelled for
+  another head is first moved onto the archetype scalp (`fit` in `export/groom.py`; `--check` prints the move).
+  `hair_cards.webp` is drawn from its card atlas, `scalp.webp` is the density of its root UVs on the head, which the
+  skin shader darkens towards the hair tone. `portrait.webp` is the still of her with that hairstyle, rendered from the
+  running game by `npm run portraits -- <url>` (`tools/avatar/portraits.ts`).
 - Her upper body from `body.dna` (`export/body.py`): `body` in `rig.json` holds the body joints the head lacks (no
   legs), with their parents by name and rest transforms; the `body` mesh is LOD0 above the pelvis without the skin the
   sweater covers, its colour matched in Lab to her synthesized head skin on the neck (`export/skintone.py`).

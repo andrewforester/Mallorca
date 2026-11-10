@@ -5,11 +5,10 @@ from pathlib import Path
 from body import body
 from dnafile import load
 from glasses import glasses
-from groom import vertex_normals
-from lbs import push_out, skin_matrices
-from groom import groom
+from groom import groom, vertex_normals
 from head import head
-from pack import check, write
+from lbs import push_out, skin_matrices
+from pack import check, write, write_hair
 
 WEB = Path(__file__).resolve().parents[4]
 
@@ -26,19 +25,22 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     header, meshes = head(a.creator, out)
     face = next(m for m in meshes if m["name"] == "head")
-    meshes += groom(a.creator, a.archetype, face, out)
+    styles = groom(a.creator, a.archetype, face, out)
     part, extra = body(a.creator, header, face, out)
     header.update(part)
-    cards = next(m for m in meshes if m["name"] == "cards")
-    push_out(cards, extra[1], skin_matrices(load(Path(a.creator) / "head.dna"), header, part))
-    cards["normal"] = vertex_normals(cards["position"], cards["index"].astype("int64")).astype("float32")
+    poses = skin_matrices(load(Path(a.creator) / "head.dna"), header, part)
+    for style in styles:
+        cards = style["mesh"]
+        push_out(cards, extra[1], poses)
+        cards["normal"] = vertex_normals(cards["position"], cards["index"].astype("int64")).astype("float32")
+        write_hair(style, out)
     meshes += extra
     glasses(a.glasses, out / "glasses")
     write(header, meshes, out)
-    files = [str(f) for f in [*out.glob("*.json"), *out.glob("glasses/*.gltf")]]
+    files = [str(f) for f in [*out.glob("*.json"), *out.glob("hair/*/*.json"), *out.glob("glasses/*.gltf")]]
     subprocess.run(["npx", "prettier", "--write", "--log-level", "warn", *files], cwd=WEB, check=True)
     if a.check:
-        check(meshes, out)
+        check(meshes, out, styles)
 
 
 if __name__ == "__main__":
