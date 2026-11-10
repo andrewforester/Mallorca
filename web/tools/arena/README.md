@@ -321,6 +321,12 @@ because the small bets of the blueprint go to the check first; and the tightest 
 65% of hands, since the blueprint plays 74% heads-up and the shift moves the odds of continuing, not a share of the
 range.
 
+The fold axes were then calibrated to the archetype edges of issue #80: `LOOSE_SHIFT` 0.35 to 0.45 and
+`STICKY_SHIFT` 0.2 to 0.31. Against `cfr-v2`, seed 2, 10000 pairs each: tightness 0.5 / 2 play 81.7% / 58.9% vpip
+(80.6% / 62.8% before), stickiness 0.5 / 2 fold 57.4% / 25.1% to a bet (52.3% / 30.6% before). Loose play is held
+near 84% vpip by the checked big blind after a limp. The mixes in the table above that use these axes were measured
+before the change.
+
 ## Managing runs
 
 Local runs live in the results directory (`web/arena-out` of the main checkout), each as `<name>.json` and

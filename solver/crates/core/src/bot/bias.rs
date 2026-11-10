@@ -28,9 +28,9 @@ impl Default for Bias {
     }
 }
 
-pub const LOOSE_SHIFT: f64 = 0.35;
+pub const LOOSE_SHIFT: f64 = 0.45;
 pub const AGGRESSIVE_SHIFT: f64 = 0.2;
-pub const STICKY_SHIFT: f64 = 0.2;
+pub const STICKY_SHIFT: f64 = 0.31;
 
 fn factor(kind: ActionKind, bias: &Bias) -> f64 {
     match kind {
@@ -559,6 +559,11 @@ mod tests {
     }
 
     #[test]
+    fn the_fold_axes_are_calibrated_to_the_archetype_edges() {
+        assert_eq!((LOOSE_SHIFT, STICKY_SHIFT), (0.45, 0.31));
+    }
+
+    #[test]
     fn purification_drops_noise_at_both_ends() {
         assert_eq!(purified(0.02), 0.0);
         assert_eq!(purified(0.97), 1.0);
@@ -569,7 +574,7 @@ mod tests {
     fn a_balanced_spot_moves_by_the_shift_and_a_lopsided_one_by_less() {
         assert!((widened(0.5, 0.01) - 0.01).abs() < 1e-5);
         assert!((widened(0.5, -0.01) + 0.01).abs() < 1e-5);
-        let tight = -LOOSE_SHIFT * 1.35f64.ln();
+        let tight = -0.35 * 1.35f64.ln();
         assert!(widened(0.92, tight).abs() < 0.03);
         assert!(widened(0.07, -tight) < 0.03);
         let middle = widened(0.42, tight);
