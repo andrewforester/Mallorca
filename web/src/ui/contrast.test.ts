@@ -28,7 +28,6 @@ const pairs = [
   ['color-accent', 'color-accent-text'],
   ['color-action', 'color-action-text'],
   ['color-danger', 'color-danger-text'],
-  ['color-felt', 'color-felt-text'],
   ['color-bg', 'color-text'],
   ['color-surface', 'color-text'],
   ['color-surface', 'color-muted'],

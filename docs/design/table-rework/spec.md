@@ -95,7 +95,7 @@ longer changes the screen.
 | `--color-card-face` | `#ffffff` | card faces, with a hairline edge and a soft shadow |
 
 Checked contrast: text on bg 14.0:1, accent text on accent 5.2:1, button text on button 4.8:1, muted on surface 5.3:1 and on bg 5.0:1.
-`contrast.test.ts` keeps its pairs; tokens it checks that this table does not use (felt, coach, her surface,
+`contrast.test.ts` keeps its pairs; tokens it checks that this table does not use (coach, her surface,
 danger) get light values that pass it.
 
 Suit colours stay four-colour and unchanged. Clubs (`#2f7a4a`) are close to the accent; they stay as they are
