@@ -1,4 +1,5 @@
 import type { Rng } from '../cards/index.ts';
+import { REACTION_S } from '../emotion/index.ts';
 import type { SeatIndex } from '../engine/index.ts';
 import type { Moment, PersonaReader, PersonaView, Signal } from '../persona/index.ts';
 import { COOL_LINES, drawHumour } from './humour.ts';
@@ -14,7 +15,7 @@ import type { Occasion, OccasionKind } from './types.ts';
 import { judge, streetKey } from './verdict.ts';
 import type { Verdict } from './verdict.ts';
 
-export const FEELS_AFTER_MS = 1000;
+export const FEELS_AFTER_MS = REACTION_S * 1000;
 
 export interface Planned {
   verdicts: Verdict[];

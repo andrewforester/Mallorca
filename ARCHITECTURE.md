@@ -327,7 +327,8 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
 
 - `createEngine(personality, config = GAME_MOOD)` returns an `Engine`. `event(e)` appraises one `TableEvent` and
   returns the `Impulse`s it gave (emotion, amount, an English reason) and queues them; `step(dt)` advances time
-  in seconds and lands them;
+  in seconds and lands them; she acts on what she feels `REACTION_S = 1` s after a moment, so her lines and the
+  bias of a decision read her view that much later;
   `snapshot()` reads the state; `ahead(dt)` is the snapshot `dt` seconds later without changing the engine;
   `reset()` starts a session over. The engine holds no clock and no randomness.
 - `Personality` is the Big Five in [-1, 1] plus `suppression` (habitual poker face) and `control` (self-control),
@@ -497,7 +498,7 @@ class, mask)` moves a per-class chance toward the mean of its classes by her mas
   and the hand number and streets for staleness.
 - `createPlanner({ seat, rng, rules? })` (`planner.ts`) returns a `Planner`: `observe(moments, persona, nowMs)` and
   `reply(text, persona, nowMs)` return `Planned` (`verdicts`, `plan` or null, the humour draw), planned on her
-  feeling `FEELS_AFTER_MS = 1000` after the moment, when the impulses of the moment have risen; `heard(signals)` and
+  feeling `FEELS_AFTER_MS = REACTION_S * 1000` after the moment, when the impulses of the moment have risen; `heard(signals)` and
   `summary()`. It keeps the pace, the last occasion of the hand, the lines since her last joke and the bets and
   reraises of the hand. A reply does not mark the pace.
 - `SessionSummary` (`summary.ts`) counts hands, her net, the player's shown bluffs and all-ins, the signals heard and

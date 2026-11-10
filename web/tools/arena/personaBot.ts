@@ -1,5 +1,6 @@
 import type { CfrBrain } from '../../src/cfr/index.ts';
 import type { EngineEvent, SeatIndex } from '../../src/engine/index.ts';
+import { REACTION_S } from '../../src/persona/index.ts';
 import type { Persona } from '../../src/persona/index.ts';
 import type { ArenaBot } from './arenaBot.ts';
 
@@ -33,7 +34,7 @@ export function createPersonaBot(brain: CfrBrain, persona: Persona, seat: SeatIn
       }
     },
     decide(legal) {
-      brain.setBias(persona.view(now).bias);
+      brain.setBias(persona.view(now + REACTION_S * 1000).bias);
       return brain.decide(legal).action;
     },
     dispose: () => brain.dispose(),

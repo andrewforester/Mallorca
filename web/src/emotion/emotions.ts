@@ -98,6 +98,7 @@ export const APPROACH: Readonly<Record<Emotion, number>> = {
 };
 
 export const ATTACK_S = 0.5;
+export const REACTION_S = 1;
 const MAX_IMPULSE = 0.999999;
 const SETTLED = 1e-9;
 
