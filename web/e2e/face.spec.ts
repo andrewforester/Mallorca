@@ -54,3 +54,39 @@ test('can be turned off and stays off across a reload', async ({ page }) => {
   await expect(byId(page, 'passive')).toBeVisible();
   await expect(byId(page, 'face-seat')).toHaveCount(0);
 });
+
+test('the table rail is drawn over her face inside the frame', async ({ page }) => {
+  await page.goto(FAST_URL);
+  await byId(page, 'start-cash').click();
+  await expect(byId(page, 'passive')).toBeEnabled();
+  const frame = byId(page, 'face-frame');
+  const layers = await frame.evaluate((node) => {
+    const z = (selector: string) => {
+      const found = node.querySelector(selector);
+      return found === null ? null : Number(getComputedStyle(found).zIndex);
+    };
+    return { room: z('.face-room'), seat: z('.face-seat'), rail: z('.face-rail') };
+  });
+  expect(layers.room).toBeLessThan(layers.seat ?? -1);
+  expect(layers.seat).toBeLessThan(layers.rail ?? -1);
+  const rail = await frame
+    .locator('.face-rail')
+    .evaluate((node) => getComputedStyle(node).clipPath);
+  expect(rail).toContain('inset');
+});
+
+test('with her face off the start screen shows her name in large light type', async ({ page }) => {
+  await page.goto(FAST_URL);
+  await byId(page, 'start-cash').click();
+  await page.locator('.menu-summary').click();
+  await byId(page, 'face').click();
+  await page.reload();
+  const name = page.locator('.tonight-face .face-frame-name');
+  await expect(name).toBeVisible();
+  const style = await name.evaluate((node) => {
+    const computed = getComputedStyle(node);
+    return { size: parseFloat(computed.fontSize), color: computed.color };
+  });
+  expect(style.size).toBeGreaterThanOrEqual(22);
+  expect(style.color).toBe('rgb(255, 255, 255)');
+});

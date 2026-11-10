@@ -125,6 +125,7 @@
 
 .face-frame {
   position: relative;
+  isolation: isolate;
   flex: 0 1 var(--face-basis);
   min-height: 120px;
   margin: 0 10px;
@@ -138,17 +139,45 @@
   --face-basis: 430px;
 }
 
-.face-frame-off {
-  display: flex;
-  flex: 0 0 96px;
-  align-items: center;
-  min-height: 96px;
-  padding-left: 20px;
+.face-room,
+.face-rail {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 130%;
+  max-width: none;
+  transform: translate(-50%, -49.2%);
+  pointer-events: none;
+  user-select: none;
 }
 
-.face-frame-name {
+.face-room {
+  z-index: 0;
+}
+
+.table-centre .face-frame > .face-seat {
+  z-index: 1;
+  inset: auto;
+  top: 0.5%;
+  left: 7.8%;
+  width: 86.6%;
+  height: 114.8%;
+}
+
+.face-rail {
+  z-index: 2;
+  clip-path: inset(48.4% 0 0 0);
+}
+
+.table-centre .face-frame-name {
+  position: absolute;
+  top: 14px;
+  left: 20px;
+  z-index: 3;
+  color: #ffffff;
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 22px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
 }
 
 .table-board {
@@ -273,10 +302,6 @@
   --seat-cards-height: calc(var(--back-width, 40px) * 1.4);
 }
 
-.seat-shown {
-  --seat-cards-height: calc(var(--shown-width) * 1.4);
-}
-
 .seat-bottom {
   padding-bottom: 12px;
   --seat-cards-height: calc(var(--hole-width) * 1.4);
@@ -330,10 +355,18 @@
   height: var(--dealer-size);
 }
 
+.seat-block:has(.seat-strip) {
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
 .seat-strip {
-  margin: 5px -12px -5px;
+  position: absolute;
+  top: 100%;
+  right: -1px;
+  left: -1px;
   padding: 4px 12px;
-  border-radius: 0 0 11px 11px;
+  border-radius: 0 0 var(--radius-medium) var(--radius-medium);
   background: var(--color-accent);
   color: var(--color-accent-text);
   font-family: var(--font-body);
@@ -386,6 +419,11 @@
   z-index: 1;
   display: flex;
   gap: 3px;
+}
+
+.seat-top .seat-cards {
+  align-items: flex-end;
+  height: var(--seat-cards-height);
 }
 
 .card {
@@ -464,11 +502,11 @@
   }
 
   .seat-top .bet-sweep {
-    transform: translateY(var(--sweep-distance));
+    transform: translate(var(--sweep-x, 0), var(--sweep-distance));
   }
 
   .seat-bottom .bet-sweep {
-    transform: translateY(calc(-1 * var(--sweep-distance)));
+    transform: translate(var(--sweep-x, 0), calc(-1 * var(--sweep-distance)));
   }
 }
 

@@ -117,6 +117,34 @@ describe('Table result and announcements', () => {
     expect(screen.getByTestId('seat-1').contains(dealer)).toBe(false);
   });
 
+  it('puts her in the attic, behind the table rail', () => {
+    render(
+      <Table
+        vm={viewModel()}
+        phase="humanToAct"
+        humanSeat={0}
+        onAct={vi.fn()}
+        onNextHand={vi.fn()}
+        face={() => <span data-testid="face-stub" />}
+      />,
+    );
+    const frame = screen.getByTestId('face-frame');
+    const order = [...frame.children].map(
+      (node) => node.getAttribute('data-testid') ?? node.className,
+    );
+    expect(order).toEqual(['face-room', 'face-stub', 'face-rail']);
+    expect(frame.querySelector('.face-room')?.getAttribute('src')).toContain('attic-portrait');
+    expect(frame.querySelector('.face-rail')?.getAttribute('alt')).toBe('');
+  });
+
+  it('shows the empty room with the face off', () => {
+    table();
+    const frame = screen.getByTestId('face-frame');
+    expect(frame.classList.contains('face-frame-off')).toBe(true);
+    expect(frame.querySelector('.face-room')).not.toBeNull();
+    expect(frame.querySelector('.face-rail')).not.toBeNull();
+  });
+
   it('shows no action strip after the blinds', () => {
     const vm = viewModel();
     const blinds = {

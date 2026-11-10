@@ -50,3 +50,10 @@ describe('colour tokens', () => {
     });
   }
 });
+
+describe('light surfaces', () => {
+  it('draws suits in the hand log with the colours made for light paper', () => {
+    const log = readFileSync('src/ui/styles/hand-log.css', 'utf8');
+    expect(log.includes('-on-dark')).toBe(false);
+  });
+});

@@ -74,19 +74,19 @@
 }
 
 .log-card-spades {
-  color: var(--color-suit-spades-on-dark);
+  color: var(--color-suit-spades);
 }
 
 .log-card-hearts {
-  color: var(--color-suit-hearts-on-dark);
+  color: var(--color-suit-hearts);
 }
 
 .log-card-diamonds {
-  color: var(--color-suit-diamonds-on-dark);
+  color: var(--color-suit-diamonds);
 }
 
 .log-card-clubs {
-  color: var(--color-suit-clubs-on-dark);
+  color: var(--color-suit-clubs);
 }
 
 .hand-log-tokens {

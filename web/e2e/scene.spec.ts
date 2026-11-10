@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { byId, expect, FAST_URL, test, waitForWaypoint } from './fixtures.ts';
 
-test('the table is a light room that loads no photo of a room', async ({ page }) => {
+test('the table loads the attic photo behind her face', async ({ page }) => {
   const rooms: string[] = [];
   page.on('request', (request) => {
     if (/\/attic-[^/]*\.webp$/.test(request.url())) {
@@ -15,7 +15,7 @@ test('the table is a light room that loads no photo of a room', async ({ page })
   await expect(byId(page, 'face-frame')).toBeInViewport();
   const room = await byId(page, 'scene').evaluate((node) => getComputedStyle(node).backgroundColor);
   expect(room).toBe('rgb(250, 248, 244)');
-  expect(rooms).toEqual([]);
+  expect(rooms.length).toBeGreaterThan(0);
 });
 
 async function playToTheFlop(page: Page) {

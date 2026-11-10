@@ -13,15 +13,11 @@
     --card-width: 62px;
     --hole-width: 56px;
     --shown-width: 56px;
-    --board-gap: 14px;
+    --board-gap: clamp(6px, calc((min(680px, 50vw) - 470px) / 4), 10px);
     --chip-dot-size: 28px;
     --bet-font: 24px;
     --dealer-size: 36px;
     --face-basis: 440px;
-  }
-
-  .table-showdown {
-    --face-basis: 560px;
   }
 
   .table-left {
@@ -45,19 +41,10 @@
     background: radial-gradient(ellipse 60% 60% at 50% 38%, #5a4436 0%, #33261f 55%, #241b18 100%);
   }
 
-  .face-frame-off {
-    flex-basis: 120px;
-    min-height: 120px;
-  }
-
   .seat-top {
     padding: 0 4px;
     --back-width: 50px;
     --shown-width: 56px;
-  }
-
-  .seat-top .seat-cards {
-    margin-top: -45px;
   }
 
   .seat-bottom {
@@ -74,13 +61,28 @@
   }
 
   .board-row {
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    width: 100%;
     margin: auto 0;
   }
 
   .pot-block {
+    justify-self: end;
+  }
+
+  .result-text {
     position: absolute;
-    right: calc(50% + 190px);
+    right: 0;
+    bottom: 8px;
+    left: 0;
+  }
+
+  .pot {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0;
+    border-radius: var(--radius-medium);
   }
 
   .pot-amount,
@@ -267,6 +269,15 @@
 }
 
 @media (min-aspect-ratio: 1/1) and (min-height: 561px) {
+  .table-layout {
+    --sweep-x: -370px;
+    --sweep-distance: 110px;
+  }
+
+  .seat-top .seat-cards {
+    margin-top: -45px;
+  }
+
   .status-bar {
     position: absolute;
     top: 20px;

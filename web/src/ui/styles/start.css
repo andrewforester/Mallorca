@@ -30,6 +30,18 @@
   min-height: 96px;
 }
 
+.tonight-face.face-frame-off {
+  display: flex;
+  align-items: center;
+  padding-left: 20px;
+}
+
+.tonight-face .face-frame-name {
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 26px;
+}
+
 .tonight-line {
   position: absolute;
   left: 14px;
