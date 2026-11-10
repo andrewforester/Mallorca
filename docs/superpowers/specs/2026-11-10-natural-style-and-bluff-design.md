@@ -13,7 +13,7 @@ Status of each part:
 | 2. natural style from leading traits              | decided                                   |
 | 3. characters: 16 extremes, 8 intermediate, nine  | decided; names of the new ones are open   |
 | 4. bluff, the game to her feelings                | decided                                   |
-| 4. certainty, and the bluff, sizing, looseness axes | decided; the heater on looseness is open |
+| 4. certainty, and the bluff, sizing, looseness axes | decided                                  |
 | 5. mood returns to rest all the time              | recommended                               |
 | 6. reference numbers                              | from the prototype                        |
 
@@ -259,9 +259,9 @@ The push of each emotion at 1:
 | sizing     | 0.84  | 0.57  | 0.55      | 0.28   | 0.38 | −0.07 | −0.16          | −0.11    | −0.38    | −0.36 | −0.33 |
 | looseness  | 0.56  | 0.13  | 0.36      | 0.31   | 0.06 | −0.30 | 0.04           | −0.61    | 0.10     | −0.12 | −0.37 |
 
-Open: with the new looseness, positive emotions barely loosen her, so on a heater looseness goes slightly down
+Decided: with the new looseness, positive emotions barely loosen her, so on a heater looseness goes slightly down
 (Mallorca 1.35 → 1.23) while the other axes go up. This matches the mood-maintenance finding (happy people avoid
-risks they can really lose) but breaks the PR #171 test "the heater raises everyone" on looseness. The owner decides.
+risks they can really lose). The PR #171 test "the heater raises everyone" excludes looseness.
 
 ## 5. Mood returns to rest all the time (recommended)
 
@@ -317,7 +317,7 @@ What the rows show:
    emotions and in the mood, the four-weight axes.
 5. The mood pull of section 5.
 6. Take the reference numbers of section 6 instead of those of the PR #171 design; keep asserting shapes, not digits.
-   The heater on looseness waits for the owner (section 4).
+   On a heater every axis but looseness goes up; looseness may go slightly down (section 4).
 
 ## Sources
 
