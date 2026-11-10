@@ -100,3 +100,37 @@ test('the talk layer keeps the new scene and an input clear of the actions', asy
   await expect(input).toBeInViewport({ ratio: 1 });
   await expectApart(input, page.locator('.action-buttons'));
 });
+
+test('the menu groups Settings and History and drops the hand line shadow', async ({ page }) => {
+  phoneOnly(page);
+  await page.goto(FAST_URL);
+  await byId(page, 'start-cash').click();
+  await expect(byId(page, 'passive')).toBeEnabled();
+  await page.locator('summary.menu-summary').click();
+  await expect(page.locator('.menu-group-title')).toHaveText(['Settings', 'History']);
+  const shadow = await page
+    .locator('.menu-toggle')
+    .first()
+    .evaluate((node) => getComputedStyle(node).textShadow);
+  expect(shadow).toBe('none');
+  for (const id of ['menu-log', 'leave']) {
+    await expect(page.locator('.menu-primary').getByTestId(id)).toBeVisible();
+  }
+  await expect(byId(page, 'clear-history')).toBeInViewport({ ratio: 1 });
+});
+
+test('the hand log is a card with rows, clear of your cards and the actions', async ({ page }) => {
+  const viewport = phoneOnly(page);
+  await page.goto(FAST_URL);
+  await byId(page, 'start-cash').click();
+  await expect(byId(page, 'passive')).toBeEnabled();
+  await page.locator('summary.menu-summary').click();
+  await byId(page, 'menu-log').click();
+  const log = byId(page, 'hand-log');
+  await expect(log).toBeVisible();
+  const found = await box(log);
+  expect(Math.round(found.x)).toBe(MARGIN);
+  expect(Math.round(viewport.width - found.x - found.width)).toBe(MARGIN);
+  await expectApart(log, page.locator('.action-buttons'));
+  await expect(log.locator('.log-row-you').first()).toBeVisible();
+});

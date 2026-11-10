@@ -4,10 +4,10 @@ import { ActionBar } from './ActionBar.tsx';
 import { BoardRow } from './BoardRow.tsx';
 import { Bubble } from './Bubble.tsx';
 import { Chat } from './Chat.tsx';
+import { FaceFrame } from './FaceFrame.tsx';
 import type { ChatProps } from './Chat.tsx';
 import { t } from './i18n.ts';
 import { handName } from './phrases.ts';
-import attic from './scene/attic-portrait.webp';
 import { ResultPill } from './ResultPill.tsx';
 import { Seat } from './Seat.tsx';
 import { useHeldActions } from './useHeldActions.ts';
@@ -107,22 +107,6 @@ function TableBoard({
         result={text === null ? null : <ResultPill vm={vm} humanSeat={humanSeat} text={text} />}
       />
       <ResultChips vm={vm} humanSeat={humanSeat} />
-    </div>
-  );
-}
-
-interface FaceFrameProps {
-  name: string;
-  face: ComponentChildren;
-}
-
-function FaceFrame({ name, face }: FaceFrameProps) {
-  const off = face === undefined || face === null;
-  return (
-    <div class={off ? 'face-frame face-frame-off' : 'face-frame'} data-testid="face-frame">
-      <img class="face-room" src={attic} alt="" aria-hidden="true" decoding="async" />
-      {off ? <span class="face-frame-name">{name}</span> : face}
-      <img class="face-rail" src={attic} alt="" aria-hidden="true" decoding="async" />
     </div>
   );
 }

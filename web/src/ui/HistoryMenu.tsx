@@ -10,7 +10,8 @@ export interface HistoryMenuProps {
   onNewGame: () => void;
   onOpen?: () => void;
   onClose?: () => void;
-  children?: ComponentChildren;
+  primary?: ComponentChildren;
+  settings?: ComponentChildren;
 }
 
 function ExportButtons({ store }: { store: HandStore }) {
@@ -18,7 +19,7 @@ function ExportButtons({ store }: { store: HandStore }) {
     <>
       <button
         type="button"
-        class="button button-small"
+        class="menu-link"
         data-testid="export-all-json"
         onClick={() => void exportHistory(store, null, 'json')}
       >
@@ -26,7 +27,7 @@ function ExportButtons({ store }: { store: HandStore }) {
       </button>
       <button
         type="button"
-        class="button button-small"
+        class="menu-link"
         data-testid="export-all-text"
         onClick={() => void exportHistory(store, null, 'text')}
       >
@@ -60,7 +61,7 @@ function MenuSummary() {
 }
 
 export function HistoryMenu(props: HistoryMenuProps) {
-  const { seed, store, onNewGame, onOpen, onClose, children } = props;
+  const { seed, store, onNewGame, onOpen, onClose, primary, settings } = props;
   const [confirmClear, setConfirmClear] = useState(false);
   const clear = () => {
     if (!confirmClear) {
@@ -84,25 +85,31 @@ export function HistoryMenu(props: HistoryMenuProps) {
     >
       <MenuSummary />
       <div class="menu-body">
-        {children}
-        <span>{t('status.seed', { seed })}</span>
-        <button
-          type="button"
-          class="button button-small"
-          data-testid="new-game"
-          onClick={onNewGame}
-        >
-          {t('status.newGame')}
-        </button>
-        <ExportButtons store={store} />
-        <button
-          type="button"
-          class="button button-small"
-          data-testid="clear-history"
-          onClick={clear}
-        >
-          {t(confirmClear ? 'history.clearConfirm' : 'history.clear')}
-        </button>
+        {primary !== undefined && <div class="menu-primary">{primary}</div>}
+        {settings !== undefined && (
+          <section class="menu-group">
+            <h3 class="menu-group-title">{t('menu.settings')}</h3>
+            {settings}
+          </section>
+        )}
+        <section class="menu-group">
+          <h3 class="menu-group-title">{t('menu.history')}</h3>
+          <div class="menu-links">
+            <ExportButtons store={store} />
+            <button type="button" class="menu-link" data-testid="new-game" onClick={onNewGame}>
+              {t('status.newGame')}
+            </button>
+            <span class="menu-seed">{t('status.seed', { seed })}</span>
+            <button
+              type="button"
+              class="menu-link menu-link-danger"
+              data-testid="clear-history"
+              onClick={clear}
+            >
+              {t(confirmClear ? 'history.clearConfirm' : 'history.clear')}
+            </button>
+          </div>
+        </section>
       </div>
     </details>
   );

@@ -2,8 +2,10 @@ import * as THREE from 'three';
 import type { FaceRenderer } from '../avatar.ts';
 import type { Pose } from '../motion.ts';
 import { FOV, addLights, createRenderer, frameBust } from '../stage.ts';
-import type { RigAssets } from './assets.ts';
-import { loadAssets } from './assets.ts';
+import type { HairKey } from '../hair.ts';
+import { hairBase } from '../hair.ts';
+import type { HairAssets, MeshSection, RigAssets } from './assets.ts';
+import { loadAssets, loadHair } from './assets.ts';
 import { NormalTracker, applyBlends, followHead } from './blend.ts';
 import type { MeshData } from './geometry.ts';
 import { meshGeometry } from './geometry.ts';
@@ -35,6 +37,16 @@ function maskTexture({ header, masks }: RigAssets): THREE.DataArrayTexture {
   return texture;
 }
 
+interface Placed {
+  bin: ArrayBuffer;
+  section: MeshSection;
+}
+
+const sectionsOf = ({ bin, header }: RigAssets, hair: HairAssets): Placed[] => [
+  ...header.meshes.map((section) => ({ bin, section })),
+  { bin: hair.bin, section: hair.mesh },
+];
+
 function eyeCenter(state: RigState): THREE.Vector2 {
   state.root.updateMatrixWorld(true);
   const eye = state.root.worldToLocal(
@@ -46,6 +58,7 @@ function eyeCenter(state: RigState): THREE.Vector2 {
 export class RigAvatar implements FaceRenderer {
   readonly canvas: HTMLCanvasElement;
   private readonly base: string;
+  private readonly hair: HairKey;
   private readonly renderer = createRenderer(EXPOSURE);
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 20);
@@ -55,8 +68,9 @@ export class RigAvatar implements FaceRenderer {
   private live: LiveMesh[] = [];
   private head: LiveMesh | null = null;
 
-  constructor(base: string) {
+  constructor(base: string, hair: HairKey) {
     this.base = base;
+    this.hair = hair;
     this.canvas = this.renderer.domElement;
     addLights(this.scene);
     const fill = new THREE.DirectionalLight(0xfff4ea, 1.3);
@@ -65,8 +79,9 @@ export class RigAvatar implements FaceRenderer {
   }
 
   async load(): Promise<void> {
-    const [assets, wasm] = await Promise.all([
+    const [assets, hair, wasm] = await Promise.all([
       loadAssets(this.base),
+      loadHair(hairBase(this.base, this.hair)),
       fetch(WASM_URL).then((r) => r.arrayBuffer()),
     ]);
     const state = new RigState(assets, await createRig(wasm, assets.dna));
@@ -79,15 +94,14 @@ export class RigAvatar implements FaceRenderer {
       lids: new THREE.Vector2(),
       eye: eyeCenter(state),
     };
-    const materials = await loadMaterials(
-      this.base,
-      this.layout,
-      assets.header.meshes.map((m) => m.name),
-    );
+    const materials = await loadMaterials(this.base, hairBase('', this.hair), this.layout, [
+      ...assets.header.meshes.map((m) => m.name),
+      hair.mesh.name,
+    ]);
     this.assets = assets;
     this.state = state;
     this.scene.add(state.root);
-    this.buildMeshes(assets, state, materials);
+    this.buildMeshes(sectionsOf(assets, hair), state, materials);
     wrinkleWeights(maps, masks, state.update(this.restPose()).maps, weights);
     await this.dress(state);
     await this.compile();
@@ -115,7 +129,7 @@ export class RigAvatar implements FaceRenderer {
     };
   }
 
-  private buildMeshes(assets: RigAssets, state: RigState, materials: Materials): void {
+  private buildMeshes(sections: Placed[], state: RigState, materials: Materials): void {
     const skeleton = new THREE.Skeleton(state.bones);
     state.root.updateMatrixWorld(true);
     const add = (geometry: THREE.BufferGeometry, material: THREE.Material, order: number) => {
@@ -126,10 +140,10 @@ export class RigAvatar implements FaceRenderer {
       mesh.bind(skeleton);
       return mesh;
     };
-    for (const section of assets.header.meshes) {
+    for (const { bin, section } of sections) {
       const material = materials.byMesh[section.name];
       if (!material) continue;
-      const data = meshGeometry(assets.bin, section);
+      const data = meshGeometry(bin, section);
       add(data.geometry, material, renderOrderOf(section.name));
       if (section.name === 'cards') add(data.geometry, materials.cardsSoft, CARDS_SOFT_ORDER);
       this.track(section.name, data);

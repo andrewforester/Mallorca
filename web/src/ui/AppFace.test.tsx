@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CASH, createSession, inProcessBot, memoryStore } from '../game/index.ts';
+import type { PersonalityKey } from '../game/index.ts';
 import { App } from './App.tsx';
 
 afterEach(() => {
@@ -9,7 +10,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-async function start() {
+async function start(character?: PersonalityKey) {
   const session = createSession({
     bot: inProcessBot(),
     seed: 42,
@@ -23,6 +24,7 @@ async function start() {
       session={session}
       store={memoryStore()}
       humanSeat={0}
+      character={character}
       onNewGame={vi.fn()}
       onLeaveTonight={vi.fn()}
     />,
@@ -38,8 +40,18 @@ describe('her face at the table', () => {
     const seat = screen.getByTestId('face-seat');
     expect(seat.dataset.face).toBe('portrait');
     expect(seat.closest('.table-layout')).not.toBeNull();
-    expect(seat.querySelector('img')?.getAttribute('src')).toContain('avatar/portrait.webp');
+    expect(seat.querySelector('img')?.getAttribute('src')).toContain(
+      'avatar/portraits/side-swept.webp',
+    );
     expect(session.getState().face.on).toBe(true);
+  });
+
+  it('shows the still of the hairstyle of the chosen character', async () => {
+    await start('ingrid');
+    const seat = screen.getByTestId('face-seat');
+    expect(seat.querySelector('img')?.getAttribute('src')).toContain(
+      'avatar/portraits/updo-buns.webp',
+    );
   });
 
   it('turns off from the menu, keeps the choice and leaves the plaque', async () => {

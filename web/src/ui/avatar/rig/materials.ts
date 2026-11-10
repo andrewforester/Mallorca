@@ -102,31 +102,46 @@ function films(lashes: THREE.Texture): Record<string, THREE.Material> {
 
 export async function loadMaterials(
   base: string,
+  hairFolder: string,
   layout: WrinkleLayout,
   meshes: readonly string[],
 ): Promise<Materials> {
   const tex = loader(base);
   const dressing = bodyMaterials(tex, meshes);
-  const [color, normal, roughness, wm1, wm2, wm3, teethC, teethN, eyesC, eyesN, lashes, cards] =
-    await Promise.all([
-      tex('head_color_map.webp', true),
-      tex('head_normal_map.webp'),
-      tex('head_roughness_map.webp'),
-      tex('head_wm1_normal_map.webp'),
-      tex('head_wm2_normal_map.webp'),
-      tex('head_wm3_normal_map.webp'),
-      tex('teeth_color_map.webp', true),
-      tex('teeth_normal_map.webp'),
-      tex('eyes_color_map.webp', true),
-      tex('eyes_normal_map.webp'),
-      tex('eyelashes.webp', true),
-      tex('hair_cards.webp', true, false),
-    ]);
+  const [
+    color,
+    normal,
+    roughness,
+    wm1,
+    wm2,
+    wm3,
+    teethC,
+    teethN,
+    eyesC,
+    eyesN,
+    lashes,
+    cards,
+    scalp,
+  ] = await Promise.all([
+    tex('head_color_map.webp', true),
+    tex('head_normal_map.webp'),
+    tex('head_roughness_map.webp'),
+    tex('head_wm1_normal_map.webp'),
+    tex('head_wm2_normal_map.webp'),
+    tex('head_wm3_normal_map.webp'),
+    tex('teeth_color_map.webp', true),
+    tex('teeth_normal_map.webp'),
+    tex('eyes_color_map.webp', true),
+    tex('eyes_normal_map.webp'),
+    tex('eyelashes.webp', true),
+    tex(`${hairFolder}hair_cards.webp`, true, false),
+    tex(`${hairFolder}scalp.webp`),
+  ]);
   const eye = eyeMaterial(eyesC, eyesN);
   const { soft, ...hair } = hairMaterials(cards);
   const dressed = await dressing;
   const byMesh: Record<string, THREE.Material> = {
-    head: skinMaterial({ color, normal, roughness, wrinkles: [wm1, wm2, wm3] }, layout),
+    head: skinMaterial({ color, normal, roughness, wrinkles: [wm1, wm2, wm3], scalp }, layout),
     teeth: mouthMaterial(teethC, teethN),
     eyeLeft: eye,
     eyeRight: eye,

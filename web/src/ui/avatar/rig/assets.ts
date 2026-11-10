@@ -58,6 +58,11 @@ export interface RigAssets {
   mapping: Mapping;
 }
 
+export interface HairAssets {
+  mesh: MeshSection;
+  bin: ArrayBuffer;
+}
+
 export type Fetcher = (url: string) => Promise<Response>;
 
 const ARRAYS = {
@@ -102,4 +107,15 @@ export async function loadAssets(
     get('mapping.json').then((r) => r.json() as Promise<Mapping>),
   ]);
   return { header, bin, dna: new Uint8Array(dna), masks: new Uint8Array(masks), mapping };
+}
+
+export async function loadHair(
+  base: string,
+  fetcher: Fetcher = (url) => fetch(url),
+): Promise<HairAssets> {
+  const [{ mesh }, bin] = await Promise.all([
+    fetchOk(fetcher, base + 'hair.json').then((r) => r.json() as Promise<{ mesh: MeshSection }>),
+    fetchOk(fetcher, base + 'hair.bin').then((r) => r.arrayBuffer()),
+  ]);
+  return { mesh, bin };
 }

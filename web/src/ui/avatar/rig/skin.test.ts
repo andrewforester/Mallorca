@@ -24,19 +24,33 @@ describe('mouthMaterial', () => {
 
 describe('skinMaterial', () => {
   it('lifts the lid fold without normalizing a vanishing blend', () => {
-    const layout: WrinkleLayout = {
-      masks: new THREE.DataArrayTexture(),
-      count: 1,
-      weights: [new THREE.Vector3()],
-      lids: new THREE.Vector2(),
-      eye: new THREE.Vector2(),
-    };
-    const t = () => new THREE.Texture();
-    const material = skinMaterial(
-      { color: t(), normal: t(), roughness: t(), wrinkles: [t(), t(), t()] },
-      layout,
-    );
-    const fragment = compiled(material);
+    const fragment = compiled(skin());
     expect(fragment).toContain('dot(lidMix, lidUp) > 0.05 ? normalize(lidMix) : lidUp');
   });
+
+  it('darkens the scalp under her hairstyle towards the hair tone', () => {
+    const fragment = compiled(skin());
+    expect(fragment).toContain('uniform sampler2D uScalp;');
+    expect(fragment).toMatch(/c = mix\(c, HAIR_TONE, [^;]*texture2D\(uScalp, vMapUv\)\.r/);
+  });
+
+  it('keeps the normal of skin outside the lid fold, under the jaw included', () => {
+    const fragment = compiled(skin());
+    expect(fragment).toMatch(/if \(lid > 0\.0\) normal = dot\(lidMix, lidUp\)/);
+  });
 });
+
+function skin(): THREE.Material {
+  const layout: WrinkleLayout = {
+    masks: new THREE.DataArrayTexture(),
+    count: 1,
+    weights: [new THREE.Vector3()],
+    lids: new THREE.Vector2(),
+    eye: new THREE.Vector2(),
+  };
+  const t = () => new THREE.Texture();
+  return skinMaterial(
+    { color: t(), normal: t(), roughness: t(), wrinkles: [t(), t(), t()], scalp: t() },
+    layout,
+  );
+}

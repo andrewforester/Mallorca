@@ -64,7 +64,7 @@
   z-index: 0;
 }
 
-.table-centre .face-frame > .face-seat {
+.face-frame > .face-seat {
   z-index: 1;
   inset: auto;
   top: 0.5%;
@@ -78,7 +78,7 @@
   clip-path: inset(48.4% 0 0 0);
 }
 
-.table-centre .face-frame-name {
+.face-frame-name {
   position: absolute;
   top: 14px;
   left: 20px;

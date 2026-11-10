@@ -78,7 +78,12 @@ function useFaceSwitch(session: Session, on: boolean) {
   }, [session, on]);
 }
 
-function faceSlot(session: Session, vm: ViewModel, preferences: Preferences) {
+function faceSlot(
+  session: Session,
+  vm: ViewModel,
+  preferences: Preferences,
+  character: PersonalityKey | undefined,
+) {
   if (!preferences.face) {
     return undefined;
   }
@@ -89,6 +94,7 @@ function faceSlot(session: Session, vm: ViewModel, preferences: Preferences) {
       thinking={thinking}
       line={vm.conversation.herBubble}
       voice={preferences.voice}
+      character={character}
     />
   );
 }
@@ -149,9 +155,7 @@ export function App(props: AppProps) {
     logOpen: drawer.open,
   });
   if (vm === null) {
-    return (
-      <Start app={props} seed={state.seed} preferences={preferences} progress={state.loading} />
-    );
+    return <Start app={props} preferences={preferences} progress={state.loading} />;
   }
   const act = actWith(session, preferences);
   const layer = tableLayer({ session, state, vm, humanSeat, open: { drawer, talk, coach } });
@@ -181,7 +185,7 @@ export function App(props: AppProps) {
           coach={coach.panel}
           layer={layer.layer}
           layerKind={layer.kind}
-          face={faceSlot(session, vm, preferences)}
+          face={faceSlot(session, vm, preferences, props.character)}
         />
         <GameOver props={props} vm={vm} phase={state.phase} sessionId={state.sessionId} />
         {props.debugPanel !== undefined && (
@@ -194,20 +198,28 @@ export function App(props: AppProps) {
 
 function Start({
   app,
-  seed,
   preferences,
   progress,
 }: {
   app: AppProps;
-  seed: number;
   preferences: UnlockingPreferences;
   progress: LoadProgress | null;
 }) {
   return (
     <StartScreen
-      seed={seed}
       simple={preferences.simple}
-      face={preferences.face}
+      face={
+        preferences.face ? (
+          <FaceSeat
+            session={app.session}
+            cues={[]}
+            thinking={false}
+            line={null}
+            voice={preferences.voice}
+            character={app.character}
+          />
+        ) : undefined
+      }
       onChoose={(opponent) => app.session.getState().prepare(opponent)}
       progress={progress}
       farewell={app.farewell ?? false}
@@ -252,6 +264,24 @@ function MenuLog({ onOpen }: { onOpen: () => void }) {
   );
 }
 
+function LeaveButton({ app, phase }: { app: AppProps; phase: Phase }) {
+  return (
+    <button
+      type="button"
+      class="button menu-leave"
+      data-testid="leave"
+      disabled={phase !== 'handOver'}
+      onClick={(event) => {
+        const menu = (event.currentTarget as HTMLElement).closest('details');
+        if (menu !== null) menu.open = false;
+        app.session.getState().leave();
+      }}
+    >
+      {t('status.leave')}
+    </button>
+  );
+}
+
 function Header({ app, vm, seed, drawer, preferences, coach, talk, onMenu }: HeaderProps) {
   const phase = app.session.getState().phase;
   const features = app.features ?? ALL_FEATURES;
@@ -277,35 +307,26 @@ function Header({ app, vm, seed, drawer, preferences, coach, talk, onMenu }: Hea
           onMenu(true);
         }}
         onClose={() => onMenu(false)}
-      >
-        <MenuLog
-          onOpen={() => {
-            onMenu(false);
-            drawer.flip();
-          }}
-        />
-        <Settings
-          preferences={preferences}
-          offered={{ coach: features.coach, voice: features.talk }}
-          {...conversationActions(app.session, vm)}
-          conversation={features.talk && vm.conversation.available}
-        />
-        {vm.mode === 'cash' && (
-          <button
-            type="button"
-            class="button menu-leave"
-            data-testid="leave"
-            disabled={phase !== 'handOver'}
-            onClick={(event) => {
-              const menu = (event.currentTarget as HTMLElement).closest('details');
-              if (menu !== null) menu.open = false;
-              app.session.getState().leave();
-            }}
-          >
-            {t('status.leave')}
-          </button>
-        )}
-      </HistoryMenu>
+        primary={
+          <>
+            <MenuLog
+              onOpen={() => {
+                onMenu(false);
+                drawer.flip();
+              }}
+            />
+            {vm.mode === 'cash' && <LeaveButton app={app} phase={phase} />}
+          </>
+        }
+        settings={
+          <Settings
+            preferences={preferences}
+            offered={{ coach: features.coach, voice: features.talk }}
+            {...conversationActions(app.session, vm)}
+            conversation={features.talk && vm.conversation.available}
+          />
+        }
+      />
     </StatusBar>
   );
 }

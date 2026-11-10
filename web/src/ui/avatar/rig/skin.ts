@@ -7,6 +7,7 @@ export interface SkinTextures {
   normal: THREE.Texture;
   roughness: THREE.Texture;
   wrinkles: [THREE.Texture, THREE.Texture, THREE.Texture];
+  scalp: THREE.Texture;
 }
 
 export interface WrinkleLayout {
@@ -66,6 +67,8 @@ uniform sampler2D uWm1; uniform sampler2D uWm2; uniform sampler2D uWm3;
 uniform vec3 uWm[${count}];
 uniform vec2 uLids;
 uniform vec2 uEye;
+uniform sampler2D uScalp;
+const vec3 HAIR_TONE = vec3(0.019, 0.010, 0.007);
 vec3 wmA;
 void wrinkleWeights(vec2 uv) {
   wmA = vec3(0.0);
@@ -83,6 +86,7 @@ float lidFold() {
 
 const SKIN_COLOR = `wrinkleWeights(vMapUv);
 vec3 c = texture2D(map, vMapUv).rgb;
+c = mix(c, HAIR_TONE, clamp(texture2D(uScalp, vMapUv).r * 1.3, 0.0, 0.95));
 vec2 nbm = texture2D(normalMap, vMapUv).xy;
 float crease = wmA.x * length(texture2D(uWm1, vMapUv).xy - nbm) + wmA.y * length(texture2D(uWm2, vMapUv).xy - nbm);
 c *= 1.0 - clamp(crease * 3.5, 0.0, 0.4) * smoothstep(147.0, 151.0, vRest.y);
@@ -98,8 +102,9 @@ vec3 mapN = normalize(nn * 2.0 - 1.0);`;
 
 const LID = `#include <normal_fragment_maps>
 vec3 lidUp = normalize(vec3(0.0, 0.35, 1.0));
-vec3 lidMix = mix(normal, lidUp, lidFold() * 0.85);
-normal = dot(lidMix, lidUp) > 0.05 ? normalize(lidMix) : lidUp;`;
+float lid = lidFold() * 0.85;
+vec3 lidMix = mix(normal, lidUp, lid);
+if (lid > 0.0) normal = dot(lidMix, lidUp) > 0.05 ? normalize(lidMix) : lidUp;`;
 
 function wrinkleShader(shader: Shader, textures: SkinTextures, layout: WrinkleLayout): void {
   skin12(shader);
@@ -118,6 +123,7 @@ function wrinkleShader(shader: Shader, textures: SkinTextures, layout: WrinkleLa
     uWm1: { value: wm1 },
     uWm2: { value: wm2 },
     uWm3: { value: wm3 },
+    uScalp: { value: textures.scalp },
   });
   shader.fragmentShader = (wrinklePars(layout) + shader.fragmentShader)
     .replace('#include <map_fragment>', SKIN_COLOR)
