@@ -41,19 +41,20 @@ are different people:
 
 ```
 composure  = clamp(0.55 − 0.35·N + 0.1·C, 0.15, 1.1)      emotional stability
-discipline = clamp(0.45 + 0.4·C − 0.1·N, 0, 0.95)        conscientiousness
+discipline = clamp(0.45 + 0.3·C − 0.25·N, 0, 0.95)       conscientiousness, and calm
 ```
 
 | Character | C    | N    | composure, now → proposed | discipline, now → proposed |
 | --------- | ---- | ---- | ------------------------- | -------------------------- |
-| mallorca  | 0.2  | 0.1  | 0.60 → 0.54               | 0.63 → 0.52                |
-| ingrid    | 0.8  | −0.8 | 0.93 → 0.91               | 0.93 → 0.85                |
-| mira      | 0.2  | 0.1  | 0.55 → 0.54               | 0.53 → 0.52                |
-| nina      | 0.8  | 0.8  | 0.43 → 0.35               | 0.44 → 0.69                |
-| lola      | −0.6 | 0.8  | 0.18 → 0.21               | 0.06 → 0.13                |
-| rita      | −0.7 | −0.4 | 0.51 → 0.62               | 0.32 → 0.21                |
+| mallorca  | 0.2  | 0.1  | 0.60 → 0.54               | 0.63 → 0.48                |
+| ingrid    | 0.8  | −0.8 | 0.93 → 0.91               | 0.93 → 0.89                |
+| mira      | 0.2  | 0.1  | 0.55 → 0.54               | 0.53 → 0.48                |
+| nina      | 0.8  | 0.8  | 0.43 → 0.35               | 0.44 → 0.49                |
+| lola      | −0.6 | 0.8  | 0.18 → 0.21               | 0.06 → 0.07                |
+| rita      | −0.7 | −0.4 | 0.51 → 0.62               | 0.32 → 0.34                |
 
-The owner postponed this choice. Until it is made, the implementation needs some formula once `control` is gone;
+Discipline leans on calm as well as on conscientiousness, so an anxious perfectionist like Nina (0.49) shows her
+feelings in her play, while Ingrid (0.89) does not. The owner postponed the final choice. Until it is made, the implementation needs some formula once `control` is gone;
 the proposal is the default unless the owner says otherwise.
 
 ## 2. Natural style from leading traits (decided)
@@ -310,27 +311,29 @@ Two more columns: her bluff caught at the river (bet 15 into 20 with 10% equity,
 
 | Character | At rest                  | Bad beat +15 s           | After the losses         | 5 min of quiet hands     | Heater peak              | Bluff caught +15 s       | Bluff through +15 s      |
 | --------- | ------------------------ | ------------------------ | ------------------------ | ------------------------ | ------------------------ | ------------------------ | ------------------------ |
-| mallorca | 1.26 1.35 0.71 0.85 0.89 | 1.24 1.31 0.72 0.96 0.81 | 1.04 1.54 0.69 0.86 0.70 | 1.28 1.43 0.76 0.92 0.88 | 1.57 1.23 0.96 1.22 1.20 | 0.95 1.41 0.63 0.75 0.69 | 1.32 1.40 0.78 0.93 0.93 |
-| ingrid | 1.05 0.95 1.29 0.66 1.64 | 1.09 0.93 1.31 0.69 1.66 | 1.05 0.98 1.31 0.68 1.62 | 1.07 0.94 1.31 0.67 1.65 | 1.13 0.91 1.36 0.70 1.69 | 1.04 0.96 1.28 0.66 1.63 | 1.06 0.95 1.30 0.67 1.65 |
-| sol | 1.69 1.74 0.83 1.52 1.22 | 1.83 1.69 1.01 1.79 1.34 | 1.75 1.90 1.07 1.77 1.12 | 1.79 1.77 1.03 1.72 1.37 | 1.92 1.59 1.33 1.87 1.71 | 1.62 1.81 0.83 1.54 1.07 | 1.78 1.79 1.04 1.70 1.37 |
-| rita | 1.79 1.75 1.68 1.78 1.57 | 1.94 1.71 1.87 1.94 1.77 | 1.94 1.92 1.93 1.96 1.75 | 1.91 1.74 1.86 1.92 1.76 | 1.95 1.59 1.92 1.95 1.88 | 1.88 1.87 1.84 1.90 1.64 | 1.86 1.80 1.83 1.88 1.69 |
-| vera | 1.25 0.74 1.18 0.63 0.66 | 1.20 0.75 1.18 0.66 0.62 | 1.11 0.81 1.15 0.64 0.60 | 1.28 0.74 1.25 0.66 0.67 | 1.46 0.71 1.44 0.76 0.77 | 0.98 0.76 1.01 0.59 0.58 | 1.30 0.77 1.28 0.67 0.68 |
-| nina | 0.65 0.74 0.68 0.57 0.58 | 0.61 0.75 0.65 0.57 0.55 | 0.58 0.80 0.63 0.55 0.54 | 0.61 0.82 0.66 0.56 0.55 | 0.76 0.71 0.83 0.64 0.64 | 0.56 0.74 0.60 0.54 0.53 | 0.66 0.75 0.70 0.57 0.58 |
-| mira | 1.04 1.24 0.59 0.78 0.83 | 0.98 1.19 0.58 0.84 0.74 | 0.80 1.42 0.57 0.74 0.64 | 1.04 1.34 0.61 0.82 0.80 | 1.37 1.13 0.72 1.11 1.11 | 0.75 1.28 0.55 0.67 0.64 | 1.08 1.29 0.62 0.83 0.86 |
-| lola | 1.40 1.63 0.94 1.49 0.64 | 1.73 1.69 1.23 1.82 0.69 | 1.28 1.90 1.07 1.67 0.55 | 1.68 1.92 1.52 1.86 0.67 | 1.94 1.57 1.77 1.95 1.39 | 0.70 1.80 0.66 1.11 0.51 | 1.77 1.90 1.78 1.92 0.91 |
-| greta | 0.59 0.62 0.75 0.63 0.76 | 0.57 0.62 0.73 0.64 0.68 | 0.55 0.65 0.69 0.61 0.63 | 0.59 0.63 0.76 0.64 0.73 | 0.66 0.60 0.93 0.75 0.92 | 0.54 0.62 0.65 0.58 0.62 | 0.59 0.62 0.76 0.63 0.77 |
+| mallorca | 1.26 1.35 0.71 0.85 0.89 | 1.24 1.30 0.72 0.96 0.81 | 1.03 1.56 0.69 0.86 0.69 | 1.29 1.44 0.76 0.93 0.88 | 1.59 1.22 0.99 1.25 1.22 | 0.93 1.41 0.63 0.74 0.68 | 1.32 1.41 0.78 0.94 0.94 |
+| ingrid | 1.05 0.95 1.29 0.66 1.64 | 1.08 0.93 1.31 0.68 1.65 | 1.05 0.98 1.30 0.67 1.63 | 1.07 0.94 1.30 0.67 1.65 | 1.11 0.92 1.34 0.69 1.68 | 1.04 0.95 1.28 0.66 1.63 | 1.06 0.95 1.30 0.67 1.65 |
+| sol | 1.69 1.74 0.83 1.52 1.22 | 1.82 1.70 0.99 1.77 1.33 | 1.74 1.89 1.04 1.75 1.13 | 1.78 1.77 1.00 1.70 1.35 | 1.90 1.61 1.27 1.85 1.67 | 1.63 1.80 0.83 1.54 1.09 | 1.77 1.78 1.01 1.69 1.35 |
+| rita | 1.79 1.75 1.68 1.78 1.57 | 1.92 1.72 1.85 1.93 1.75 | 1.93 1.90 1.91 1.94 1.72 | 1.89 1.74 1.84 1.90 1.74 | 1.94 1.62 1.89 1.94 1.85 | 1.87 1.85 1.82 1.88 1.63 | 1.85 1.79 1.81 1.87 1.68 |
+| vera | 1.25 0.74 1.18 0.63 0.66 | 1.17 0.76 1.19 0.68 0.61 | 1.03 0.86 1.14 0.64 0.58 | 1.29 0.74 1.29 0.69 0.67 | 1.57 0.70 1.58 0.86 0.85 | 0.85 0.77 0.92 0.58 0.55 | 1.33 0.79 1.34 0.69 0.69 |
+| nina | 0.65 0.74 0.68 0.57 0.58 | 0.59 0.75 0.64 0.57 0.54 | 0.55 0.84 0.60 0.54 0.52 | 0.59 0.89 0.65 0.56 0.54 | 0.85 0.69 0.97 0.71 0.69 | 0.53 0.75 0.56 0.53 0.52 | 0.66 0.77 0.71 0.58 0.58 |
+| mira | 1.04 1.24 0.59 0.78 0.83 | 0.97 1.19 0.58 0.85 0.73 | 0.79 1.43 0.57 0.74 0.63 | 1.04 1.35 0.61 0.82 0.80 | 1.39 1.12 0.74 1.14 1.14 | 0.74 1.29 0.55 0.67 0.63 | 1.08 1.29 0.62 0.84 0.86 |
+| lola | 1.40 1.63 0.94 1.49 0.64 | 1.75 1.69 1.25 1.83 0.69 | 1.28 1.90 1.08 1.69 0.55 | 1.69 1.93 1.55 1.87 0.67 | 1.95 1.56 1.81 1.95 1.46 | 0.67 1.81 0.64 1.09 0.51 | 1.79 1.91 1.81 1.93 0.93 |
+| greta | 0.59 0.62 0.75 0.63 0.76 | 0.57 0.63 0.72 0.64 0.66 | 0.54 0.66 0.68 0.60 0.61 | 0.59 0.63 0.76 0.64 0.73 | 0.68 0.59 0.98 0.78 0.96 | 0.53 0.62 0.63 0.57 0.61 | 0.59 0.62 0.76 0.63 0.77 |
 | neutral | 1.00 1.00 1.00 1.00 1.00 | 1.00 1.00 1.05 1.17 0.91 | 0.88 1.25 1.04 1.11 0.80 | 1.08 1.04 1.12 1.15 1.03 | 1.36 0.88 1.40 1.44 1.37 | 0.80 1.09 0.89 0.91 0.79 | 1.05 1.04 1.09 1.08 1.04 |
 
 What the rows show:
 
 - **Rita** tilts up on every axis and stays up for minutes: anger lives in the mood.
-- **Ingrid** barely moves: discipline 0.85.
+- **Ingrid** barely moves: discipline 0.89.
 - **Nina, Greta, Mira, Vera** tighten after losses (distress, shame); Mira and Mallorca loosen a little, sadness wants
   to win it back.
-- **Lola** swings most: a bad beat sends her bluff from 0.94 to 1.23, a caught bluff drops it to 0.66, a bluff through
-  raises it to 1.78. After five quiet minutes she is above her rest (aggression 1.68): composure 0.21 and urgency 0.7
+- **Lola** swings most: a bad beat sends her bluff from 0.94 to 1.25, a caught bluff drops it to 0.64, a bluff through
+  raises it to 1.81. After five quiet minutes she is above her rest (aggression 1.69): composure 0.21 and urgency 0.7
   let even the small joys of the quiet hands through. This is her character, not drift; the average character returns.
-- **Caught bluff**: Rita keeps bluffing (1.84, anger), Mira, Nina and Greta stop (shame).
+- **Nina** sits near the low edge at rest, so losses can tighten her only a little; her feelings show most on a
+  heater, where her bluff goes from 0.68 to 0.97.
+- **Caught bluff**: Rita keeps bluffing (1.82, anger), Mira, Nina and Greta stop (shame).
 
 ## 7. Taking it into PR #171
 
