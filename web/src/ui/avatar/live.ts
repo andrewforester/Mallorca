@@ -1,10 +1,13 @@
 import type { FaceCue, FaceFrame, VisemeCue } from '../../game/index.ts';
 import { Avatar } from './avatar.ts';
 import type { FaceRenderer } from './avatar.ts';
+import type { HairKey } from './hair.ts';
 import { Motion } from './motion.ts';
 import { RigAvatar } from './rig/RigAvatar.ts';
 
-export const rigRenderer = (base: string) => (): FaceRenderer => new RigAvatar(base);
+export const rigRenderer =
+  (base: string, hair: HairKey) => (): FaceRenderer =>
+    new RigAvatar(base, hair);
 export const glbRenderer = (url: string) => (): FaceRenderer => new Avatar(url);
 
 export interface LiveOptions {

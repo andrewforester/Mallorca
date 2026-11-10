@@ -27,15 +27,15 @@ It is the fallback when her MetaHuman face cannot load. It is under the library'
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-# Her face: `her/` and `portrait.webp`
+# Her face: `her/`
 
-`her/` is her live face and `portrait.webp` a still of it. It is a MetaHuman made in MetaHuman Creator inside Unreal
+`her/` is her live face, with a still of it in every hairstyle folder `her/hair/<key>/portrait.webp`. It is a MetaHuman made in MetaHuman Creator inside Unreal
 Engine 5.8 by conforming the shape of `brunette.glb`, an avatar made with Ready Player Me and published by Mika
 Suominen in the TalkingHead project (https://github.com/met4citizen/TalkingHead) under the Creative Commons
 Attribution-NonCommercial 4.0 International license (https://creativecommons.org/licenses/by-nc/4.0/). Only the shape
 of her face comes from that avatar: the MetaHuman conform fitted its proportions. That shape carries the BY-NC terms:
 the attribution above, and **while her face is used, the game is non-commercial**; replacing the face lifts that
-condition. Everything else in `her/` (the rig and its DNA, skin, eyes, teeth, hair and lashes) is MetaHuman Creator's
+condition. Everything else in `her/` (the rig and its DNA, skin, eyes, teeth, the hairstyles of the MetaHuman groom library and lashes) is MetaHuman Creator's
 and stays under Epic's terms below, which do not allow it to be reused outside this game.
 
 `her/glasses/` is "Round Spectacles" by Sean Buckley from Poly Haven (https://polyhaven.com/a/round_spectacles), CC0,

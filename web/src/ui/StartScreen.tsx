@@ -3,7 +3,7 @@ import { CASH, CHARACTERS, opponentsFor, TOURNAMENT } from '../game/index.ts';
 import type { LoadProgress, Opponent, PersonalityKey, TableMode } from '../game/index.ts';
 import { t } from './i18n.ts';
 import { Scene } from './Scene.tsx';
-import { PORTRAIT_URL } from './avatar/FaceSeat.tsx';
+import { portraitFor } from './avatar/FaceSeat.tsx';
 
 export interface StartScreenProps {
   onStart: (mode: TableMode, opponent: Opponent) => void;
@@ -152,7 +152,7 @@ function TonightFace({ face, farewell, character }: TonightFaceProps) {
       data-testid="tonight-face"
     >
       {face ? (
-        <img class="face-portrait" src={PORTRAIT_URL} alt={name} draggable={false} />
+        <img class="face-portrait" src={portraitFor(character)} alt={name} draggable={false} />
       ) : (
         <span class="face-frame-name">{name}</span>
       )}
