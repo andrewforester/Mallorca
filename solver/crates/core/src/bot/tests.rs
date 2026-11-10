@@ -1436,3 +1436,46 @@ fn a_loose_bias_enters_with_hands_the_blueprint_always_folds() {
         "{loose} {neutral} {tight}"
     );
 }
+
+fn root_mix(bucket: u16, bias: &Bias) -> Vec<f64> {
+    let root = model().file.tree.root();
+    let spot = model().spot(root).unwrap();
+    let probabilities = model().file.probabilities(root, bucket);
+    let w = biased(model(), &spot, probabilities, bucket, bias);
+    let continuing: f64 = spot
+        .actions
+        .iter()
+        .zip(&w)
+        .filter(|(a, _)| a.0 != ActionKind::Fold)
+        .map(|(_, &x)| x)
+        .sum();
+    spot.actions
+        .iter()
+        .zip(&w)
+        .filter(|(a, _)| a.0 != ActionKind::Fold)
+        .map(|(_, &x)| x / continuing)
+        .collect()
+}
+
+#[test]
+fn tightness_keeps_the_call_and_raise_mix_of_the_real_hand() {
+    let loose = Bias {
+        tightness: 0.67,
+        ..Bias::NEUTRAL
+    };
+    let mut checked = 0;
+    for bucket in 0..169u16 {
+        if root_continue(bucket, &Bias::NEUTRAL) == 0.0 {
+            continue;
+        }
+        checked += 1;
+        let (neutral, biased) = (root_mix(bucket, &Bias::NEUTRAL), root_mix(bucket, &loose));
+        for (n, b) in neutral.iter().zip(&biased) {
+            assert!(
+                (n - b).abs() < 1e-9,
+                "bucket {bucket}: {neutral:?} vs {biased:?}"
+            );
+        }
+    }
+    assert!(checked > 20, "{checked} buckets");
+}

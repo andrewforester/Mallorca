@@ -62,6 +62,21 @@ pub fn shift(bias: &Bias, street: Street, kinds: &[ActionKind]) -> f64 {
     }
 }
 
+pub fn continuing(real: &[f64], shifted: &[f64], kinds: &[ActionKind]) -> Vec<f64> {
+    let Some(fold) = kinds.iter().position(|&k| k == ActionKind::Fold) else {
+        return shifted.to_vec();
+    };
+    let real_rest: f64 = real.iter().sum::<f64>() - real[fold];
+    if real_rest <= 0.0 {
+        return shifted.to_vec();
+    }
+    let scale = (shifted.iter().sum::<f64>() - shifted[fold]) / real_rest;
+    real.iter()
+        .enumerate()
+        .map(|(i, &p)| if i == fold { shifted[fold] } else { p * scale })
+        .collect()
+}
+
 pub fn sample_weighted(weights: &[f64], draw: f64) -> usize {
     let total: f64 = weights.iter().sum();
     let target = draw * total;
@@ -114,7 +129,12 @@ pub(super) fn biased(
 ) -> Vec<f64> {
     let kinds: Vec<ActionKind> = spot.actions.iter().map(|a| a.0).collect();
     let delta = shift(bias, spot.street, &kinds);
-    let row = shifted_row(model, spot, probabilities, bucket, delta);
+    let real: Vec<f64> = probabilities.iter().map(|&p| f64::from(p)).collect();
+    let row = continuing(
+        &real,
+        &shifted_row(model, spot, probabilities, bucket, delta),
+        &kinds,
+    );
     let late = matches!(spot.street, Street::Turn | Street::River);
     let buckets = model.file.tree.buckets()[spot.street.as_index()];
     let low = f64::from(bucket) < 0.35 * f64::from(buckets);
@@ -257,6 +277,22 @@ mod tests {
             assert_eq!(shift(&hot, street, &facing), 0.0);
         }
         assert_eq!(shift(&Bias::NEUTRAL, Street::Turn, &open), 0.0);
+    }
+
+    #[test]
+    fn continuing_keeps_the_fold_of_the_shifted_row_and_the_mix_of_the_real_one() {
+        let kinds = [Fold, Call, RaiseTo(60), AllIn];
+        let real = [100.0, 60.0, 30.0, 10.0];
+        let shifted = [20.0, 30.0, 120.0, 30.0];
+        let w = continuing(&real, &shifted, &kinds);
+        assert_eq!(w, vec![20.0, 108.0, 54.0, 18.0]);
+        let pure_fold = [200.0, 0.0, 0.0, 0.0];
+        assert_eq!(continuing(&pure_fold, &shifted, &kinds), shifted.to_vec());
+        let open = [Check, RaiseTo(60)];
+        assert_eq!(
+            continuing(&[50.0, 50.0], &[10.0, 90.0], &open),
+            vec![10.0, 90.0]
+        );
     }
 
     #[test]
