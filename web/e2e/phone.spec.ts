@@ -155,3 +155,17 @@ test('your action strip stays in full view above the raise sizing', async ({ pag
   expect(found.y + found.height).toBeLessThanOrEqual(presets.y);
   await expect(strip).toBeInViewport({ ratio: 1 });
 });
+
+test('her dealer button stands above her bet', async ({ page }) => {
+  await startOnPhone(page);
+  await byId(page, 'fold').click();
+  await byId(page, 'next-hand').click();
+  await expect(byId(page, 'seat-1').locator('.dealer-slot > *')).toBeVisible();
+  const dealer = await box(page, '[data-testid="seat-1"] .dealer-slot > *');
+  const bet = await box(page, '[data-testid="bet-1"]');
+  expect(dealer.y + dealer.height).toBeLessThanOrEqual(bet.y + 1);
+  const block = await box(page, '[data-testid="seat-1"] .seat-block');
+  const middle = dealer.y + dealer.height / 2;
+  expect(middle).toBeGreaterThan(block.y);
+  expect(middle).toBeLessThan(block.y + block.height);
+});

@@ -77,7 +77,7 @@
 
   .seat-top .seat-side {
     display: grid;
-    grid-template-rows: 24px var(--dealer-size);
+    grid-template-rows: var(--dealer-size) 24px;
     row-gap: 8px;
     align-items: center;
     justify-items: start;
@@ -87,11 +87,11 @@
   }
 
   .seat-top .seat-side .bet-chips {
-    grid-row: 1;
+    grid-row: 2;
   }
 
   .seat-top .seat-side .dealer-slot {
-    grid-row: 2;
+    grid-row: 1;
   }
 
   .seat-block {
