@@ -62,39 +62,73 @@ pub fn shift(bias: &Bias, street: Street, kinds: &[ActionKind]) -> f64 {
     }
 }
 
-pub fn fold_only(real: &[f64], target: f64, kinds: &[ActionKind], delta: f64) -> Vec<f64> {
-    let Some(fold) = kinds.iter().position(|&k| k == ActionKind::Fold) else {
-        return real.to_vec();
-    };
+fn rebalance(real: &[f64], class: usize, target: f64, delta: f64, receivers: &[f64]) -> Vec<f64> {
     let total: f64 = real.iter().sum();
     if total <= 0.0 {
         return real.to_vec();
     }
-    let fold_weight = if delta > 0.0 {
-        (target * total).min(real[fold])
+    let weight = if delta > 0.0 {
+        (target * total).min(real[class])
     } else {
-        (target * total).max(real[fold])
+        (target * total).max(real[class])
     };
     let mut row = real.to_vec();
-    row[fold] = fold_weight;
-    let passive = kinds
-        .iter()
-        .position(|&k| matches!(k, ActionKind::Call | ActionKind::Check));
-    if let (true, Some(passive)) = (fold_weight < real[fold], passive) {
-        row[passive] += real[fold] - fold_weight;
+    row[class] = weight;
+    let freed = real[class] - weight;
+    let receiving: f64 = receivers.iter().sum();
+    if freed > 0.0 && receiving > 0.0 {
+        for (w, r) in row.iter_mut().zip(receivers) {
+            *w += freed * r / receiving;
+        }
         return row;
     }
-    let rest = total - real[fold];
+    let rest = total - real[class];
     if rest <= 0.0 {
         return real.to_vec();
     }
-    let scale = (total - fold_weight) / rest;
+    let scale = (total - weight) / rest;
     for (i, w) in row.iter_mut().enumerate() {
-        if i != fold {
+        if i != class {
             *w *= scale;
         }
     }
     row
+}
+
+pub fn fold_only(real: &[f64], target: f64, kinds: &[ActionKind], delta: f64) -> Vec<f64> {
+    let Some(fold) = kinds.iter().position(|&k| k == ActionKind::Fold) else {
+        return real.to_vec();
+    };
+    let receivers: Vec<f64> = kinds
+        .iter()
+        .map(|&k| f64::from(u8::from(matches!(k, ActionKind::Call | ActionKind::Check))))
+        .collect();
+    rebalance(real, fold, target, delta, &receivers)
+}
+
+pub fn check_only(
+    real: &[f64],
+    target: f64,
+    kinds: &[ActionKind],
+    delta: f64,
+    shifted: &[f64],
+) -> Vec<f64> {
+    let Some(check) = kinds.iter().position(|&k| k == ActionKind::Check) else {
+        return real.to_vec();
+    };
+    let bets = |row: &[f64]| -> Vec<f64> {
+        row.iter()
+            .enumerate()
+            .map(|(i, &w)| if i == check { 0.0 } else { w })
+            .collect()
+    };
+    let own = bets(real);
+    let receivers = if own.iter().sum::<f64>() > 0.0 {
+        own
+    } else {
+        bets(shifted)
+    };
+    rebalance(real, check, target, delta, &receivers)
 }
 
 pub const NOISE: f64 = 0.1;
@@ -135,62 +169,59 @@ pub fn sample_weighted(weights: &[f64], draw: f64) -> usize {
         .unwrap_or(weights.len() - 1)
 }
 
-fn fold_target(
+struct Shifted {
+    class: usize,
+    share: f64,
+    row: Vec<f64>,
+}
+
+fn shifted(
     model: &Model,
     spot: &Spot<'_>,
     probabilities: &[u8],
     bucket: u16,
     delta: f64,
-) -> Option<f64> {
+) -> Option<Shifted> {
     if delta == 0.0 {
         return None;
     }
-    let fold = spot.actions.iter().position(|a| a.0 == ActionKind::Fold)?;
+    let class = spot
+        .actions
+        .iter()
+        .position(|a| a.0 == ActionKind::Fold)
+        .or_else(|| spot.actions.iter().position(|a| a.0 == ActionKind::Check))?;
     let buckets = model.file.tree.buckets()[spot.street.as_index()];
-    let folds: Vec<Option<f64>> = (0..buckets)
+    let rows: Vec<Option<&[u8]>> = (0..buckets)
         .map(|b| {
-            let row = model
+            model
                 .file
                 .try_probabilities(spot.id, b)
-                .filter(|r| r.len() == probabilities.len())?;
-            let total: f64 = row.iter().map(|&p| f64::from(p)).sum();
-            (total > 0.0).then(|| f64::from(row[fold]) / total)
+                .filter(|r| r.len() == probabilities.len())
         })
         .collect();
-    let pure: Vec<Option<f64>> = folds.iter().map(|f| f.map(purified)).collect();
-    let order = model.order(spot.street).by_fold(&pure);
-    let moved = widened(order.mean(&pure), delta);
+    let shares: Vec<Option<f64>> = rows
+        .iter()
+        .map(|row| {
+            let row = (*row)?;
+            let total: f64 = row.iter().map(|&p| f64::from(p)).sum();
+            (total > 0.0).then(|| purified(f64::from(row[class]) / total))
+        })
+        .collect();
+    let order = model.order(spot.street).by_fold(&shares);
+    let moved = widened(order.mean(&shares), delta);
     let q = (order.percentile(bucket) + moved).clamp(0.0, 1.0);
     let (lo, hi, t) = order.around(q);
-    let at = |b: u16| pure[usize::from(b)].unwrap_or(0.0);
-    Some((1.0 - t) * at(lo) + t * at(hi))
-}
-
-pub(super) fn shifted_row(
-    model: &Model,
-    spot: &Spot<'_>,
-    probabilities: &[u8],
-    bucket: u16,
-    delta: f64,
-) -> Vec<f64> {
-    if delta == 0.0 {
-        return probabilities.iter().map(|&p| f64::from(p)).collect();
-    }
-    let order = model.order(spot.street);
-    let q = (order.percentile(bucket) + delta).clamp(0.0, 1.0);
-    let (lo, hi, t) = order.around(q);
-    let row = |b: u16| {
-        model
-            .file
-            .try_probabilities(spot.id, b)
-            .filter(|r| r.len() == probabilities.len())
-            .unwrap_or(probabilities)
-    };
-    row(lo)
-        .iter()
-        .zip(row(hi))
-        .map(|(&a, &b)| (1.0 - t) * f64::from(a) + t * f64::from(b))
-        .collect()
+    let share = |b: u16| shares[usize::from(b)].unwrap_or(0.0);
+    let row = |b: u16| rows[usize::from(b)].unwrap_or(probabilities);
+    Some(Shifted {
+        class,
+        share: (1.0 - t) * share(lo) + t * share(hi),
+        row: row(lo)
+            .iter()
+            .zip(row(hi))
+            .map(|(&a, &b)| (1.0 - t) * f64::from(a) + t * f64::from(b))
+            .collect(),
+    })
 }
 
 pub(super) fn biased(
@@ -203,9 +234,10 @@ pub(super) fn biased(
     let kinds: Vec<ActionKind> = spot.actions.iter().map(|a| a.0).collect();
     let delta = shift(bias, spot.street, &kinds);
     let real: Vec<f64> = probabilities.iter().map(|&p| f64::from(p)).collect();
-    let row = match fold_target(model, spot, probabilities, bucket, delta) {
-        Some(target) => fold_only(&real, target, &kinds, delta),
-        None => shifted_row(model, spot, probabilities, bucket, delta),
+    let row = match shifted(model, spot, probabilities, bucket, delta) {
+        Some(s) if kinds[s.class] == ActionKind::Fold => fold_only(&real, s.share, &kinds, delta),
+        Some(s) => check_only(&real, s.share, &kinds, delta, &s.row),
+        None => real,
     };
     let late = matches!(spot.street, Street::Turn | Street::River);
     let buckets = model.file.tree.buckets()[spot.street.as_index()];
@@ -384,6 +416,42 @@ mod tests {
         assert_eq!(
             fold_only(&[50.0, 50.0], 0.1, &no_call, 0.1),
             vec![10.0, 90.0]
+        );
+    }
+
+    #[test]
+    fn an_aggressive_shift_moves_checks_into_the_bets_of_the_hand() {
+        let kinds = [Check, RaiseTo(30), AllIn];
+        let shifted = [0.0, 10.0, 90.0];
+        let real = [100.0, 60.0, 40.0];
+        assert_eq!(
+            check_only(&real, 0.2, &kinds, 0.1, &shifted),
+            vec![40.0, 96.0, 64.0]
+        );
+        let pure_check = [200.0, 0.0, 0.0];
+        assert_eq!(
+            check_only(&pure_check, 0.5, &kinds, 0.1, &shifted),
+            vec![100.0, 10.0, 90.0]
+        );
+        let bets_more = [0.0, 100.0, 100.0];
+        assert_eq!(
+            check_only(&bets_more, 0.5, &kinds, 0.1, &shifted),
+            bets_more.to_vec()
+        );
+    }
+
+    #[test]
+    fn a_passive_shift_moves_bets_into_the_check() {
+        let kinds = [Check, RaiseTo(30), AllIn];
+        let real = [40.0, 80.0, 80.0];
+        let shifted = [1.0, 0.0, 0.0];
+        assert_eq!(
+            check_only(&real, 0.6, &kinds, -0.1, &shifted),
+            vec![120.0, 40.0, 40.0]
+        );
+        assert_eq!(
+            check_only(&real, 0.0, &kinds, -0.1, &shifted),
+            real.to_vec()
         );
     }
 
