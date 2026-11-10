@@ -27,9 +27,9 @@ It is the fallback when her MetaHuman face cannot load. It is under the library'
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
-# Her face: `her/`
+# Her face: `her/` and `portraits/`
 
-`her/` is her live face, with a still of it in every hairstyle folder `her/hair/<key>/portrait.webp`. It is a MetaHuman made in MetaHuman Creator inside Unreal
+`her/` is her live face and `portraits/` a still of it in each hairstyle. It is a MetaHuman made in MetaHuman Creator inside Unreal
 Engine 5.8 by conforming the shape of `brunette.glb`, an avatar made with Ready Player Me and published by Mika
 Suominen in the TalkingHead project (https://github.com/met4citizen/TalkingHead) under the Creative Commons
 Attribution-NonCommercial 4.0 International license (https://creativecommons.org/licenses/by-nc/4.0/). Only the shape

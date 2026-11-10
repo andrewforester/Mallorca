@@ -12,5 +12,5 @@ export const HAIR: Readonly<Record<PersonalityKey, HairKey>> = {
 };
 
 export const hairBase = (rig: string, key: HairKey): string => `${rig}hair/${key}/`;
-export const portraitOf = (rig: string, key: HairKey): string =>
-  `${hairBase(rig, key)}portrait.webp`;
+export const portraitOf = (avatar: string, key: HairKey): string =>
+  `${avatar}portraits/${key}.webp`;

@@ -17,7 +17,7 @@ export const RIG_BASE = `${import.meta.env.BASE_URL}avatar/her/`;
 export const hairOf = (character: PersonalityKey | undefined): HairKey =>
   HAIR[character ?? 'mallorca'];
 export const portraitFor = (character: PersonalityKey | undefined): string =>
-  portraitOf(RIG_BASE, hairOf(character));
+  portraitOf(`${import.meta.env.BASE_URL}avatar/`, hairOf(character));
 
 export interface FaceSeatProps {
   session: Session;

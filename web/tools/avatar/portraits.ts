@@ -42,7 +42,7 @@ async function portrait(page: Page, key: HairKey): Promise<void> {
   await page.waitForSelector('[data-face="live"]', { timeout: 120_000 });
   await page.waitForTimeout(SETTLE_MS);
   const url = await still(page);
-  const file = `public/avatar/her/hair/${key}/portrait.webp`;
+  const file = `public/avatar/portraits/${key}.webp`;
   writeFileSync(file, Buffer.from(url.split(',')[1]!, 'base64'));
   console.log(file);
 }

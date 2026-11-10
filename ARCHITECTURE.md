@@ -21,7 +21,7 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 | `web/tools/arena/external/`                                         | Matches against external bots over their APIs, see "arena"                         |
 | `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                              |
 | `web/prototypes/emotion-lab/`                                       | Emotion sandbox: the `emotion` engine with a face and a voice, see `docs/emotion`  |
-| `web/public/avatar/`                                                | Her MetaHuman face and upper body `her/` with a folder per hairstyle `her/hair/<key>/` (cards, scalp mask, still portrait), the fallback `mallorca.glb`, `LICENSE.md` |
+| `web/public/avatar/`                                                | Her MetaHuman face and upper body `her/` with a folder per hairstyle `her/hair/<key>/` (cards, scalp mask), a still per hairstyle in `portraits/`, the fallback `mallorca.glb`, `LICENSE.md` |
 | `web/tools/avatar/`                                                 | Blender script that converts the Rocketbox source into `mallorca.glb`, see README  |
 | `web/tools/avatar/metahuman/`                                       | Workstation, Unreal scripts, export to `public/avatar/her/` and the RigLogic wasm, see README |
 | `docs/emotion/`                                                     | Emotion model document, its screenshots and generated tables                       |

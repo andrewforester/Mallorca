@@ -16,8 +16,9 @@ interesting look and chose three grooms of the MetaHuman library from a sheet of
 ## Decisions
 
 - **Hair leaves the rig.** `rig.json` and `rig.bin` keep the head, body, sweater and the rest; each hairstyle is a
-  folder `her/hair/<key>/` with `hair.json`, `hair.bin`, `hair_cards.webp`, `scalp.webp` and `portrait.webp`. A game
-  loads only the hairstyle of its character.
+  folder `her/hair/<key>/` with `hair.json`, `hair.bin`, `hair_cards.webp` and `scalp.webp`; its still is
+  `portraits/<key>.webp`, outside the model folders that a game without WebGL never fetches. A game loads only the
+  hairstyle of its character.
 - **`head_color_map.webp` no longer carries painted hair.** The scalp under the hair is darkened in the skin shader by
   the hairstyle's `scalp.webp`, with the tone the export painted before. The brows stay painted.
 - **The scalp mask comes from the roots of the groom.** Only some grooms ship a `_baked` texture, but every groom has
@@ -52,7 +53,7 @@ interesting look and chose three grooms of the MetaHuman library from a sheet of
 - `rig/materials.ts` and `rig/skin.ts`: the hair textures come from the hairstyle folder; `skinMaterial` takes the scalp
   mask and mixes the skin towards the hair tone by it.
 - `FaceSeat.tsx` takes `character`, renders `rigRenderer(RIG_BASE, HAIR[character])` and shows
-  `hair/<key>/portrait.webp` as the still. `App` passes the character it already has.
+  `portraits/<key>.webp` as the still. `App` passes the character it already has.
 - `tools/avatar/portraits.ts` renders the still of each hairstyle from the 3D face, framed like the live face.
 
 ## Checks

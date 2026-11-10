@@ -79,8 +79,8 @@ exceeds 23 MB.
   same packing, with no blendshapes: `follow` names the head vertex each card vertex moves with. A groom modelled for
   another head is first moved onto the archetype scalp (`fit` in `export/groom.py`; `--check` prints the move).
   `hair_cards.webp` is drawn from its card atlas, `scalp.webp` is the density of its root UVs on the head, which the
-  skin shader darkens towards the hair tone. `portrait.webp` is the still of her with that hairstyle, rendered from the
-  running game by `npm run portraits -- <url>` (`tools/avatar/portraits.ts`).
+  skin shader darkens towards the hair tone. `public/avatar/portraits/<key>.webp` is the still of her with that
+  hairstyle, rendered from the running game by `npm run portraits -- <url>` (`tools/avatar/portraits.ts`).
 - Her upper body from `body.dna` (`export/body.py`): `body` in `rig.json` holds the body joints the head lacks (no
   legs), with their parents by name and rest transforms; the `body` mesh is LOD0 above the pelvis without the skin the
   sweater covers, its colour matched in Lab to her synthesized head skin on the neck (`export/skintone.py`).

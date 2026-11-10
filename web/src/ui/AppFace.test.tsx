@@ -41,7 +41,7 @@ describe('her face at the table', () => {
     expect(seat.dataset.face).toBe('portrait');
     expect(seat.closest('.table-layout')).not.toBeNull();
     expect(seat.querySelector('img')?.getAttribute('src')).toContain(
-      'avatar/her/hair/side-swept/portrait.webp',
+      'avatar/portraits/side-swept.webp',
     );
     expect(session.getState().face.on).toBe(true);
   });
@@ -50,7 +50,7 @@ describe('her face at the table', () => {
     await start('ingrid');
     const seat = screen.getByTestId('face-seat');
     expect(seat.querySelector('img')?.getAttribute('src')).toContain(
-      'avatar/her/hair/updo-buns/portrait.webp',
+      'avatar/portraits/updo-buns.webp',
     );
   });
 

@@ -14,17 +14,18 @@ describe('HAIR', () => {
   });
 
   it('ships every file of every hairstyle', () => {
-    const files = ['hair.json', 'hair.bin', 'hair_cards.webp', 'scalp.webp', 'portrait.webp'];
+    const files = ['hair.json', 'hair.bin', 'hair_cards.webp', 'scalp.webp'];
     for (const key of HAIRSTYLES) {
       for (const file of files)
         expect(existsSync(resolve('public/avatar/her/hair', key, file)), `${key}/${file}`).toBe(true);
+      expect(existsSync(resolve('public/avatar/portraits', `${key}.webp`)), key).toBe(true);
     }
   });
 });
 
 describe('hairBase and portraitOf', () => {
-  it('place a hairstyle in the folder of her rig', () => {
+  it('place a hairstyle in the folder of her rig and its still beside the models', () => {
     expect(hairBase('/her/', 'curly-bob')).toBe('/her/hair/curly-bob/');
-    expect(portraitOf('/her/', 'updo-buns')).toBe('/her/hair/updo-buns/portrait.webp');
+    expect(portraitOf('/avatar/', 'updo-buns')).toBe('/avatar/portraits/updo-buns.webp');
   });
 });
