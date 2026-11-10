@@ -78,6 +78,9 @@ Sizes are in bb through `scaled(bb) = 1 − e^(−|bb| / 20)`, a smooth curve wi
   a win (won while behind). The rest is shared between her and the opponent: by `selfBlame` on a loss, by `control`
   on a win.
 - `bluff`, `mistake`: realized, self, `value = +0.8 · scaled(pot)` or `−scaled(pot)`, `−scaled(cost)`.
+- `ownMove` bet keeps today's reactions until the bluff task, through the axes: below 45% equity a prospective bad
+  event of her own, `−0.5 · scaled(amount) · (1 − eq)` (fear); from 70% a realized good one,
+  `0.2 · scaled(amount) · smoothstep(0.7, 0.9, eq)` (joy and pride).
 - `ownMove` fold: realized, opponent, `value = −0.35 · scaled(facing) · smoothstep(0.35, 0.75, eq)`, `resolved = 1`.
 - `chat`: opponent; tease −0.25, mock bluff −0.35, compliment +0.25, friendly +0.1 realized; claim of strength −0.12 and
   of weakness +0.1 prospective.
@@ -199,7 +202,6 @@ style_k   = 2 ^ tanh(atanh(0.8) · nature_k + push_k)
 Readers that change:
 
 - `face/frame.ts` `nervousOf` reads negative approach of the mood instead of negative dominance.
-- `face/expression.ts` `feltPadOf` gains approach next to PAD (unused by the face until the face step).
 - `game/debugView.ts` and the debug panel: the strain block shows intensity against composure, reach and the
   emotions' parts; the mood block shows approach; the personality block loses experience and shows selfBlame,
   control and urgency; the bias block shows nature, the state's push and the sent bias.
