@@ -30,6 +30,8 @@
 - Style check: `npm run style-check -- <history file>` replays her decisions from a history copied in the debug panel
   and shows, per decision, the blueprint, her style and each bias axis alone. The `style-check` skill in
   `.claude/skills/` describes the input and how to judge the result.
+- Feeling check: the `feeling-check` skill in `.claude/skills/` reads the same history as an emotionally intelligent
+  person and judges whether her feelings and the moves of her style are believable for her character.
 - Screenshots: `npm run contact` builds, plays a seeded game and writes one contact sheet per device,
   `web/e2e/contact/phone.png` and `web/e2e/contact/desktop.png` (gitignored). After a UI change, look at each
   sheet once, as one image, before committing.
