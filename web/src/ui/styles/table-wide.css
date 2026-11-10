@@ -310,10 +310,9 @@
 
   .status-info [data-testid='hand-number'] {
     flex-basis: 100%;
-    order: -1;
   }
 
-  .status-info [data-testid='hand-number']::before {
+  .status-info [data-testid='blinds']::before {
     content: none;
   }
 
