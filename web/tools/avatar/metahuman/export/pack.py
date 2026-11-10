@@ -5,9 +5,10 @@ import numpy as np
 
 Q16 = (np.int16, 32767)
 Q8 = (np.int8, 127)
-LIMIT_MB = 17.0
+LIMIT_MB = 26.0
 POSITION_TOLERANCE_CM = 0.005
 DELTA_TOLERANCE_CM = 0.03
+SHIFT_LIMIT_CM = 20.0
 
 
 class Pack:
@@ -69,7 +70,22 @@ def write(header, meshes, out):
     return rig
 
 
-def check(meshes, out):
+def write_hair(style, out):
+    place = Path(out) / "hair" / style["key"]
+    pack = Pack()
+    section = mesh_section(pack, style["mesh"])
+    (place / "hair.json").write_text(json.dumps({"mesh": section}))
+    (place / "hair.bin").write_bytes(b"".join(pack.parts))
+
+
+def hair_error(style, out):
+    place = Path(out) / "hair" / style["key"]
+    section = json.loads((place / "hair.json").read_text())["mesh"]
+    decoded = decode((place / "hair.bin").read_bytes(), section["position"])
+    return float(np.abs(decoded - style["mesh"]["position"]).max())
+
+
+def check(meshes, out, styles):
     out = Path(out)
     rig = json.loads((out / "rig.json").read_text())
     data = (out / "rig.bin").read_bytes()
@@ -78,6 +94,12 @@ def check(meshes, out):
         worst = max(worst, float(np.abs(decode(data, s["position"]) - m["position"]).max()))
         for (_, _, d), t in zip(m["targets"], s["targets"]):
             delta = max(delta, float(np.abs(decode(data, t["delta"]) - d).max()))
+    for style in styles:
+        shift = np.round(style["shift"], 2).tolist()
+        print(f"hair {style['key']}: shift {shift} cm")
+        worst = max(worst, hair_error(style, out))
+        if np.linalg.norm(style["shift"]) > SHIFT_LIMIT_CM:
+            raise SystemExit(f"check failed: {style['key']} moved by more than {SHIFT_LIMIT_CM} cm")
     if "body" not in rig:
         raise SystemExit("check failed: no body skeleton")
     joints = set(rig["joints"]) | set(rig["body"]["joints"])

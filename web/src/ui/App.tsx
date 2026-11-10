@@ -78,7 +78,12 @@ function useFaceSwitch(session: Session, on: boolean) {
   }, [session, on]);
 }
 
-function faceSlot(session: Session, vm: ViewModel, preferences: Preferences) {
+function faceSlot(
+  session: Session,
+  vm: ViewModel,
+  preferences: Preferences,
+  character: PersonalityKey | undefined,
+) {
   if (!preferences.face) {
     return undefined;
   }
@@ -89,6 +94,7 @@ function faceSlot(session: Session, vm: ViewModel, preferences: Preferences) {
       thinking={thinking}
       line={vm.conversation.herBubble}
       voice={preferences.voice}
+      character={character}
     />
   );
 }
@@ -179,7 +185,7 @@ export function App(props: AppProps) {
           coach={coach.panel}
           layer={layer.layer}
           layerKind={layer.kind}
-          face={faceSlot(session, vm, preferences)}
+          face={faceSlot(session, vm, preferences, props.character)}
         />
         <GameOver props={props} vm={vm} phase={state.phase} sessionId={state.sessionId} />
         {props.debugPanel !== undefined && (
@@ -210,6 +216,7 @@ function Start({
             thinking={false}
             line={null}
             voice={preferences.voice}
+            character={app.character}
           />
         ) : undefined
       }

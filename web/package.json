@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "npm run wasm && vite",
     "wasm": "node scripts/wasm.ts",
+    "portraits": "node tools/avatar/portraits.ts",
     "prebuild": "npm run wasm",
     "build": "tsc && vite build && vite build --config tools/arena/ui/vite.config.ts && node scripts/check-dist.ts",
     "preview": "vite preview",

@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { MeshSection, RigHeader, Section } from './assets.ts';
-import { decode, loadAssets } from './assets.ts';
+import { HAIRSTYLES } from '../hair.ts';
+import { decode, loadAssets, loadHair } from './assets.ts';
 
 const her = (file: string) => readFileSync(resolve('public/avatar/her', file));
 const BYTES: Record<Section['type'], number> = {
@@ -94,12 +95,50 @@ describe('loadAssets', () => {
   });
 });
 
+describe('loadHair', () => {
+  it('rejects when the hair binary cannot be fetched', async () => {
+    const fetcher = (url: string) =>
+      Promise.resolve(
+        new Response(url.endsWith('hair.bin') ? null : '{"mesh":{}}', {
+          status: url.endsWith('hair.bin') ? 404 : 200,
+        }),
+      );
+    await expect(loadHair('/her/hair/side-swept/', fetcher)).rejects.toThrow('hair.bin');
+  });
+
+  it('reads the cards section and its binary', async () => {
+    const files: Record<string, BodyInit> = {
+      'hair.json': '{"mesh":{"name":"cards"}}',
+      'hair.bin': new Uint8Array([1, 2, 3]),
+    };
+    const fetcher = (url: string) =>
+      Promise.resolve(new Response(files[url.replace('/her/hair/curly-bob/', '')]!));
+    const hair = await loadHair('/her/hair/curly-bob/', fetcher);
+    expect(hair.mesh.name).toBe('cards');
+    expect(hair.bin.byteLength).toBe(3);
+  });
+});
+
+describe('her packed hairstyles', () => {
+  it('end each binary at its last section, padded to 16 bytes, with cards that follow her head', () => {
+    for (const key of HAIRSTYLES) {
+      const { mesh } = JSON.parse(her(`hair/${key}/hair.json`).toString('utf8')) as {
+        mesh: MeshSection;
+      };
+      expect(mesh.name, key).toBe('cards');
+      expect(mesh.follow, key).toBeDefined();
+      const end = Math.max(...sectionsOf(mesh).map((s) => s.offset + s.length * BYTES[s.type]));
+      expect(her(`hair/${key}/hair.bin`).byteLength, key).toBe(Math.ceil(end / 16) * 16);
+    }
+  });
+});
+
 describe('her packed rig', () => {
   const header = JSON.parse(her('rig.json').toString('utf8')) as RigHeader;
 
-  it('dresses her hair in cards alone, with no helmet under them', () => {
+  it('leaves her hair to the hairstyles, with no helmet under them', () => {
     const names = header.meshes.map((m) => m.name);
-    expect(names).toContain('cards');
+    expect(names).not.toContain('cards');
     expect(names).not.toContain('helmet');
   });
 

@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { RefObject } from 'preact';
 import { speechOf } from '../../game/index.ts';
-import type { ChatLine, FaceCue, Session } from '../../game/index.ts';
+import type { ChatLine, FaceCue, PersonalityKey, Session } from '../../game/index.ts';
 import { t } from '../i18n.ts';
 import { canRender } from './canRender.ts';
 import { firstOf } from './firstOf.ts';
+import { HAIR, portraitOf } from './hair.ts';
+import type { HairKey } from './hair.ts';
 import type * as Live from './live.ts';
 import type { LiveFace, LiveOptions } from './live.ts';
 import { createVoice } from './voice.ts';
@@ -12,7 +14,10 @@ import type { Voice } from './voice.ts';
 
 export const MODEL_URL = `${import.meta.env.BASE_URL}avatar/mallorca.glb`;
 export const RIG_BASE = `${import.meta.env.BASE_URL}avatar/her/`;
-export const PORTRAIT_URL = `${import.meta.env.BASE_URL}avatar/portrait.webp`;
+export const hairOf = (character: PersonalityKey | undefined): HairKey =>
+  HAIR[character ?? 'mallorca'];
+export const portraitFor = (character: PersonalityKey | undefined): string =>
+  portraitOf(`${import.meta.env.BASE_URL}avatar/`, hairOf(character));
 
 export interface FaceSeatProps {
   session: Session;
@@ -20,6 +25,7 @@ export interface FaceSeatProps {
   thinking: boolean;
   line: ChatLine | null;
   voice: boolean;
+  character?: PersonalityKey;
 }
 
 type Mode = 'portrait' | 'live';
@@ -32,19 +38,19 @@ type LiveModule = typeof Live;
 function attempts(
   mod: LiveModule,
   node: HTMLElement,
-  session: Session,
+  { session, hair }: { session: Session; hair: HairKey },
   onLost: (i: number) => void,
 ) {
   const base: Omit<LiveOptions, 'create' | 'onLost'> = {
     frame: () => session.getState().faceNow(),
     calm: reducedMotion(),
   };
-  return [mod.rigRenderer(RIG_BASE), mod.glbRenderer(MODEL_URL)].map(
+  return [mod.rigRenderer(RIG_BASE, hair), mod.glbRenderer(MODEL_URL)].map(
     (create, i) => () => mod.mountFace(node, { ...base, create, onLost: () => onLost(i) }),
   );
 }
 
-function useLive(host: RefObject<HTMLDivElement | null>, session: Session) {
+function useLive(host: RefObject<HTMLDivElement | null>, session: Session, hair: HairKey) {
   const [mode, setMode] = useState<Mode>('portrait');
   const live = useRef<LiveFace | null>(null);
   useEffect(() => {
@@ -53,7 +59,7 @@ function useLive(host: RefObject<HTMLDivElement | null>, session: Session) {
     let gone = false;
     const start = (from: number) => {
       import('./live.ts')
-        .then((mod) => firstOf(attempts(mod, node, session, drop), from))
+        .then((mod) => firstOf(attempts(mod, node, { session, hair }, drop), from))
         .then(({ value: face }) => {
           if (gone) return face.dispose();
           live.current = face;
@@ -73,7 +79,7 @@ function useLive(host: RefObject<HTMLDivElement | null>, session: Session) {
       live.current?.dispose();
       live.current = null;
     };
-  }, [host, session]);
+  }, [host, session, hair]);
   return { mode, live };
 }
 
@@ -108,7 +114,7 @@ function useSpeech(props: FaceSeatProps, live: RefObject<LiveFace | null>) {
 
 export function FaceSeat(props: FaceSeatProps) {
   const host = useRef<HTMLDivElement>(null);
-  const { mode, live } = useLive(host, props.session);
+  const { mode, live } = useLive(host, props.session, hairOf(props.character));
   useCues(live, props.cues);
   useSpeech(props, live);
   useEffect(() => {
@@ -116,7 +122,12 @@ export function FaceSeat(props: FaceSeatProps) {
   }, [props.thinking, mode, live]);
   return (
     <div class={`face-seat face-mode-${mode}`} data-testid="face-seat" data-face={mode}>
-      <img class="face-portrait" src={PORTRAIT_URL} alt={t('seat.bot')} draggable={false} />
+      <img
+        class="face-portrait"
+        src={portraitFor(props.character)}
+        alt={t('seat.bot')}
+        draggable={false}
+      />
       <div class="face-stage" ref={host} />
     </div>
   );
