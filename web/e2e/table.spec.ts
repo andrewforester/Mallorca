@@ -238,3 +238,43 @@ test('her action strip stays above the board', async ({ page }) => {
   }
   expect(action.y + action.height).toBeLessThanOrEqual(board.y);
 });
+
+test('the result pill at a showdown overlaps no card, block, chip or dealer button', async ({
+  page,
+}) => {
+  await page.goto(FAST_URL);
+  await byId(page, 'start-tournament').click();
+  const shown = byId(page, 'seat-1').getByTestId('card');
+  for (let step = 0; step < 60; step += 1) {
+    const waypoint = await waitForWaypoint(page);
+    if (waypoint === 'next-hand' && (await shown.count()) === 2) {
+      break;
+    }
+    await byId(page, waypoint === 'next-hand' ? 'next-hand' : 'passive').click();
+  }
+  await expect(shown).toHaveCount(2);
+  await expect(page.locator('.card-dim').first()).toBeAttached();
+  const pill = await byId(page, 'result').boundingBox();
+  if (pill === null) {
+    throw new Error('the result is not laid out');
+  }
+  expect(pill.width).toBeGreaterThanOrEqual(64);
+  expect(pill.height).toBeLessThanOrEqual(72);
+  const amount = byId(page, 'result').locator('.result-amount');
+  expect(await amount.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+  const others = page.locator(
+    '[data-testid="card"], [data-testid="card-back"], .seat-block, .dealer-slot > *, .bet-chips',
+  );
+  for (const other of await others.all()) {
+    const box = await other.boundingBox();
+    if (box === null) {
+      continue;
+    }
+    const apart =
+      pill.x + pill.width <= box.x ||
+      box.x + box.width <= pill.x ||
+      pill.y + pill.height <= box.y ||
+      box.y + box.height <= pill.y;
+    expect(apart).toBe(true);
+  }
+});

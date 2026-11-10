@@ -8,7 +8,7 @@ const RANKS: Record<number, string> = { 10: '10', 11: 'J', 12: 'Q', 13: 'K', 14:
 
 export interface CardProps {
   card: CardValue | 'back';
-  highlight?: boolean;
+  dim?: boolean;
 }
 
 function CardBack({ className }: { className: string }) {
@@ -85,8 +85,12 @@ function CardFace({ card, className }: { card: CardValue; className: string }) {
   );
 }
 
-export function Card({ card, highlight = false }: CardProps) {
-  const className = `card${highlight ? ' card-highlight' : ''}`;
+export function playedOut(card: CardValue | 'back', played: readonly CardValue[] | null): boolean {
+  return played !== null && card !== 'back' && !played.includes(card);
+}
+
+export function Card({ card, dim = false }: CardProps) {
+  const className = `card${dim ? ' card-dim' : ''}`;
   return card === 'back' ? (
     <CardBack className={className} />
   ) : (

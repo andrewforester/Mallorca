@@ -122,6 +122,12 @@
     "youWin": "You win {{amount}}",
     "youWinWith": "You win {{amount}} with {{hand}}",
     "split": "Split pot {{amount}} each",
+    "pill": {
+      "won": "+{{amount}}",
+      "each": "{{amount}} each",
+      "split": "Split",
+      "splitWith": "Split · {{hand}}"
+    },
     "next": "Next hand",
     "soon": "Next hand in a moment",
     "wait": "Wait"

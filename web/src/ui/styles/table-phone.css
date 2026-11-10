@@ -152,6 +152,10 @@
     font-size: 12px;
   }
 
+  .pot-block:has(.result-pill) {
+    max-width: calc(50% - var(--hole-width) - 26px);
+  }
+
   .seat-bottom {
     padding-top: 24px;
     padding-bottom: 16px;
@@ -323,7 +327,6 @@
 
   .table-layer-log .table-board,
   .table-layer-log .seat-bottom,
-  .table-layer-open .result-text,
   .table-layer-open .seat-bottom .seat-block,
   .table-layer-open .seat-bottom .seat-side {
     display: none;

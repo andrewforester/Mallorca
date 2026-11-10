@@ -67,6 +67,6 @@ export function fixtureResult(): ViewModel {
   vm.pot = { collected: 0, total: 0 };
   vm.seats[1].cards = [44, 40];
   vm.seats[0].isToAct = false;
-  vm.result = { winner: 1, category: 'two-pair', amount: 120 };
+  vm.result = { winner: 1, category: 'two-pair', amount: 120, cards: [] };
   return vm;
 }
