@@ -5,9 +5,47 @@ import { MALLORCA, PERSONALITIES } from './profiles.ts';
 import { styleOf } from './style.ts';
 
 describe('PERSONALITIES', () => {
-  it('holds Mallorca and the four sandbox presets', () => {
-    expect(Object.keys(PERSONALITIES)).toEqual(['mallorca', 'mira', 'ingrid', 'lola', 'nina']);
+  it('holds the nine characters and the neutral reference', () => {
+    expect(Object.keys(PERSONALITIES)).toEqual([
+      'mallorca',
+      'ingrid',
+      'mira',
+      'nina',
+      'lola',
+      'sol',
+      'rita',
+      'vera',
+      'greta',
+      'neutral',
+    ]);
     expect(PERSONALITIES.mallorca).toBe(MALLORCA);
+  });
+
+  it('gives every character the traits of the spec', () => {
+    const table: Record<string, number[]> = {
+      mallorca: [0.4, 0.2, 0.4, 0.5, 0.1, 0.7, 0.35],
+      ingrid: [0.2, 0.8, -0.2, -0.4, -0.8, 0.8, 0.85],
+      mira: [0.3, 0.2, 0.2, 0.9, 0.1, 0.5, 0.3],
+      nina: [-0.3, 0.8, -0.4, 0.3, 0.8, 0.3, 0.55],
+      lola: [0.5, -0.6, 0.7, 0.2, 0.8, 0.1, 0.08],
+      sol: [0.8, -0.5, 0.9, 0.5, -0.2, 0.4, 0.2],
+      rita: [0.8, -0.7, 0.9, -0.6, -0.4, 0.3, 0.2],
+      vera: [-0.4, 0.8, 0.4, -0.5, 0.6, 0.2, 0.5],
+      greta: [-0.6, 0.5, -0.8, 0.2, 0.2, 0.6, 0.6],
+      neutral: [0, 0, 0, 0, 0, 0.5, 0.3],
+    };
+    for (const [key, p] of Object.entries(PERSONALITIES)) {
+      const b = p.bigFive;
+      expect([
+        b.openness,
+        b.conscientiousness,
+        b.extraversion,
+        b.agreeableness,
+        b.neuroticism,
+        p.control,
+        p.suppression,
+      ]).toEqual(table[key]);
+    }
   });
 
   it('keeps every trait in its range', () => {
