@@ -1,4 +1,4 @@
-import { EMOTIONS, EMOTION_PAD, clamp } from './emotions.ts';
+import { APPROACH, EMOTIONS, EMOTION_PAD, clamp } from './emotions.ts';
 import type { Emotions, Pad } from './emotions.ts';
 
 export interface MoodConfig {
@@ -91,6 +91,42 @@ export function stepMood(mood: Pad, e: Emotions, dt: number, frame: MoodFrame): 
     ];
   }
   return clampPad(next);
+}
+
+function approachCenter(e: Emotions): { center: number; intensity: number } | null {
+  let sum = 0;
+  let weight = 0;
+  let count = 0;
+  for (const name of EMOTIONS) {
+    const v = e[name];
+    if (v >= ACTIVE) {
+      sum += v * APPROACH[name];
+      weight += v;
+      count++;
+    }
+  }
+  return count === 0 ? null : { center: sum / weight, intensity: Math.min(1, weight / count) };
+}
+
+function toward(from: number, to: number, distance: number): number {
+  return Math.abs(to - from) <= distance ? to : from + Math.sign(to - from) * distance;
+}
+
+export function stepApproach(
+  approach: number,
+  e: Emotions,
+  dt: number,
+  config: MoodConfig,
+): number {
+  const c = approachCenter(e);
+  if (!c) {
+    return toward(approach, 0, (SQRT3 / config.returnTimeS) * dt);
+  }
+  const step = (c.intensity / config.changeTimeS) * dt;
+  if (approach * c.center < c.center * c.center) {
+    return clamp(toward(approach, c.center, step));
+  }
+  return clamp(approach + Math.sign(c.center) * step);
 }
 
 export function octantOf(p: Pad): {

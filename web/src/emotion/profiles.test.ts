@@ -43,6 +43,43 @@ describe('PERSONALITIES', () => {
 });
 
 describe('setPersonality', () => {
+  it('keeps emotions, mood, approach, pressure and the impulses still rising', () => {
+    const engine = createEngine(MALLORCA);
+    engine.event({ kind: 'chat', signal: 'tease' });
+    engine.event({
+      kind: 'opponentBet',
+      sizeBb: 10,
+      equity: 0.5,
+      raise: true,
+    });
+    engine.step(120);
+    engine.event({ kind: 'bluff', succeeded: false, potBb: 40 });
+    const before = engine.snapshot();
+    engine.setPersonality(PERSONALITIES.lola);
+    const after = engine.snapshot();
+    const keep = ({
+      emotions,
+      mood,
+      approach,
+      pressure,
+      prospect,
+      sessionNetBb,
+      time,
+    }: typeof before) => ({
+      emotions,
+      mood,
+      approach,
+      pressure,
+      prospect,
+      sessionNetBb,
+      time,
+    });
+    expect(before.approach).not.toBe(0);
+    expect(keep(after)).toEqual(keep(before));
+    engine.step(2);
+    expect(engine.snapshot().emotions.shame).toBeGreaterThan(before.emotions.shame + 0.3);
+  });
+
   it('keeps the feeling and changes the traits, and reset starts at the new default mood', () => {
     const engine = createEngine(MALLORCA);
     engine.event({ kind: 'result', netBb: -40, lastEquity: 0.9 });

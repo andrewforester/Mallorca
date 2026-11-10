@@ -12,7 +12,7 @@ import {
 } from './emotions.ts';
 import type { Emotions } from './emotions.ts';
 import { createEngine } from './engine.ts';
-import { emotionCenter, octantOf, stepMood } from './mood.ts';
+import { GAME_MOOD, emotionCenter, octantOf, stepApproach, stepMood } from './mood.ts';
 import { defaultMoodOf, traitsOf } from './personality.ts';
 import type { Personality } from './personality.ts';
 import { MALLORCA } from './profiles.ts';
@@ -224,6 +224,31 @@ describe('mood', () => {
   it('names the octant and its strength', () => {
     expect(octantOf([0.25, -0.18, 0.12])).toEqual({ octant: 'relaxed', strength: 'slightly' });
     expect(octantOf([-0.7, 0.8, 0.6]).octant).toBe('hostile');
+  });
+});
+
+describe('approach', () => {
+  const held = (e: Partial<Emotions>, seconds: number, start = 0): number => {
+    let approach = start;
+    for (let t = 0; t < seconds; t++) {
+      approach = stepApproach(approach, withEmotions(e), 1, GAME_MOOD);
+    }
+    return approach;
+  };
+
+  it('leans in under steady anger and pulls back under steady shame', () => {
+    expect(held({ anger: 0.8 }, 600)).toBeGreaterThan(0.2);
+    expect(held({ shame: 0.8 }, 600)).toBeLessThan(-0.2);
+  });
+
+  it('returns to zero without emotions and never overshoots', () => {
+    const seconds = Math.ceil((GAME_MOOD.returnTimeS / Math.sqrt(3)) * 0.5);
+    let approach = 0.5;
+    for (let t = 0; t < seconds; t++) {
+      approach = stepApproach(approach, noEmotions(), 1, GAME_MOOD);
+      expect(approach).toBeGreaterThanOrEqual(0);
+    }
+    expect(approach).toBe(0);
   });
 });
 
