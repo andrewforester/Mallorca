@@ -1,0 +1,256 @@
+.menu-log {
+  display: none;
+}
+
+@media not (min-aspect-ratio: 1/1) {
+  .menu-log {
+    display: block;
+  }
+
+  .log-toggle {
+    display: none;
+  }
+
+  .app:has(.table-layout) .status-info {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .app:has(.table-layout) .menu-glyph {
+    display: none;
+  }
+
+  .app:has(.table-layout) .menu-word {
+    display: inline;
+  }
+
+  .app:has(.table-layout) .status-bar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    min-height: 44px;
+    padding: max(4px, env(safe-area-inset-top)) 16px 0;
+    color: #ffffff;
+    font-size: 14px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  }
+
+  .app:has(.table-layout) .status-bar > .status-actions > .status-button,
+  .app:has(.table-layout) .status-bar .menu-summary {
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .table-layout:not(.table-layer-open) {
+    --card-width: 52px;
+    --hole-width: 62px;
+    --back-width: 40px;
+    --shown-width: 40px;
+    --board-gap: 8px;
+    --chip-dot-size: 24px;
+    --bet-font: 20px;
+    --dealer-size: 32px;
+  }
+
+  .table-layout:not(.table-layer-open) .face-frame {
+    flex: 1 1 316px;
+    min-height: 200px;
+    max-height: 400px;
+    margin: 0;
+    border-radius: 0;
+    -webkit-mask-image: linear-gradient(#000000 74%, transparent);
+    mask-image: linear-gradient(#000000 74%, transparent);
+  }
+
+  .table-layout:not(.table-layer-open) .seat-top {
+    z-index: 2;
+    margin-top: -68px;
+    padding-bottom: 48px;
+  }
+
+  .seat-top .seat-side {
+    display: grid;
+    grid-template-rows: 24px var(--dealer-size);
+    row-gap: 8px;
+    align-items: center;
+    justify-items: start;
+    top: calc(var(--seat-cards-height) + 8px);
+    left: calc(50% + 80px);
+    transform: none;
+  }
+
+  .seat-top .seat-side .bet-chips {
+    grid-row: 1;
+  }
+
+  .seat-top .seat-side .dealer-slot {
+    grid-row: 2;
+  }
+
+  .seat-block {
+    min-width: 128px;
+    padding: 6px 12px;
+  }
+
+  .seat-name {
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .seat-stack {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .seat-strip {
+    height: 24px;
+    padding: 0 12px;
+    font-size: 14px;
+    line-height: 24px;
+  }
+
+  .table-board {
+    position: relative;
+    flex: 0 0 auto;
+    align-self: stretch;
+    padding: 0;
+  }
+
+  .table-layout:not(.table-layer-open) .board-row {
+    position: static;
+  }
+
+  .pot-block {
+    position: absolute;
+    top: calc(100% + 24px + var(--hole-width) * 0.7);
+    left: 16px;
+    z-index: 3;
+    transform: translateY(-50%);
+  }
+
+  .pot {
+    height: 32px;
+    padding: 0 12px;
+    gap: 6px;
+    align-items: center;
+    border-radius: 16px;
+  }
+
+  .pot-amount,
+  .pot-total:only-child {
+    font-size: 16px;
+  }
+
+  .pot-total {
+    font-size: 12px;
+  }
+
+  .seat-bottom {
+    padding-top: 24px;
+    padding-bottom: 16px;
+  }
+
+  .seat-bottom .seat-cards {
+    gap: 4px;
+  }
+
+  .seat-bottom .seat-side {
+    display: grid;
+    grid-template-rows: 24px var(--dealer-size);
+    row-gap: 50px;
+    align-items: center;
+    justify-items: start;
+    top: calc(24px + var(--hole-width) * 0.27);
+    left: calc(50% + 80px);
+    transform: none;
+  }
+
+  .seat-bottom .seat-side .bet-chips {
+    grid-row: 1;
+  }
+
+  .seat-bottom .seat-side .dealer-slot {
+    grid-row: 2;
+  }
+
+  .action-panel {
+    gap: 16px;
+    padding: 0 16px max(34px, env(safe-area-inset-bottom));
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .action-bar {
+    gap: 16px;
+  }
+
+  .bet-sheet {
+    gap: 8px;
+  }
+
+  .bet-sheet-head,
+  .bet-limits {
+    display: none;
+  }
+
+  .bet-presets {
+    gap: 8px;
+  }
+
+  .bet-preset {
+    flex-direction: row;
+    gap: 6px;
+    min-height: 44px;
+    background: var(--color-surface);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .bet-preset[aria-pressed='true'] {
+    border-width: 2px;
+  }
+
+  .bet-preset-value {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .bet-slider {
+    align-items: center;
+    gap: 12px;
+  }
+
+  .bet-step {
+    background: var(--color-surface);
+  }
+
+  .bet-range::-webkit-slider-runnable-track {
+    height: 4px;
+  }
+
+  .bet-range::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    margin-top: -8px;
+  }
+
+  .bet-range::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+  }
+
+  .action-buttons {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .action-buttons .button {
+    min-height: 56px;
+    border-radius: 14px;
+    font-size: 18px;
+  }
+}

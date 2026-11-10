@@ -28,7 +28,7 @@ export default defineConfig({
     {
       name: 'small-phone',
       use: DEVICES['small-phone'],
-      testMatch: ['**/layout.spec.ts', '**/table.spec.ts'],
+      testMatch: ['**/layout.spec.ts', '**/table.spec.ts', '**/phone.spec.ts'],
     },
     {
       name: 'desktop',
