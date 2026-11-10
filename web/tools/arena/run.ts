@@ -7,6 +7,8 @@ import { handRecord } from '../../src/game/records/record.ts';
 import { botFactory, botLabel, prepareBots } from './bots.ts';
 import { playPair } from './match.ts';
 import { summarize } from './stats.ts';
+import { pokerStats } from './pokerStats.ts';
+import type { PokerStats } from './pokerStats.ts';
 import { styleStats } from './styleStats.ts';
 import type { StyleStats } from './styleStats.ts';
 import type { WorkerInput, WorkerResult } from './worker.ts';
@@ -39,6 +41,7 @@ export interface Report {
   finishedAt: string;
   handsFile: string | null;
   styleStats?: StyleStats;
+  pokerStats?: PokerStats;
 }
 
 export function commitHash(): string {
@@ -117,9 +120,13 @@ function sideOf(hand: number, session: number): 0 | 1 {
   return Math.floor(hand / session) % 2 === 0 ? 0 : 1;
 }
 
-function styleOfA(results: WorkerResult[], session: number): StyleStats {
+function styleOfA(
+  results: WorkerResult[],
+  session: number,
+): { styleStats: StyleStats; pokerStats: PokerStats } {
   const hands = results.flatMap((result) => result.hands ?? []);
-  return styleStats(hands, (index) => sideOf(index, session));
+  const seat = (index: number) => sideOf(index, session);
+  return { styleStats: styleStats(hands, seat), pokerStats: pokerStats(hands, seat) };
 }
 
 export async function runArena(options: ArenaOptions): Promise<Report> {
@@ -163,6 +170,6 @@ export async function runArena(options: ArenaOptions): Promise<Report> {
       options.saveHands === undefined
         ? null
         : relative(options.reportDir ?? process.cwd(), options.saveHands),
-    ...(options.stats === true ? { styleStats: styleOfA(results, session) } : {}),
+    ...(options.stats === true ? styleOfA(results, session) : {}),
   };
 }
