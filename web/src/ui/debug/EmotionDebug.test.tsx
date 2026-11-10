@@ -166,6 +166,17 @@ describe('EmotionDebug', () => {
     expect(text).toContain('she feels (hand over');
   });
 
+  it('copies the hand still in play too', async () => {
+    const writeText = vi.fn((_text: string) => Promise.resolve());
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    const store = memoryStore();
+    const session = await seated(true, store);
+    const panel = await opened(session, store);
+    fireEvent.click(within(panel).getByRole('button', { name: COPY.journal.copy }));
+    await waitFor(() => expect(writeText).toHaveBeenCalled());
+    expect(writeText.mock.calls[0]?.[0]).toContain('*** HAND IN PROGRESS ***');
+  });
+
   it('switches between her feelings and her conversation and remembers the tab', async () => {
     const session = await seated();
     const panel = await opened(session);

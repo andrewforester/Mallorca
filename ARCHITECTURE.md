@@ -715,6 +715,8 @@ text)` (the caller's localized label) append the player's line at once, plan an 
 - `feelings.ts`: the recorder's `felt(persona, moments)` runs after each batch of events and takes the journal
   entries after its own cursor. An entry of a moment points at that moment's event; an entry made between batches
   (a chat signal, a narrowed range) points at the event before it, and one from before the hand is dropped.
+  `draft(mode, bot)` builds the record of the hand in play, or null once it is saved; the session reads it as
+  `handInPlay()`.
 - `toPokerStars(records)` (`pokerstars.ts`) returns PokerStars hand history text, hands separated by two blank
   lines. The hand number is `Date.parse(playedAt) * 1000 + handNumber % 1000`. Seat `n + 1` is seat index `n`;
   the hero (`Dealt to`) is `humanSeat`, or seat 0 when it is null. Amounts carry no currency, the blinds read
@@ -726,7 +728,8 @@ text)` (the caller's localized label) append the player's line at once, plan an 
 - `toFeelingsText(records, said)` is the same text with both hands dealt under `*** HOLE CARDS ***` and, after
   each event, one `~ she feels (...)` line per recorded feeling (a deal, street or own move without impulses is left
   out): the event, the impulses with their reasons, the
-  mood words and, when `said(journalId)` gives it, her line. The debug panel copies it; the menu offers only the
+  mood words and, when `said(journalId)` gives it, her line. A hand without `handEnded` ends with
+  `*** HAND IN PROGRESS ***` instead of the summary. The debug panel copies it; the menu offers only the
   plain text, which never shows her folded cards.
 - `HandStore` (`store.ts`) has `add`, `list(sessionId?)` and `clear`. `list` returns records by `handNumber`
   ascending within one session; without a session id it returns every record. `memoryStore()` is a map.
@@ -837,8 +840,8 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   the derived traits), state (`debug-emotions`, `debug-mood` with the octant and the default mood marked,
   `debug-load`), play bias (`debug-bias`, the five multipliers around 1 and the bias sent), the last decision
   (`debug-decision`, her cards, each move with its blueprint and biased probability, the chosen one marked) and the
-  journal (`debug-journal`, newest first, and Copy history: `toFeelingsText` of the session's finished hands from the
-  `HandStore` passed to the panel, with her lines from the conversation trace). Its colours follow `ui/styles/tokens.css`.
+  journal (`debug-journal`, newest first, and Copy history: `toFeelingsText` of the session's hands from the
+  `HandStore` passed to the panel and the hand in play (`handInPlay()`), with her lines from the conversation trace). Its colours follow `ui/styles/tokens.css`.
 - `scripts/check-dist.ts` (over `distTraces` in `scripts/distTraces.ts`, tested under `npm test`) runs at the end
   of `npm run build` and fails when any file in `dist` contains
   `emotion-debug` (the panel and its copy), `sentBias` (the session's debug state) or `engineBias`

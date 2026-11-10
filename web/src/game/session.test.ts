@@ -558,6 +558,19 @@ describe('session recording', () => {
     expect(feelings.some((f) => f.event.kind === 'deal')).toBe(true);
   });
 
+  it('gives the hand in play with her feelings until it is saved', async () => {
+    const store = memoryStore();
+    const session = record(store, shovingBot());
+    expect(session.getState().handInPlay()).toBeNull();
+    await session.getState().start();
+    const live = session.getState().handInPlay();
+    expect(live?.id).toBe('s1-1');
+    expect(live?.events.some((e) => e.type === 'handEnded')).toBe(false);
+    expect(live?.feelings?.length).toBeGreaterThan(0);
+    await session.getState().act({ kind: 'fold' });
+    expect(session.getState().handInPlay()).toBeNull();
+  });
+
   it('keeps dealing when the store rejects', async () => {
     const store: HandStore = {
       add: () => Promise.reject(new Error('quota')),

@@ -239,7 +239,8 @@ function formatHand(record: HandRecord, extras: Extras = PLAIN): string {
     onEvent(w, event, index);
     w.lines.push(...w.after(index));
   });
-  return [...w.lines, ...summary(w)].join('\n');
+  const ended = events.some((event) => event.type === 'handEnded');
+  return [...w.lines, ...(ended ? summary(w) : ['*** HAND IN PROGRESS ***'])].join('\n');
 }
 
 export function toPokerStars(records: HandRecord[]): string {

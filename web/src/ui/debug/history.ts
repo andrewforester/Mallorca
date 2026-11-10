@@ -16,7 +16,10 @@ export async function copyHistory(store: HandStore, session: Session): Promise<v
     return;
   }
   try {
-    const records = await store.list(sessionId);
+    const saved = await store.list(sessionId);
+    const live = session.getState().handInPlay();
+    const fresh = live !== null && !saved.some((r) => r.id === live.id);
+    const records = fresh ? [...saved, live] : saved;
     await navigator.clipboard?.writeText(toFeelingsText(records, saidIn(debug?.conversation)));
   } catch {
     return;

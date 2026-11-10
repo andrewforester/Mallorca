@@ -7,7 +7,6 @@ import type { Decision } from '../brains/index.ts';
 import { toObservations } from '../brains/index.ts';
 import {
   apply,
-  createTable,
   handHistory,
   legalActionsOf,
   startHand,
@@ -23,6 +22,7 @@ import type {
   TableMode,
 } from '../engine/index.ts';
 import { withFallback } from './botClient.ts';
+import { freshTable } from './freshTable.ts';
 import type { BotClient } from './botClient.ts';
 import { resolveIntent, toIntent } from './intent.ts';
 import type { Intent } from './intent.ts';
@@ -102,21 +102,6 @@ interface Runtime {
   face: SessionFace;
   probe: DebugProbe | null;
   trace: Her['trace'];
-}
-
-function freshTable(options: SessionOptions, mode: TableMode): Table {
-  const { names, startingStacks } = options;
-  const table = createTable(names, mode, 0);
-  if (startingStacks === undefined) {
-    return table;
-  }
-  return {
-    ...table,
-    seats: [
-      { name: names[0], stack: startingStacks[0] },
-      { name: names[1], stack: startingStacks[1] },
-    ],
-  };
 }
 
 function tally(rt: Runtime, table: Table): SessionResult {
@@ -346,6 +331,7 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
     setCoach: (on) => switchCoach(rt, on),
     setFace: (on) => rt.face.setOn(on),
     faceNow: () => rt.face.now(),
+    handInPlay: () => rt.recorder.draft(rt.get().table.mode, botRecord(rt.opponent)),
     setPersonality: (choice) => rt.probe?.choose(choice),
     resetFeeling: () => rt.probe?.reset(),
   };

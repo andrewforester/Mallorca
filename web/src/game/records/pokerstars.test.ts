@@ -233,6 +233,13 @@ describe('toFeelingsText', () => {
     ]);
   });
 
+  it('ends a hand still in play without a summary', () => {
+    const live = recordOf([2000, 2000], 'Ah Kd', '7c 2s', 'Qh Jd 4c 9s 3h', [raiseTo(60)]);
+    const text = toFeelingsText([live]);
+    expect(text.endsWith('*** HAND IN PROGRESS ***')).toBe(true);
+    expect(text).not.toContain('*** SUMMARY ***');
+  });
+
   it('leaves the plain PokerStars text without feelings', () => {
     expect(toPokerStars([felt])).not.toContain('his raise');
   });
