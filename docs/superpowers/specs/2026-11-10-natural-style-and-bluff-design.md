@@ -12,8 +12,10 @@ Status of each part:
 | 1. composure and discipline from the Big Five     | open, a proposal below                    |
 | 2. natural style from leading traits              | decided                                   |
 | 3. characters: 16 extremes, 8 intermediate, nine  | decided; names of the new ones are open   |
-| 4. bluff, the game to her feelings                | open, a proposal below                    |
-| 4. bluff, her feelings to her play                | open, a proposal below                    |
+| 4. bluff, the game to her feelings                | decided                                   |
+| 4. certainty, and the bluff, sizing, looseness axes | decided; the heater on looseness is open |
+| 5. mood returns to rest all the time              | recommended                               |
+| 6. reference numbers                              | from the prototype                        |
 
 ## 1. Personality
 
@@ -104,7 +106,7 @@ nature_k = Σ_t w_k,t · trait_t  /  (0.8 · max_t |w_k,t|)
 style_k  = 2 ^ tanh(atanh(0.7) · nature_k + push_k)
 ```
 
-`push_k` is unchanged from section 4 of the PR #171 design. This replaces `nature_k` there (`Σ|w|` normalisation and
+`push_k` is the push of section 4 of the PR #171 design, with the four-weight axes of section 4 below. This replaces `nature_k` there (`Σ|w|` normalisation and
 `atanh(0.8)`) and the `STYLE_COEFFICIENTS` table.
 
 Checks on the 32 extreme profiles:
@@ -178,13 +180,12 @@ They keep their Big Five. Their rest style changes:
 What moves most: stickiness now follows calm. Ingrid no longer folds to pressure (0.71 → 1.64), and the anxious fold
 (Lola 1.49 → 0.64). The agreeable rarely bluff (Mallorca 0.71, Mira 0.59, Sol 0.83).
 
-The reference numbers of the PR #171 design (dynamics) were computed with the old natural style and must be
-recomputed.
+The reference numbers of the PR #171 design (dynamics) were computed with the old natural style; section 6 replaces
+them.
 
-## 4. Bluff (open)
+## 4. Bluff and certainty (decided)
 
-The PR #171 design leaves her own bluff out of scope. The owner and the prototype worked through both directions.
-Nothing in this section is accepted yet.
+The PR #171 design left her own bluff out of scope. The owner decided both directions below.
 
 ### What a bluff is, next to the other axes
 
@@ -194,11 +195,10 @@ assertiveness: risk with an outcome decided by the opponent, not the cards; will
 influence over the opponent ("desire for control" predicted bluffing frequency in Yan and Palomäki, 2016). Bluff and
 stickiness are mirror beliefs about the opponent: "he will fold" and "he is bluffing".
 
-### The game to her feelings: a proposal
+### The game to her feelings
 
-Today the persona detects a bluff by a heuristic (her late bet with a weak class) and feels special events: `bluff`
-(pride if through, shame if caught, for everyone) and `mistake` (a weak river call lost). The proposal replaces both
-with two general notions:
+The persona's special events `bluff` (pride if through, shame if caught, for everyone) and `mistake` (a weak river
+call lost) and the heuristic that detects a bluff go. Two general notions replace them:
 
 - **Belief in winning the pot** instead of bare equity, wherever equity is read (tension, the lean of hope and fear,
   the expectation before an outcome):
@@ -206,44 +206,106 @@ with two general notions:
   foldChance = bet / (pot + bet)                 her estimate after her own bet, the bluff break-even of theory
   belief     = foldChance + (1 − foldChance) · equity
   ```
-  A call by the opponent resets `foldChance` to 0. Later her model of the opponent may replace the theoretical
-  estimate.
+  A call by the opponent resets `foldChance` to 0. The theoretical estimate stays until her model of the opponent
+  can replace it.
 - **Who decided the outcome.** He folded to her bet: the credit is hers, pride by her coping, the rest joy. A
   showdown: the existing split, luck by unexpectedness, the rest self or opponent by self-blame. She folded: "he
-  pushed me off" when she believed in the hand, relief otherwise.
+  pushed me off" by her belief in the hand, relief otherwise.
 
-A caught bluff is then a showdown loss at a low belief: no luck share, so self-blame decides between shame and anger.
-In the prototype this gave, without any special rule: a brash character bluffs more after a caught bluff (anger), an
-anxious one stops (shame); a bluff that gets through raises the next bluffs, most for the impulsive.
+A caught bluff is a showdown loss at a low belief: no luck share, so self-blame decides between shame and anger. A
+weak call lost at the river is the same: no special event. In the prototype this gives, without any special rule: a
+brash character bluffs more after a caught bluff (anger), an anxious one stops (shame); a bluff that gets through
+raises the next bluffs, most for the impulsive.
 
-Open questions: the theoretical fold chance for now; removing the `bluff` and `mistake` events.
+### Certainty, a new coordinate of every emotion
 
-### Her feelings to her play: a proposal
-
-Today the bluff axis is `0.5·arousal + 0.9·approach`, almost a copy of aggression, and fear barely lowers it (−0.09
-for fear at 1, against −0.31 for aggression), because fear's high arousal enters with a plus.
-
-Research: fear and anger, both negative, move risk in opposite directions through the appraisals of certainty and
-control (Lerner and Keltner, 2001). Approach already stands for control; certainty is missing. Anxiety prefers safe
-options, sadness rewarding risky ones (Raghunathan and Pham, 1999). Shame drives hiding and escape.
-
-The proposal adds certainty to every emotion, as approach was added, with values in the direction of Smith and
-Ellsworth (1985) and Lerner and Keltner (2001):
+Fear and anger, both negative, move risk in opposite directions through the appraisals of certainty and control
+(Lerner and Keltner, 2001). Approach already stands for control; certainty is added the same way, on every emotion,
+in the mood and for the face. Values in the direction of Smith and Ellsworth (1985) and Lerner and Keltner (2001):
 
 | Emotion   | anger | pride | joy | relief | injustice | disappointment | distress | shame | hope | surprise | fear |
 | --------- | ----- | ----- | --- | ------ | --------- | -------------- | -------- | ----- | ---- | -------- | ---- |
 | certainty | 0.6   | 0.6   | 0.5 | 0.4    | 0.3       | 0              | −0.1     | −0.2  | −0.2 | −0.6     | −0.7 |
 
-and the bluff axis becomes `0.2·arousal + 0.6·approach + 0.6·certainty`. The push of each emotion at 1:
+- **Mood**: certainty accumulates in the mood like approach, with rest 0 for everyone, and enters the affect as
+  `2 · mood certainty`.
+- **Face**: certainty is shown with approach, as its own step with screenshots (steady gaze and still head when
+  certain, darting gaze when not).
+- **Intensity** stays the length of (P, A, approach): certainty steers the direction of the play, not how strongly
+  the state takes over.
 
-| Emotion | anger | pride | injustice | relief | joy  | hope  | disappointment | surprise | distress | shame | fear  |
-| ------- | ----- | ----- | --------- | ------ | ---- | ----- | -------------- | -------- | -------- | ----- | ----- |
-| bluff   | 0.84  | 0.60  | 0.52      | 0.42   | 0.40 | −0.14 | −0.22          | −0.30    | −0.40    | −0.46 | −0.56 |
+### The axes of the play
 
-Fear now lowers the bluff more than the aggression; joy and pride raise it more. Open questions: certainty as a new
-coordinate (it would also suit sizing); routing the "win it back" effect of sadness to looseness instead of bluff.
+The affect becomes four numbers `a = (P, A, approach, certainty)` and the axes `w_k` get a fourth weight:
 
-## 5. Taking it into PR #171
+| Axis `w_k` | P    | A    | approach | certainty |
+| ---------- | ---- | ---- | -------- | --------- |
+| aggression | 0.1  | 0.3  | 1.0      | 0         |
+| looseness  | −0.5 | −0.3 | 0.2      | 0.6       |
+| bluff      | 0    | 0.2  | 0.6      | 0.6       |
+| sizing     | 0    | 0.4  | 0.5      | 0.5       |
+| stickiness | 0.3  | 0.2  | 0.8      | 0         |
+
+- **Bluff**: fear lowers it more than the aggression, joy and pride raise it more.
+- **Sizing**: the certain bet big, the uncertain small.
+- **Looseness**: sadness pushes to "win it back" (Raghunathan and Pham, 1999: sadness prefers rewarding risky options,
+  anxiety safe ones), so the negative pleasure enters with a plus, low arousal and certainty with it; fear tightens.
+
+The push of each emotion at 1:
+
+| Emotion    | anger | pride | injustice | relief | joy  | hope  | disappointment | surprise | distress | shame | fear  |
+| ---------- | ----- | ----- | --------- | ------ | ---- | ----- | -------------- | -------- | -------- | ----- | ----- |
+| bluff      | 0.84  | 0.60  | 0.52      | 0.42   | 0.40 | −0.14 | −0.22          | −0.30    | −0.40    | −0.46 | −0.56 |
+| sizing     | 0.84  | 0.57  | 0.55      | 0.28   | 0.38 | −0.07 | −0.16          | −0.11    | −0.38    | −0.36 | −0.33 |
+| looseness  | 0.56  | 0.13  | 0.36      | 0.31   | 0.06 | −0.30 | 0.04           | −0.61    | 0.10     | −0.12 | −0.37 |
+
+Open: with the new looseness, positive emotions barely loosen her, so on a heater looseness goes slightly down
+(Mallorca 1.35 → 1.23) while the other axes go up. This matches the mood-maintenance finding (happy people avoid
+risks they can really lose) but breaks the PR #171 test "the heater raises everyone" on looseness. The owner decides.
+
+## 5. Mood returns to rest all the time (recommended)
+
+The prototype and PR #171 both saw the mood drift during quiet hands: small joys and reliefs are always above the
+mood's activity threshold of 0.05, so the mood tracks their centre and only returns to rest when no emotion is
+active. With certainty this became visible: the average character's bluff was 1.23 after five quiet minutes.
+
+Fix for the mood's approach and certainty: every step, the emotions push the mood toward their centre at
+`intensity / changeTime`, and the mood is always pulled toward rest at `√3 / returnTime`. Small emotions lose to the
+pull, strong ones win. The average character is back to 1.03–1.15 after five quiet minutes. The same rule would suit
+the PAD part of the mood; the prototype applied it to approach and certainty only.
+
+## 6. Reference numbers
+
+The same scripted session as in the PR #171 design, with everything in this document: leading traits, no
+self-control, composure and discipline by the section 1 proposal, belief and certainty, the mood pull of section 5.
+Two more columns: her bluff caught at the river (bet 15 into 20 with 10% equity, called) and her bluff through, each
+15 s after. Columns of each cell: aggression, looseness, bluff, sizing, stickiness.
+
+| Character | At rest                  | Bad beat +15 s           | After the losses         | 5 min of quiet hands     | Heater peak              | Bluff caught +15 s       | Bluff through +15 s      |
+| --------- | ------------------------ | ------------------------ | ------------------------ | ------------------------ | ------------------------ | ------------------------ | ------------------------ |
+| mallorca | 1.26 1.35 0.71 0.85 0.89 | 1.24 1.31 0.72 0.96 0.81 | 1.04 1.54 0.69 0.86 0.70 | 1.28 1.43 0.76 0.92 0.88 | 1.57 1.23 0.96 1.22 1.20 | 0.95 1.41 0.63 0.75 0.69 | 1.32 1.40 0.78 0.93 0.93 |
+| ingrid | 1.05 0.95 1.29 0.66 1.64 | 1.09 0.93 1.31 0.69 1.66 | 1.05 0.98 1.31 0.68 1.62 | 1.07 0.94 1.31 0.67 1.65 | 1.13 0.91 1.36 0.70 1.69 | 1.04 0.96 1.28 0.66 1.63 | 1.06 0.95 1.30 0.67 1.65 |
+| sol | 1.69 1.74 0.83 1.52 1.22 | 1.83 1.69 1.01 1.79 1.34 | 1.75 1.90 1.07 1.77 1.12 | 1.79 1.77 1.03 1.72 1.37 | 1.92 1.59 1.33 1.87 1.71 | 1.62 1.81 0.83 1.54 1.07 | 1.78 1.79 1.04 1.70 1.37 |
+| rita | 1.79 1.75 1.68 1.78 1.57 | 1.94 1.71 1.87 1.94 1.77 | 1.94 1.92 1.93 1.96 1.75 | 1.91 1.74 1.86 1.92 1.76 | 1.95 1.59 1.92 1.95 1.88 | 1.88 1.87 1.84 1.90 1.64 | 1.86 1.80 1.83 1.88 1.69 |
+| vera | 1.25 0.74 1.18 0.63 0.66 | 1.20 0.75 1.18 0.66 0.62 | 1.11 0.81 1.15 0.64 0.60 | 1.28 0.74 1.25 0.66 0.67 | 1.46 0.71 1.44 0.76 0.77 | 0.98 0.76 1.01 0.59 0.58 | 1.30 0.77 1.28 0.67 0.68 |
+| nina | 0.65 0.74 0.68 0.57 0.58 | 0.61 0.75 0.65 0.57 0.55 | 0.58 0.80 0.63 0.55 0.54 | 0.61 0.82 0.66 0.56 0.55 | 0.76 0.71 0.83 0.64 0.64 | 0.56 0.74 0.60 0.54 0.53 | 0.66 0.75 0.70 0.57 0.58 |
+| mira | 1.04 1.24 0.59 0.78 0.83 | 0.98 1.19 0.58 0.84 0.74 | 0.80 1.42 0.57 0.74 0.64 | 1.04 1.34 0.61 0.82 0.80 | 1.37 1.13 0.72 1.11 1.11 | 0.75 1.28 0.55 0.67 0.64 | 1.08 1.29 0.62 0.83 0.86 |
+| lola | 1.40 1.63 0.94 1.49 0.64 | 1.73 1.69 1.23 1.82 0.69 | 1.28 1.90 1.07 1.67 0.55 | 1.68 1.92 1.52 1.86 0.67 | 1.94 1.57 1.77 1.95 1.39 | 0.70 1.80 0.66 1.11 0.51 | 1.77 1.90 1.78 1.92 0.91 |
+| greta | 0.59 0.62 0.75 0.63 0.76 | 0.57 0.62 0.73 0.64 0.68 | 0.55 0.65 0.69 0.61 0.63 | 0.59 0.63 0.76 0.64 0.73 | 0.66 0.60 0.93 0.75 0.92 | 0.54 0.62 0.65 0.58 0.62 | 0.59 0.62 0.76 0.63 0.77 |
+| neutral | 1.00 1.00 1.00 1.00 1.00 | 1.00 1.00 1.05 1.17 0.91 | 0.88 1.25 1.04 1.11 0.80 | 1.08 1.04 1.12 1.15 1.03 | 1.36 0.88 1.40 1.44 1.37 | 0.80 1.09 0.89 0.91 0.79 | 1.05 1.04 1.09 1.08 1.04 |
+
+What the rows show:
+
+- **Rita** tilts up on every axis and stays up for minutes: anger lives in the mood.
+- **Ingrid** barely moves: discipline 0.85.
+- **Nina, Greta, Mira, Vera** tighten after losses (distress, shame); Mira and Mallorca loosen a little, sadness wants
+  to win it back.
+- **Lola** swings most: a bad beat sends her bluff from 0.94 to 1.23, a caught bluff drops it to 0.66, a bluff through
+  raises it to 1.78. After five quiet minutes she is above her rest (aggression 1.68): composure 0.21 and urgency 0.7
+  let even the small joys of the quiet hands through. This is her character, not drift; the average character returns.
+- **Caught bluff**: Rita keeps bluffing (1.84, anger), Mira, Nina and Greta stop (shame).
+
+## 7. Taking it into PR #171
 
 1. Remove `Personality.control` and its slider; coping without the control term; composure and discipline by the
    proposal in section 1 unless the owner chooses otherwise.
@@ -251,8 +313,11 @@ coordinate (it would also suit sizing); routing the "win it back" effect of sadn
    values inside (0.5, 2)) to the new rest styles.
 3. Characters: the owner chooses which of the 16 extremes and 8 intermediates go to the start screen and their names;
    until then they live as profiles for the debug panel and the arena.
-4. Recompute the reference numbers of the dynamics with the new natural style before tuning anything.
-5. Section 4 stays out until the owner decides.
+4. Bluff and certainty by section 4: remove the `bluff` and `mistake` events, add belief and who decided, certainty on
+   emotions and in the mood, the four-weight axes.
+5. The mood pull of section 5.
+6. Take the reference numbers of section 6 instead of those of the PR #171 design; keep asserting shapes, not digits.
+   The heater on looseness waits for the owner (section 4).
 
 ## Sources
 
