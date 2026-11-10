@@ -130,6 +130,12 @@ describe('default output', () => {
     expect(report.styleStats.vpip).toBe(1);
     expect(report.styleStats.pfr).toBe(0);
     expect(report.styleStats.betFrequency).toBe(0);
+    expect(report.pokerStats.hands).toBe(8);
+    expect(report.pokerStats.limp.rate).toBe(1);
+    expect(report.pokerStats.steal).toEqual({ rate: 0, of: report.pokerStats.limp.of });
+    expect(r.stdout.split('\n')[2]).toMatch(
+      /^always-call poker: steal 0\.0% \(\d+\) limp 100\.0% \(\d+\) big blind defence \d+\.\d% \(\d+\) 3-bet .* went to showdown \d+\.\d% \(\d+\) won at showdown \d+\.\d% \(\d+\)$/,
+    );
     expect(r.stdout.split('\n')[1]).toMatch(
       /^always-call style: vpip 100\.0% pfr 0\.0% af \d+\.\d\d bet 0\.0% fold to bet \d+\.\d% raise \d+\.\d% bet size 0\.00 pot, preflop raise 0\.00 pot, river bluffs 0\.0% of 0 river bets over 8 hands, \d+ decisions after the flop, \d+ facing a bet$/,
     );
@@ -139,7 +145,9 @@ describe('default output', () => {
     const dir = mkdtempSync(join(tmpdir(), 'arena-'));
     const out = join(dir, 'r.json');
     expect(cli([...base, '--dir', dir, '--out', out, '--no-hands']).status).toBe(0);
-    expect(JSON.parse(readFileSync(out, 'utf8')).styleStats).toBeUndefined();
+    const report = JSON.parse(readFileSync(out, 'utf8'));
+    expect(report.styleStats).toBeUndefined();
+    expect(report.pokerStats).toBeUndefined();
   });
 
   it('--out and --save-hands write exactly those paths', () => {

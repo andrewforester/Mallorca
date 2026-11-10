@@ -4,6 +4,7 @@ import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { BOTS, botLabel, isBotName } from './bots.ts';
 import { resultsDir, runName } from './paths.ts';
+import type { PokerStats } from './pokerStats.ts';
 import { runArena } from './run.ts';
 
 const percent = (value: number): string => `${(value * 100).toFixed(1)}%`;
@@ -90,9 +91,34 @@ console.log(
   `${report.a} vs ${report.b}: ${signed(report.bbPer100)} ± ${interval} bb/100 over ${report.hands} hands in ${Math.round(report.durationMs / 1000)} s`,
 );
 
+const POKER_LABELS: [keyof Omit<PokerStats, 'hands'>, string][] = [
+  ['steal', 'steal'],
+  ['limp', 'limp'],
+  ['bigBlindDefence', 'big blind defence'],
+  ['threeBet', '3-bet'],
+  ['foldToThreeBet', 'fold to 3-bet'],
+  ['continuationBet', 'c-bet'],
+  ['foldToContinuationBet', 'fold to c-bet'],
+  ['donkBet', 'donk bet'],
+  ['checkRaise', 'check-raise'],
+  ['foldToFlopBet', 'fold to flop bet'],
+  ['foldToTurnBet', 'fold to turn bet'],
+  ['foldToRiverBet', 'fold to river bet'],
+  ['wentToShowdown', 'went to showdown'],
+  ['wonAtShowdown', 'won at showdown'],
+];
+
 const style = report.styleStats;
 if (style !== undefined) {
   console.log(
     `${report.a} style: vpip ${percent(style.vpip)} pfr ${percent(style.pfr)} af ${style.aggressionFactor.toFixed(2)} bet ${percent(style.betFrequency)} fold to bet ${percent(style.foldToBet)} raise ${percent(style.raiseFrequency)} bet size ${style.betSize.toFixed(2)} pot, preflop raise ${style.preflopRaiseSize.toFixed(2)} pot, river bluffs ${percent(style.riverBluffShare)} of ${style.riverBets} river bets over ${style.hands} hands, ${style.postflopDecisions} decisions after the flop, ${style.facedBets} facing a bet`,
   );
+}
+
+const poker = report.pokerStats;
+if (poker !== undefined) {
+  const parts = POKER_LABELS.map(
+    ([key, label]) => `${label} ${percent(poker[key].rate)} (${poker[key].of})`,
+  );
+  console.log(`${report.a} poker: ${parts.join(' ')}`);
 }
