@@ -1,3 +1,4 @@
+use super::order::Order;
 use super::translate::sample;
 use super::{Model, Spot};
 use crate::tree::{ActionKind, Street};
@@ -117,6 +118,22 @@ pub fn sample_weighted(weights: &[f64], draw: f64) -> usize {
         .unwrap_or(weights.len() - 1)
 }
 
+fn fold_order(model: &Model, spot: &Spot<'_>, width: usize) -> Option<Order> {
+    let fold = spot.actions.iter().position(|a| a.0 == ActionKind::Fold)?;
+    let buckets = model.file.tree.buckets()[spot.street.as_index()];
+    let folds: Vec<Option<f64>> = (0..buckets)
+        .map(|b| {
+            let row = model
+                .file
+                .try_probabilities(spot.id, b)
+                .filter(|r| r.len() == width)?;
+            let total: f64 = row.iter().map(|&p| f64::from(p)).sum();
+            (total > 0.0).then(|| f64::from(row[fold]) / total)
+        })
+        .collect();
+    Some(model.order(spot.street).by_fold(&folds))
+}
+
 pub(super) fn shifted_row(
     model: &Model,
     spot: &Spot<'_>,
@@ -127,7 +144,8 @@ pub(super) fn shifted_row(
     if delta == 0.0 {
         return probabilities.iter().map(|&p| f64::from(p)).collect();
     }
-    let order = model.order(spot.street);
+    let order = fold_order(model, spot, probabilities.len());
+    let order = order.as_ref().unwrap_or_else(|| model.order(spot.street));
     let q = (order.percentile(bucket) + delta).clamp(0.0, 1.0);
     let (lo, hi, t) = order.around(q);
     let row = |b: u16| {
