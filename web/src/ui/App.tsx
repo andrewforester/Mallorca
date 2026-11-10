@@ -149,9 +149,7 @@ export function App(props: AppProps) {
     logOpen: drawer.open,
   });
   if (vm === null) {
-    return (
-      <Start app={props} seed={state.seed} preferences={preferences} progress={state.loading} />
-    );
+    return <Start app={props} preferences={preferences} progress={state.loading} />;
   }
   const act = actWith(session, preferences);
   const layer = tableLayer({ session, state, vm, humanSeat, open: { drawer, talk, coach } });
@@ -194,20 +192,27 @@ export function App(props: AppProps) {
 
 function Start({
   app,
-  seed,
   preferences,
   progress,
 }: {
   app: AppProps;
-  seed: number;
   preferences: UnlockingPreferences;
   progress: LoadProgress | null;
 }) {
   return (
     <StartScreen
-      seed={seed}
       simple={preferences.simple}
-      face={preferences.face}
+      face={
+        preferences.face ? (
+          <FaceSeat
+            session={app.session}
+            cues={[]}
+            thinking={false}
+            line={null}
+            voice={preferences.voice}
+          />
+        ) : undefined
+      }
       onChoose={(opponent) => app.session.getState().prepare(opponent)}
       progress={progress}
       farewell={app.farewell ?? false}
