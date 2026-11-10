@@ -138,21 +138,16 @@
   .pot {
     flex-direction: column;
     align-items: flex-start;
+    justify-content: center;
     gap: 2px;
-    padding: 6px 12px;
+    min-height: 32px;
+    padding: 4px 10px;
+    border-radius: 16px;
+    line-height: 1.2;
+  }
+
+  .pot:has(> span + span) {
     border-radius: 14px;
-    line-height: 1.15;
-  }
-
-  .pot > span {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .pot-word {
-    color: var(--color-muted);
-    font-size: 12px;
-    font-weight: 500;
   }
 
   .pot-amount,
@@ -164,7 +159,7 @@
     font-size: 12px;
   }
 
-  .pot-block {
+  .pot-block:has(.result-pill) {
     max-width: calc(50% - var(--hole-width) - 26px);
   }
 

@@ -119,36 +119,30 @@ test('the table stays put while she acts and when a hand ends', async ({ page })
   }
 });
 
-test('a pot with bets stacks Pot and Total, each word over its number', async ({ page }) => {
+test('a pot with bets puts Total on the line under Pot, each in one line', async ({ page }) => {
   await startOnPhone(page);
   await page.evaluate(() => {
     const pot = document.querySelector('[data-testid="pot"]');
     if (pot !== null) {
       pot.innerHTML =
-        '<span class="pot-amount"><span class="pot-word">Pot</span> <span class="pot-number">1240</span></span>' +
-        '<span class="pot-total"><span class="pot-word">Total</span> <span class="pot-number">1980</span></span>';
+        '<span class="pot-amount">Pot 1240</span><span class="pot-total">Total 1980</span>';
     }
   });
-  const words = page.locator('[data-testid="pot"] .pot-word');
-  const numbers = page.locator('[data-testid="pot"] .pot-number');
-  for (let part = 0; part < 2; part += 1) {
-    const word = await words.nth(part).boundingBox();
-    const number = await numbers.nth(part).boundingBox();
-    expect((number?.y ?? 0) >= (word?.y ?? 0) + (word?.height ?? 0) - 1).toBe(true);
-  }
+  const amount = await box(page, '[data-testid="pot"] .pot-amount');
+  const total = await box(page, '[data-testid="pot"] .pot-total');
+  expect(total.y).toBeGreaterThanOrEqual(amount.y + amount.height - 1);
+  expect(amount.height).toBeLessThan(26);
+  expect(total.height).toBeLessThan(22);
   const pot = await box(page, '[data-testid="pot"]');
   const cards = await box(page, '[data-testid="seat-0"] .seat-cards');
   expect(pot.x + pot.width).toBeLessThanOrEqual(cards.x - 8);
 });
 
-test('the pot stacks its word over the number beside your cards', async ({ page }) => {
+test('a pot with only Total keeps it on one line', async ({ page }) => {
   await startOnPhone(page);
-  const word = await box(page, '[data-testid="pot"] .pot-word');
-  const number = await box(page, '[data-testid="pot"] .pot-number');
-  expect(number.y).toBeGreaterThanOrEqual(word.y + word.height - 1);
   const pot = await box(page, '[data-testid="pot"]');
-  const cards = await box(page, '[data-testid="seat-0"] .seat-cards');
-  expect(pot.x + pot.width).toBeLessThanOrEqual(cards.x - 8);
+  expect(pot.height).toBeLessThanOrEqual(34);
+  await expect(byId(page, 'pot')).toHaveText(/^Total \d+$/);
 });
 
 test('your action strip stays in full view above the raise sizing', async ({ page }) => {
