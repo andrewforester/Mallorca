@@ -111,7 +111,7 @@ tall. Everything stays on one screen: no sheet, no scroll.
 1. **Scene** without a frame: the attic with her live model across the full width, 316 px high, fading into the
    page background over its last quarter. Her head sits in the upper third of the screen.
 2. **Hand line** over the scene, under the system status bar: `Hand 1 · 10/20` on the left, Menu on the right,
-   light text with a soft shadow. No Log button on phones.
+   light text with a soft shadow. No Log button on phones: the hand log opens from a Log item in the Menu.
 3. **Her seat**: card backs overlapping the bottom of the scene, her block, the action strip; her bet to the
    right of the block.
 4. **Board**: five slots centred.
