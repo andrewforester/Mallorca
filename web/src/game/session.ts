@@ -22,6 +22,7 @@ import type {
   TableMode,
 } from '../engine/index.ts';
 import { withFallback } from './botClient.ts';
+import { freshTable } from './freshTable.ts';
 import type { BotClient } from './botClient.ts';
 import { resolveIntent, toIntent } from './intent.ts';
 import type { Intent } from './intent.ts';
@@ -116,7 +117,7 @@ function record(rt: Runtime, events: EngineEvent[], opens = false): void {
   rt.recorder.observe(events);
   rt.coach.observe(events);
   rt.bot.observe(toObservations(events, rt.botSeat));
-  observeHer(rt, events);
+  rt.recorder.felt(rt.persona.current(), observeHer(rt, events));
   for (const event of events) {
     if (event.type === 'toppedUp' && event.seat === rt.humanSeat) {
       rt.topUps += event.amount;
@@ -343,6 +344,7 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
     setCoach: (on) => switchCoach(rt, on),
     setFace: (on) => rt.face.setOn(on),
     faceNow: () => rt.face.now(),
+    handInPlay: () => rt.recorder.draft(rt.get().table.mode, botRecord(rt.opponent)),
     setPersonality: (choice) => rt.probe?.choose(choice),
     resetFeeling: () => rt.probe?.reset(),
   };

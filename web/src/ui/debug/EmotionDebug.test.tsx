@@ -1,7 +1,7 @@
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/preact';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/preact';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { CASH, createSession, inProcessBot } from '../../game/index.ts';
-import type { BotClient, Session } from '../../game/index.ts';
+import { CASH, createSession, inProcessBot, memoryStore } from '../../game/index.ts';
+import type { BotClient, HandStore, Session } from '../../game/index.ts';
 import { EmotionDebug } from './EmotionDebug.tsx';
 import { COPY } from './copy.ts';
 
@@ -27,8 +27,9 @@ function explainingBot(): BotClient {
   };
 }
 
-async function seated(debug = true): Promise<Session> {
+async function seated(debug = true, store?: HandStore): Promise<Session> {
   const session = createSession({
+    ...(store === undefined ? {} : { records: { store, sessionId: 's1', now: () => 'now' } }),
     bot: explainingBot(),
     seed: 42,
     botDelayMs: 0,
@@ -42,21 +43,23 @@ async function seated(debug = true): Promise<Session> {
   return session;
 }
 
-async function opened(session: Session) {
-  render(<EmotionDebug session={session} />);
+async function opened(session: Session, store: HandStore = memoryStore()) {
+  render(<EmotionDebug session={session} store={store} />);
   fireEvent.click(screen.getByTestId('emotion-debug-toggle'));
   return screen.getByTestId('emotion-debug');
 }
 
 describe('EmotionDebug', () => {
   it('renders nothing for a session without the debug state', async () => {
-    const { container } = render(<EmotionDebug session={await seated(false)} />);
+    const { container } = render(
+      <EmotionDebug store={memoryStore()} session={await seated(false)} />,
+    );
     expect(container.innerHTML).toBe('');
   });
 
   it('opens and hides with the toggle and remembers it', async () => {
     const session = await seated();
-    render(<EmotionDebug session={session} />);
+    render(<EmotionDebug store={memoryStore()} session={session} />);
     const toggle = screen.getByTestId('emotion-debug-toggle');
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     expect(screen.queryByTestId('emotion-debug')).toBeNull();
@@ -65,7 +68,7 @@ describe('EmotionDebug', () => {
     expect(screen.getByTestId('emotion-debug')).toBeTruthy();
     expect(localStorage.getItem('mallorca.debugPanel')).toBe('open');
     cleanup();
-    render(<EmotionDebug session={session} />);
+    render(<EmotionDebug store={memoryStore()} session={session} />);
     expect(screen.getByTestId('emotion-debug')).toBeTruthy();
     fireEvent.click(screen.getByTestId('emotion-debug-toggle'));
     expect(screen.queryByTestId('emotion-debug')).toBeNull();
@@ -147,6 +150,31 @@ describe('EmotionDebug', () => {
     const items = within(screen.getByTestId('debug-journal')).getAllByRole('listitem');
     expect(items.length).toBeGreaterThan(0);
     expect(items[0]?.textContent).toContain(COPY.event.deal);
+  });
+
+  it('copies the hands of the session with her feelings', async () => {
+    const writeText = vi.fn((_text: string) => Promise.resolve());
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    const store = memoryStore();
+    const session = await seated(true, store);
+    await act(() => session.getState().act({ kind: 'fold' }));
+    const panel = await opened(session, store);
+    fireEvent.click(within(panel).getByRole('button', { name: COPY.journal.copy }));
+    await waitFor(() => expect(writeText).toHaveBeenCalled());
+    const text = writeText.mock.calls[0]?.[0] ?? '';
+    expect(text).toContain('Dealt to Mallorca');
+    expect(text).toContain('she feels (hand over');
+  });
+
+  it('copies the hand still in play too', async () => {
+    const writeText = vi.fn((_text: string) => Promise.resolve());
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    const store = memoryStore();
+    const session = await seated(true, store);
+    const panel = await opened(session, store);
+    fireEvent.click(within(panel).getByRole('button', { name: COPY.journal.copy }));
+    await waitFor(() => expect(writeText).toHaveBeenCalled());
+    expect(writeText.mock.calls[0]?.[0]).toContain('*** HAND IN PROGRESS ***');
   });
 
   it('switches between her feelings and her conversation and remembers the tab', async () => {

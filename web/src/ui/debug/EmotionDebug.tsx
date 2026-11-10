@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { toDebugView } from '../../game/index.ts';
-import type { DebugState, Session } from '../../game/index.ts';
+import type { DebugState, HandStore, Session } from '../../game/index.ts';
 import { COPY } from './copy.ts';
 import { DecisionSection } from './DecisionSection.tsx';
 import { JournalSection } from './JournalSection.tsx';
@@ -77,7 +77,7 @@ function useDebug(session: Session): DebugState | null {
   return debug;
 }
 
-export function EmotionDebug({ session }: { session: Session }) {
+export function EmotionDebug({ session, store }: { session: Session; store: HandStore }) {
   const debug = useDebug(session);
   const [open, setOpen] = useState(readOpen);
   const [tab, setTab] = useState(readTab);
@@ -129,7 +129,7 @@ export function EmotionDebug({ session }: { session: Session }) {
               <StateSection view={view} />
               <BiasSection view={view} />
               <DecisionSection view={view} />
-              <JournalSection view={view} />
+              <JournalSection view={view} store={store} session={session} />
             </>
           )}
         </aside>

@@ -46,7 +46,7 @@ export interface AppProps {
   farewell?: boolean;
   autoNext?: boolean;
   player?: SoundPlayer;
-  debugPanel?: ComponentType<{ session: Session }>;
+  debugPanel?: ComponentType<{ session: Session; store: HandStore }>;
   features?: Features;
   opponent?: Opponent;
   character?: PersonalityKey;
@@ -184,7 +184,9 @@ export function App(props: AppProps) {
           face={faceSlot(session, vm, preferences)}
         />
         <GameOver props={props} vm={vm} phase={state.phase} sessionId={state.sessionId} />
-        {props.debugPanel !== undefined && <props.debugPanel session={session} />}
+        {props.debugPanel !== undefined && (
+          <props.debugPanel session={session} store={props.store} />
+        )}
       </div>
     </Scene>
   );

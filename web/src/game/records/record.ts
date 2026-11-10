@@ -5,6 +5,7 @@ import type { BotRecord } from '../../cfr/index.ts';
 import type { CoachDecision } from '../../coach/index.ts';
 import { formatCard } from '../cards.ts';
 import type { Opponent } from '../opponent.ts';
+import type { RecordedFeeling } from './feelings.ts';
 
 export interface RecordedDecision {
   eventIndex: number;
@@ -39,6 +40,7 @@ export interface HandRecord {
   events: EngineEvent[];
   decisions: RecordedDecision[];
   coach?: RecordedCoach[];
+  feelings?: RecordedFeeling[];
 }
 
 export const MATH_BOT: BotRecord = { id: 'math', version: '1' };
@@ -73,8 +75,9 @@ export function handRecord(
   events: EngineEvent[],
   decisions: RecordedDecision[],
   meta: RecordMeta,
-  coach: RecordedCoach[] = [],
+  extras: { coach?: RecordedCoach[]; feelings?: RecordedFeeling[] } = {},
 ): HandRecord {
+  const { coach = [], feelings = [] } = extras;
   const holeCards: HandRecord['holeCards'] = [
     ['', ''],
     ['', ''],
@@ -105,5 +108,6 @@ export function handRecord(
     events,
     decisions,
     ...(coach.length > 0 ? { coach } : {}),
+    ...(feelings.length > 0 ? { feelings } : {}),
   };
 }

@@ -1,4 +1,5 @@
 import { PERSONALITIES } from '../persona/index.ts';
+import type { Moment } from '../persona/index.ts';
 import { mulberry32 } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import type { BotClient } from './botClient.ts';
@@ -46,11 +47,12 @@ export function beginHer(her: Her): void {
   her.probe?.refresh();
 }
 
-export function observeHer(her: Her, events: readonly EngineEvent[]): void {
+export function observeHer(her: Her, events: readonly EngineEvent[]): Moment[] {
   const moments = her.persona.observe(events);
   her.conversation.observe(events, moments);
   her.face.observe(events);
   her.probe?.observed();
+  return moments;
 }
 
 export function wireHer(

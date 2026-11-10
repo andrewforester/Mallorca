@@ -11,6 +11,7 @@ import type { Intent } from './intent.ts';
 import type { Opponent } from './opponent.ts';
 import type { HandResult, SeatActions } from './outcome.ts';
 import type { RecordsOptions } from './records/recorder.ts';
+import type { HandRecord } from './records/record.ts';
 import type { FaceFrame } from '../face/index.ts';
 import type { FaceState } from './sessionFace.ts';
 import type { QuickPhrase, ConversationState } from './sessionConversation.ts';
@@ -64,6 +65,7 @@ export interface SessionActions {
   pageHidden(): void;
   setFace(on: boolean): void;
   faceNow(): FaceFrame | null;
+  handInPlay(): HandRecord | null;
   setPersonality(choice: PersonalityKey | Personality): void;
   resetFeeling(): void;
 }

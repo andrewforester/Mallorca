@@ -140,6 +140,7 @@ export const COPY = {
     words: 'Mood words',
     noWords: 'none',
     spoke: 'she spoke',
+    copy: 'Copy history',
   },
   event: {
     deal: 'Dealt',
