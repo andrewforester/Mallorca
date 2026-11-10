@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { byId, expect, FAST_URL, test, waitForWaypoint } from './fixtures.ts';
+import { byId, expect, FAST_URL, openHandLog, test, waitForWaypoint } from './fixtures.ts';
 
 test('the table marks stay inside the viewport on the first turn', async ({ page }) => {
   const viewport = page.viewportSize();
@@ -27,7 +27,7 @@ test('the hand log drawer opens inside the viewport and closes on Escape', async
   await byId(page, 'start-tournament').click();
   await expect(byId(page, 'passive')).toBeEnabled();
   await byId(page, 'passive').click();
-  await byId(page, 'hand-log-toggle').click();
+  await openHandLog(page);
   await expect(byId(page, 'hand-log')).toBeVisible();
   await expect(byId(page, 'hand-log')).toBeInViewport({ ratio: 1 });
   await expect(byId(page, 'hand-log-close')).toBeInViewport({ ratio: 1 });
@@ -63,7 +63,7 @@ for (const viewport of [
     await page.goto(FAST_URL);
     await byId(page, 'start-tournament').click();
     await expect(byId(page, 'raise')).toBeEnabled();
-    await byId(page, 'hand-log-toggle').click();
+    await openHandLog(page);
     await expect(byId(page, 'hand-log')).toBeInViewport({ ratio: 1 });
     const log = await byId(page, 'hand-log').boundingBox();
     const frame = await byId(page, 'face-frame').boundingBox();
@@ -79,7 +79,7 @@ test('on a phone the hand log replaces the board under her face and the actions 
   await page.goto(FAST_URL);
   await byId(page, 'start-tournament').click();
   await expect(byId(page, 'raise')).toBeEnabled();
-  await byId(page, 'hand-log-toggle').click();
+  await openHandLog(page);
   await expect(byId(page, 'hand-log')).toBeInViewport({ ratio: 1 });
   await expect(byId(page, 'face-frame')).toBeInViewport();
   await expect(byId(page, 'board')).toBeHidden();

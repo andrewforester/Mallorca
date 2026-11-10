@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 import type { Browser, Page } from '@playwright/test';
-import { byId, DEVICES, playToTheEnd, waitForWaypoint } from './shared.ts';
+import { byId, DEVICES, openHandLog, playToTheEnd, waitForWaypoint } from './shared.ts';
 import { answers, compose, snap, waitForServer } from './sheet.ts';
 import type { Shot } from './sheet.ts';
 import { serveConversation } from './conversationServer.ts';
@@ -54,7 +54,7 @@ async function capture(browser: Browser, sheet: Sheet): Promise<Shot[]> {
     await byId(page, 'passive').click();
   }
   await snap(page, 'showdown', shots);
-  await byId(page, 'hand-log-toggle').click();
+  await openHandLog(page);
   await byId(page, 'hand-log').waitFor();
   await snap(page, 'hand log', shots);
   await byId(page, 'hand-log-close').click();

@@ -34,6 +34,16 @@ export async function openMenu(page: Page): Promise<void> {
   }
 }
 
+export async function openHandLog(page: Page): Promise<void> {
+  const toggle = byId(page, 'hand-log-toggle');
+  if (await toggle.isVisible()) {
+    await toggle.click();
+    return;
+  }
+  await openMenu(page);
+  await byId(page, 'menu-log').click();
+}
+
 export async function leaveTable(page: Page): Promise<void> {
   await openMenu(page);
   await byId(page, 'leave').click();

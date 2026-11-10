@@ -909,7 +909,7 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   (with `data-stack`), `face-frame`, `table-board`, `action-panel`, `bet-<i>`, `dealer-button`, `action-<i>` (the bubble, class `bubble-passive`,
   `bubble-aggressive` or `bubble-fold`), `thinking-<i>`, `card` (with `data-card`), `card-back`, `board`, `pot` (with
   `data-amount` = total and `data-collected`), `result`, `next-hand`, `next-hand-wait`, `fold`, `passive`, `raise`, `raise-amount`,
-  `preset-half`, `preset-pot` (or `preset-min`), `preset-allin`, `raise-size`, `raise-less`, `raise-more`, `hand-log-toggle`, `simple-table`, `auto-next`,
+  `preset-half`, `preset-pot` (or `preset-min`), `preset-allin`, `raise-size`, `raise-less`, `raise-more`, `hand-log-toggle` (hidden on phones), `menu-log` (the Log item in the menu, phones only), `simple-table`, `auto-next`,
   `sound`, `hand-log`, `hand-log-close`, `coach`, `coach-mode`, `start-coach`, `coach-toggle`,
   `coach-close`, `coach-status`, `coach-hint`, `coach-tab-hint`, `coach-tab-range`, `coach-tab-numbers`,
   `coach-strategy`, `coach-range`, `coach-numbers`, `coach-composition`, `coach-outs`, `coach-blockers`, `coach-tab-session`, `coach-review`, `coach-leaks`, `live-region`, `tournament-over`, `leave-tonight`,

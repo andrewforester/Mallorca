@@ -233,6 +233,23 @@ interface HeaderProps {
   onMenu: (open: boolean) => void;
 }
 
+function MenuLog({ onOpen }: { onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      class="button menu-log"
+      data-testid="menu-log"
+      onClick={(event) => {
+        const menu = (event.currentTarget as HTMLElement).closest('details');
+        if (menu !== null) menu.open = false;
+        onOpen();
+      }}
+    >
+      {t('status.log')}
+    </button>
+  );
+}
+
 function Header({ app, vm, seed, drawer, preferences, coach, talk, onMenu }: HeaderProps) {
   const phase = app.session.getState().phase;
   const features = app.features ?? ALL_FEATURES;
@@ -259,6 +276,12 @@ function Header({ app, vm, seed, drawer, preferences, coach, talk, onMenu }: Hea
         }}
         onClose={() => onMenu(false)}
       >
+        <MenuLog
+          onOpen={() => {
+            onMenu(false);
+            drawer.flip();
+          }}
+        />
         <Settings
           preferences={preferences}
           offered={{ coach: features.coach, voice: features.talk }}

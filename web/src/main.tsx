@@ -29,6 +29,7 @@ import './ui/styles/table.css';
 import './ui/styles/actions.css';
 import './ui/styles/dialog.css';
 import './ui/styles/table-wide.css';
+import './ui/styles/table-phone.css';
 import './ui/styles/scene.css';
 import './ui/styles/hand-log.css';
 import './ui/styles/talk.css';

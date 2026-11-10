@@ -103,8 +103,69 @@ unless the owner asks otherwise after the colour step.
 
 ## 6. Phones
 
-Not designed yet. Next short design step, with the same seat block, bet column, pot and colours, fitted into the
-narrow screen. Until then, phones get the new colours and the new seat block in the current phone layout.
+Agreed on 2026-11-10 from localhost mockups at 390 × 844 (`phone.jpg`). Portrait screens narrower than they are
+tall. Everything stays on one screen: no sheet, no scroll.
+
+### 6.1 Layout, top to bottom
+
+1. **Scene** without a frame: the attic with her live model across the full width, 316 px high, fading into the
+   page background over its last quarter. Her head sits in the upper third of the screen.
+2. **Hand line** over the scene, under the system status bar: `Hand 1 · 10/20` on the left, Menu on the right,
+   light text with a soft shadow. No Log button on phones: the hand log opens from a Log item in the Menu.
+3. **Her seat**: card backs overlapping the bottom of the scene, her block, the action strip; her bet to the
+   right of the block.
+4. **Board**: five slots centred.
+5. **Your seat**: your cards centred, your block tucked under them; the pot pill on the left at the height of your
+   cards. On the right of your cards: your bet on top (level with the top third of your cards) and the dealer button
+   lower, level with your block. The bet slot is kept when you have no bet, so the dealer button never moves.
+6. **Raise sizing**, always visible: three presets (`½ pot`, `Pot`, `All-in`, each with its amount), then the
+   slider with − and + buttons.
+7. **Actions**: Fold, Call, Raise in one row; Raise shows the chosen size (`Raise` / `to 180`).
+
+### 6.2 Spacing (8 pt grid)
+
+| Where | px |
+|---|---|
+| Side margins (presets, slider, actions, pot) | 16 |
+| Her block with strip → board → your cards | 24 each |
+| Your block → presets | 16 |
+| Presets → slider | 8 |
+| Slider → actions | 16 |
+| Between buttons in a row | 8 |
+| Actions → bottom edge (home indicator) | 34 (`env(safe-area-inset-bottom)` when larger) |
+| Your cards tuck under your block | 6 |
+
+### 6.3 Touch targets (Apple 44 pt, Material 48 dp)
+
+| Control | Size |
+|---|---|
+| Fold, Call, Raise | 56 high, equal widths |
+| Presets | 44 high, equal widths |
+| − and + | 44 × 44 |
+| Slider thumb | 20 visible, 44 hit area |
+| Menu | 44 hit area |
+
+### 6.4 Type scale: 12 · 14 · 16 · 18 · 20 · 24
+
+| Text | px |
+|---|---|
+| Names, captions, preset amounts, `Pot` label | 12 |
+| Hand line, action strip, preset labels | 14 |
+| Stacks, pot amount, Menu | 16 |
+| Action buttons (size line under Raise 12) | 18 |
+| Bet amount by the chip | 20 |
+| Board cards / your cards | 24 / 28 |
+
+### 6.5 Sizes and radii
+
+- Board cards 52 × 73, your cards 62 × 87, her backs 40 × 56, gaps 8 (board) and 4 (hole cards).
+- Seat block 128 × 52, strip 24 high. Chip 24, dealer button 32, pot pill 32 high.
+- Radii: 12 for blocks, presets and ±; 14 for action buttons; the pot pill is fully round.
+
+### 6.6 Shorter phones
+
+Below 844 px of height only the scene shrinks (down to 200 px); the table, raise sizing and actions keep their
+sizes and spacing.
 
 ## 7. Order of work
 
@@ -115,7 +176,7 @@ Each step is a branch from `origin/master` and a pull request, with `npm run con
    Unit tests for the strip (no strip on blinds, strip text per action) and for the reserved dealer slot.
 3. **No top bar on wide screens:** hand line, Log and Menu in the right column; e2e ids unchanged.
 4. **Scene:** restore the attic photo, transparent face over it, rail overlay, camera and light on her.
-5. **Phone layout:** after its own short design step.
+5. **Phone layout:** §6.
 
 ## 8. Constraints that stay
 
