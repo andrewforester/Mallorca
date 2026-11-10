@@ -110,14 +110,14 @@ tall. Everything stays on one screen: no sheet, no scroll.
 
 1. **Scene** without a frame: the attic with her live model across the full width, 316 px high, fading into the
    page background over its last quarter. Her head sits in the upper third of the screen.
-2. **Hand line** over the scene, under the system status bar: `Hand 1 · 10/20` on the left, Log and Menu on the
-   right, light text with a soft shadow.
+2. **Hand line** over the scene, under the system status bar: `Hand 1 · 10/20` on the left, Menu on the right,
+   light text with a soft shadow. No Log button on phones.
 3. **Her seat**: card backs overlapping the bottom of the scene, her block, the action strip; her bet to the
    right of the block.
 4. **Board**: five slots centred.
 5. **Your seat**: your cards centred, your block tucked under them; the pot pill on the left at the height of your
-   cards. On the right of your cards, in one column: your bet on top (level with the top third of your cards), the
-   dealer button 16 px below it. The bet slot is kept when you have no bet, so the dealer button never moves.
+   cards. On the right of your cards: your bet on top (level with the top third of your cards) and the dealer button
+   lower, level with your block. The bet slot is kept when you have no bet, so the dealer button never moves.
 6. **Raise sizing**, always visible: three presets (`½ pot`, `Pot`, `All-in`, each with its amount), then the
    slider with − and + buttons.
 7. **Actions**: Fold, Call, Raise in one row; Raise shows the chosen size (`Raise` / `to 180`).
@@ -143,7 +143,7 @@ tall. Everything stays on one screen: no sheet, no scroll.
 | Presets | 44 high, equal widths |
 | − and + | 44 × 44 |
 | Slider thumb | 20 visible, 44 hit area |
-| Log, Menu | 44 hit area |
+| Menu | 44 hit area |
 
 ### 6.4 Type scale: 12 · 14 · 16 · 18 · 20 · 24
 
@@ -151,7 +151,7 @@ tall. Everything stays on one screen: no sheet, no scroll.
 |---|---|
 | Names, captions, preset amounts, `Pot` label | 12 |
 | Hand line, action strip, preset labels | 14 |
-| Stacks, pot amount, Log, Menu | 16 |
+| Stacks, pot amount, Menu | 16 |
 | Action buttons (size line under Raise 12) | 18 |
 | Bet amount by the chip | 20 |
 | Board cards / your cards | 24 / 28 |
