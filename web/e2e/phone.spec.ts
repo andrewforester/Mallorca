@@ -118,3 +118,24 @@ test('the table stays put while she acts and when a hand ends', async ({ page })
     await expect(byId(page, 'passive').and(page.locator(':enabled')).or(next)).toBeVisible();
   }
 });
+
+test('the pot stacks its word over the number beside your cards', async ({ page }) => {
+  await startOnPhone(page);
+  const word = await box(page, '[data-testid="pot"] .pot-word');
+  const number = await box(page, '[data-testid="pot"] .pot-number');
+  expect(number.y).toBeGreaterThanOrEqual(word.y + word.height - 1);
+  const pot = await box(page, '[data-testid="pot"]');
+  const cards = await box(page, '[data-testid="seat-0"] .seat-cards');
+  expect(pot.x + pot.width).toBeLessThanOrEqual(cards.x - 8);
+});
+
+test('your action strip stays in full view above the raise sizing', async ({ page }) => {
+  await startOnPhone(page);
+  await byId(page, 'passive').click();
+  const strip = byId(page, 'action-0');
+  await expect(strip).toBeVisible();
+  const found = await box(page, '[data-testid="action-0"]');
+  const presets = await box(page, '.action-panel');
+  expect(found.y + found.height).toBeLessThanOrEqual(presets.y);
+  await expect(strip).toBeInViewport({ ratio: 1 });
+});

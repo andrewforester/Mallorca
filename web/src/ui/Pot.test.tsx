@@ -25,4 +25,11 @@ describe('Pot', () => {
     render(<Pot collected={120} total={120} />);
     expect(screen.getByTestId('pot').textContent).toBe('Pot 120');
   });
+
+  it('keeps the word and the number apart so a phone can stack them', () => {
+    render(<Pot collected={0} total={30} />);
+    const total = screen.getByTestId('pot').querySelector('.pot-total');
+    expect(total?.querySelector('.pot-word')?.textContent).toBe('Total');
+    expect(total?.querySelector('.pot-number')?.textContent).toBe('30');
+  });
 });

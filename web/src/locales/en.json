@@ -89,7 +89,7 @@
   "pot": {
     "label": "Pot",
     "amount": "Pot {{amount}}",
-    "total": "Total {{amount}}"
+    "totalLabel": "Total"
   },
   "actions": {
     "fold": "Fold",

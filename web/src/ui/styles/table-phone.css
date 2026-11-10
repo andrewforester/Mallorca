@@ -136,11 +136,23 @@
   }
 
   .pot {
-    height: 32px;
-    padding: 0 12px;
-    gap: 6px;
-    align-items: center;
-    border-radius: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 6px 12px;
+    border-radius: 14px;
+    line-height: 1.15;
+  }
+
+  .pot > span:only-child {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pot > span:only-child .pot-word {
+    color: var(--color-muted);
+    font-size: 12px;
+    font-weight: 500;
   }
 
   .pot-amount,
@@ -152,13 +164,13 @@
     font-size: 12px;
   }
 
-  .pot-block:has(.result-pill) {
+  .pot-block {
     max-width: calc(50% - var(--hole-width) - 26px);
   }
 
   .seat-bottom {
     padding-top: 24px;
-    padding-bottom: 16px;
+    padding-bottom: 40px;
   }
 
   .seat-bottom .seat-cards {
