@@ -10,7 +10,8 @@ import {
   startHand,
 } from '../../src/engine/testDeck.ts';
 import type { Action } from '../../src/engine/index.ts';
-import { styleStats } from './styleStats.ts';
+import { parseCards } from '../../src/cards/index.ts';
+import { BLUFF_STRENGTH, riverStrength, styleStats } from './styleStats.ts';
 
 const deck = deckOf('7c 2d', 'As Ks', 'Qh 9h 3c 4d 5s');
 
@@ -19,6 +20,7 @@ const hand = (...actions: Action[]): EngineEvent[] =>
 
 const raisedAndFolded = hand(raiseTo(60), call, check, raiseTo(60), raiseTo(180), fold);
 const foldedPreflop = hand(fold);
+const riverStab = hand(call, check, check, check, check, check, check, raiseTo(40), fold);
 const limpedToShowdown = hand(call, check, raiseTo(20), call, check, check, check, check);
 
 describe('styleStats', () => {
@@ -35,6 +37,8 @@ describe('styleStats', () => {
       facedBets: 1,
       betSize: 60 / 120,
       preflopRaiseSize: 50 / 30,
+      riverBets: 0,
+      riverBluffShare: 0,
     });
   });
 
@@ -51,6 +55,8 @@ describe('styleStats', () => {
       facedBets: 1,
       betSize: 180 / 180,
       preflopRaiseSize: 0,
+      riverBets: 0,
+      riverBluffShare: 0,
     });
   });
 
@@ -76,5 +82,24 @@ describe('styleStats', () => {
     expect(stats.facedBets).toBe(2);
     expect(stats.raiseFrequency).toBe(0.5);
     expect(stats.foldToBet).toBe(0);
+  });
+
+  it('counts a river bet with a hand that beats less than a third of the hands as a bluff', () => {
+    expect(riverStrength([0, 1], [2, 3, 4, 5, 6])).toBeGreaterThan(0);
+    const button = styleStats([riverStab, limpedToShowdown], () => 0);
+    expect(button.riverBets).toBe(1);
+    expect(button.riverBluffShare).toBe(1);
+    const blind = styleStats([riverStab], () => 1);
+    expect(blind.riverBets).toBe(0);
+    expect(blind.riverBluffShare).toBe(0);
+  });
+
+  it('rates a river hand by the share of the other hands it beats', () => {
+    const cards = (text: string) => parseCards(text);
+    expect(riverStrength(cards('7c 2d'), cards('Qh 9h 3c 4d 5s'))).toBeLessThan(BLUFF_STRENGTH);
+    expect(riverStrength(cards('As Ah'), cards('Ad Ac 3c 4d 9s'))).toBe(1);
+    const middle = riverStrength(cards('Qs Jd'), cards('Qh 9h 3c 4d 2s'));
+    expect(middle).toBeGreaterThan(0.6);
+    expect(middle).toBeLessThan(1);
   });
 });
