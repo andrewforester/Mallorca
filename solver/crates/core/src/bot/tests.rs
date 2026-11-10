@@ -1796,3 +1796,118 @@ fn a_bluffer_bets_weak_hands_checked_to_after_the_flop_and_leaves_the_rest() {
     }
     assert!(weak > 100, "{weak} weak rows");
 }
+
+#[test]
+fn an_axis_next_to_neutral_barely_moves_any_decision() {
+    let model = shipped();
+    let mut spots = check_spots(model);
+    let folds: Vec<NodeId> = (0..model.file.tree.nodes().len() as NodeId)
+        .filter(|&id| {
+            model
+                .spot(id)
+                .is_some_and(|s| s.actions.iter().any(|a| a.0 == ActionKind::Fold))
+        })
+        .collect();
+    let step = (folds.len() / 150).max(1);
+    spots.extend(folds.into_iter().step_by(step));
+    let axes: [fn(f64) -> Bias; 3] = [
+        |v| Bias {
+            tightness: v,
+            ..Bias::NEUTRAL
+        },
+        |v| Bias {
+            stickiness: v,
+            ..Bias::NEUTRAL
+        },
+        |v| Bias {
+            aggression: v,
+            ..Bias::NEUTRAL
+        },
+    ];
+    for make in axes {
+        for value in [0.999, 1.001] {
+            let bias = make(value);
+            for &node in &spots {
+                let spot = model.spot(node).unwrap();
+                let buckets = model.file.tree.buckets()[spot.street.as_index()];
+                for b in 0..buckets {
+                    let Some(p) = model.file.try_probabilities(node, b) else {
+                        continue;
+                    };
+                    let total: f64 = p.iter().map(|&x| f64::from(x)).sum();
+                    let w = biased(model, &spot, p, b, &bias);
+                    let sum: f64 = w.iter().sum();
+                    for (&real, &moved) in p.iter().zip(&w) {
+                        let gap = (f64::from(real) / total - moved / sum).abs();
+                        assert!(
+                            gap < 0.05,
+                            "{bias:?}, node {node}, bucket {b}: {p:?} -> {w:?}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn aggression_and_the_fold_axes_act_independently() {
+    let model = shipped();
+    let mut spots = check_spots(model);
+    let folds: Vec<NodeId> = (0..model.file.tree.nodes().len() as NodeId)
+        .filter(|&id| {
+            model
+                .spot(id)
+                .is_some_and(|s| s.actions.iter().any(|a| a.0 == ActionKind::Fold))
+        })
+        .collect();
+    let step = (folds.len() / 150).max(1);
+    spots.extend(folds.into_iter().step_by(step));
+    for (tightness, stickiness, aggression) in [(1.35, 0.69, 1.4), (0.74, 1.44, 0.78)] {
+        let combo = Bias {
+            tightness,
+            stickiness,
+            aggression,
+            ..Bias::NEUTRAL
+        };
+        let fold_axes = Bias {
+            tightness,
+            stickiness,
+            ..Bias::NEUTRAL
+        };
+        let alone = Bias {
+            aggression,
+            ..Bias::NEUTRAL
+        };
+        for &node in &spots {
+            let spot = model.spot(node).unwrap();
+            let fold = spot.actions.iter().position(|a| a.0 == ActionKind::Fold);
+            let buckets = model.file.tree.buckets()[spot.street.as_index()];
+            for b in 0..buckets {
+                let Some(p) = model.file.try_probabilities(node, b) else {
+                    continue;
+                };
+                let share = |bias: &Bias| {
+                    let w = biased(model, &spot, p, b, bias);
+                    let sum: f64 = w.iter().sum();
+                    w.iter().map(|x| x / sum).collect::<Vec<f64>>()
+                };
+                let both = share(&combo);
+                let expected = match fold {
+                    Some(fold) => vec![share(&fold_axes)[fold]],
+                    None => share(&alone),
+                };
+                let got = match fold {
+                    Some(fold) => vec![both[fold]],
+                    None => both,
+                };
+                for (g, e) in got.iter().zip(&expected) {
+                    assert!(
+                        (g - e).abs() < 1e-9,
+                        "{combo:?}, node {node}, bucket {b}: {got:?} vs {expected:?}"
+                    );
+                }
+            }
+        }
+    }
+}
