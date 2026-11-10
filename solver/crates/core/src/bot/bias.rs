@@ -223,9 +223,13 @@ fn shifted(
     let (lo, hi, t) = order.around(q);
     let share = |b: u16| shares[usize::from(b)].unwrap_or(0.0);
     let row = |b: u16| rows[usize::from(b)].unwrap_or(probabilities);
+    let total: f64 = probabilities.iter().map(|&p| f64::from(p)).sum();
+    let own = f64::from(probabilities[class]) / total.max(f64::MIN_POSITIVE);
+    let phase = (4.0 * delta.abs() / NOISE).min(1.0);
+    let target = (1.0 - t) * share(lo) + t * share(hi) + (1.0 - phase) * (own - purified(own));
     Some(Shifted {
         class,
-        share: (1.0 - t) * share(lo) + t * share(hi),
+        share: target.clamp(0.0, 1.0),
         row: row(lo)
             .iter()
             .zip(row(hi))
