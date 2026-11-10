@@ -4,15 +4,20 @@ pub(super) struct Order {
     sorted: Vec<u16>,
     ascending: Vec<f64>,
     of: Vec<f64>,
+    mass: Vec<f64>,
 }
 
 impl Order {
     pub(super) fn by_strength(strength: &[f64], mass: &[f64]) -> Order {
         let mut sorted: Vec<u16> = (0..strength.len() as u16).collect();
         sorted.sort_by(|&a, &b| strength[usize::from(a)].total_cmp(&strength[usize::from(b)]));
-        let total: f64 = mass.iter().sum();
-        let mut of = vec![0.0; strength.len()];
-        let mut ascending = Vec::with_capacity(strength.len());
+        Order::from_sorted(sorted, mass)
+    }
+
+    fn from_sorted(sorted: Vec<u16>, mass: &[f64]) -> Order {
+        let total: f64 = sorted.iter().map(|&b| mass[usize::from(b)]).sum();
+        let mut of = vec![0.0; mass.len()];
+        let mut ascending = Vec::with_capacity(sorted.len());
         let mut below = 0.0;
         for &b in &sorted {
             let m = mass[usize::from(b)];
@@ -25,7 +30,21 @@ impl Order {
             sorted,
             ascending,
             of,
+            mass: mass.to_vec(),
         }
+    }
+
+    pub(super) fn by_fold(&self, folds: &[Option<f64>]) -> Order {
+        let fold = |b: u16| folds[usize::from(b)].unwrap_or(0.0);
+        let mut sorted: Vec<u16> = (0..folds.len() as u16)
+            .filter(|&b| folds[usize::from(b)].is_some())
+            .collect();
+        sorted.sort_by(|&a, &b| {
+            fold(b)
+                .total_cmp(&fold(a))
+                .then(self.percentile(a).total_cmp(&self.percentile(b)))
+        });
+        Order::from_sorted(sorted, &self.mass)
     }
 
     pub(super) fn uniform(buckets: u16) -> Order {
@@ -135,6 +154,17 @@ mod tests {
         let order = Order::uniform(4);
         let p: Vec<f64> = (0..4).map(|b| order.percentile(b)).collect();
         assert_eq!(p, vec![0.125, 0.375, 0.625, 0.875]);
+    }
+
+    #[test]
+    fn a_fold_order_puts_the_likeliest_folds_first_and_breaks_ties_by_strength() {
+        let base = Order::by_strength(&[0.9, 0.1, 0.5, 0.3], &[1.0, 1.0, 1.0, 2.0]);
+        let order = base.by_fold(&[Some(0.0), Some(0.0), Some(0.6), None]);
+        assert!((order.percentile(2) - 1.0 / 6.0).abs() < 1e-12);
+        assert!((order.percentile(1) - 0.5).abs() < 1e-12);
+        assert!((order.percentile(0) - 5.0 / 6.0).abs() < 1e-12);
+        assert_eq!(order.around(0.0), (2, 2, 0.0));
+        assert_eq!(order.around(1.0), (0, 0, 0.0));
     }
 
     #[test]

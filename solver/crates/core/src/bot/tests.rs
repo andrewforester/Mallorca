@@ -1506,3 +1506,53 @@ fn a_tight_bias_never_folds_less_and_keeps_the_call_and_raise_mix() {
         }
     }
 }
+
+fn fold_shares(node: NodeId, bias: &Bias) -> Vec<(f64, f64)> {
+    let spot = model().spot(node).unwrap();
+    let fold = spot
+        .actions
+        .iter()
+        .position(|a| a.0 == ActionKind::Fold)
+        .unwrap();
+    let buckets = model().file.tree.buckets()[spot.street.as_index()];
+    (0..buckets)
+        .filter_map(|b| {
+            let p = model().file.try_probabilities(node, b)?;
+            let total: f64 = p.iter().map(|&x| f64::from(x)).sum();
+            let w = biased(model(), &spot, p, b, bias);
+            Some((f64::from(p[fold]) / total, w[fold] / w.iter().sum::<f64>()))
+        })
+        .collect()
+}
+
+#[test]
+fn a_fold_axis_keeps_the_blueprint_order_of_folds() {
+    let root = model().file.tree.root();
+    let raise = model()
+        .spot(root)
+        .unwrap()
+        .actions
+        .iter()
+        .find(|a| matches!(a.0, ActionKind::RaiseTo(_)))
+        .unwrap()
+        .1;
+    for tightness in [0.67, 1.5] {
+        let bias = Bias {
+            tightness,
+            ..Bias::NEUTRAL
+        };
+        for node in [root, raise] {
+            let shares = fold_shares(node, &bias);
+            for &(real_a, biased_a) in &shares {
+                for &(real_b, biased_b) in &shares {
+                    if real_a > real_b + 1e-9 {
+                        assert!(
+                            biased_a >= biased_b - 1e-9,
+                            "tightness {tightness}, node {node}: {real_a} -> {biased_a}, {real_b} -> {biased_b}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
