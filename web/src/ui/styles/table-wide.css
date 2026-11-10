@@ -42,7 +42,7 @@
   }
 
   .seat-top {
-    padding: 0 4px;
+    padding: 0 4px 32px;
     --back-width: 50px;
     --shown-width: 56px;
   }
