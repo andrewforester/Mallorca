@@ -45,9 +45,23 @@ fn factor(kind: ActionKind, bias: &Bias, situation: &Situation) -> f64 {
 }
 
 pub fn reweight(row: &[f64], kinds: &[ActionKind], bias: &Bias, situation: &Situation) -> Vec<f64> {
-    row.iter()
+    let weighted: Vec<f64> = row
+        .iter()
         .zip(kinds)
         .map(|(&p, &kind)| p * factor(kind, bias, situation))
+        .collect();
+    let Some(fold) = kinds.iter().position(|&k| k == ActionKind::Fold) else {
+        return weighted;
+    };
+    let rest = |r: &[f64]| r.iter().sum::<f64>() - r[fold];
+    let (before, after) = (rest(row), rest(&weighted));
+    if after <= 0.0 {
+        return weighted;
+    }
+    weighted
+        .iter()
+        .enumerate()
+        .map(|(i, &w)| if i == fold { w } else { w * before / after })
         .collect()
 }
 
@@ -315,6 +329,23 @@ mod tests {
             &at(false),
         );
         assert_eq!(w, vec![80.0, 125.0]);
+    }
+
+    #[test]
+    fn aggression_keeps_the_fold_share() {
+        let p = [50.0, 80.0, 70.0, 55.0];
+        let kinds = [Fold, Call, RaiseTo(60), AllIn];
+        for aggression in [0.6, 1.4] {
+            let w = shares(&reweight(
+                &p,
+                &kinds,
+                &bias(aggression, 1.3, 1.0),
+                &at(true),
+            ));
+            assert!((w[0] - 50.0 / 255.0).abs() < 1e-12, "{aggression}: {w:?}");
+        }
+        let hot = shares(&reweight(&p, &kinds, &bias(1.4, 1.0, 1.0), &at(false)));
+        assert!(hot[2] > 70.0 / 255.0 && hot[1] < 80.0 / 255.0, "{hot:?}");
     }
 
     #[test]
