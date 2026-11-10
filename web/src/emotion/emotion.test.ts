@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { appraise, prospectTargets } from './appraisal.ts';
 import type { Prospect } from './appraisal.ts';
-import { addImpulse, decay, noEmotions } from './emotions.ts';
+import {
+  APPROACH,
+  ATTACK_S,
+  EMOTIONS,
+  EMOTION_PAD,
+  addImpulse,
+  decay,
+  noEmotions,
+  queue,
+  rise,
+} from './emotions.ts';
 import type { Emotions } from './emotions.ts';
 import { createEngine } from './engine.ts';
 import { emotionCenter, octantOf, stepMood } from './mood.ts';
@@ -131,6 +141,43 @@ describe('emotions', () => {
     const start = withEmotions({ joy: 0.8 });
     const later = decay(start, 30, () => 1);
     expect(later.joy).toBeCloseTo(0.4);
+  });
+
+  const risen = (amount: number, steps: number, dt: number): Emotions => {
+    let state = { emotions: noEmotions(), pending: queue({}, 'joy', amount) };
+    for (let i = 0; i < steps; i++) {
+      state = rise(state.emotions, state.pending, dt);
+    }
+    return state.emotions;
+  };
+
+  it('lands a queued impulse as exactly one saturated impulse', () => {
+    expect(ATTACK_S).toBe(0.5);
+    expect(risen(0.42, 200, 0.05).joy).toBeCloseTo(addImpulse(noEmotions(), 'joy', 0.42).joy, 6);
+  });
+
+  it('lands half of the log mass after the attack time, in any split of steps', () => {
+    const half = 1 - Math.exp(Math.log(0.58) / 2);
+    expect(risen(0.42, 10, 0.05).joy).toBeCloseTo(half, 9);
+    expect(risen(0.42, 1, 0.5).joy).toBeCloseTo(half, 9);
+  });
+
+  it('queues a full impulse without infinity', () => {
+    const joy = risen(1, 40, 0.25).joy;
+    expect(Number.isFinite(joy)).toBe(true);
+    expect(joy).toBeGreaterThanOrEqual(0.999);
+    expect(joy).toBeLessThan(1);
+  });
+
+  it('gives every emotion the approach of its dominance, except anger and injustice', () => {
+    for (const e of EMOTIONS) {
+      if (e === 'anger' || e === 'injustice') {
+        continue;
+      }
+      expect(APPROACH[e]).toBe(EMOTION_PAD[e][2]);
+    }
+    expect(APPROACH.anger).toBe(0.6);
+    expect(APPROACH.injustice).toBe(0.4);
   });
 });
 
