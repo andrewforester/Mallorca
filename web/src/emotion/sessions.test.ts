@@ -207,7 +207,7 @@ describe('the reference session of the addendum', () => {
     const s = SESSIONS.ingrid;
     for (const column of ['badBeat', 'losses', 'quiet', 'heater', 'caught', 'through'] as const) {
       for (const axis of BIAS_KEYS) {
-        expect(Math.abs(s[column][axis] - s.rest[axis])).toBeLessThan(0.12);
+        expect(Math.abs(s[column][axis] - s.rest[axis])).toBeLessThan(0.1);
       }
     }
   });

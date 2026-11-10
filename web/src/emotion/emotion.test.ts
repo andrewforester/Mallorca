@@ -75,7 +75,7 @@ describe('personality', () => {
   it('takes composure from stability and discipline from conscientiousness', () => {
     const t = traitsOf(MALLORCA);
     expect(t.composure).toBeCloseTo(0.55 - 0.35 * 0.1 + 0.1 * 0.2, 12);
-    expect(t.discipline).toBeCloseTo(0.45 + 0.4 * 0.2 - 0.1 * 0.1, 12);
+    expect(t.discipline).toBeCloseTo(0.45 + 0.3 * 0.2 - 0.25 * 0.1, 12);
     const shaky = { ...average.bigFive, neuroticism: 1, conscientiousness: -1 };
     expect(traitsOf({ ...average, bigFive: shaky }).composure).toBe(0.15);
     const steady = { ...average.bigFive, neuroticism: -1, conscientiousness: 1 };
@@ -234,12 +234,12 @@ describe('approach and certainty of the mood', () => {
 
   it('lets small emotions lose to the pull to rest', () => {
     expect(Math.abs(held({ joy: 0.06 }, 600))).toBeLessThan(0.02);
-    expect(Math.abs(held({ anger: 0.8 }, 600))).toBeLessThan(0.02);
   });
 
-  it('lets strong emotions win over the pull to rest', () => {
-    expect(held({ anger: 1 }, 600)).toBeGreaterThan(0.1);
-    expect(held({ fear: 1 }, 600, CERTAINTY)).toBeLessThan(-0.1);
+  it('lets strong emotions switch the pull off and move the mood', () => {
+    expect(held({ anger: 0.8 }, 600)).toBeGreaterThan(0.2);
+    expect(held({ shame: 0.8 }, 600)).toBeLessThan(-0.2);
+    expect(held({ fear: 0.5 }, 600, CERTAINTY)).toBeLessThan(-0.1);
   });
 
   it('returns to zero without emotions and never overshoots', () => {

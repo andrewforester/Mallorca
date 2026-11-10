@@ -101,6 +101,7 @@ describe('belief in winning the pot', () => {
     expect(foldChanceOf(15, 20)).toBeCloseTo(15 / 35, 12);
     expect(foldChanceOf(0, 0)).toBe(0);
     expect(foldChanceOf(0, 20)).toBe(0);
+    expect(foldChanceOf(15, 0)).toBe(0);
     expect(beliefOf(0.1, 15 / 35)).toBeCloseTo(0.4857, 4);
     expect(beliefOf(0, 0.5)).toBe(0.5);
     expect(beliefOf(1, 0.5)).toBe(1);

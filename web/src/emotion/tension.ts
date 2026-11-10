@@ -42,8 +42,7 @@ export function tensionTargets(p: Prospect, traits: Traits): { hope: number; fea
 }
 
 export function foldChanceOf(betBb: number, potBb: number): number {
-  const total = potBb + betBb;
-  return total > 0 ? Math.max(0, betBb) / total : 0;
+  return potBb > 0 && betBb > 0 ? betBb / (potBb + betBb) : 0;
 }
 
 export function beliefOf(equity: number, foldChance: number): number {

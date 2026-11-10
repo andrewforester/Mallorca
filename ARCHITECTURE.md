@@ -333,8 +333,8 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   `reset()` starts a session over. The engine holds no clock and no randomness.
 - `Personality` is the Big Five in [-1, 1] plus `suppression` (habitual poker face) in [0, 1]. `traitsOf` derives
   the default mood (Mehrabian's weights, as in ALMA), the gain and the half-life factor of every emotion,
-  `composure = clamp(0.55 - 0.35 N + 0.1 C, 0.15, 1.1)` (emotional stability), `discipline = clamp(0.45 + 0.4 C -
-  0.1 N, 0, 0.95)` (conscientiousness), `expressiveness`, `mask`, `talkativeness`, three stances (logistic, in (0, 1),
+  `composure = clamp(0.55 - 0.35 N + 0.1 C, 0.15, 1.1)` (emotional stability), `discipline = clamp(0.45 + 0.3 C -
+  0.25 N, 0, 0.95)` (conscientiousness and calm), `expressiveness`, `mask`, `talkativeness`, three stances (logistic, in (0, 1),
   and one clamp): `selfBlame` (whom she blames for a loss), `coping` (`σ(-1.2 N + 0.6 E - 0.5 A)`, whether pressure
   is a challenge or a threat) and `urgency` (negative urgency of UPPS, `clamp01(0.5 N - 0.5 C)`), her `nature` per
   axis and `baseline`, her natural style (`style.ts`): every axis has one leading trait in `STYLE_WEIGHTS`
@@ -379,7 +379,8 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   back to the default mood when none is active (`GAME_MOOD`: 600 s to change, 1200 s to return). Every emotion has
   an `APPROACH` and a `CERTAINTY`; the mood holds both beside PAD with a rest of 0 (`Snapshot.approach`,
   `Snapshot.certainty`), and `stepAxis` moves them every step toward the centre of the active emotions at
-  `intensity / changeTimeS` and always back toward 0 at `√3 / returnTimeS`, so small emotions lose to the pull.
+  `strength / changeTimeS` (`strength` the mean intensity of the active emotions) and back toward 0 at
+  `(1 - min(1, 3 strength)) √3 / returnTimeS`: strong emotions switch the pull off, small ones lose to it.
 - Play (`play.ts`): `affectOf(emotions, { shift, approach, certainty }, urgency)` is the `Affect` of four numbers,
   the sum of every emotion's (P, A, approach, certainty) plus `MOOD_WEIGHT = 2` times the mood shift, approach and
   certainty, with `URGENCY_PUSH * urgency * max(0, arousal)` added to approach. `playOf(affect, traits)` gives

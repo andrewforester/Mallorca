@@ -95,7 +95,7 @@ export function traitsOf(p: Personality): Traits {
     gains: gainsOf(b),
     halfLifeFactor: halfLifeFactorOf(b),
     composure: clamp(0.55 - 0.35 * b.neuroticism + 0.1 * b.conscientiousness, 0.15, 1.1),
-    discipline: clamp(0.45 + 0.4 * b.conscientiousness - 0.1 * b.neuroticism, 0, 0.95),
+    discipline: clamp(0.45 + 0.3 * b.conscientiousness - 0.25 * b.neuroticism, 0, 0.95),
     expressiveness: clamp(0.85 + 0.35 * b.extraversion + 0.1 * b.neuroticism, 0.3, 1.4),
     mask: clamp(p.suppression, 0, 1),
     talkativeness: clamp(0.5 + 0.4 * b.extraversion, 0.1, 1),

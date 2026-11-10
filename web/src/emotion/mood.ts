@@ -115,30 +115,23 @@ function toward(from: number, to: number, distance: number): number {
   return Math.abs(to - from) <= distance ? to : from + Math.sign(to - from) * distance;
 }
 
-function pushed(
-  value: number,
-  e: Emotions,
-  weights: Readonly<Record<Emotion, number>>,
-  step: number,
-): number {
-  const c = axisCenter(e, weights);
-  if (!c) {
-    return value;
-  }
-  const distance = c.intensity * step;
-  if (value * c.center < c.center * c.center) {
-    return toward(value, c.center, distance);
-  }
-  return value + Math.sign(c.center) * distance;
-}
-
 export interface AxisFrame extends MoodConfig {
   weights: Readonly<Record<Emotion, number>>;
 }
 
 export function stepAxis(value: number, e: Emotions, dt: number, frame: AxisFrame): number {
-  const moved = pushed(value, e, frame.weights, dt / frame.changeTimeS);
-  return clamp(toward(moved, 0, (SQRT3 / frame.returnTimeS) * dt));
+  const c = axisCenter(e, frame.weights);
+  const strength = c?.intensity ?? 0;
+  let next = value;
+  if (c) {
+    const distance = (strength / frame.changeTimeS) * dt;
+    next =
+      value * c.center < c.center * c.center
+        ? toward(value, c.center, distance)
+        : value + Math.sign(c.center) * distance;
+  }
+  const pull = (1 - Math.min(1, 3 * strength)) * (SQRT3 / frame.returnTimeS) * dt;
+  return clamp(toward(next, 0, pull));
 }
 
 export function octantOf(p: Pad): {
