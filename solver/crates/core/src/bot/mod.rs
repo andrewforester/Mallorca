@@ -498,7 +498,7 @@ fn to_real(spot: &Spot<'_>, hand: &Hand, kind: ActionKind, legal: &Legal, sizing
             let f = fraction(t, spot.street_bets[1 - spot.seat], spot.pot_after_call());
             let me = hand.hero;
             Move::RaiseTo(scaled_raise(
-                f * sizing,
+                f * sizing.powf(bias::SIZE_SCALE),
                 hand.bets[1 - me],
                 hand.pot_after_call(me),
                 range,

@@ -1375,23 +1375,45 @@ fn a_new_hand_or_a_passive_play_clears_the_explanation() {
 }
 
 #[test]
-fn sizing_scales_the_bet_itself() {
-    let neutral = flop_bets(Bias::NEUTRAL);
-    let big = flop_bets(Bias {
-        sizing: 1.5,
-        ..Bias::NEUTRAL
-    });
-    let mut made = 0;
-    for (&n, &b) in neutral.iter().zip(&big) {
-        if n == 0 {
-            assert_eq!(b, 0);
-            continue;
+fn sizing_scales_each_size_of_the_tree_by_its_fourth_root() {
+    let moves = |sizing: f64| {
+        let mut bot = started(false, [400, 400], [10, 20], [48, 49]);
+        bot.set_bias(Bias {
+            sizing,
+            ..Bias::NEUTRAL
+        });
+        bot.acted(model(), false, Move::Call, 0.0);
+        bot.acted(model(), true, Move::Check, 0.0);
+        bot.street(model(), &[0, 5, 22]);
+        let legal = Legal {
+            fold: false,
+            check: true,
+            call: None,
+            raise: Some((20, 360)),
+        };
+        bot.decide(model(), &legal, 0.5);
+        bot.last_decision().unwrap().moves.clone()
+    };
+    let neutral = moves(1.0);
+    let raises = neutral
+        .iter()
+        .filter(|m| matches!(m, Move::RaiseTo(t) if *t < 360))
+        .count();
+    assert!(raises >= 1, "{neutral:?}");
+    for sizing in [0.5, 1.5, 2.0] {
+        for (n, b) in neutral.iter().zip(moves(sizing)) {
+            match (n, b) {
+                (Move::RaiseTo(n), Move::RaiseTo(b)) if *n < 360 => {
+                    let expected = (f64::from(*n) * sizing.powf(0.25)).clamp(20.0, 360.0);
+                    assert!(
+                        (f64::from(b) - expected).abs() <= 1.5,
+                        "{sizing}: {n} -> {b}"
+                    );
+                }
+                (n, b) => assert_eq!(*n, b),
+            }
         }
-        made += 1;
-        let expected = (1.5 * f64::from(n)).min(360.0);
-        assert!((f64::from(b) - expected).abs() <= 1.5, "{n} -> {b}");
     }
-    assert!(made > 100, "{made} bets");
 }
 
 fn root_continue(bucket: u16, bias: &Bias) -> f64 {
@@ -1910,4 +1932,88 @@ fn aggression_and_the_fold_axes_act_independently() {
             }
         }
     }
+}
+
+#[test]
+fn sizing_prefers_bigger_sizes_and_keeps_every_other_action() {
+    let model = shipped();
+    let nodes: Vec<NodeId> = (0..model.file.tree.nodes().len() as NodeId)
+        .filter(|&id| {
+            model.spot(id).is_some_and(|s| {
+                s.actions
+                    .iter()
+                    .filter(|a| matches!(a.0, ActionKind::RaiseTo(_)))
+                    .count()
+                    >= 2
+            })
+        })
+        .collect();
+    let step = (nodes.len() / 150).max(1);
+    let mut moved = 0;
+    for node in nodes.into_iter().step_by(step) {
+        let spot = model.spot(node).unwrap();
+        let logs: Vec<Option<f64>> = spot
+            .actions
+            .iter()
+            .map(|a| match a.0 {
+                ActionKind::RaiseTo(t) => Some(
+                    super::translate::fraction(
+                        t,
+                        spot.street_bets[1 - spot.seat],
+                        spot.pot_after_call(),
+                    )
+                    .ln(),
+                ),
+                _ => None,
+            })
+            .collect();
+        let buckets = model.file.tree.buckets()[spot.street.as_index()];
+        for b in 0..buckets {
+            let Some(p) = model.file.try_probabilities(node, b) else {
+                continue;
+            };
+            let share = |sizing: f64| {
+                let bias = Bias {
+                    sizing,
+                    ..Bias::NEUTRAL
+                };
+                let w = biased(model, &spot, p, b, &bias);
+                let sum: f64 = w.iter().sum();
+                w.iter().map(|x| x / sum).collect::<Vec<f64>>()
+            };
+            let mean = |v: &[f64]| {
+                let (mut weighted, mut total) = (0.0, 0.0);
+                for (x, l) in v.iter().zip(&logs) {
+                    if let Some(l) = l {
+                        weighted += x * l;
+                        total += x;
+                    }
+                }
+                (total > 1e-9).then(|| weighted / total)
+            };
+            let (neutral, big, small) = (share(1.0), share(2.0), share(0.5));
+            for (i, l) in logs.iter().enumerate() {
+                if l.is_none() {
+                    assert!(
+                        (big[i] - neutral[i]).abs() < 1e-9,
+                        "node {node}, bucket {b}"
+                    );
+                    assert!(
+                        (small[i] - neutral[i]).abs() < 1e-9,
+                        "node {node}, bucket {b}"
+                    );
+                }
+            }
+            if let (Some(n), Some(g), Some(s)) = (mean(&neutral), mean(&big), mean(&small)) {
+                assert!(
+                    g >= n - 1e-9 && s <= n + 1e-9,
+                    "node {node}, bucket {b}: {s} {n} {g}"
+                );
+                if g > n + 1e-3 && s < n - 1e-3 {
+                    moved += 1;
+                }
+            }
+        }
+    }
+    assert!(moved > 100, "{moved} rows moved");
 }
