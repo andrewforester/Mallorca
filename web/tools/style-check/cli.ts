@@ -3,9 +3,8 @@ import { parseArgs } from 'node:util';
 import type { BotBias } from '../../src/brains/index.ts';
 import { createCfrModel, inflate } from '../../src/cfr/index.ts';
 import { SHIPPED_STRATEGIES, WASM_URL } from '../../src/cfr/strategies.ts';
-import { AXES } from './checks.ts';
 import { parseHands } from './parse.ts';
-import { decisionsOf, NEUTRAL } from './replay.ts';
+import { AXES, decisionsOf, NEUTRAL } from './replay.ts';
 import { report } from './report.ts';
 
 const { values, positionals } = parseArgs({

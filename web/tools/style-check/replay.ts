@@ -4,9 +4,13 @@ import type { BotBias } from '../../src/brains/index.ts';
 import type { CfrModel } from '../../src/cfr/index.ts';
 import { checkOrCall, playToEnd, startHandWith } from '../../src/engine/index.ts';
 import type { Action, LegalActions, SeatIndex, Step } from '../../src/engine/index.ts';
-import { AXES, checkDecision } from './checks.ts';
-import type { Axis, Flag, MoveClass, Shares } from './checks.ts';
 import type { ParsedHand } from './parse.ts';
+
+export type MoveClass = 'fold' | 'passive' | 'raise' | 'allIn';
+
+export type Axis = keyof BotBias;
+
+export const AXES: Axis[] = ['aggression', 'bluff', 'tightness', 'sizing', 'stickiness'];
 
 export const NEUTRAL: BotBias = { aggression: 1, bluff: 1, tightness: 1, sizing: 1, stickiness: 1 };
 
@@ -17,7 +21,13 @@ export interface Spot {
   pot: number;
 }
 
-export interface Decision extends Shares {
+export interface Decision {
+  classes: MoveClass[];
+  street: number;
+  base: number[];
+  styled: number[];
+  only: Record<Axis, number[]>;
+  played: number | null;
   hand: ParsedHand;
   index: number;
   her: SeatIndex;
@@ -26,7 +36,6 @@ export interface Decision extends Shares {
   spot: Spot;
   style: BotBias;
   moves: Action[];
-  flags: Flag[];
 }
 
 const other = (seat: SeatIndex): SeatIndex => (seat === 0 ? 1 : 0);
@@ -152,13 +161,12 @@ export function decisionsOf(model: CfrModel, hand: ParsedHand, given: Given = {}
     const only = Object.fromEntries(
       AXES.map((axis) => [axis, biasedOf(alone(used, [axis]))]),
     ) as Record<Axis, number[]>;
-    const shares: Shares = {
+    const shares = {
       classes: styled.moves.map((m) => classOf(m, spot.legal)),
       street: action.street,
       base: styled.base,
       styled: styled.biased,
       only,
-      foldAxes: biasedOf(alone(used, ['tightness', 'stickiness'])),
       played: playedIndex(styled.moves, action.action),
     };
     decisions.push({
@@ -171,7 +179,6 @@ export function decisionsOf(model: CfrModel, hand: ParsedHand, given: Given = {}
       spot,
       style: used,
       moves: styled.moves,
-      flags: checkDecision(shares, used),
     });
   });
   return decisions;

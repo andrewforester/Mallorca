@@ -65,7 +65,6 @@ describe('decisionsOf', () => {
     expect(decisions.map((d) => d.index)).toEqual([1, 2, 4, 5, 7, 9]);
     for (const d of decisions) {
       expect(d.styled).toEqual(d.base);
-      expect(d.flags.filter((f) => f.level === 'error')).toEqual([]);
       expect(d.played).not.toBeNull();
       expect(d.base.reduce((a, b) => a + b, 0)).toBeCloseTo(1);
     }
@@ -73,14 +72,14 @@ describe('decisionsOf', () => {
     expect(decisions[1]?.classes).not.toContain('fold');
   });
 
-  it('finds no broken rule for a strong style and attributes the moves to the axes', () => {
+  it('attributes the moves of a strong style to the axes', () => {
     const style = { aggression: 1.6, bluff: 1.5, tightness: 0.6, sizing: 1.5, stickiness: 2 };
     const [hand] = parseHands(textOf(line, style));
     const decisions = decisionsOf(model, hand!);
-    for (const d of decisions) {
-      expect(d.flags.filter((f) => f.level === 'error')).toEqual([]);
-      expect(d.only.sizing.length).toBe(d.base.length);
-    }
+    for (const d of decisions) expect(d.only.sizing.length).toBe(d.base.length);
+    expect(
+      decisions.some((d) => d.styled.some((v, i) => Math.abs(v - (d.base[i] ?? 0)) > 0.01)),
+    ).toBe(true);
     const flop = decisions.find((d) => d.street === 1 && d.classes.includes('fold'));
     const fold = (row: number[] | undefined) => row?.[flop?.classes.indexOf('fold') ?? 0] ?? 0;
     expect(fold(flop?.styled)).toBeLessThanOrEqual(fold(flop?.base) + 1e-9);
@@ -97,12 +96,13 @@ describe('decisionsOf', () => {
     expect(hers.map((d) => d.index)).toEqual([1, 2, 4, 5, 7, 9]);
   });
 
-  it('writes a report with a table per decision and the broken rules counted', () => {
+  it('writes a report with a table per decision', () => {
     const style = { ...NEUTRAL, stickiness: 1.44 };
     const [hand] = parseHands(textOf(line, style));
     const text = report(decisionsOf(model, hand!));
     expect(text).toContain('# Style check');
-    expect(text).toContain('6 decisions, 0 broken rules');
+    expect(text).toContain('6 decisions of her');
+    expect(text).not.toMatch(/rule|Error|Note/);
     expect(text).toContain('| Move | Blueprint | Her style | stickiness alone |');
     expect(text).toContain('(played)');
     expect(text).toContain('### Decision 2: flop, Mallorca holds');

@@ -1,6 +1,6 @@
 import { formatCard } from '../../src/cards/index.ts';
 import type { Action } from '../../src/engine/index.ts';
-import { AXES } from './checks.ts';
+import { AXES } from './replay.ts';
 import type { Decision } from './replay.ts';
 
 const STREETS = ['preflop', 'flop', 'turn', 'river'];
@@ -35,14 +35,6 @@ function table(d: Decision): string[] {
   return [head, head.map(() => '---'), ...rows].map((r) => `| ${r.join(' | ')} |`);
 }
 
-function flags(d: Decision): string[] {
-  if (d.flags.length === 0) return ['', 'No rule broken.'];
-  return [
-    '',
-    ...d.flags.map((f) => `- ${f.level === 'error' ? 'Error' : 'Note'} \`${f.rule}\`: ${f.text}`),
-  ];
-}
-
 export function report(decisions: Decision[]): string {
   const hands: string[] = [];
   let title = '';
@@ -51,10 +43,8 @@ export function report(decisions: Decision[]): string {
       title = d.hand.title;
       hands.push(`## ${title}`, '');
     }
-    hands.push(...heading(d, i + 1), ...table(d), ...flags(d), '');
+    hands.push(...heading(d, i + 1), ...table(d), '');
   });
-  const errors = decisions.flatMap((d) => d.flags.filter((f) => f.level === 'error'));
-  const notes = decisions.flatMap((d) => d.flags.filter((f) => f.level === 'note'));
-  const summary = `${decisions.length} decisions, ${errors.length} broken rules, ${notes.length} notes.`;
+  const summary = `${decisions.length} decisions of her, each replayed with the blueprint, her style and every axis alone.`;
   return [`# Style check`, '', summary, '', ...hands].join('\n');
 }
