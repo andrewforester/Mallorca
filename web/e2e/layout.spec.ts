@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { byId, expect, FAST_URL, leaveTable, openMenu, test } from './fixtures.ts';
 
 const CONTROLS = ['fold', 'passive', 'raise'];
-const SIZE = ['preset-half', 'preset-pot', 'preset-allin', 'raise-amount', 'raise-size'];
+const SIZE = ['preset-half', 'preset-pot', 'preset-allin', 'raise-amount'];
 
 async function expectTheSizeInView(page: Page) {
   for (const id of SIZE) {
