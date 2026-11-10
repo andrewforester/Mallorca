@@ -11,8 +11,12 @@
     grid-template-columns: minmax(0, 1fr) min(680px, 50vw) minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
     --card-width: 62px;
-    --hole-width: 72px;
+    --hole-width: 56px;
     --shown-width: 56px;
+    --board-gap: 14px;
+    --chip-dot-size: 28px;
+    --bet-font: 24px;
+    --dealer-size: 36px;
     --face-basis: 440px;
   }
 
@@ -47,27 +51,41 @@
   }
 
   .seat-top {
-    padding: 12px 4px 0;
+    padding: 0 4px;
+    --back-width: 50px;
+    --shown-width: 56px;
   }
 
-  .seat-top .seat-cards:not(.seat-cards-shown) .card {
-    width: 18px;
-  }
-
-  .seat-name {
-    font-size: 17px;
-  }
-
-  .seat-stack {
-    font-size: 15px;
+  .seat-top .seat-cards {
+    margin-top: -45px;
   }
 
   .seat-bottom {
     padding: 0 4px 28px;
   }
 
-  .pot-amount {
-    font-size: 16px;
+  .seat-block {
+    min-width: 136px;
+  }
+
+  .seat-side {
+    --side-offset: 74px;
+    gap: 16px;
+  }
+
+  .board-row {
+    flex-direction: row;
+    margin: auto 0;
+  }
+
+  .pot-block {
+    position: absolute;
+    right: calc(50% + 190px);
+  }
+
+  .pot-amount,
+  .pot-total:only-child {
+    font-size: 20px;
   }
 
   .action-panel {

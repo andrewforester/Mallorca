@@ -117,6 +117,22 @@ describe('Table result and announcements', () => {
     expect(screen.getByTestId('seat-1').contains(dealer)).toBe(false);
   });
 
+  it('shows no action strip after the blinds', () => {
+    const vm = viewModel();
+    const blinds = {
+      ...vm,
+      seats: [
+        { ...vm.seats[0], bet: 10, lastAction: null },
+        { ...vm.seats[1], bet: 20, lastAction: null },
+      ] as typeof vm.seats,
+    };
+    table(blinds);
+    expect(screen.queryByTestId('action-0')).toBeNull();
+    expect(screen.queryByTestId('action-1')).toBeNull();
+    expect(screen.getByTestId('bet-0').getAttribute('data-amount')).toBe('10');
+    expect(screen.getByTestId('bet-1').getAttribute('data-amount')).toBe('20');
+  });
+
   it('puts each bet and action tag on its own seat', () => {
     table();
     expect(screen.getByTestId('seat-0').contains(screen.getByTestId('bet-0'))).toBe(true);

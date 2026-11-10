@@ -16,9 +16,9 @@ export interface SeatProps {
   children?: ComponentChildren;
 }
 
-function Cards({ view, winner, shown }: { view: SeatView; winner: boolean; shown: boolean }) {
+function Cards({ view, winner }: { view: SeatView; winner: boolean }) {
   return (
-    <div class={shown ? 'seat-cards seat-cards-shown' : 'seat-cards'}>
+    <div class="seat-cards">
       {view.cards.map((card, slot) => (
         <Card key={slot} card={card} highlight={winner && card !== 'back'} />
       ))}
@@ -26,45 +26,44 @@ function Cards({ view, winner, shown }: { view: SeatView; winner: boolean; shown
   );
 }
 
-function Plate({ props, backs }: { props: SeatProps; backs: ComponentChildren }) {
-  const { index, view, action, thinking, bet } = props;
+function Block({ index, view, action, thinking }: SeatProps) {
   return (
-    <div class="seat-plate">
-      <div class="seat-who">
-        <span class="seat-name">{view.name}</span>
-        {view.isButton && <DealerButton />}
-        <span class="seat-stack" data-testid={`stack-${index}`} data-stack={view.stack}>
-          {view.stack}
-        </span>
-        {backs}
-      </div>
-      <div class="seat-act">
-        {bet !== undefined && <BetChips seat={index} amount={bet.amount} sweeping={bet.sweeping} />}
-        <div class="seat-bubble">
-          <ActionBubble seat={index} entry={action} thinking={thinking} />
-        </div>
-      </div>
+    <div class="seat-block">
+      <span class="seat-name">{view.name}</span>
+      <span class="seat-stack" data-testid={`stack-${index}`} data-stack={view.stack}>
+        {view.stack}
+      </span>
+      <ActionBubble seat={index} entry={action} thinking={thinking} />
+    </div>
+  );
+}
+
+function Side({ index, view, bet }: SeatProps) {
+  return (
+    <div class="seat-side">
+      <span class="dealer-slot">{view.isButton && <DealerButton />}</span>
+      {bet !== undefined && <BetChips seat={index} amount={bet.amount} sweeping={bet.sweeping} />}
     </div>
   );
 }
 
 export function Seat(props: SeatProps) {
   const { index, view, winner, position, children } = props;
+  const shown = position === 'top' && view.cards.some((card) => card !== 'back');
   const className = [
     'seat',
     `seat-${position}`,
+    shown ? 'seat-shown' : '',
     view.isToAct ? 'seat-active' : '',
     winner ? 'seat-winner' : '',
   ]
     .filter(Boolean)
     .join(' ');
-  const top = position === 'top';
-  const shown = top && view.cards.some((card) => card !== 'back');
-  const cards = <Cards view={view} winner={winner} shown={shown} />;
   return (
     <section class={className} data-testid={`seat-${index}`} data-winner={winner}>
-      {(!top || shown) && cards}
-      <Plate props={props} backs={top && !shown ? cards : null} />
+      <Cards view={view} winner={winner} />
+      <Block {...props} />
+      <Side {...props} />
       {children}
     </section>
   );
