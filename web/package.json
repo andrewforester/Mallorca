@@ -30,6 +30,7 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write . && eslint . --fix",
     "arena:external": "node tools/arena/external/cli.ts",
+    "style-check": "npm run wasm && node tools/style-check/cli.ts",
     "prearena:external": "npm run wasm"
   },
   "engines": {
