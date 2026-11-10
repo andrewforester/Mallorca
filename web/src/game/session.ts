@@ -7,7 +7,6 @@ import type { Decision } from '../brains/index.ts';
 import { toObservations } from '../brains/index.ts';
 import {
   apply,
-  createTable,
   handHistory,
   legalActionsOf,
   startHand,
@@ -43,6 +42,8 @@ import type { SessionFace } from './sessionFace.ts';
 import { initialConversation } from './sessionConversation.ts';
 import { beginHer, observeHer, wireHer, wireProbe } from './sessionWiring.ts';
 import type { Her, WiringHost } from './sessionWiring.ts';
+import { freshTable } from './freshTable.ts';
+import { RUNOUT_MS, runoutOf, stageRunout } from './runout.ts';
 import { createTimers } from './timers.ts';
 import type { Timers } from './timers.ts';
 import type { SessionConversation } from './sessionConversation.ts';
@@ -50,7 +51,6 @@ import type { Bias } from '../persona/index.ts';
 import type { SessionPersona } from './sessionPersona.ts';
 import { COACH_OFF, createCoach } from './coach.ts';
 import type { Coach } from './coach.ts';
-import type { CoachDecision } from '../coach/index.ts';
 import type { DebugProbe } from './debug.ts';
 
 export { resolveIntent, toIntent } from './intent.ts';
@@ -69,6 +69,7 @@ export type {
   SessionState,
 } from './sessionTypes.ts';
 import type {
+  Played,
   Session,
   SessionActions,
   SessionOptions,
@@ -102,21 +103,6 @@ interface Runtime {
   face: SessionFace;
   probe: DebugProbe | null;
   trace: Her['trace'];
-}
-
-function freshTable(options: SessionOptions, mode: TableMode): Table {
-  const { names, startingStacks } = options;
-  const table = createTable(names, mode, 0);
-  if (startingStacks === undefined) {
-    return table;
-  }
-  return {
-    ...table,
-    seats: [
-      { name: names[0], stack: startingStacks[0] },
-      { name: names[1], stack: startingStacks[1] },
-    ],
-  };
 }
 
 function tally(rt: Runtime, table: Table): SessionResult {
@@ -166,13 +152,14 @@ function conclude(rt: Runtime, step: Step): void {
   });
 }
 
-interface Played {
-  decision?: Decision | null;
-  bias?: Bias;
-  coached?: CoachDecision | null;
+function settle(rt: Runtime, step: Step, events: EngineEvent[], opens = false): true {
+  rt.set({ table: step.state });
+  record(rt, events, opens);
+  conclude(rt, step);
+  return true;
 }
 
-function play(rt: Runtime, action: Action, played: Played = {}): void {
+function play(rt: Runtime, action: Action, played: Played = {}): Promise<boolean> | true {
   const { decision = null, bias, coached = null } = played;
   const { hand } = rt.get().table;
   const opens = hand !== null && isOpeningBet(hand, action);
@@ -183,9 +170,19 @@ function play(rt: Runtime, action: Action, played: Played = {}): void {
   if (coached !== null) {
     rt.recorder.coached(coached, step.events);
   }
-  rt.set({ table: step.state });
-  record(rt, step.events, opens);
-  conclude(rt, step);
+  const runout = rt.botDelayMs > 0 ? runoutOf(step) : null;
+  if (runout === null) {
+    return settle(rt, step, step.events, opens);
+  }
+  const mine = rt.epoch;
+  rt.set({ phase: 'animating' });
+  return stageRunout(runout, {
+    show: (stage, first) => {
+      rt.set({ table: stage.table });
+      record(rt, stage.events, opens && first);
+    },
+    wait: () => rt.timers.sleep(RUNOUT_MS).then(() => mine === rt.epoch),
+  }).then((alive) => alive && settle(rt, step, runout.tail));
 }
 
 async function decide(rt: Runtime, legal: LegalActions, bias?: Bias): Promise<Decision | null> {
@@ -217,8 +214,7 @@ async function botTurn(rt: Runtime, myEpoch: number): Promise<boolean> {
   const intent: Intent = decision === null ? { kind: 'passive' } : toIntent(decision.action);
   const action = resolveIntent(intent, legal);
   rt.probe?.decided({ decision, bias, action, legal, table: rt.get().table, seat: rt.botSeat });
-  play(rt, action, { decision, bias });
-  return true;
+  return play(rt, action, { decision, bias });
 }
 
 async function drive(rt: Runtime, myEpoch: number): Promise<void> {
@@ -335,8 +331,9 @@ function sessionActions(rt: Runtime, options: SessionOptions): SessionActions {
       const action = resolveIntent(intent, legalActionsOf(table));
       const coached = rt.coach.played(action);
       rt.coach.acted();
-      play(rt, action, { coached });
-      return drive(rt, rt.epoch);
+      const played = play(rt, action, { coached });
+      const next = (alive: boolean) => (alive ? drive(rt, rt.epoch) : undefined);
+      return played === true ? drive(rt, rt.epoch) : played.then(next);
     },
     say: (text) => rt.conversation.say(text),
     quick: (id, text) => rt.conversation.quick(id, text),
