@@ -144,12 +144,12 @@
     line-height: 1.15;
   }
 
-  .pot > span:only-child {
+  .pot > span {
     display: flex;
     flex-direction: column;
   }
 
-  .pot > span:only-child .pot-word {
+  .pot-word {
     color: var(--color-muted);
     font-size: 12px;
     font-weight: 500;

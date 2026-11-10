@@ -119,6 +119,28 @@ test('the table stays put while she acts and when a hand ends', async ({ page })
   }
 });
 
+test('a pot with bets stacks Pot and Total, each word over its number', async ({ page }) => {
+  await startOnPhone(page);
+  await page.evaluate(() => {
+    const pot = document.querySelector('[data-testid="pot"]');
+    if (pot !== null) {
+      pot.innerHTML =
+        '<span class="pot-amount"><span class="pot-word">Pot</span> <span class="pot-number">1240</span></span>' +
+        '<span class="pot-total"><span class="pot-word">Total</span> <span class="pot-number">1980</span></span>';
+    }
+  });
+  const words = page.locator('[data-testid="pot"] .pot-word');
+  const numbers = page.locator('[data-testid="pot"] .pot-number');
+  for (let part = 0; part < 2; part += 1) {
+    const word = await words.nth(part).boundingBox();
+    const number = await numbers.nth(part).boundingBox();
+    expect((number?.y ?? 0) >= (word?.y ?? 0) + (word?.height ?? 0) - 1).toBe(true);
+  }
+  const pot = await box(page, '[data-testid="pot"]');
+  const cards = await box(page, '[data-testid="seat-0"] .seat-cards');
+  expect(pot.x + pot.width).toBeLessThanOrEqual(cards.x - 8);
+});
+
 test('the pot stacks its word over the number beside your cards', async ({ page }) => {
   await startOnPhone(page);
   const word = await box(page, '[data-testid="pot"] .pot-word');
