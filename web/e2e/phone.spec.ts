@@ -99,3 +99,22 @@ test('the whole table fits one screen without scrolling', async ({ page }) => {
     viewport.height,
   );
 });
+
+test('the table stays put while she acts and when a hand ends', async ({ page }) => {
+  const viewport = page.viewportSize();
+  test.skip(viewport === null || viewport.width >= viewport.height, 'phones only');
+  await page.goto(FAST_URL.replace('botDelay=0', 'botDelay=400'));
+  await byId(page, 'start-tournament').click();
+  await expect(byId(page, 'passive')).toBeEnabled();
+  const top = async () => (await box(page, '[data-testid="board"]')).y;
+  const resting = await top();
+  for (let step = 0; step < 6; step += 1) {
+    const next = byId(page, 'next-hand');
+    await ((await next.isVisible()) ? next : byId(page, 'passive')).click();
+    for (let sample = 0; sample < 6; sample += 1) {
+      expect(Math.abs((await top()) - resting)).toBeLessThan(1);
+      await page.waitForTimeout(120);
+    }
+    await expect(byId(page, 'passive').and(page.locator(':enabled')).or(next)).toBeVisible();
+  }
+});

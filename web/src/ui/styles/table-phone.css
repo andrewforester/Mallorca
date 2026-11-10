@@ -191,6 +191,11 @@
     background: transparent;
   }
 
+  .table-layout:not(.table-layer-open) .action-panel {
+    justify-content: flex-end;
+    min-height: calc(168px + max(34px, env(safe-area-inset-bottom)));
+  }
+
   .action-bar {
     gap: 16px;
   }
