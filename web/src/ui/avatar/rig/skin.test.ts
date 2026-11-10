@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
-import { mouthMaterial } from './skin.ts';
+import type { WrinkleLayout } from './skin.ts';
+import { mouthMaterial, skinMaterial } from './skin.ts';
 
 function compiled(material: THREE.Material): string {
   const shader = {
@@ -18,5 +19,24 @@ describe('mouthMaterial', () => {
     const shade = fragment.indexOf('outgoingLight *= mouthShade;');
     expect(shade).toBeGreaterThan(fragment.indexOf('float mouthShade'));
     expect(shade).toBeLessThan(fragment.indexOf('#include <opaque_fragment>'));
+  });
+});
+
+describe('skinMaterial', () => {
+  it('lifts the lid fold without normalizing a vanishing blend', () => {
+    const layout: WrinkleLayout = {
+      masks: new THREE.DataArrayTexture(),
+      count: 1,
+      weights: [new THREE.Vector3()],
+      lids: new THREE.Vector2(),
+      eye: new THREE.Vector2(),
+    };
+    const t = () => new THREE.Texture();
+    const material = skinMaterial(
+      { color: t(), normal: t(), roughness: t(), wrinkles: [t(), t(), t()] },
+      layout,
+    );
+    const fragment = compiled(material);
+    expect(fragment).toContain('dot(lidMix, lidUp) > 0.05 ? normalize(lidMix) : lidUp');
   });
 });

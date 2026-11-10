@@ -97,7 +97,9 @@ vec3 nn = nb + 4.0 * (wmA.x * (texture2D(uWm1, vNormalMapUv).xyz - nb) + wmA.y *
 vec3 mapN = normalize(nn * 2.0 - 1.0);`;
 
 const LID = `#include <normal_fragment_maps>
-normal = normalize(mix(normal, vec3(0.0, 0.35, 1.0), lidFold() * 0.85));`;
+vec3 lidUp = normalize(vec3(0.0, 0.35, 1.0));
+vec3 lidMix = mix(normal, lidUp, lidFold() * 0.85);
+normal = dot(lidMix, lidUp) > 0.05 ? normalize(lidMix) : lidUp;`;
 
 function wrinkleShader(shader: Shader, textures: SkinTextures, layout: WrinkleLayout): void {
   skin12(shader);
