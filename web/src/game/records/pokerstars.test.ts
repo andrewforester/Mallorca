@@ -233,6 +233,28 @@ describe('toFeelingsText', () => {
     ]);
   });
 
+  it('puts the style she played with right after each of her decisions', () => {
+    const foldIndex = plain.events.findLastIndex((e) => e.type === 'acted');
+    const styled: HandRecord = {
+      ...felt,
+      decisions: [
+        {
+          eventIndex: foldIndex,
+          solverChoice: 'fold',
+          evByAction: { fold: 0, passive: null, aggressive: null },
+          style: { aggression: 0.78, bluff: 0.66, tightness: 0.74, sizing: 0.83, stickiness: 1.44 },
+        },
+      ],
+    };
+    const lines = toFeelingsText([styled]).split('\n');
+    const folded = lines.findIndex((l) => l.endsWith(': folds'));
+    expect(lines[folded + 1]).toBe(
+      '  ~ style: aggression 0.78 bluff 0.66 tightness 0.74 sizing 0.83 stickiness 1.44',
+    );
+    expect(lines.filter((l) => l.includes('~ style:'))).toHaveLength(1);
+    expect(toPokerStars([styled])).not.toContain('~ style:');
+  });
+
   it('ends a hand still in play without a summary', () => {
     const live = recordOf([2000, 2000], 'Ah Kd', '7c 2s', 'Qh Jd 4c 9s 3h', [raiseTo(60)]);
     const text = toFeelingsText([live]);

@@ -247,13 +247,25 @@ export function toPokerStars(records: HandRecord[]): string {
   return records.map((record) => formatHand(record)).join('\n\n\n');
 }
 
+const AXES = ['aggression', 'bluff', 'tightness', 'sizing', 'stickiness'] as const;
+
+function styleLines(record: HandRecord, index: number): string[] {
+  return record.decisions
+    .filter((d) => d.eventIndex === index && d.style !== undefined)
+    .map(
+      (d) => `  ~ style: ${AXES.map((axis) => `${axis} ${d.style?.[axis].toFixed(2)}`).join(' ')}`,
+    );
+}
+
 function feelingsExtras(record: HandRecord, said: Said): Extras {
   const feelings = record.feelings ?? [];
   return {
-    after: (index) =>
-      feelings
+    after: (index) => [
+      ...styleLines(record, index),
+      ...feelings
         .filter((f) => f.eventIndex === index && worthALine(f))
         .map((f) => feelingLine(f, said)),
+    ],
     both: true,
   };
 }
