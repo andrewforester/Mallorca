@@ -1,6 +1,6 @@
 ---
 name: feeling-check
-description: Read a hand history copied from the debug panel as an emotionally intelligent person would, and judge whether her feelings fit what happened at the table and her character, and whether her playing style moved the way such feelings would move a real person's play. Use when the owner pastes a history with "~ she feels" and "~ style" lines, or asks whether her emotions or her tilt look believable.
+description: Read a hand history copied from the debug panel as an emotionally intelligent person would, and judge whether her feelings fit what happened at the table and her character, and whether her playing style moved the way such feelings would move a real person's play. Use when someone pastes a history with "~ she feels" and "~ style" lines, or asks whether her emotions or her tilt look believable.
 ---
 
 # Feeling check
@@ -24,11 +24,11 @@ A history copied from the debug panel: PokerStars text, one block per hand, with
 
 Save the pasted text to a file in the scratchpad as it is, and read it whole before judging.
 
-What the history does not carry, ask the owner for or say you are missing:
+What the history does not carry, ask for it or say you are missing it:
 
 - **Who she is.** The character (Mallorca, Ingrid, Lola and so on) and, if known, her traits. Her character is the
   measure of everything else: the same bad beat should feel different to a calm professional and to an anxious
-  perfectionist. If the owner does not say, infer it from her reactions and say that you did.
+  perfectionist. If nobody says, infer it from her reactions and say that you did.
 - **Her state between impulses**: the level of each emotion, her mood, how much of it reaches the play. Judge from
   the impulses, the mood words and the style, and say where the missing state leaves you unsure.
 
@@ -63,18 +63,18 @@ Then compare, with care and without a checklist. Things worth noticing, as examp
 - **The whole evening.** Read across hands: does she read as one consistent person with moods, or as a set of
   disconnected reactions? Is anything uncanny, even if you cannot say it is wrong?
 
-Notice what rings true as well as what does not; the owner needs both.
+Notice what rings true as well as what does not; both are needed.
 
-## Report to the owner
+## Report
 
-Answer in the owner's language. Start with a short verdict in plain words: does she read as a believable person of
+Start with a short verdict in plain words: does she read as a believable person of
 her character over this session, and how she felt to you. Then the moments that matter, each with what happened, what
 she felt (the impulse lines), what her style did (the style lines), and what a person like her would have felt and
 done instead if it differs. End with the few things that look off, ordered by how much they break the feeling of a
 real person.
 
 When something looks off, describe it as a general tendency of the model (for example "her fear does not fade between
-hands", "anger never reaches her stickiness"), not as a fix for one hand: the owner wants general mechanisms, not
+hands", "anger never reaches her stickiness"), not as a fix for one hand: this project wants general mechanisms, not
 special cases. Say what you would look at to confirm it, and propose it as its own task. Do not change the code from
 this skill.
 
