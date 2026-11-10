@@ -2,7 +2,8 @@ import type { LoadProgress } from './workerProtocol.ts';
 import type { StoreApi } from 'zustand/vanilla';
 import type { Decision } from '../brains/index.ts';
 import type { LogEntry, SeatIndex, Table, TableMode } from '../engine/index.ts';
-import type { Personality, PersonalityKey } from '../persona/index.ts';
+import type { CoachDecision } from '../coach/index.ts';
+import type { Bias, Personality, PersonalityKey } from '../persona/index.ts';
 import type { BotClient } from './botClient.ts';
 import type { CoachState } from './coach.ts';
 import type { DebugState } from './debug.ts';
@@ -87,4 +88,10 @@ export interface SessionOptions {
   coach?: boolean;
   faceOn?: boolean;
   debug?: boolean;
+}
+
+export interface Played {
+  decision?: Decision | null;
+  bias?: Bias;
+  coached?: CoachDecision | null;
 }

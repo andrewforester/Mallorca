@@ -64,7 +64,7 @@ function seatView(state: SessionState, seat: SeatIndex, humanSeat: SeatIndex): S
   const { table, result } = state;
   const { hand } = table;
   const hole = hand?.holeCards[seat];
-  const revealed = seat === humanSeat || result?.showdown === true;
+  const revealed = seat === humanSeat || result?.showdown === true || hand?.street === 'showdown';
   const cards: (Card | 'back')[] =
     hole === undefined ? [] : revealed ? [hole[0], hole[1]] : ['back', 'back'];
   return {

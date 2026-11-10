@@ -548,6 +548,12 @@ class, mask)` moves a per-class chance toward the mean of its classes by her mas
   changes only when a hand completes.
 - Turn loop: after each step the session forwards the events to the bot as observations, then either waits for
   the human or asks the bot to decide and applies its action after `botDelayMs`.
+- All-in run-out: when a step ends the hand at a showdown and deals one or more streets, and `botDelayMs` is above
+  zero, `runoutOf(step)` in `runout.ts` splits it into one stage per dealt street and a tail from the `showdown`
+  event on. The session shows each stage for `RUNOUT_MS` (1200 ms) in phase `animating`: the stage's table has the
+  board and pot of that street, the stacks before the award, `hand.street` `showdown` and no winner, and only the
+  stage's events are recorded, logged and observed. The tail then sets the final table and the result. The view
+  model shows both hands face up while `hand.street` is `showdown`. With `botDelayMs` 0 the whole step lands at once.
 - `Intent` is `fold`, `passive` (check or call) or `raise` with a target. `resolveIntent` turns it into a legal
   action: a raise is rounded and clamped into `legal.raise`, a fold becomes a check when checking is free.
 - `log` holds the `LogEntry` values of the session. `groupHand(log)` in `handLog.ts` splits the last hand, with
