@@ -202,7 +202,7 @@ slightly stronger or weaker one: the row of the same node is blended from the tw
 strength percentile, `δ = 0.35 ln(1/tightness)`, `0.2 ln(stickiness)` and `0.2 ln(aggression)`. Preflop classes are
 ordered by their equity against a random hand; buckets after the flop are already ordered by strength. Sizing
 multiplies the pot fraction of the bot's own bet or raise. Aggression keeps its factor between calls and raises;
-bluff keeps its factor and is left for its own study. The goal: the edges of each axis, 0.5 and 2 (the clamp of the
+bluff has its own rule, below. The goal: the edges of each axis, 0.5 and 2 (the clamp of the
 emotion model), make a different kind of player.
 
 Each axis against `cfr`, seed 5, 2000 pairs (4000 hands) per point, each frequency known to about ±1.5 points:
@@ -239,6 +239,39 @@ station after the flop, and within the noise for the loose bot before the flop, 
 Folding too much costs more than calling too much. Sizing is free against `cfr`, which does not read sizes; its
 value is that a person can. The gain of an exploiting opponent is not measured: `tilt-exploiter` is too simple to
 stand for one.
+
+### Bluff
+
+Bluffing is not aggression: aggression is how often she bets with any hand, bluffing is which hands her bets hold.
+`bluff` acts only where she is checked to after the flop, and only on a hand in the bottom 35% of the street's
+strength order: with `t = log2(bluff)`, a share `t` of its checks moves into its bets (into the node's average bet mix
+when the hand never bets), and below 1 a share `-t` of its bets moves back into the check. At 2 she bets every such
+hand, at 0.5 none, sizes stay the blueprint's, and spots facing a bet are left to stickiness and aggression.
+
+`--stats` measures it as `riverBluffShare`: the share of her river bets and raises made with a hand that beats less
+than 35% of the other hands on the board. At equilibrium a bet of 0.8 pot holds about 31% bluffs (`B / (P + 2B)`).
+
+Against `cfr-v2`, seed 5, 2000 pairs (4000 hands) per point, the river share known to about ±4 points:
+
+| `bluff`                 | 0.5   | 0.67  | 0.8   | 1     | 1.25  | 1.5   | 2     |
+| ----------------------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+| river bluffs            | 4.0%  | 12.4% | 17.4% | 21.8% | 25.7% | 29.6% | 32.5% |
+| bet after the flop      | 22.1% | 25.5% | 27.5% | 29.9% | 34.2% | 38.1% | 43.8% |
+| bet size after the flop | 0.82  | 0.79  | 0.79  | 0.80  | 0.82  | 0.81  | 0.81  |
+
+The edges against `cfr-v2`, seed 2, 20000 pairs (40000 hands) each:
+
+| Bot A              | bb/100      | af   | bet   | fold to bet | raise | bet size | river bluffs | river bets |
+| ------------------ | ----------- | ---- | ----- | ----------- | ----- | -------- | ------------ | ---------- |
+| `cfr-v2`           | -1.8 ± 10.0 | 2.28 | 29.3% | 41.6%       | 14.6% | 0.81     | 23.8%        | 4939       |
+| `cfr-v2@bluff=0.5` | -3.6 ± 9.6  | 1.73 | 21.7% | 42.7%       | 15.3% | 0.84     | 3.6%         | 4066       |
+| `cfr-v2@bluff=2`   | -3.5 ± 11.4 | 3.28 | 43.2% | 37.2%       | 15.1% | 0.83     | 35.2%        | 6081       |
+
+At 0.5 her river bets are almost all for value; at 2 she bets every weak hand checked to her and about a third of
+her river bets are bluffs. The upper edge is held by the hands that reach the river: a bluffer who bets the flop and
+the turn with air takes many of those pots before the river. Raise frequency and sizes do not move, and fold to bet
+moves only because she faces fewer bets. Neither edge costs a measurable amount against `cfr-v2`, which does not
+exploit either; a player who calls too much would punish 2, and one who folds too much would punish 0.5.
 
 ## Managing runs
 

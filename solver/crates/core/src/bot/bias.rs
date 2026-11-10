@@ -1,3 +1,4 @@
+use super::bluff::{bluffed, is_bet, pull};
 use super::translate::sample;
 use super::{Model, Spot};
 use crate::tree::{ActionKind, Street};
@@ -27,28 +28,23 @@ impl Default for Bias {
     }
 }
 
-pub struct Situation {
-    pub bluffing: bool,
-}
-
 pub const LOOSE_SHIFT: f64 = 0.35;
 pub const AGGRESSIVE_SHIFT: f64 = 0.2;
 pub const STICKY_SHIFT: f64 = 0.2;
 
-fn factor(kind: ActionKind, bias: &Bias, situation: &Situation) -> f64 {
+fn factor(kind: ActionKind, bias: &Bias) -> f64 {
     match kind {
         ActionKind::Fold => 1.0,
         ActionKind::Check | ActionKind::Call => 1.0 / bias.aggression,
-        _ if situation.bluffing => bias.aggression * bias.bluff,
         _ => bias.aggression,
     }
 }
 
-pub fn reweight(row: &[f64], kinds: &[ActionKind], bias: &Bias, situation: &Situation) -> Vec<f64> {
+pub fn reweight(row: &[f64], kinds: &[ActionKind], bias: &Bias) -> Vec<f64> {
     let weighted: Vec<f64> = row
         .iter()
         .zip(kinds)
-        .map(|(&p, &kind)| p * factor(kind, bias, situation))
+        .map(|(&p, &kind)| p * factor(kind, bias))
         .collect();
     let Some(fold) = kinds.iter().position(|&k| k == ActionKind::Fold) else {
         return weighted;
@@ -253,13 +249,44 @@ pub(super) fn biased(
         Some(s) => check_only(&real, s.share, &kinds, delta, &s.row),
         None => real,
     };
-    let late = matches!(spot.street, Street::Turn | Street::River);
-    let buckets = model.file.tree.buckets()[spot.street.as_index()];
-    let low = f64::from(bucket) < 0.35 * f64::from(buckets);
-    let situation = Situation {
-        bluffing: low && late,
+    let row = reweight(&row, &kinds, bias);
+    let t = pull(
+        bias.bluff,
+        spot.street,
+        model.order(spot.street).percentile(bucket),
+    );
+    let never_bets = kinds
+        .iter()
+        .zip(&row)
+        .all(|(&k, &w)| !is_bet(k) || w == 0.0);
+    let fallback = if t > 0.0 && never_bets {
+        node_mix(model, spot, probabilities.len())
+    } else {
+        Vec::new()
     };
-    reweight(&row, &kinds, bias, &situation)
+    bluffed(&row, &kinds, t, &fallback)
+}
+
+fn node_mix(model: &Model, spot: &Spot<'_>, width: usize) -> Vec<f64> {
+    let buckets = model.file.tree.buckets()[spot.street.as_index()];
+    let mut mix = vec![0.0; width];
+    for b in 0..buckets {
+        let Some(row) = model
+            .file
+            .try_probabilities(spot.id, b)
+            .filter(|r| r.len() == width)
+        else {
+            continue;
+        };
+        let total: f64 = row.iter().map(|&p| f64::from(p)).sum();
+        if total <= 0.0 {
+            continue;
+        }
+        for (m, &p) in mix.iter_mut().zip(row) {
+            *m += f64::from(p) / total;
+        }
+    }
+    mix
 }
 
 pub(super) fn choose(
@@ -295,17 +322,12 @@ mod tests {
         }
     }
 
-    fn at(bluffing: bool) -> Situation {
-        Situation { bluffing }
-    }
-
     #[test]
     fn neutral_bias_keeps_weights() {
         let w = reweight(
             &[100.0, 55.0, 100.0],
             &[Fold, Call, RaiseTo(60)],
             &Bias::NEUTRAL,
-            &at(false),
         );
         assert_eq!(w, vec![100.0, 55.0, 100.0]);
         assert_eq!(Bias::default(), Bias::NEUTRAL);
@@ -315,9 +337,9 @@ mod tests {
     fn aggression_moves_mass_to_raises() {
         let p = [50.0, 80.0, 70.0, 55.0];
         let kinds = [Fold, Call, RaiseTo(60), AllIn];
-        let neutral = shares(&reweight(&p, &kinds, &Bias::NEUTRAL, &at(false)));
-        let hot = shares(&reweight(&p, &kinds, &bias(1.25, 1.0, 1.0), &at(false)));
-        let cold = shares(&reweight(&p, &kinds, &bias(0.8, 1.0, 1.0), &at(false)));
+        let neutral = shares(&reweight(&p, &kinds, &Bias::NEUTRAL));
+        let hot = shares(&reweight(&p, &kinds, &bias(1.25, 1.0, 1.0)));
+        let cold = shares(&reweight(&p, &kinds, &bias(0.8, 1.0, 1.0)));
         assert!(hot[2] > neutral[2] && hot[3] > neutral[3], "{hot:?}");
         assert!(hot[1] < neutral[1], "{hot:?}");
         assert!(cold[2] < neutral[2] && cold[3] < neutral[3], "{cold:?}");
@@ -326,7 +348,6 @@ mod tests {
             &[100.0, 100.0],
             &[Check, RaiseTo(30)],
             &bias(1.25, 1.0, 1.0),
-            &at(false),
         );
         assert_eq!(w, vec![80.0, 125.0]);
     }
@@ -336,29 +357,19 @@ mod tests {
         let p = [50.0, 80.0, 70.0, 55.0];
         let kinds = [Fold, Call, RaiseTo(60), AllIn];
         for aggression in [0.6, 1.4] {
-            let w = shares(&reweight(
-                &p,
-                &kinds,
-                &bias(aggression, 1.3, 1.0),
-                &at(true),
-            ));
+            let w = shares(&reweight(&p, &kinds, &bias(aggression, 1.3, 1.0)));
             assert!((w[0] - 50.0 / 255.0).abs() < 1e-12, "{aggression}: {w:?}");
         }
-        let hot = shares(&reweight(&p, &kinds, &bias(1.4, 1.0, 1.0), &at(false)));
+        let hot = shares(&reweight(&p, &kinds, &bias(1.4, 1.0, 1.0)));
         assert!(hot[2] > 70.0 / 255.0 && hot[1] < 80.0 / 255.0, "{hot:?}");
     }
 
     #[test]
-    fn bluff_acts_only_when_bluffing() {
+    fn the_kind_reweight_leaves_bluffing_to_its_own_pull() {
         let p = [100.0, 100.0, 50.0];
         let kinds = [Check, RaiseTo(30), AllIn];
-        let bluffer = bias(1.0, 1.3, 1.0);
-        let neutral = shares(&reweight(&p, &kinds, &Bias::NEUTRAL, &at(true)));
-        let w = shares(&reweight(&p, &kinds, &bluffer, &at(false)));
-        assert_eq!(w, neutral);
-        let w = shares(&reweight(&p, &kinds, &bluffer, &at(true)));
-        assert!(w[1] > neutral[1] && w[2] > neutral[2], "{w:?}");
-        assert!(w[0] < neutral[0], "{w:?}");
+        let w = reweight(&p, &kinds, &bias(1.0, 2.0, 1.0));
+        assert_eq!(w, p.to_vec());
     }
 
     #[test]
@@ -372,7 +383,6 @@ mod tests {
                 sizing: 2.0,
                 ..Bias::NEUTRAL
             },
-            &at(false),
         );
         assert_eq!(w, vec![80.0, 60.0, 20.0]);
     }

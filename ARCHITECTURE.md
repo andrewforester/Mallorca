@@ -278,8 +278,11 @@ push/fold, neural opponent models, hand history parsers, the robot and the Swing
   and the node's row is blended from the two buckets next to the bot's strength percentile shifted by `δ`, which is
   `0.35 ln(1 / tightness)` before the flop and `0.2 ln(stickiness)` after it at a node with a fold, and
   `0.2 ln(aggression)` at a node without one. It then reweights by action kind: a check or a call by
-  `1 / aggression`, a raise or an all-in by `aggression` (times `bluff` for a low bucket on the turn or the river);
-  folds are not scaled. `sizing` multiplies the pot fraction of the bet or raise she makes, clamped to the legal
+  `1 / aggression`, a raise or an all-in by `aggression`; folds are not scaled. `bluff` acts last and only where she
+  is checked to after the flop with a hand in the bottom 35% of the street's strength order (`BLUFF_ZONE`): with
+  `t = log2(bluff)` clamped to [-1, 1], a share `t` of her checks moves into her bets, or into the node's average bet
+  mix when the hand never bets, and below 1 a share `-t` of her bets moves back into the check. So 2 bets every
+  such hand, 0.5 bets none, and the sizes stay those of the blueprint. `sizing` multiplies the pot fraction of the bet or raise she makes, clamped to the legal
   range, so it changes how big she bets, not how often.
 - The coach reads the strategy through two more `CfrBot` methods. Hole-card pairs are indexed
   `b * (b - 1) / 2 + a` for cards `a < b`, 1326 in all. `range()` is the bot's own range: 1 per pair at the start of
