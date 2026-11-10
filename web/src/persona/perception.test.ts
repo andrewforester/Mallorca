@@ -65,9 +65,9 @@ describe('the feeling of a hand', () => {
     hand.act(call, 1000);
     hand.act(check, 1500);
     hand.act(raiseTo(40), 2000);
-    const before = hand.feeling.snapshot().emotions.anger;
+    const before = hand.feeling.at(2500).emotions.anger;
     hand.act(raiseTo(120), 2500);
-    const after = hand.feeling.snapshot();
+    const after = hand.feeling.at(4500);
     expect(after.emotions.anger).toBeGreaterThan(before + 0.05);
     expect(after.pressure).toBeGreaterThan(0.9);
   });
@@ -75,7 +75,10 @@ describe('the feeling of a hand', () => {
   it('hears a mocking line as anger', () => {
     const hand = deal('7c 2d', 'Ah Kd', 'Qs Jh 8d 4c 9h');
     hand.feeling.hear(['mockBluff']);
-    expect(hand.feeling.snapshot().emotions.anger).toBeGreaterThan(0.2);
+    const t = traitsOf(MALLORCA);
+    const felt = hand.feeling.at(3000).emotions.anger;
+    expect(felt).toBeGreaterThan(0.85 * 0.35 * t.coping * t.gains.anger);
+    expect(felt).toBeLessThan(0.35 * t.coping * t.gains.anger);
   });
 
   it('moves time only forward with the clock it is given', () => {
@@ -120,8 +123,8 @@ describe("her equity against the player's range", () => {
     read.feeling.narrow(SETS_AND_TWO_PAIR, read.state());
     expect(equityOf(plain)).toBeGreaterThan(0.75);
     expect(equityOf(read)).toBeLessThan(0.3);
-    const before = plain.feeling.snapshot().emotions;
-    const after = read.feeling.snapshot().emotions;
+    const before = plain.feeling.at(4500).emotions;
+    const after = read.feeling.at(4500).emotions;
     expect(after.disappointment).toBeGreaterThan(before.disappointment + 0.1);
     expect(after.surprise).toBeGreaterThan(before.surprise + 0.1);
     read.feeling.advance(5000);
@@ -136,8 +139,8 @@ describe("her equity against the player's range", () => {
     const read = raisedOnTheFlop('8h 8s');
     read.feeling.narrow(TOP_PAIRS, read.state());
     expect(equityOf(read)).toBeGreaterThan(0.85);
-    const before = plain.feeling.snapshot().emotions;
-    const after = read.feeling.snapshot().emotions;
+    const before = plain.feeling.at(4500).emotions;
+    const after = read.feeling.at(4500).emotions;
     expect(after.disappointment).toBeLessThanOrEqual(before.disappointment + 0.01);
     expect(after.fear).toBeLessThanOrEqual(before.fear + 0.01);
   });

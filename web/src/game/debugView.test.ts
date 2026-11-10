@@ -15,10 +15,11 @@ import { toDebugView } from './debugView.ts';
 
 function state(extra: Partial<DebugState> = {}): DebugState {
   const persona = createPersona({ seat: 1, rng: mulberry32(1) });
+  persona.observe([], 0);
   persona.hear(['mockBluff']);
   return {
     personality: { key: 'lola' },
-    snapshot: persona.view(0).snapshot,
+    snapshot: persona.view(2000).snapshot,
     sentBias: { aggression: 1.2, bluff: 1, tightness: 0.8, sizing: 1, stickiness: 1 },
     decision: null,
     journal: persona.journal().map((e) => ({ ...e, spoke: false })),

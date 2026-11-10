@@ -1,23 +1,17 @@
-import { clamp01, saturate, smoothstep } from './emotions.ts';
-import type { Emotion, Emotions } from './emotions.ts';
+import { saturate, smoothstep } from './emotions.ts';
+import type { Emotions } from './emotions.ts';
+import { impulsesOf } from './feelings.ts';
+import type { Appraisal, Impulse } from './feelings.ts';
 import type { Traits } from './personality.ts';
+import { STAKE_BB, atStakeOf, leaningOf } from './tension.ts';
+import type { Money, Prospect } from './tension.ts';
 
-export const STAKE_BB = 20;
+export { STAKE_BB } from './tension.ts';
+export type { Money, Prospect } from './tension.ts';
+export type { Appraisal, Impulse } from './feelings.ts';
 
 export type ChatSignal =
   'tease' | 'compliment' | 'claimStrength' | 'claimWeakness' | 'mockBluff' | 'friendly';
-
-export interface Money {
-  potBb: number;
-  investedBb: number;
-  stackBb?: number;
-  streetsLeft?: number;
-}
-
-export interface Prospect extends Money {
-  equity: number;
-  previousEquity?: number;
-}
 
 export type TableEvent =
   | ({ kind: 'deal'; equity: number } & Money)
@@ -30,239 +24,155 @@ export type TableEvent =
   | { kind: 'ownMove'; move: 'fold'; facingBb: number; equity: number }
   | { kind: 'chat'; signal: ChatSignal };
 
-export interface Impulse {
-  emotion: Emotion;
-  amount: number;
-  reason: string;
+export interface AppraisalContext {
+  prospect: Prospect | null;
+  pressure: number;
+  traits: Traits;
 }
 
-export const FUTURE_RISK = 0.5;
-
-export function stakesOf(m: Money): { toWin: number; toLose: number } {
-  const future = Math.min(m.stackBb ?? 0, m.potBb * (m.streetsLeft ?? 0));
-  return {
-    toWin: Math.max(0, m.potBb - m.investedBb) + future,
-    toLose: m.investedBb + FUTURE_RISK * future,
-  };
-}
-
-export function prospectTargets(p: Prospect, traits: Traits): { hope: number; fear: number } {
-  const { toWin, toLose } = stakesOf(p);
-  return {
-    hope: clamp01(saturate((p.equity * toWin) / STAKE_BB) * traits.gains.hope),
-    fear: clamp01(saturate(((1 - p.equity) * toLose) / STAKE_BB) * traits.gains.fear),
-  };
-}
+export const scaled = (bb: number): number => saturate(Math.abs(bb) / STAKE_BB);
 
 const pct = (x: number): string => `${Math.round(x * 100)}%`;
 
-export const SWING = 0.2;
+const BLANK = {
+  realized: true,
+  resolved: 0,
+  self: 0,
+  opponent: 0,
+  luck: 0,
+  expected: 0,
+  unexpected: 0,
+};
 
-function streetImpulses(
-  event: Extract<TableEvent, { kind: 'street' }>,
-  emotions: Emotions,
-): Impulse[] {
-  const { equity, previousEquity: previous } = event;
-  if (previous === undefined) {
-    return [];
+type Axes = Omit<Appraisal, 'control'> & { control?: number };
+
+function deal(e: Extract<TableEvent, { kind: 'deal' }>): Axes {
+  const value = 0.6 * smoothstep(0.6, 0.85, e.equity);
+  return { ...BLANK, value, luck: 1, reason: `a starting hand, equity ${pct(e.equity)}` };
+}
+
+function street(e: Extract<TableEvent, { kind: 'street' }>): Axes | null {
+  const before = e.previousEquity;
+  if (before === undefined) {
+    return null;
   }
-  const delta = equity - previous;
+  const delta = e.equity - before;
   const swing = Math.abs(delta);
-  if (swing < SWING) {
-    return [];
-  }
-  const label = `equity ${pct(previous)} to ${pct(equity)}`;
-  const list: Impulse[] = [
-    {
-      emotion: 'surprise',
-      amount: saturate((swing - 0.15) * 3),
-      reason: `${label}, a swing of ${pct(swing)}`,
-    },
-  ];
-  if (delta < 0) {
-    list.push({
-      emotion: 'disappointment',
-      amount: emotions.hope * swing,
-      reason: `${label}: hope breaks`,
-    });
-  } else {
-    const { toWin } = stakesOf(event);
-    list.push(
-      { emotion: 'relief', amount: emotions.fear * swing, reason: `${label}: fear eases` },
-      {
-        emotion: 'joy',
-        amount: swing * (0.3 + 0.7 * saturate(toWin / STAKE_BB)),
-        reason: `${label}: the hand grew, up to ${Math.round(toWin)} bb ahead`,
-      },
-    );
-  }
-  return list;
+  return {
+    ...BLANK,
+    value: delta * (0.3 + 0.7 * scaled(atStakeOf(e))),
+    luck: 1,
+    resolved: swing,
+    expected: before,
+    unexpected: saturate(3 * (swing - 0.15)),
+    reason: `equity ${pct(before)} to ${pct(e.equity)}`,
+  };
 }
 
-function raiseImpulses(event: Extract<TableEvent, { kind: 'opponentBet' }>): Impulse[] {
-  const fear = 0.6 * saturate(event.sizeBb / STAKE_BB) * (1 - event.equity);
-  const label = `the opponent ${event.raise ? 'raises' : 'bets'} ${event.sizeBb} bb, her equity ${pct(event.equity)}`;
-  if (!event.raise) {
-    return [{ emotion: 'fear', amount: fear, reason: label }];
-  }
-  const pressure = Math.min(3, event.pressure ?? 0);
-  return [
-    { emotion: 'fear', amount: fear + 0.08, reason: `${label}: pressure on her` },
-    {
-      emotion: 'anger',
-      amount: 0.12 * (1 + 0.5 * pressure),
-      reason: `${label}: a challenge${pressure > 0 ? `, ${Math.round(pressure * 10) / 10} raises this session` : ''}`,
-    },
-  ];
+function opponentBet(e: Extract<TableEvent, { kind: 'opponentBet' }>, c: AppraisalContext): Axes {
+  const open = 4 * e.equity * (1 - e.equity);
+  const pressure = Math.min(3, e.pressure ?? c.pressure);
+  const challenge = e.raise === true ? 0.12 * (1 + 0.5 * pressure) : 0;
+  return {
+    ...BLANK,
+    realized: false,
+    opponent: 1,
+    value: -(0.6 * scaled(e.sizeBb) * open + challenge),
+    control: leaningOf(c.traits.coping, e.equity),
+    reason: `the opponent ${e.raise === true ? 'raises' : 'bets'} ${e.sizeBb} bb, her equity ${pct(e.equity)}`,
+  };
 }
 
-function premiumImpulses(equity: number): Impulse[] {
-  const amount = 0.6 * smoothstep(0.6, 0.85, equity);
-  return amount > 0
-    ? [{ emotion: 'joy', amount, reason: `a strong starting hand, equity ${pct(equity)}` }]
-    : [];
+function result(e: Extract<TableEvent, { kind: 'result' }>, traits: Traits): Axes {
+  const expected = e.lastEquity ?? 0.5;
+  const lost = e.netBb < 0;
+  const luck = lost ? smoothstep(0.5, 0.95, expected) : smoothstep(0.5, 0.9, 1 - expected);
+  const mine = lost ? traits.selfBlame : traits.coping;
+  return {
+    ...BLANK,
+    value: lost ? -scaled(e.netBb) : scaled(e.netBb),
+    resolved: 1,
+    expected,
+    luck,
+    unexpected: luck,
+    self: (1 - luck) * mine,
+    opponent: (1 - luck) * (1 - mine),
+    reason: `${lost ? 'lost' : 'won'} ${Math.abs(e.netBb)} bb with equity ${pct(expected)}`,
+  };
 }
 
-function winImpulses(netBb: number, lastEquity: number, emotions: Emotions): Impulse[] {
-  const list: Impulse[] = [
-    { emotion: 'joy', amount: saturate(netBb / STAKE_BB), reason: `won ${netBb} bb` },
-    { emotion: 'relief', amount: emotions.fear, reason: 'the fear did not come true' },
-  ];
-  const unlikely = smoothstep(0.5, 0.9, 1 - lastEquity);
-  if (unlikely > 0) {
-    list.push({
-      emotion: 'surprise',
-      amount: unlikely,
-      reason: `won with equity ${pct(lastEquity)}`,
-    });
+function ownMove(e: Extract<TableEvent, { kind: 'ownMove' }>): Axes {
+  const { equity } = e;
+  if (e.move === 'fold') {
+    return {
+      ...BLANK,
+      opponent: 1,
+      resolved: 1,
+      expected: equity,
+      value: -0.35 * scaled(e.facingBb) * smoothstep(0.35, 0.75, equity),
+      reason: `she folds to ${e.facingBb} bb with equity ${pct(equity)}`,
+    };
   }
-  return list;
-}
-
-function lossImpulses(netBb: number, lastEquity: number, emotions: Emotions): Impulse[] {
-  const loss = saturate(-netBb / STAKE_BB);
-  const list: Impulse[] = [
-    { emotion: 'distress', amount: loss, reason: `lost ${-netBb} bb` },
-    { emotion: 'disappointment', amount: emotions.hope, reason: 'the hope did not come true' },
-  ];
-  const unjust = smoothstep(0.5, 0.95, lastEquity);
-  if (unjust > 0) {
-    list.push({
-      emotion: 'injustice',
-      amount: loss * unjust,
-      reason: `lost while ahead with ${pct(lastEquity)}`,
-    });
-    list.push({
-      emotion: 'surprise',
-      amount: smoothstep(0.6, 0.95, lastEquity),
-      reason: 'a card against the odds',
-    });
+  const label = `she bets ${e.amountBb} bb with equity ${pct(equity)}`;
+  if (equity < WEAK_EQUITY) {
+    const value = -0.5 * scaled(e.amountBb) * (1 - equity);
+    return { ...BLANK, realized: false, self: 1, value, reason: `${label}: at risk` };
   }
-  return list;
+  const value = 0.2 * scaled(e.amountBb) * smoothstep(0.7, 0.9, equity);
+  return { ...BLANK, self: 1, value, reason: `${label}: she takes the lead` };
 }
 
 export const WEAK_EQUITY = 0.45;
 
-function ownMoveImpulses(event: Extract<TableEvent, { kind: 'ownMove' }>): Impulse[] {
-  const { equity } = event;
-  if (event.move === 'bet') {
-    const size = saturate(event.amountBb / STAKE_BB);
-    const label = `she bets ${event.amountBb} bb with equity ${pct(equity)}`;
-    if (equity < WEAK_EQUITY) {
-      return [
-        { emotion: 'fear', amount: 0.5 * size * (1 - equity), reason: `${label}: a bluff at risk` },
-      ];
-    }
-    return [
-      {
-        emotion: 'pride',
-        amount: 0.2 * size * smoothstep(0.7, 0.9, equity),
-        reason: `${label}: she takes the lead`,
-      },
-    ];
-  }
-  const facing = saturate(event.facingBb / STAKE_BB);
-  const label = `she folds to ${event.facingBb} bb with equity ${pct(equity)}`;
-  return [
-    {
-      emotion: 'anger',
-      amount: 0.35 * smoothstep(0.35, 0.75, equity) * facing,
-      reason: `${label}: pushed off a hand she believed in`,
-    },
-    {
-      emotion: 'relief',
-      amount: 0.35 * (1 - smoothstep(0.2, WEAK_EQUITY, equity)) * facing,
-      reason: `${label}: out of a hand she could not win`,
-    },
-  ];
-}
-
-const CHAT: Readonly<Record<ChatSignal, ReadonlyArray<[Emotion, number]>>> = {
-  tease: [['anger', 0.25]],
-  mockBluff: [
-    ['anger', 0.35],
-    ['shame', 0.08],
-  ],
-  compliment: [
-    ['pride', 0.15],
-    ['joy', 0.1],
-  ],
-  friendly: [['joy', 0.1]],
-  claimStrength: [['fear', 0.12]],
-  claimWeakness: [['hope', 0.1]],
+const CHAT: Readonly<Record<ChatSignal, readonly [number, boolean]>> = {
+  tease: [-0.25, true],
+  mockBluff: [-0.35, true],
+  compliment: [0.25, true],
+  friendly: [0.1, true],
+  claimStrength: [-0.12, false],
+  claimWeakness: [0.1, false],
 };
 
-function rawImpulses(event: TableEvent, emotions: Emotions): Impulse[] {
-  switch (event.kind) {
+function chat(signal: ChatSignal): Axes {
+  const [value, realized] = CHAT[signal];
+  return { ...BLANK, value, realized, opponent: 1, reason: `chat: ${signal}` };
+}
+
+function axesOf(e: TableEvent, c: AppraisalContext): Axes | null {
+  switch (e.kind) {
     case 'deal':
-      return premiumImpulses(event.equity);
+      return deal(e);
     case 'street':
-      return streetImpulses(event, emotions);
+      return street(e);
     case 'opponentBet':
-      return raiseImpulses(event);
-    case 'result': {
-      const last = event.lastEquity ?? 0.5;
-      return event.netBb >= 0
-        ? winImpulses(event.netBb, last, emotions)
-        : lossImpulses(event.netBb, last, emotions);
+      return opponentBet(e, c);
+    case 'result':
+      return result(e, c.traits);
+    case 'bluff': {
+      const value = e.succeeded ? 0.8 * scaled(e.potBb) : -scaled(e.potBb);
+      const reason = e.succeeded ? 'the bluff got through' : 'the bluff was caught';
+      return { ...BLANK, self: 1, value, reason };
     }
-    case 'bluff':
-      return event.succeeded
-        ? [
-            {
-              emotion: 'pride',
-              amount: 0.8 * saturate(event.potBb / STAKE_BB),
-              reason: 'the bluff got through',
-            },
-          ]
-        : [
-            {
-              emotion: 'shame',
-              amount: saturate(event.potBb / STAKE_BB),
-              reason: 'the bluff was caught',
-            },
-          ];
     case 'mistake':
-      return [
-        {
-          emotion: 'shame',
-          amount: saturate(event.costBb / STAKE_BB),
-          reason: `the mistake cost ${event.costBb} bb`,
-        },
-      ];
+      return {
+        ...BLANK,
+        self: 1,
+        value: -scaled(e.costBb),
+        reason: `the mistake cost ${e.costBb} bb`,
+      };
     case 'ownMove':
-      return ownMoveImpulses(event);
+      return ownMove(e);
     case 'chat':
-      return CHAT[event.signal].map(([emotion, amount]) => ({
-        emotion,
-        amount,
-        reason: `chat: ${event.signal}`,
-      }));
+      return chat(e.signal);
   }
 }
 
-export function appraise(event: TableEvent, emotions: Emotions, traits: Traits): Impulse[] {
-  return rawImpulses(event, emotions)
-    .map((i) => ({ ...i, amount: clamp01(i.amount * traits.gains[i.emotion]) }))
-    .filter((i) => i.amount > 0.005);
+export function appraisalOf(e: TableEvent, c: AppraisalContext): Appraisal | null {
+  const axes = axesOf(e, c);
+  return axes === null ? null : { ...axes, control: axes.control ?? c.traits.coping };
+}
+
+export function appraise(e: TableEvent, now: Emotions, c: AppraisalContext): Impulse[] {
+  const a = appraisalOf(e, c);
+  return a === null ? [] : impulsesOf(a, now, c.traits);
 }

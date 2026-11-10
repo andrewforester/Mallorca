@@ -1,6 +1,8 @@
-import { appraise, prospectTargets } from './appraisal.ts';
+import { appraise } from './appraisal.ts';
 import type { Impulse, Prospect, TableEvent } from './appraisal.ts';
-import { addImpulse, decay, noEmotions } from './emotions.ts';
+import { RELEASE_S, tensionTargets } from './tension.ts';
+import { decay, noEmotions, queue, rise } from './emotions.ts';
+import type { Pending } from './emotions.ts';
 import type { Emotions, Pad } from './emotions.ts';
 import { GAME_MOOD, octantOf, stepMood } from './mood.ts';
 import type { MoodConfig } from './mood.ts';
@@ -13,21 +15,7 @@ import type { LoadReading } from './load.ts';
 
 export const PROSPECT_HALF_LIFE_S = 0.8;
 export const PROSPECT_DROP_HALF_LIFE_S = 0.25;
-export const OUTCOME_DAMPING = 0.3;
 export const PRESSURE_HALF_LIFE_S = 300;
-
-export function settle(e: Emotions, netBb: number): Emotions {
-  const won = netBb >= 0;
-  return {
-    ...e,
-    hope: 0,
-    fear: 0,
-    joy: won ? e.joy : e.joy * OUTCOME_DAMPING,
-    pride: won ? e.pride : e.pride * OUTCOME_DAMPING,
-    distress: won ? e.distress * OUTCOME_DAMPING : e.distress,
-    disappointment: won ? e.disappointment * OUTCOME_DAMPING : e.disappointment,
-  };
-}
 
 export interface Snapshot {
   time: number;
@@ -71,6 +59,7 @@ class EmotionEngine implements Engine {
   private traits: Traits;
   private time = 0;
   private emotions: Emotions = noEmotions();
+  private pending: Pending = {};
   private mood: Pad;
   private prospect: Prospect | null = null;
   private sessionNetBb = 0;
@@ -87,9 +76,13 @@ class EmotionEngine implements Engine {
     if (e.kind === 'street' && !this.prospect) {
       return [];
     }
-    const impulses = appraise(this.completed(e), this.emotions, this.traits);
+    const impulses = appraise(this.completed(e), this.emotions, {
+      prospect: this.prospect,
+      pressure: this.pressure,
+      traits: this.traits,
+    });
     for (const i of impulses) {
-      this.emotions = addImpulse(this.emotions, i.emotion, i.amount);
+      this.pending = queue(this.pending, i.emotion, i.amount);
     }
     this.remember(e);
     return impulses;
@@ -99,9 +92,6 @@ class EmotionEngine implements Engine {
     const p = this.prospect;
     if (e.kind === 'street' && p) {
       return { ...e, previousEquity: e.previousEquity ?? p.equity };
-    }
-    if (e.kind === 'opponentBet' && e.raise) {
-      return { ...e, pressure: e.pressure ?? this.pressure };
     }
     if (e.kind === 'result') {
       return { ...e, lastEquity: e.lastEquity ?? lastEquityOf(p) };
@@ -121,13 +111,14 @@ class EmotionEngine implements Engine {
     } else if (e.kind === 'result') {
       this.prospect = null;
       this.sessionNetBb += e.netBb;
-      this.emotions = settle(this.emotions, e.netBb);
     }
   }
 
   step(dt: number): void {
     this.time += dt;
-    this.emotions = decay(this.emotions, dt, (name) => this.traits.halfLifeFactor[name]);
+    const risen = rise(this.emotions, this.pending, dt);
+    this.pending = risen.pending;
+    this.emotions = decay(risen.emotions, dt, (name) => this.traits.halfLifeFactor[name]);
     this.trackProspect(dt);
     this.mood = stepMood(this.mood, this.emotions, dt, {
       ...this.config,
@@ -138,9 +129,15 @@ class EmotionEngine implements Engine {
 
   private trackProspect(dt: number): void {
     if (!this.prospect) {
+      const fade = 0.5 ** (dt / RELEASE_S);
+      this.emotions = {
+        ...this.emotions,
+        hope: this.emotions.hope * fade,
+        fear: this.emotions.fear * fade,
+      };
       return;
     }
-    const target = prospectTargets(this.prospect, this.traits);
+    const target = tensionTargets(this.prospect, this.traits);
     const { hope, fear } = this.emotions;
     this.emotions = {
       ...this.emotions,
@@ -170,10 +167,10 @@ class EmotionEngine implements Engine {
   }
 
   ahead(dt: number): Snapshot {
-    const { time, emotions, mood, prospect, pressure } = this;
+    const { time, emotions, pending, mood, prospect, pressure } = this;
     this.step(dt);
     const later = this.snapshot();
-    Object.assign(this, { time, emotions, mood, prospect, pressure });
+    Object.assign(this, { time, emotions, pending, mood, prospect, pressure });
     return later;
   }
 
@@ -184,6 +181,7 @@ class EmotionEngine implements Engine {
   reset(): void {
     this.time = 0;
     this.emotions = noEmotions();
+    this.pending = {};
     this.mood = this.traits.defaultMood;
     this.prospect = null;
     this.sessionNetBb = 0;

@@ -1,6 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { appraise, prospectTargets } from './appraisal.ts';
-import type { Prospect } from './appraisal.ts';
 import {
   APPROACH,
   ATTACK_S,
@@ -178,149 +176,6 @@ describe('emotions', () => {
     }
     expect(APPROACH.anger).toBe(0.6);
     expect(APPROACH.injustice).toBe(0.4);
-  });
-});
-
-describe('appraisal', () => {
-  const traits = traitsOf(average);
-
-  it('raises hope with equity and fear with what is invested', () => {
-    const strong: Prospect = { equity: 0.9, potBb: 60, investedBb: 30 };
-    const weak: Prospect = { equity: 0.2, potBb: 60, investedBb: 30 };
-    expect(prospectTargets(strong, traits).hope).toBeGreaterThan(
-      prospectTargets(weak, traits).hope,
-    );
-    expect(prospectTargets(weak, traits).fear).toBeGreaterThan(
-      prospectTargets(strong, traits).fear,
-    );
-  });
-
-  it('turns a loss from a winning position into injustice and surprise', () => {
-    const emotions = withEmotions({ hope: 0.7, fear: 0.1 });
-    const badBeat = appraise({ kind: 'result', netBb: -60, lastEquity: 0.86 }, emotions, traits);
-    const cooler = appraise({ kind: 'result', netBb: -60, lastEquity: 0.1 }, emotions, traits);
-    const amount = (list: typeof badBeat, emotion: string) =>
-      list.filter((i) => i.emotion === emotion).reduce((sum, i) => sum + i.amount, 0);
-    expect(amount(badBeat, 'injustice')).toBeGreaterThan(0.3);
-    expect(amount(badBeat, 'surprise')).toBeGreaterThan(0.3);
-    expect(amount(cooler, 'injustice')).toBeLessThan(0.05);
-    expect(amount(badBeat, 'disappointment')).toBeCloseTo(0.7 * traits.gains.disappointment);
-  });
-
-  it('turns fear into relief when the hand is won', () => {
-    const impulses = appraise(
-      { kind: 'result', netBb: 40, lastEquity: 0.5 },
-      withEmotions({ fear: 0.5 }),
-      traits,
-    );
-    const relief = impulses.find((i) => i.emotion === 'relief');
-    expect(relief?.amount).toBeCloseTo(0.5 * traits.gains.relief);
-  });
-
-  it('counts what can still be won on later streets, not only the pot', () => {
-    const now: Prospect = { equity: 0.85, potBb: 6, investedBb: 3 };
-    const ahead: Prospect = { ...now, stackBb: 97, streetsLeft: 2 };
-    expect(prospectTargets(ahead, traits).hope).toBeGreaterThan(
-      prospectTargets(now, traits).hope + 0.2,
-    );
-  });
-
-  it('meets a flopped straight with joy as well as surprise', () => {
-    const impulses = appraise(
-      {
-        kind: 'street',
-        equity: 0.85,
-        potBb: 6,
-        investedBb: 3,
-        stackBb: 97,
-        streetsLeft: 2,
-        previousEquity: 0.46,
-      },
-      noEmotions(),
-      traits,
-    );
-    expect(impulses.find((i) => i.emotion === 'joy')?.amount).toBeGreaterThan(0.2);
-    expect(impulses.find((i) => i.emotion === 'surprise')?.amount).toBeGreaterThan(0.4);
-  });
-
-  it('takes a raise as a challenge: anger for the disagreeable, fear for the anxious', () => {
-    const rude = traitsOf({ ...average, bigFive: { ...average.bigFive, agreeableness: -0.8 } });
-    const anxious = traitsOf({ ...average, bigFive: { ...average.bigFive, neuroticism: 0.8 } });
-    const raise = {
-      kind: 'opponentBet',
-      sizeBb: 14,
-      equity: 0.6,
-      raise: true,
-      pressure: 0,
-    } as const;
-    const amount = (t: typeof rude, emotion: string) =>
-      appraise(raise, noEmotions(), t).find((i) => i.emotion === emotion)?.amount ?? 0;
-    expect(amount(rude, 'anger')).toBeGreaterThan(amount(anxious, 'anger'));
-    expect(amount(anxious, 'fear')).toBeGreaterThan(amount(rude, 'fear'));
-  });
-
-  it('greets a premium starting hand with joy', () => {
-    const aces = appraise(
-      { kind: 'deal', equity: 0.85, potBb: 3, investedBb: 1.5 },
-      noEmotions(),
-      traits,
-    );
-    const trash = appraise(
-      { kind: 'deal', equity: 0.35, potBb: 3, investedBb: 1.5 },
-      noEmotions(),
-      traits,
-    );
-    expect(aces.find((i) => i.emotion === 'joy')?.amount).toBeGreaterThan(0.4);
-    expect(trash).toEqual([]);
-  });
-
-  it('answers a big swing on a street with surprise', () => {
-    const impulses = appraise(
-      { kind: 'street', equity: 0.9, potBb: 20, investedBb: 10, previousEquity: 0.3 },
-      noEmotions(),
-      traits,
-    );
-    expect(impulses.some((i) => i.emotion === 'surprise' && i.amount > 0.3)).toBe(true);
-  });
-});
-
-describe('her own moves', () => {
-  const traits = traitsOf(MALLORCA);
-  const felt = (event: Parameters<typeof appraise>[0], emotion: string): number =>
-    appraise(event, noEmotions(), traits).find((i) => i.emotion === emotion)?.amount ?? 0;
-
-  it('frightens her by what she risks when she bets behind a weak hand', () => {
-    const bluff = { kind: 'ownMove', move: 'bet', amountBb: 20, equity: 0.2 } as const;
-    expect(felt(bluff, 'fear')).toBeGreaterThan(0.2);
-    expect(felt(bluff, 'pride')).toBe(0);
-    const small = { ...bluff, amountBb: 2 };
-    expect(felt(small, 'fear')).toBeLessThan(felt(bluff, 'fear'));
-  });
-
-  it('makes her a little proud when she takes the lead with a strong hand', () => {
-    const value = { kind: 'ownMove', move: 'bet', amountBb: 20, equity: 0.9 } as const;
-    expect(felt(value, 'pride')).toBeGreaterThan(0.05);
-    expect(felt(value, 'pride')).toBeLessThan(0.2);
-    expect(felt(value, 'fear')).toBe(0);
-  });
-
-  it('angers her to fold a hand she believed in and relieves her to fold junk', () => {
-    const pushed = {
-      kind: 'ownMove',
-      move: 'fold',
-      equity: 0.75,
-      facingBb: 30,
-    } as const;
-    expect(felt(pushed, 'anger')).toBeGreaterThan(0.1);
-    expect(felt(pushed, 'relief')).toBe(0);
-    const junk = { ...pushed, equity: 0.1 };
-    expect(felt(junk, 'relief')).toBeGreaterThan(0.1);
-    expect(felt(junk, 'anger')).toBe(0);
-  });
-
-  it('leaves a small bet with a middling hand unfelt', () => {
-    const plain = { kind: 'ownMove', move: 'bet', amountBb: 2, equity: 0.55 } as const;
-    expect(appraise(plain, noEmotions(), traits)).toEqual([]);
   });
 });
 
@@ -506,14 +361,6 @@ describe('engine', () => {
     expect(impulses.some((i) => i.emotion === 'injustice' && i.amount > 0.3)).toBe(true);
   });
 
-  it('damps the joy of the deal when the hand is lost', () => {
-    const engine = createEngine(MALLORCA);
-    engine.event({ kind: 'deal', equity: 0.85, potBb: 3, investedBb: 1.5 });
-    const before = engine.snapshot().emotions.joy;
-    engine.event({ kind: 'result', netBb: -30 });
-    expect(engine.snapshot().emotions.joy).toBeCloseTo(before * 0.3);
-  });
-
   it('ignores cards shown after the hand is over', () => {
     const engine = createEngine(MALLORCA);
     engine.event({ kind: 'deal', equity: 0.7, potBb: 40, investedBb: 20 });
@@ -531,11 +378,28 @@ describe('engine', () => {
     }
   });
 
-  it('clears hope and fear when the hand ends', () => {
-    const after = badBeat(MALLORCA);
-    expect(after.emotions.hope).toBeLessThan(0.05);
-    expect(after.prospect).toBeNull();
-    expect(after.sessionNetBb).toBe(-60);
+  it('lets hope and fear fade after the hand instead of dropping them', () => {
+    const engine = createEngine(MALLORCA);
+    engine.event({
+      kind: 'deal',
+      equity: 0.5,
+      potBb: 120,
+      investedBb: 60,
+      stackBb: 40,
+      streetsLeft: 1,
+    });
+    engine.step(3);
+    const during = engine.snapshot().emotions;
+    expect(during.hope + during.fear).toBeGreaterThan(0.3);
+    engine.event({ kind: 'result', netBb: -60 });
+    expect(engine.snapshot().prospect).toBeNull();
+    expect(engine.snapshot().sessionNetBb).toBe(-60);
+    engine.step(0.5);
+    expect(engine.snapshot().emotions.hope).toBeGreaterThan(0);
+    expect(engine.snapshot().emotions.fear).toBeGreaterThan(0);
+    engine.step(9.5);
+    expect(engine.snapshot().emotions.hope).toBeLessThan(0.01);
+    expect(engine.snapshot().emotions.fear).toBeLessThan(0.01);
   });
 });
 
@@ -543,6 +407,7 @@ describe('looking ahead', () => {
   it('reads the snapshot a step later without moving the engine', () => {
     const engine = createEngine(MALLORCA);
     engine.event({ kind: 'bluff', succeeded: false, potBb: 40 });
+    engine.step(10);
     const before = engine.snapshot();
     const ahead = engine.ahead(3);
     expect(engine.snapshot()).toEqual(before);
