@@ -1,4 +1,4 @@
-import type { BigFive, Emotion, Part, PersonalityKey, Bias, BiasKey } from '../../game/index.ts';
+import type { BigFive, Emotion, Part, Bias, BiasKey } from '../../game/index.ts';
 
 type Octant =
   'exuberant' | 'bored' | 'dependent' | 'disdainful' | 'relaxed' | 'anxious' | 'docile' | 'hostile';
@@ -15,19 +15,7 @@ export const COPY = {
     decision: 'Last decision',
     journal: 'Journal',
   },
-  personality: {
-    mallorca: 'Mallorca',
-    ingrid: 'Ingrid',
-    mira: 'Mira',
-    nina: 'Nina',
-    lola: 'Lola',
-    sol: 'Sol',
-    rita: 'Rita',
-    vera: 'Vera',
-    greta: 'Greta',
-    neutral: 'Neutral',
-    custom: 'Custom',
-  } satisfies Record<PersonalityKey | 'custom', string>,
+  custom: 'Custom',
   reset: 'Start her feeling over',
   sliders: 'Big Five and traits',
   bigFive: {

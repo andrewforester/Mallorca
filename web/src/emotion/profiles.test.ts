@@ -2,26 +2,66 @@ import { describe, expect, it } from 'vitest';
 import { createEngine } from './engine.ts';
 import { traitsOf } from './personality.ts';
 import { MALLORCA, PERSONALITIES } from './profiles.ts';
+import type { PersonalityKey } from './profiles.ts';
 import { styleOf } from './style.ts';
 
+const NINE = ['mallorca', 'ingrid', 'mira', 'nina', 'lola', 'sol', 'rita', 'vera', 'greta'];
+
+const EXTREMES: [string, string][] = [
+  ['boldSchemer', '+-+--'],
+  ['nervousCareerist', '+++-+'],
+  ['lifeOfTheParty', '+-++-'],
+  ['caringActivist', '+++++'],
+  ['toughBoss', '-++--'],
+  ['hotheadBraggart', '--+-+'],
+  ['reliableCaptain', '-+++-'],
+  ['fussyChatterbox', '--+++'],
+  ['coldSceptic', '++---'],
+  ['gloomyRebel', '+---+'],
+  ['calmPhilosopher', '++-+-'],
+  ['dreamyArtist', '+--++'],
+  ['unshakableLoner', '-----'],
+  ['suspiciousGrump', '-+--+'],
+  ['easygoingHomebody', '---+-'],
+  ['timidStickler', '-+-++'],
+];
+
+const MIDDLE: [string, number[]][] = [
+  ['nervousPragmatist', [-0.52, -0.32, 0.24, -0.3, 0.52]],
+  ['curiousOptimist', [0.57, -0.08, 0.28, -0.22, -0.23]],
+  ['noisyBully', [0.47, -0.43, 0.6, -0.52, 0.06]],
+  ['plainRealist', [-0.25, -0.1, -0.07, 0.08, 0.04]],
+  ['quietTidy', [-0.22, 0.29, -0.5, 0.44, -0.2]],
+  ['softMiddle', [0.17, 0.21, -0.17, 0.16, -0.24]],
+  ['calmCurious', [0.7, 0.1, -0.02, 0.1, -0.53]],
+  ['reservedConservative', [-0.42, 0.25, -0.4, 0.32, 0.05]],
+];
+
+function traitRow(key: string): number[] {
+  const p = PERSONALITIES[key as PersonalityKey];
+  const b = p.bigFive;
+  return [
+    b.openness,
+    b.conscientiousness,
+    b.extraversion,
+    b.agreeableness,
+    b.neuroticism,
+    p.suppression,
+  ];
+}
+
 describe('PERSONALITIES', () => {
-  it('holds the nine characters and the neutral reference', () => {
+  it('holds the nine characters, the sixteen extremes, the eight intermediate and neutral', () => {
     expect(Object.keys(PERSONALITIES)).toEqual([
-      'mallorca',
-      'ingrid',
-      'mira',
-      'nina',
-      'lola',
-      'sol',
-      'rita',
-      'vera',
-      'greta',
+      ...NINE,
+      ...EXTREMES.map(([k]) => k),
+      ...MIDDLE.map(([k]) => k),
       'neutral',
     ]);
     expect(PERSONALITIES.mallorca).toBe(MALLORCA);
   });
 
-  it('gives every character the traits of the spec', () => {
+  it('gives the characters of the first design their traits', () => {
     const table: Record<string, number[]> = {
       mallorca: [0.4, 0.2, 0.4, 0.5, 0.1, 0.35],
       ingrid: [0.2, 0.8, -0.2, -0.4, -0.8, 0.85],
@@ -34,16 +74,31 @@ describe('PERSONALITIES', () => {
       greta: [-0.6, 0.5, -0.8, 0.2, 0.2, 0.6],
       neutral: [0, 0, 0, 0, 0, 0.3],
     };
-    for (const [key, p] of Object.entries(PERSONALITIES)) {
-      const b = p.bigFive;
-      expect([
-        b.openness,
-        b.conscientiousness,
-        b.extraversion,
-        b.agreeableness,
-        b.neuroticism,
-        p.suppression,
-      ]).toEqual(table[key]);
+    for (const [key, row] of Object.entries(table)) {
+      expect(traitRow(key)).toEqual(row);
+    }
+  });
+
+  it('gives the extremes every trait at 0.8 with the signs of the addendum', () => {
+    for (const [key, signs] of EXTREMES) {
+      expect(traitRow(key).slice(0, 5)).toEqual([...signs].map((c) => (c === '+' ? 0.8 : -0.8)));
+    }
+  });
+
+  it('gives the intermediate characters the traits of the addendum', () => {
+    for (const [key, traits] of MIDDLE) {
+      expect(traitRow(key).slice(0, 5)).toEqual(traits);
+    }
+  });
+
+  it('gives the new characters a poker face habit from conscientiousness and extraversion', () => {
+    for (const key of [...EXTREMES.map(([k]) => k), ...MIDDLE.map(([k]) => k)]) {
+      const b = PERSONALITIES[key as PersonalityKey].bigFive;
+      const habit = Math.min(
+        0.9,
+        Math.max(0.05, 0.35 + 0.3 * b.conscientiousness - 0.3 * b.extraversion),
+      );
+      expect(PERSONALITIES[key as PersonalityKey].suppression).toBe(Math.round(habit * 100) / 100);
     }
   });
 

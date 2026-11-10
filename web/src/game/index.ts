@@ -60,7 +60,7 @@ export type {
 export type { DebugLoad, DebugTraits, DebugView } from './debugView.ts';
 export { toDebugView } from './debugView.ts';
 export type { ConversationTrace, Fate, TraceEntry, TraceTotals } from './conversationTrace.ts';
-export { EMOTIONS, PERSONALITIES, BIAS_KEYS } from '../persona/index.ts';
+export { CHARACTER_SHEETS, EMOTIONS, PERSONALITIES, BIAS_KEYS } from '../persona/index.ts';
 export type {
   BigFive,
   Emotion,

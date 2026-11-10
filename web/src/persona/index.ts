@@ -1,4 +1,6 @@
 export type { Bias } from './bias.ts';
+export { CHARACTER_SHEETS } from './characters.ts';
+export type { CharacterSheet } from './characters.ts';
 export { NEUTRAL_BIAS } from './bias.ts';
 export type { HandState } from './hand.ts';
 export { netOf, playerCardsShown } from './hand.ts';

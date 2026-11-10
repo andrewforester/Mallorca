@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CASH, createSession, inProcessBot, memoryStore } from '../../game/index.ts';
 import type { BotClient, HandStore, Session } from '../../game/index.ts';
 import { EmotionDebug } from './EmotionDebug.tsx';
+import { CHARACTER_SHEETS } from '../../game/index.ts';
 import { COPY } from './copy.ts';
 
 afterEach(() => {
@@ -89,6 +90,14 @@ describe('EmotionDebug', () => {
     expect(lola.getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByTestId('debug-reset'));
     expect(resetFeeling).toHaveBeenCalled();
+  });
+
+  it('lists every character by her name, with who she is in life', async () => {
+    await opened(await seated());
+    const boss = screen.getByTestId('debug-personality-toughBoss');
+    expect(boss.textContent).toBe(CHARACTER_SHEETS.toughBoss.name);
+    expect(boss.getAttribute('title')).toBe(CHARACTER_SHEETS.toughBoss.short);
+    expect(screen.getAllByTestId(/^debug-personality-/)).toHaveLength(34);
   });
 
   it('turns a Big Five slider into a custom personality', async () => {

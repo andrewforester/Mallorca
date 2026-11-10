@@ -1,4 +1,4 @@
-import { PERSONALITIES } from '../../game/index.ts';
+import { CHARACTER_SHEETS, PERSONALITIES } from '../../game/index.ts';
 import type { BigFive, DebugView, Personality, PersonalityKey, Session } from '../../game/index.ts';
 import { COPY } from './copy.ts';
 import { f2, padText } from './format.ts';
@@ -124,12 +124,13 @@ export function PersonalitySection({ view, session }: { view: DebugView; session
             class="debug-pick"
             data-testid={`debug-personality-${key}`}
             aria-pressed={chosen === key}
+            title={CHARACTER_SHEETS[key].short}
             onClick={() => session.getState().setPersonality(key)}
           >
-            {COPY.personality[key]}
+            {CHARACTER_SHEETS[key].name}
           </button>
         ))}
-        {chosen === 'custom' && <span class="debug-note">{COPY.personality.custom}</span>}
+        {chosen === 'custom' && <span class="debug-note">{COPY.custom}</span>}
       </div>
       <button
         type="button"
