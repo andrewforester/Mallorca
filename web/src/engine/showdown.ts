@@ -1,5 +1,5 @@
 import type { Card } from '../cards/index.ts';
-import { pheEvaluator } from '../equity/index.ts';
+import { bestFive, pheEvaluator } from '../equity/index.ts';
 import type { SeatIndex, ShowdownHand } from './types.ts';
 
 export function awardShowdown(
@@ -24,8 +24,14 @@ export function evaluateShowdown(
   board: readonly Card[],
 ): [ShowdownHand, ShowdownHand] {
   const hand = (seat: SeatIndex): ShowdownHand => {
-    const rank = pheEvaluator.rank([...holeCards[seat], ...board]);
-    return { cards: holeCards[seat], rank, category: pheEvaluator.category(rank) };
+    const cards = [...holeCards[seat], ...board];
+    const rank = pheEvaluator.rank(cards);
+    return {
+      cards: holeCards[seat],
+      rank,
+      category: pheEvaluator.category(rank),
+      best: bestFive(cards),
+    };
   };
   return [hand(0), hand(1)];
 }

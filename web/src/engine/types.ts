@@ -42,6 +42,7 @@ export interface ShowdownHand {
   cards: [Card, Card];
   rank: number;
   category: HandCategory;
+  best: Card[];
 }
 
 export type EngineEvent =

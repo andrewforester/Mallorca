@@ -6,8 +6,8 @@ function showdown(ranks: [number, number]): EngineEvent {
   return {
     type: 'showdown',
     hands: [
-      { cards: [0, 1], rank: ranks[0], category: 'pair' },
-      { cards: [2, 3], rank: ranks[1], category: 'flush' },
+      { cards: [0, 1], rank: ranks[0], category: 'pair', best: [0, 1, 4, 5, 6] },
+      { cards: [2, 3], rank: ranks[1], category: 'flush', best: [2, 3, 4, 5, 7] },
     ],
     pot: 4000,
   };
@@ -20,7 +20,12 @@ describe('resultOf', () => {
       { type: 'potAwarded', seat: 0, amount: 3000 },
       { type: 'potAwarded', seat: 1, amount: 1000 },
     ];
-    expect(resultOf(events)).toEqual({ winner: 1, category: 'flush', showdown: true });
+    expect(resultOf(events)).toEqual({
+      winner: 1,
+      category: 'flush',
+      showdown: true,
+      cards: [2, 3, 4, 5, 7],
+    });
   });
 
   it('names the big stack as the winner when the short stack loses', () => {
@@ -28,7 +33,12 @@ describe('resultOf', () => {
       showdown([5000, 100]),
       { type: 'potAwarded', seat: 0, amount: 4000 },
     ];
-    expect(resultOf(events)).toEqual({ winner: 0, category: 'pair', showdown: true });
+    expect(resultOf(events)).toEqual({
+      winner: 0,
+      category: 'pair',
+      showdown: true,
+      cards: [0, 1, 4, 5, 6],
+    });
   });
 
   it('reports a split when the ranks are equal even if a refund makes the awards unequal', () => {
@@ -38,11 +48,12 @@ describe('resultOf', () => {
       { type: 'potAwarded', seat: 1, amount: 500 },
     ];
     expect(resultOf(events).winner).toBeNull();
+    expect(resultOf(events).cards).toEqual([0, 1, 4, 5, 6, 2, 3, 7]);
   });
 
   it('names the player who got the pot when there is no showdown', () => {
     const events: EngineEvent[] = [{ type: 'potAwarded', seat: 1, amount: 60 }];
-    expect(resultOf(events)).toEqual({ winner: 1, category: null, showdown: false });
+    expect(resultOf(events)).toEqual({ winner: 1, category: null, showdown: false, cards: [] });
   });
 });
 

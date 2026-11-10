@@ -1,10 +1,19 @@
-import type { Action, EngineEvent, Hand, LogEntry, SeatIndex } from '../engine/index.ts';
+import type { Card } from '../cards/index.ts';
+import type {
+  Action,
+  EngineEvent,
+  Hand,
+  LogEntry,
+  SeatIndex,
+  ShowdownHand,
+} from '../engine/index.ts';
 import type { HandCategory } from '../equity/index.ts';
 
 export interface HandResult {
   winner: SeatIndex | null;
   category: HandCategory | null;
   showdown: boolean;
+  cards: Card[];
   amount: number;
 }
 
@@ -37,6 +46,13 @@ export function actedLabel(
   }
 }
 
+function winningCards(hands: [ShowdownHand, ShowdownHand], winner: SeatIndex | null): Card[] {
+  if (winner !== null) {
+    return [...hands[winner].best];
+  }
+  return [...new Set([...hands[0].best, ...hands[1].best])];
+}
+
 export function resultOf(events: EngineEvent[]): Omit<HandResult, 'amount'> {
   const awards: [number, number] = [0, 0];
   let hands: Extract<EngineEvent, { type: 'showdown' }>['hands'] | null = null;
@@ -58,6 +74,7 @@ export function resultOf(events: EngineEvent[]): Omit<HandResult, 'amount'> {
     winner,
     category: shown === null ? null : shown.category,
     showdown: hands !== null,
+    cards: hands === null ? [] : winningCards(hands, winner),
   };
 }
 
