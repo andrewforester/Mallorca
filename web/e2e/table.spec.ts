@@ -112,3 +112,27 @@ test('a long stack stays in its block', async ({ page }) => {
   expect(stack.x).toBeGreaterThanOrEqual(block.x);
   expect(stack.x + stack.width).toBeLessThanOrEqual(block.x + block.width);
 });
+
+test('wide screens have no top bar', async ({ page }) => {
+  const viewport = page.viewportSize();
+  test.skip(viewport === null || viewport.width < viewport.height || viewport.height < 561);
+  await page.goto(FAST_URL);
+  await byId(page, 'start-cash').click();
+  await expect(byId(page, 'passive')).toBeEnabled();
+  const bar = await page.locator('.status-bar').boundingBox();
+  const right = await page.locator('.table-right').boundingBox();
+  const face = await byId(page, 'face-frame').boundingBox();
+  if (bar === null || right === null || face === null) {
+    throw new Error('the table is not laid out');
+  }
+  expect(bar.x).toBeGreaterThanOrEqual(right.x - 1);
+  expect(bar.x + bar.width).toBeLessThanOrEqual(right.x + right.width + 1);
+  expect(face.y).toBeLessThanOrEqual(32);
+  const border = await page
+    .locator('.status-bar')
+    .evaluate((node) => getComputedStyle(node).borderBottomWidth);
+  expect(border).toBe('0px');
+  const hand = await byId(page, 'hand-number').boundingBox();
+  const blinds = await byId(page, 'blinds').boundingBox();
+  expect((hand?.y ?? 0) < (blinds?.y ?? 0)).toBe(true);
+});

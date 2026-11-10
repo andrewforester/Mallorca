@@ -265,3 +265,60 @@
     font-size: var(--font-size-base);
   }
 }
+
+@media (min-aspect-ratio: 1/1) and (min-height: 561px) {
+  .status-bar {
+    position: absolute;
+    top: 20px;
+    right: 32px;
+    width: calc((100% - min(680px, 50vw)) / 2 - 64px);
+    min-height: 0;
+    padding: 0;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+  }
+
+  .table-right {
+    padding-top: 84px;
+  }
+
+  .status-info {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    min-width: 0;
+    gap: 0 var(--space-2);
+    line-height: 1.5;
+  }
+
+  .status-info > span + span::before {
+    margin-right: var(--space-2);
+  }
+
+  .status-info [data-testid='hand-number'] {
+    flex-basis: 100%;
+    order: -1;
+  }
+
+  .status-info [data-testid='hand-number']::before {
+    content: none;
+  }
+
+  .status-actions {
+    gap: var(--space-2);
+  }
+
+  .status-actions .status-button {
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    font-weight: 500;
+  }
+
+  .face-frame {
+    margin-top: 24px;
+  }
+}
