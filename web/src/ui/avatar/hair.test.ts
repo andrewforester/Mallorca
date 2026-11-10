@@ -13,6 +13,10 @@ describe('HAIR', () => {
     expect(HAIR.mallorca).toBe('side-swept');
   });
 
+  it('gives Nina the straight bangs she wore first', () => {
+    expect(HAIR.nina).toBe('straight-bangs');
+  });
+
   it('ships every file of every hairstyle', () => {
     const files = ['hair.json', 'hair.bin', 'hair_cards.webp', 'scalp.webp'];
     for (const key of HAIRSTYLES) {

@@ -3,13 +3,15 @@
 ## Goal
 
 Her hair today is the MetaHuman groom `Hair_L_StraightBangs`, baked into the rig. The owner wants a fuller, more
-interesting look and chose three grooms of the MetaHuman library from a sheet of candidates rendered on her:
+interesting look and chose three grooms of the MetaHuman library from a sheet of candidates rendered on her, and keeps
+her first groom as a fourth:
 
 | key          | groom                    | characters        |
 | ------------ | ------------------------ | ----------------- |
 | `side-swept` | `Hair_M_SideSweptFringe` | `mallorca`, `mira` |
-| `curly-bob`  | `Hair_M_BobCurly`        | `lola`, `nina`    |
+| `curly-bob`  | `Hair_M_BobCurly`        | `lola`            |
 | `updo-buns`  | `Hair_S_UpdoBuns`        | `ingrid`          |
+| `straight-bangs` | `Hair_L_StraightBangs` | `nina`          |
 
 `side-swept` is the main one. More characters come later and each gets one of these keys.
 
@@ -28,7 +30,8 @@ interesting look and chose three grooms of the MetaHuman library from a sheet of
   sits about 13 cm too high). The export finds a translation that lays the cards nearest the skin 2.5 mm above the
   archetype scalp. Grooms modelled on the archetype come out within 1.5 cm of where they are, so a translation under
   3 cm is dropped and those grooms stay as modelled.
-- **The folder limit rises from 17 MB to 23 MB**, in its own commit: a game loads the rig and one hairstyle, about what it loaded before, while the folder holds three.
+- **The folder limit rises from 17 MB to 26 MB**, in its own commits: a game loads the rig and one hairstyle, about
+  what it loaded before, while the folder holds four.
 - Out of scope: switching hairstyles in the game, hair colour per character, other grooms.
 
 ## Export: `web/tools/avatar/metahuman/`
@@ -60,4 +63,4 @@ interesting look and chose three grooms of the MetaHuman library from a sheet of
 
 - Unit: `HAIR` covers `CHARACTERS`; `loadHair` decodes a section and throws on a missing file; the skin shader mixes by
   `uScalp`; `FaceSeat` picks the portrait of the character's hairstyle.
-- Visual: a sheet of her with the three hairstyles, and the contact sheets, before the pull request.
+- Visual: a sheet of her with the four hairstyles, and the contact sheets, before the pull request.

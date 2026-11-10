@@ -1,6 +1,6 @@
 import type { PersonalityKey } from '../../game/index.ts';
 
-export const HAIRSTYLES = ['side-swept', 'curly-bob', 'updo-buns'] as const;
+export const HAIRSTYLES = ['side-swept', 'curly-bob', 'updo-buns', 'straight-bangs'] as const;
 export type HairKey = (typeof HAIRSTYLES)[number];
 
 export const HAIR: Readonly<Record<PersonalityKey, HairKey>> = {
@@ -8,7 +8,7 @@ export const HAIR: Readonly<Record<PersonalityKey, HairKey>> = {
   mira: 'side-swept',
   ingrid: 'updo-buns',
   lola: 'curly-bob',
-  nina: 'curly-bob',
+  nina: 'straight-bangs',
 };
 
 export const hairBase = (rig: string, key: HairKey): string => `${rig}hair/${key}/`;
