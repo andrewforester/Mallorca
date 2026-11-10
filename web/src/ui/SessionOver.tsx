@@ -16,7 +16,7 @@ function Exports({ store, sessionId }: { store: HandStore; sessionId: string | n
     <div class="end-exports">
       <button
         type="button"
-        class="button button-small"
+        class="end-link"
         data-testid="export-json"
         onClick={() => void exportHistory(store, sessionId, 'json')}
       >
@@ -24,13 +24,21 @@ function Exports({ store, sessionId }: { store: HandStore; sessionId: string | n
       </button>
       <button
         type="button"
-        class="button button-small"
+        class="end-link"
         data-testid="export-text"
         onClick={() => void exportHistory(store, sessionId, 'text')}
       >
         {t('history.exportText')}
       </button>
     </div>
+  );
+}
+
+function Stat({ id, value, label }: { id: string; value: string; label: string }) {
+  return (
+    <p class="end-stat" data-testid={id}>
+      <span class="end-stat-value">{value}</span> <span class="end-stat-label">{label}</span>
+    </p>
   );
 }
 
@@ -46,14 +54,16 @@ export function SessionOver(props: SessionOverProps) {
         <p class="end-number" data-testid="session-summary">
           {t('session.summary', { sign: net.sign, bb: net.value })}
         </p>
-        <p class="end-detail">
-          <span data-testid="session-hands">{t('session.hands', { count: session.hands })}</span>
+        <div class="end-stats">
+          <Stat
+            id="session-hands"
+            value={String(session.hands)}
+            label={t('session.hands', { count: session.hands })}
+          />
           {rate !== null && (
-            <span data-testid="session-rate">
-              {t('session.rate', { rate: `${rate.sign}${rate.value}` })}
-            </span>
+            <Stat id="session-rate" value={`${rate.sign}${rate.value}`} label={t('session.rate')} />
           )}
-        </p>
+        </div>
         <Exports store={store} sessionId={sessionId} />
         <div class="end-actions">
           <button type="button" class="button" data-testid="play-again" onClick={onPlayAgain}>

@@ -86,6 +86,17 @@ describe('SessionOver', () => {
     expect(screen.queryByTestId('session-rate')).toBeNull();
   });
 
+  it('shows the hands and the rate as tiles in the body font', () => {
+    over(7, -4.5, -64.3);
+    const hands = screen.getByTestId('session-hands');
+    expect(hands.classList.contains('end-stat')).toBe(true);
+    expect(hands.querySelector('.end-stat-value')?.textContent).toBe('7');
+    expect(screen.getByTestId('session-rate').querySelector('.end-stat-value')?.textContent).toBe(
+      '-64.3',
+    );
+    expect(screen.getByTestId('export-json').classList.contains('end-link')).toBe(true);
+  });
+
   it('uses the singular for one hand', () => {
     over(1, 2, 200);
     expect(screen.getByTestId('session-summary').textContent).toBe('+2.0 bb');

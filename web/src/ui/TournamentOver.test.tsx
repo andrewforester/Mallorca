@@ -8,7 +8,9 @@ describe('TournamentOver', () => {
   it('offers to play again or to stop for tonight', () => {
     const onPlayAgain = vi.fn();
     const onLeave = vi.fn();
-    render(<TournamentOver won onPlayAgain={onPlayAgain} onLeave={onLeave} />);
+    render(
+      <TournamentOver won winner="You" hands={9} onPlayAgain={onPlayAgain} onLeave={onLeave} />,
+    );
     fireEvent.click(screen.getByTestId('play-again'));
     fireEvent.click(screen.getByTestId('leave-tonight'));
     expect(onPlayAgain).toHaveBeenCalledTimes(1);
@@ -19,11 +21,35 @@ describe('TournamentOver', () => {
     );
   });
 
+  it('names the winner and the number of hands', () => {
+    const { container } = render(
+      <TournamentOver
+        won={false}
+        winner="Mallorca"
+        hands={23}
+        onPlayAgain={vi.fn()}
+        onLeave={vi.fn()}
+      />,
+    );
+    expect(container.textContent).toContain('Mallorca wins the tournament in 23 hands');
+    cleanup();
+    const mine = render(
+      <TournamentOver won winner="You" hands={1} onPlayAgain={vi.fn()} onLeave={vi.fn()} />,
+    );
+    expect(mine.container.textContent).toContain('You win the tournament in 1 hand');
+  });
+
   it('names the outcome under the title', () => {
     const { container } = render(
-      <TournamentOver won={false} onPlayAgain={vi.fn()} onLeave={vi.fn()} />,
+      <TournamentOver
+        won={false}
+        winner="Mallorca"
+        hands={9}
+        onPlayAgain={vi.fn()}
+        onLeave={vi.fn()}
+      />,
     );
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('Good game');
-    expect(container.textContent).toContain('You lost the tournament');
+    expect(container.textContent).toContain('Mallorca wins the tournament');
   });
 });

@@ -268,8 +268,10 @@
   },
   "over": {
     "title": "Good game",
-    "won": "You won the tournament",
-    "lost": "You lost the tournament",
+    "won_one": "You win the tournament in {{count}} hand",
+    "won_other": "You win the tournament in {{count}} hands",
+    "lost_one": "{{name}} wins the tournament in {{count}} hand",
+    "lost_other": "{{name}} wins the tournament in {{count}} hands",
     "again": "Play again",
     "leave": "That's enough for tonight"
   },
@@ -283,11 +285,11 @@
   },
   "session": {
     "title": "Session over",
-    "rate": "{{rate}} bb/100",
+    "rate": "bb/100",
     "again": "Play again",
     "summary": "{{sign}}{{bb}} bb",
-    "hands_one": "{{count}} hand",
-    "hands_other": "{{count}} hands",
+    "hands_one": "hand",
+    "hands_other": "hands",
     "thanks": "Thank you for the company.",
     "leave": "That's enough for tonight"
   },
