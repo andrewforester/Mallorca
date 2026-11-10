@@ -43,4 +43,16 @@ describe('NormalTracker', () => {
     expect(out[0]).toBeCloseTo(-Math.SQRT1_2);
     expect(out[2]).toBeCloseTo(Math.SQRT1_2);
   });
+
+  it('replaces an authored normal that turns more than about 53 degrees from its surface', () => {
+    const flat = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+    const index = new Uint16Array([0, 1, 2]);
+    const inward = new Float32Array([0, 0, -1, 0.866, 0, 0.5, 0, 0, 1]);
+    const tracker = new NormalTracker(inward, flat, index);
+    const out = new Float32Array(9);
+    tracker.update(flat, out);
+    expect([...out.slice(0, 3)]).toEqual([0, 0, 1]);
+    expect([...out.slice(3, 6)]).toEqual([0, 0, 1]);
+    expect([...out.slice(6, 9)]).toEqual([0, 0, 1]);
+  });
 });

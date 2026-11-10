@@ -97,7 +97,9 @@ vec3 nn = nb + 4.0 * (wmA.x * (texture2D(uWm1, vNormalMapUv).xyz - nb) + wmA.y *
 vec3 mapN = normalize(nn * 2.0 - 1.0);`;
 
 const LID = `#include <normal_fragment_maps>
-normal = normalize(mix(normal, vec3(0.0, 0.35, 1.0), lidFold() * 0.85));`;
+vec3 lidUp = normalize(vec3(0.0, 0.35, 1.0));
+vec3 lidMix = mix(normal, lidUp, lidFold() * 0.85);
+normal = dot(lidMix, lidUp) > 0.05 ? normalize(lidMix) : lidUp;`;
 
 function wrinkleShader(shader: Shader, textures: SkinTextures, layout: WrinkleLayout): void {
   skin12(shader);
@@ -152,10 +154,15 @@ export function mouthMaterial(map: THREE.Texture, normalMap: THREE.Texture): THR
       );
     shader.fragmentShader =
       'varying float vDepth;\nvarying float vSide;\n' +
-      shader.fragmentShader.replace(
-        '#include <map_fragment>',
-        '#include <map_fragment>\ndiffuseColor.rgb *= mix(0.08, 1.0, smoothstep(-1.6, -0.4, vDepth)) * (1.0 - 0.6 * smoothstep(0.9, 2.0, vSide));',
-      );
+      shader.fragmentShader
+        .replace(
+          '#include <map_fragment>',
+          '#include <map_fragment>\nfloat mouthShade = mix(0.08, 1.0, smoothstep(-1.6, -0.4, vDepth)) * (1.0 - 0.6 * smoothstep(0.9, 2.0, vSide));',
+        )
+        .replace(
+          '#include <opaque_fragment>',
+          'outgoingLight *= mouthShade;\n#include <opaque_fragment>',
+        );
   };
   return material;
 }
