@@ -43,7 +43,6 @@ import type { SessionFace } from './sessionFace.ts';
 import { initialConversation } from './sessionConversation.ts';
 import { beginHer, observeHer, wireHer, wireProbe } from './sessionWiring.ts';
 import type { Her, WiringHost } from './sessionWiring.ts';
-import { freshTable } from './freshTable.ts';
 import { RUNOUT_MS, runoutOf, stageRunout } from './runout.ts';
 import { createTimers } from './timers.ts';
 import type { Timers } from './timers.ts';
