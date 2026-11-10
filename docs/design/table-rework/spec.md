@@ -116,7 +116,8 @@ tall. Everything stays on one screen: no sheet, no scroll.
    right of the block.
 4. **Board**: five slots centred.
 5. **Your seat**: your cards centred, your block tucked under them; the pot pill on the left at the height of your
-   cards, the dealer button on the right at the same height.
+   cards. On the right of your cards, in one column: your bet on top (level with the top third of your cards), the
+   dealer button 16 px below it. The bet slot is kept when you have no bet, so the dealer button never moves.
 6. **Raise sizing**, always visible: three presets (`½ pot`, `Pot`, `All-in`, each with its amount), then the
    slider with − and + buttons.
 7. **Actions**: Fold, Call, Raise in one row; Raise shows the chosen size (`Raise` / `to 180`).
