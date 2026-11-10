@@ -233,7 +233,7 @@ provisional until the arena measures them.
 
 | Key      | Line                                                | Label          | Hello                                       |
 | -------- | --------------------------------------------------- | -------------- | ------------------------------------------- |
-| mallorca | Warm and curious. Opens up when the cards are kind. | A real game    | Oh, it's you. Sit, I'll deal.               |
+| mallorca | Warm and curious. Opens up when the cards are kind. | A fair fight   | Oh, it's you. Sit, I'll deal.               |
 | ingrid   | A professional. Nothing rattles her.                | The toughest   | Your blind.                                 |
 | mira     | Kind and easy-going.                                | Comfortable    | Shall we? No hurry.                         |
 | nina     | Anxious and exacting. Hates her own mistakes.       | A gentle start | Um, hi. Go easy on me?                      |
