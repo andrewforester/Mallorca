@@ -40,7 +40,6 @@ export const COPY = {
     neuroticism: 'Neuroticism',
   } satisfies Record<keyof BigFive, string>,
   suppression: 'Poker face habit',
-  experience: 'Poker experience',
   control: 'Self-control',
   traits: {
     defaultMood: 'Default mood',

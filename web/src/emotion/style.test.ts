@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { BIAS_KEYS } from './biasKeys.ts';
+import type { BiasKey } from './biasKeys.ts';
 import type { BigFive } from './personality.ts';
-import { PERSONALITIES } from './profiles.ts';
-import { STYLE_COEFFICIENTS, styleOf } from './style.ts';
+import { MALLORCA } from './profiles.ts';
+import { STYLE_COEFFICIENTS, STYLE_SHARE, natureOf, styleFrom, styleOf } from './style.ts';
 
 const NEUTRAL: BigFive = {
   openness: 0,
@@ -17,24 +18,55 @@ const TRAITS = Object.keys(NEUTRAL) as (keyof BigFive)[];
 const rounded = (b: ReturnType<typeof styleOf>): number[] =>
   BIAS_KEYS.map((k) => Math.round(b[k] * 100) / 100);
 
+const allAxes = (v: number): Record<BiasKey, number> =>
+  Object.fromEntries(BIAS_KEYS.map((k) => [k, v])) as Record<BiasKey, number>;
+
+const signedProfile = (key: BiasKey, sign: number): BigFive =>
+  Object.fromEntries(
+    TRAITS.map((t) => [t, sign * Math.sign(STYLE_COEFFICIENTS[key][t])]),
+  ) as unknown as BigFive;
+
+function lcg(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 2 ** 32;
+  };
+}
+
+describe('natureOf', () => {
+  it('is zero on every axis for an average character', () => {
+    expect(Object.values(natureOf(NEUTRAL))).toEqual([0, 0, 0, 0, 0]);
+  });
+
+  it('is one on an axis when every trait has the sign of its coefficient', () => {
+    expect(natureOf(signedProfile('aggression', 1)).aggression).toBeCloseTo(1, 12);
+    expect(natureOf(signedProfile('aggression', -1)).aggression).toBeCloseTo(-1, 12);
+  });
+});
+
 describe('styleOf', () => {
-  it('gives a neutral character the blueprint at any experience', () => {
-    for (const experience of [0, 0.5]) {
-      expect(rounded(styleOf(NEUTRAL, experience))).toEqual([1, 1, 1, 1, 1]);
-    }
+  it('gives an average character the blueprint', () => {
+    expect(rounded(styleOf(NEUTRAL))).toEqual([1, 1, 1, 1, 1]);
   });
 
-  it('pulls every profile fully to the blueprint at experience 1', () => {
-    for (const p of Object.values(PERSONALITIES)) {
-      expect(rounded(styleOf(p.bigFive, 1))).toEqual([1, 1, 1, 1, 1]);
-    }
+  it('takes the most extreme character to eighty percent of the log range', () => {
+    expect(STYLE_SHARE).toBe(0.8);
+    expect(styleOf(signedProfile('aggression', 1)).aggression).toBeCloseTo(2 ** 0.8, 9);
+    expect(styleOf(signedProfile('aggression', -1)).aggression).toBeCloseTo(2 ** -0.8, 9);
   });
 
-  it('gives a single trait at full strength the exponent of its coefficient for a novice', () => {
-    for (const trait of TRAITS) {
-      const style = styleOf({ ...NEUTRAL, [trait]: 1 }, 0);
-      for (const key of BIAS_KEYS) {
-        expect(style[key]).toBeCloseTo(Math.exp(STYLE_COEFFICIENTS[key][trait]), 9);
+  it('gives Mallorca the reference style at rest', () => {
+    expect(rounded(styleOf(MALLORCA.bigFive))).toEqual([1.02, 1.12, 1, 0.98, 1.15]);
+  });
+
+  it('keeps every random character strictly inside the range', () => {
+    const next = lcg(7);
+    for (let i = 0; i < 200; i++) {
+      const b = Object.fromEntries(TRAITS.map((t) => [t, 2 * next() - 1])) as unknown as BigFive;
+      for (const v of Object.values(styleOf(b))) {
+        expect(v).toBeGreaterThan(0.5);
+        expect(v).toBeLessThan(2);
       }
     }
   });
@@ -76,14 +108,21 @@ describe('styleOf', () => {
       neuroticism: 0.3,
     });
   });
+});
 
-  it('gives the profiles the styles of the spec', () => {
-    const style = (k: keyof typeof PERSONALITIES) =>
-      rounded(styleOf(PERSONALITIES[k].bigFive, PERSONALITIES[k].experience));
-    expect(style('mallorca')).toEqual([1.01, 1.04, 1, 1, 1.05]);
-    expect(style('mira')).toEqual([1.01, 1.02, 1.01, 1, 1.03]);
-    expect(style('ingrid')).toEqual([0.99, 0.96, 1, 1.01, 0.96]);
-    expect(style('lola')).toEqual([1.17, 1.49, 1.09, 1.02, 1.47]);
-    expect(style('nina')).toEqual([0.67, 0.96, 0.65, 0.79, 1.25]);
+describe('styleFrom', () => {
+  it('approaches the edges without reaching them', () => {
+    const up = styleFrom(allAxes(1), allAxes(5));
+    const down = styleFrom(allAxes(-1), allAxes(-5));
+    for (const k of BIAS_KEYS) {
+      expect(up[k]).toBeLessThan(2);
+      expect(up[k]).toBeGreaterThan(1.999);
+      expect(down[k]).toBeGreaterThan(0.5);
+    }
+  });
+
+  it('adds the push to the nature inside the tanh', () => {
+    const style = styleFrom(allAxes(0.25), allAxes(0.3));
+    expect(style.bluff).toBeCloseTo(2 ** Math.tanh(Math.atanh(0.8) * 0.25 + 0.3), 12);
   });
 });

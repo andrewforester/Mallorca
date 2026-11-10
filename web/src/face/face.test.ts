@@ -19,7 +19,6 @@ const COLD: Personality = {
     neuroticism: -0.6,
   },
   suppression: 0.9,
-  experience: 0.9,
   control: 0.9,
 };
 
@@ -32,7 +31,6 @@ const HOT: Personality = {
     neuroticism: 0.7,
   },
   suppression: 0.05,
-  experience: 0.3,
   control: 0.3,
 };
 

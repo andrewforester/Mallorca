@@ -14,7 +14,6 @@ import { LEAK_FLOOR, loadOf } from './load.ts';
 const average: Personality = {
   bigFive: { openness: 0, conscientiousness: 0, extraversion: 0, agreeableness: 0, neuroticism: 0 },
   suppression: 0.3,
-  experience: 0.5,
   control: 0.5,
 };
 
@@ -29,7 +28,6 @@ const hot: Personality = {
     neuroticism: 0.5,
   },
   suppression: 0.08,
-  experience: 0.2,
   control: 0.2,
 };
 
@@ -42,7 +40,6 @@ const cold: Personality = {
     neuroticism: -0.6,
   },
   suppression: 0.85,
-  experience: 0.9,
   control: 0.9,
 };
 
@@ -68,6 +65,51 @@ describe('personality', () => {
     expect(anxious.gains.fear).toBeGreaterThan(calm.gains.fear);
     expect(anxious.halfLifeFactor.distress).toBeGreaterThan(calm.halfLifeFactor.distress);
     expect(anxious.composure).toBeLessThan(calm.composure);
+  });
+
+  it('takes composure and discipline from conscientiousness, neuroticism and self-control', () => {
+    const b = MALLORCA.bigFive;
+    const t = traitsOf(MALLORCA);
+    const composure = 0.45 + 0.15 * b.conscientiousness - 0.25 * b.neuroticism + 0.2 * 0.7;
+    const discipline = 0.25 + 0.2 * b.conscientiousness - 0.15 * b.neuroticism + 0.5 * 0.7;
+    expect(t.composure).toBeCloseTo(composure, 12);
+    expect(t.discipline).toBeCloseTo(discipline, 12);
+  });
+
+  it('derives whom she blames, how she copes and how rash she gets', () => {
+    const b = MALLORCA.bigFive;
+    const s = (x: number): number => 1 / (1 + Math.exp(-x));
+    const c = b.conscientiousness;
+    const n = b.neuroticism;
+    const a = b.agreeableness;
+    const e = b.extraversion;
+    const t = traitsOf(MALLORCA);
+    expect(t.selfBlame).toBeCloseTo(s(1.2 * c + 0.8 * n + 0.8 * a - 0.6 * e), 12);
+    expect(t.coping).toBeCloseTo(s(-1.2 * n + 0.6 * e - 0.5 * a + 0.7 - 0.5), 12);
+    expect(t.urgency).toBe(0);
+    const rash = { ...average.bigFive, neuroticism: 0.8, conscientiousness: -0.6 };
+    expect(traitsOf({ ...average, bigFive: rash }).urgency).toBeCloseTo(0.7, 12);
+  });
+
+  it('keeps the stances inside zero and one at the corners', () => {
+    for (const sign of [-1, 1]) {
+      for (const control of [0, 1]) {
+        const corner = {
+          openness: sign,
+          conscientiousness: sign,
+          extraversion: -sign,
+          agreeableness: sign,
+          neuroticism: sign,
+        };
+        const t = traitsOf({ ...average, bigFive: corner, control });
+        for (const v of [t.coping, t.selfBlame]) {
+          expect(v).toBeGreaterThan(0);
+          expect(v).toBeLessThan(1);
+        }
+        expect(t.urgency).toBeGreaterThanOrEqual(0);
+        expect(t.urgency).toBeLessThanOrEqual(1);
+      }
+    }
   });
 
   it('makes a disagreeable personality angrier at the same provocation', () => {

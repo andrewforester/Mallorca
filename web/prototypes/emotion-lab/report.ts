@@ -37,10 +37,6 @@ function traitsTable(): string[] {
       ids.map((id) => f2(PROFILES[id].personality.suppression)),
     ),
     row(
-      'Покерный опыт',
-      ids.map((id) => f2(PROFILES[id].personality.experience)),
-    ),
-    row(
       'Сдержанность',
       ids.map((id) => f2(PROFILES[id].personality.control)),
     ),

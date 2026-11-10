@@ -1,11 +1,4 @@
-import {
-  BIAS_KEYS,
-  BIAS_RANGE,
-  PERSONALITIES,
-  createPersona,
-  styleOf,
-  toBotBias,
-} from '../../src/persona/index.ts';
+import { PERSONALITIES, createPersona, styleOf, toBotBias } from '../../src/persona/index.ts';
 import type { Bias } from '../../src/persona/index.ts';
 import type { Personality, PersonalityKey } from '../../src/persona/index.ts';
 import { fromBrain } from './arenaBot.ts';
@@ -23,7 +16,7 @@ export interface ProfileBot {
 
 const KINDS: readonly ProfileKind[] = ['style', 'persona'];
 const TRAITS = Object.keys(PERSONALITIES.mallorca.bigFive) as (keyof Personality['bigFive'])[];
-const HABITS = ['suppression', 'experience', 'control'] as const;
+const HABITS = ['suppression', 'control'] as const;
 type Habit = (typeof HABITS)[number];
 
 const isTrait = (key: string): key is keyof Personality['bigFive'] =>
@@ -67,12 +60,7 @@ export function profileOfName(name: string): ProfileBot | null {
 }
 
 export function styleBiasOf(p: Personality): Bias {
-  const style = styleOf(p.bigFive, p.experience);
-  const [low, high] = BIAS_RANGE;
-  const clamped = Object.fromEntries(
-    BIAS_KEYS.map((k) => [k, Math.min(high, Math.max(low, style[k]))]),
-  ) as Record<(typeof BIAS_KEYS)[number], number>;
-  return toBotBias(clamped);
+  return toBotBias(styleOf(p.bigFive));
 }
 
 export function profileFactory(profile: ProfileBot): BotFactory {

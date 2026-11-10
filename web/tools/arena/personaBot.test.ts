@@ -50,7 +50,7 @@ describe('createPersonaBot', () => {
     const seen: Watched = { biases: [], persona: null, steps: [] };
     playPair(watched(seen), botFactory('always-raise'), 2, 0, 40);
     const nina = PERSONALITIES.nina;
-    expect(seen.biases[0]).toEqual(toBotBias(styleOf(nina.bigFive, nina.experience)));
+    expect(seen.biases[0]).toEqual(toBotBias(styleOf(nina.bigFive)));
     const moved = seen.biases.some(
       (b) => Math.abs(b.aggression - seen.biases[0]!.aggression) > 0.01,
     );

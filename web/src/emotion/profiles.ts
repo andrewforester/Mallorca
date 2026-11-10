@@ -9,7 +9,6 @@ export const MALLORCA: Personality = {
     neuroticism: 0.1,
   },
   suppression: 0.35,
-  experience: 0.7,
   control: 0.7,
 };
 
@@ -24,7 +23,6 @@ export const PERSONALITIES = {
       neuroticism: -0.1,
     },
     suppression: 0.3,
-    experience: 0.5,
     control: 0.5,
   },
   ingrid: {
@@ -36,7 +34,6 @@ export const PERSONALITIES = {
       neuroticism: -0.6,
     },
     suppression: 0.85,
-    experience: 0.9,
     control: 0.9,
   },
   lola: {
@@ -48,7 +45,6 @@ export const PERSONALITIES = {
       neuroticism: 0.5,
     },
     suppression: 0.08,
-    experience: 0.2,
     control: 0.2,
   },
   nina: {
@@ -60,7 +56,6 @@ export const PERSONALITIES = {
       neuroticism: 0.8,
     },
     suppression: 0.55,
-    experience: 0,
     control: 0,
   },
 } satisfies Record<string, Personality>;

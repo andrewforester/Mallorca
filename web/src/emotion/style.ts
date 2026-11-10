@@ -42,13 +42,34 @@ export const STYLE_COEFFICIENTS: Readonly<Record<BiasKey, Readonly<BigFive>>> = 
 
 const TRAITS = Object.keys(STYLE_COEFFICIENTS.aggression) as (keyof BigFive)[];
 
-export function styleOf(bigFive: BigFive, experience: number): PlayBias {
-  const value = (key: BiasKey): number => {
+export const STYLE_SHARE = 0.8;
+
+const NATURE_SCALE = Math.atanh(STYLE_SHARE);
+
+const byAxis = (value: (key: BiasKey) => number): Record<BiasKey, number> =>
+  Object.fromEntries(BIAS_KEYS.map((k) => [k, value(k)])) as Record<BiasKey, number>;
+
+export function natureOf(bigFive: BigFive): Record<BiasKey, number> {
+  return byAxis((key) => {
     let sum = 0;
+    let scale = 0;
     for (const t of TRAITS) {
       sum += STYLE_COEFFICIENTS[key][t] * bigFive[t];
+      scale += Math.abs(STYLE_COEFFICIENTS[key][t]);
     }
-    return Math.exp((1 - experience) * sum);
-  };
-  return Object.fromEntries(BIAS_KEYS.map((k) => [k, value(k)])) as Record<BiasKey, number>;
+    return sum / scale;
+  });
+}
+
+export function styleFrom(
+  nature: Readonly<Record<BiasKey, number>>,
+  push: Readonly<Record<BiasKey, number>>,
+): PlayBias {
+  return byAxis((key) => 2 ** Math.tanh(NATURE_SCALE * nature[key] + push[key]));
+}
+
+const NO_PUSH = byAxis(() => 0);
+
+export function styleOf(bigFive: BigFive): PlayBias {
+  return styleFrom(natureOf(bigFive), NO_PUSH);
 }

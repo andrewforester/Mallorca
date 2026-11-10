@@ -1,7 +1,7 @@
-import { EMOTIONS, NEGATIVE, POSITIVE, clamp } from './emotions.ts';
+import { EMOTIONS, NEGATIVE, POSITIVE, clamp, clamp01 } from './emotions.ts';
 import type { Emotion, Pad } from './emotions.ts';
-import type { PlayBias } from './biasKeys.ts';
-import { styleOf } from './style.ts';
+import type { BiasKey, PlayBias } from './biasKeys.ts';
+import { natureOf, styleOf } from './style.ts';
 
 export interface BigFive {
   openness: number;
@@ -14,7 +14,6 @@ export interface BigFive {
 export interface Personality {
   bigFive: BigFive;
   suppression: number;
-  experience: number;
   control: number;
 }
 
@@ -28,6 +27,10 @@ export interface Traits {
   mask: number;
   talkativeness: number;
   baseline: PlayBias;
+  nature: Readonly<Record<BiasKey, number>>;
+  selfBlame: number;
+  coping: number;
+  urgency: number;
 }
 
 export function defaultMoodOf(b: BigFive): Pad {
@@ -71,6 +74,21 @@ function halfLifeFactorOf(b: BigFive): Record<Emotion, number> {
   return Object.fromEntries(EMOTIONS.map((e) => [e, factor(e)])) as Record<Emotion, number>;
 }
 
+const sigmoid = (x: number): number => 1 / (1 + Math.exp(-x));
+
+function stancesOf(p: Personality): { selfBlame: number; coping: number; urgency: number } {
+  const b = p.bigFive;
+  const c = b.conscientiousness;
+  const n = b.neuroticism;
+  const a = b.agreeableness;
+  const e = b.extraversion;
+  return {
+    selfBlame: sigmoid(1.2 * c + 0.8 * n + 0.8 * a - 0.6 * e),
+    coping: sigmoid(-1.2 * n + 0.6 * e - 0.5 * a + (p.control - 0.5)),
+    urgency: clamp01(0.5 * n - 0.5 * c),
+  };
+}
+
 export function traitsOf(p: Personality): Traits {
   const b = p.bigFive;
   return {
@@ -78,11 +96,7 @@ export function traitsOf(p: Personality): Traits {
     gains: gainsOf(b),
     halfLifeFactor: halfLifeFactorOf(b),
     composure: clamp(
-      0.45 +
-        0.15 * b.conscientiousness -
-        0.25 * b.neuroticism +
-        0.2 * p.control +
-        0.15 * p.experience,
+      0.45 + 0.15 * b.conscientiousness - 0.25 * b.neuroticism + 0.2 * p.control,
       0.1,
       1.2,
     ),
@@ -94,6 +108,8 @@ export function traitsOf(p: Personality): Traits {
     expressiveness: clamp(0.85 + 0.35 * b.extraversion + 0.1 * b.neuroticism, 0.3, 1.4),
     mask: clamp(p.suppression, 0, 1),
     talkativeness: clamp(0.5 + 0.4 * b.extraversion, 0.1, 1),
-    baseline: styleOf(b, p.experience),
+    baseline: styleOf(b),
+    nature: natureOf(b),
+    ...stancesOf(p),
   };
 }

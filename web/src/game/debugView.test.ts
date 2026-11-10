@@ -33,7 +33,7 @@ describe('toDebugView', () => {
     expect(view.personality).toEqual({ key: 'lola' });
     expect(view.bigFive).toEqual(PERSONALITIES.lola.bigFive);
     expect(view.suppression).toBe(PERSONALITIES.lola.suppression);
-    expect(view.experience).toBe(PERSONALITIES.lola.experience);
+    expect('experience' in view).toBe(false);
     expect(view.control).toBe(PERSONALITIES.lola.control);
     expect(view.traits?.gains.map(([e]) => e)).toEqual([...EMOTIONS]);
   });
@@ -45,7 +45,7 @@ describe('toDebugView', () => {
     expect(view.load?.sources.map(([s]) => s)).toEqual([...LOAD_SOURCES]);
     expect(view.engineBias.map(([k]) => k)).toEqual([...BIAS_KEYS]);
     expect(view.baseline).toEqual(
-      BIAS_KEYS.map((k) => [k, styleOf(PERSONALITIES.lola.bigFive, 0.2)[k]]),
+      BIAS_KEYS.map((k) => [k, styleOf(PERSONALITIES.lola.bigFive)[k]]),
     );
     expect(view.sentBias).toEqual(state().sentBias);
     expect(view.journal).toHaveLength(1);

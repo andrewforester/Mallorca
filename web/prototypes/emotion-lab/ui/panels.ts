@@ -238,12 +238,6 @@ export function createPersonalityEditor(
     (p, v) => ({ ...p, suppression: v }),
   );
   slider(
-    'Покерный опыт',
-    0,
-    (p) => p.experience,
-    (p, v) => ({ ...p, experience: v }),
-  );
-  slider(
     'Сдержанность',
     0,
     (p) => p.control,
