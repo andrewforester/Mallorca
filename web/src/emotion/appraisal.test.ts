@@ -102,9 +102,9 @@ describe('a won pot', () => {
 });
 
 describe('a bet against her', () => {
-  const bet = (equity: number, raise = false): TableEvent => ({
+  const bet = (equity: number, raise = false, sizeBb = 20): TableEvent => ({
     kind: 'opponentBet',
-    sizeBb: 20,
+    sizeBb,
     equity,
     raise,
   });
@@ -117,10 +117,25 @@ describe('a bet against her', () => {
     expect(axes(bet(0.5)).realized).toBe(false);
   });
 
-  it('adds a challenge for a raise that grows with the pressure', () => {
-    const plain = axes(bet(0.5)).value;
-    expect(axes(bet(0.5, true), traitsOf(MALLORCA), 3).value - plain).toBeCloseTo(-0.12 * 2.5, 12);
-    expect(axes(bet(0.5, true), traitsOf(MALLORCA), 9).value - plain).toBeCloseTo(-0.12 * 2.5, 12);
+  const challenge = (equity: number, pressure: number, sizeBb = 20): number =>
+    axes(bet(equity, true, sizeBb), traitsOf(MALLORCA), pressure).value /
+      axes(bet(equity, false, sizeBb)).value -
+    1;
+
+  it('makes a raise a bet that challenges her, more so under pressure, softly', () => {
+    expect(challenge(0.5, 0)).toBeCloseTo(0.5, 12);
+    expect(challenge(0.5, 3)).toBeCloseTo(0.5 * (2 - Math.exp(-1)), 12);
+    expect(challenge(0.5, 9)).toBeGreaterThan(challenge(0.5, 3));
+    expect(challenge(0.5, 100)).toBeLessThan(1);
+  });
+
+  it('weighs the challenge of a raise by its size and by how open the outcome is', () => {
+    const raise = (equity: number, sizeBb: number): number =>
+      axes(bet(equity, true, sizeBb), traitsOf(MALLORCA), 3).value;
+    expect(raise(0.9, 20)).toBeCloseTo(0.36 * raise(0.5, 20), 12);
+    expect(raise(0.98, 20)).toBeGreaterThan(-0.06);
+    expect(raise(0.5, 5)).toBeGreaterThan(0.5 * raise(0.5, 20));
+    expect(raise(0.5, 5)).toBeCloseTo((scaled(5) / scaled(20)) * raise(0.5, 20), 12);
   });
 
   it('is felt through her leaning: anger when she copes, fear when she does not', () => {

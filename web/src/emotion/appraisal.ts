@@ -30,6 +30,8 @@ export interface AppraisalContext {
   traits: Traits;
 }
 
+export const PRESSURE_SCALE = 3;
+
 export const scaled = (bb: number): number => saturate(Math.abs(bb) / STAKE_BB);
 
 const pct = (x: number): string => `${Math.round(x * 100)}%`;
@@ -71,13 +73,13 @@ function street(e: Extract<TableEvent, { kind: 'street' }>): Axes | null {
 
 function opponentBet(e: Extract<TableEvent, { kind: 'opponentBet' }>, c: AppraisalContext): Axes {
   const open = 4 * e.equity * (1 - e.equity);
-  const pressure = Math.min(3, e.pressure ?? c.pressure);
-  const challenge = e.raise === true ? 0.12 * (1 + 0.5 * pressure) : 0;
+  const pressure = saturate((e.pressure ?? c.pressure) / PRESSURE_SCALE);
+  const challenge = e.raise === true ? 0.5 * (1 + pressure) : 0;
   return {
     ...BLANK,
     realized: false,
     opponent: 1,
-    value: -(0.6 * scaled(e.sizeBb) * open + challenge),
+    value: -0.6 * scaled(e.sizeBb) * open * (1 + challenge),
     control: leaningOf(c.traits.coping, e.equity),
     reason: `the opponent ${e.raise === true ? 'raises' : 'bets'} ${e.sizeBb} bb, her equity ${pct(e.equity)}`,
   };
