@@ -1,4 +1,4 @@
-import { clamp, clamp01, saturate } from './emotions.ts';
+import { ATTACK_S, clamp, clamp01, massOf, saturate } from './emotions.ts';
 import type { Traits } from './personality.ts';
 
 export const STAKE_BB = 20;
@@ -48,3 +48,23 @@ export function foldChanceOf(betBb: number, potBb: number): number {
 export function beliefOf(equity: number, foldChance: number): number {
   return clamp01(foldChance + (1 - foldChance) * equity);
 }
+
+export interface Held {
+  value: number;
+  pending: number;
+}
+
+export const NOTHING_HELD: Held = { value: 0, pending: 0 };
+
+export const holdOf = (h: Held, amount: number): Held => ({
+  value: h.value,
+  pending: h.pending + massOf(amount),
+});
+
+export function stepHeld(h: Held, dt: number, halfLife: number): Held {
+  const landed = h.pending * (1 - 0.5 ** (dt / ATTACK_S));
+  const risen = 1 - (1 - h.value) * Math.exp(-landed);
+  return { value: risen * 0.5 ** (dt / halfLife), pending: h.pending - landed };
+}
+
+export const withHeld = (value: number, h: Held): number => 1 - (1 - value) * (1 - h.value);

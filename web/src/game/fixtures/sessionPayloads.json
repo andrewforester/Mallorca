@@ -277,7 +277,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.42
+          "intensity": 0.41
         },
         "words": {
           "min": 2,
@@ -371,7 +371,7 @@
         "occasion": "the player raised before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.5
+          "intensity": 0.49
         },
         "words": {
           "min": 1,
@@ -459,7 +459,7 @@
         "occasion": "you bet on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.38
+          "intensity": 0.33
         },
         "words": {
           "min": 2,
@@ -569,11 +569,11 @@
         "occasion": "you lost a 16 bb pot",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.42
+          "intensity": 0.41
         },
         "words": {
           "min": 2,
-          "max": 4
+          "max": 6
         },
         "humour": null,
         "claim": null,
@@ -696,7 +696,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.54
+          "intensity": 0.53
         },
         "words": {
           "min": 2,
@@ -1058,7 +1058,7 @@
         "occasion": "the player raised on the river",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.4
+          "intensity": 0.39
         },
         "words": {
           "min": 2,
@@ -1189,7 +1189,7 @@
         "occasion": "you stayed in before the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.62
+          "intensity": 0.61
         },
         "words": {
           "min": 2,
@@ -1312,7 +1312,7 @@
         "occasion": "you stayed in on the turn",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.47
+          "intensity": 0.46
         },
         "words": {
           "min": 2,
@@ -1579,7 +1579,7 @@
         "occasion": "you won a 18 bb pot",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.61
+          "intensity": 0.6
         },
         "words": {
           "min": 2,
@@ -1723,7 +1723,7 @@
         "occasion": "you bet before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.48
+          "intensity": 0.46
         },
         "words": {
           "min": 2,
@@ -1852,7 +1852,7 @@
         "occasion": "you won a 18 bb pot",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.71
+          "intensity": 0.7
         },
         "words": {
           "min": 2,
@@ -1998,7 +1998,7 @@
         "occasion": "you stayed in before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.65
+          "intensity": 0.64
         },
         "words": {
           "min": 2,
@@ -2122,7 +2122,7 @@
         "occasion": "you lost a 18 bb pot",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.59
+          "intensity": 0.58
         },
         "words": {
           "min": 2,
@@ -2393,7 +2393,7 @@
         "occasion": "the player raised on the turn",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.66
+          "intensity": 0.65
         },
         "words": {
           "min": 1,
@@ -2525,7 +2525,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.58
+          "intensity": 0.57
         },
         "words": {
           "min": 2,
@@ -2534,7 +2534,7 @@
         "humour": {
           "style": "aggressive",
           "target": "play",
-          "intensity": "clear",
+          "intensity": "soft",
           "softened": true
         },
         "claim": {
@@ -2663,7 +2663,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.61
+          "intensity": 0.6
         },
         "words": {
           "min": 1,
@@ -3215,7 +3215,7 @@
         "occasion": "you bet before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.5
+          "intensity": 0.48
         },
         "words": {
           "min": 2,
@@ -3480,7 +3480,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "anger",
-          "intensity": 0.41
+          "intensity": 0.26
         },
         "words": {
           "min": 1,
@@ -3753,7 +3753,7 @@
         "occasion": "the player raised before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.54
+          "intensity": 0.53
         },
         "words": {
           "min": 2,
@@ -4273,7 +4273,7 @@
         "occasion": "you bet before the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.51
+          "intensity": 0.5
         },
         "words": {
           "min": 2,
@@ -4538,7 +4538,7 @@
         "occasion": "you stayed in on the turn",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.53
+          "intensity": 0.52
         },
         "words": {
           "min": 2,
@@ -4674,7 +4674,7 @@
         "occasion": "the player raised on the river",
         "voice": {
           "emotion": "anger",
-          "intensity": 0.43
+          "intensity": 0.3
         },
         "words": {
           "min": 1,
@@ -4810,7 +4810,7 @@
         "occasion": "you bet on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.57
+          "intensity": 0.55
         },
         "words": {
           "min": 2,
@@ -4942,7 +4942,7 @@
         "occasion": "you won a 16 bb pot",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.72
+          "intensity": 0.71
         },
         "words": {
           "min": 2,
@@ -5087,7 +5087,7 @@
         "occasion": "you bet before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.65
+          "intensity": 0.64
         },
         "words": {
           "min": 2,
@@ -5213,7 +5213,7 @@
         "occasion": "the player called your bet and you lost a 18 bb pot",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.58
+          "intensity": 0.57
         },
         "words": {
           "min": 1,
@@ -5359,7 +5359,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.56
+          "intensity": 0.55
         },
         "words": {
           "min": 1,
@@ -5487,7 +5487,7 @@
         "occasion": "you lost a 18 bb pot",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.65
+          "intensity": 0.64
         },
         "words": {
           "min": 2,
@@ -5761,7 +5761,7 @@
         "occasion": "the player raised on the river",
         "voice": {
           "emotion": "anger",
-          "intensity": 0.42
+          "intensity": 0.3
         },
         "words": {
           "min": 2,
@@ -6027,7 +6027,7 @@
         "occasion": "you stayed in on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.64
+          "intensity": 0.63
         },
         "words": {
           "min": 1,
@@ -6430,7 +6430,7 @@
         "occasion": "you won a 18 bb pot",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.72
+          "intensity": 0.71
         },
         "words": {
           "min": 1,
@@ -6575,7 +6575,7 @@
         "occasion": "you bet before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.51
+          "intensity": 0.5
         },
         "words": {
           "min": 2,
@@ -6704,7 +6704,7 @@
         "occasion": "the player raised on the river",
         "voice": {
           "emotion": "anger",
-          "intensity": 0.54
+          "intensity": 0.4
         },
         "words": {
           "min": 1,
@@ -6836,21 +6836,18 @@
       },
       "plan": {
         "version": 2,
-        "act": "claim",
+        "act": "react",
         "occasion": "you stayed in before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.7
+          "intensity": 0.69
         },
         "words": {
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         "humour": null,
-        "claim": {
-          "about": "weak",
-          "honest": true
-        },
+        "claim": null,
         "facts": {
           "street": "preflop",
           "board": [],
@@ -6964,7 +6961,7 @@
         "occasion": "you stayed in on the turn",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.66
+          "intensity": 0.65
         },
         "words": {
           "min": 2,
@@ -7100,7 +7097,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "anger",
-          "intensity": 0.43
+          "intensity": 0.25
         },
         "words": {
           "min": 2,
@@ -7233,7 +7230,7 @@
         "occasion": "you bet on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.47
+          "intensity": 0.45
         },
         "words": {
           "min": 2,
@@ -7510,7 +7507,7 @@
         "occasion": "the player raised before the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.45
+          "intensity": 0.44
         },
         "words": {
           "min": 2,
@@ -7914,7 +7911,7 @@
         "occasion": "the player said something",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.71
+          "intensity": 0.7
         },
         "words": {
           "min": 3,
@@ -8637,7 +8634,7 @@
         "occasion": "the player said something",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.72
+          "intensity": 0.71
         },
         "words": {
           "min": 3,
@@ -8818,1243 +8815,1243 @@
       "stickiness": 0.86609636
     },
     {
-      "aggression": 1.162419327,
-      "bluff": 0.687434897,
-      "tightness": 0.722015141,
-      "sizing": 0.825857999,
-      "stickiness": 0.808253227
+      "aggression": 1.15119758,
+      "bluff": 0.681570221,
+      "tightness": 0.727036033,
+      "sizing": 0.816526741,
+      "stickiness": 0.804081275
     },
     {
-      "aggression": 1.177187084,
-      "bluff": 0.686592605,
-      "tightness": 0.741539078,
-      "sizing": 0.832355304,
-      "stickiness": 0.818539073
+      "aggression": 1.166341524,
+      "bluff": 0.680966581,
+      "tightness": 0.74663333,
+      "sizing": 0.823060319,
+      "stickiness": 0.814537607
     },
     {
-      "aggression": 1.174192449,
-      "bluff": 0.681939998,
-      "tightness": 0.747401613,
-      "sizing": 0.836977066,
-      "stickiness": 0.807420491
+      "aggression": 1.162230993,
+      "bluff": 0.675991389,
+      "tightness": 0.752902727,
+      "sizing": 0.826804642,
+      "stickiness": 0.803060226
     },
     {
-      "aggression": 1.157006675,
-      "bluff": 0.67305814,
-      "tightness": 0.752355436,
-      "sizing": 0.829531225,
-      "stickiness": 0.792490278
+      "aggression": 1.144198599,
+      "bluff": 0.66700502,
+      "tightness": 0.758229843,
+      "sizing": 0.819010837,
+      "stickiness": 0.787815809
     },
     {
-      "aggression": 1.147902725,
-      "bluff": 0.670791732,
-      "tightness": 0.749700203,
-      "sizing": 0.82942112,
-      "stickiness": 0.783247157
+      "aggression": 1.134888527,
+      "bluff": 0.664718159,
+      "tightness": 0.755574196,
+      "sizing": 0.81883643,
+      "stickiness": 0.778497545
     },
     {
-      "aggression": 1.38910165,
-      "bluff": 0.89550645,
-      "tightness": 0.671098344,
-      "sizing": 1.08527898,
-      "stickiness": 0.982867093
+      "aggression": 1.348940633,
+      "bluff": 0.852747327,
+      "tightness": 0.685635323,
+      "sizing": 1.032719757,
+      "stickiness": 0.958985125
     },
     {
-      "aggression": 1.409754033,
-      "bluff": 0.903604732,
-      "tightness": 0.682143474,
-      "sizing": 1.11306238,
-      "stickiness": 0.993156202
+      "aggression": 1.369230815,
+      "bluff": 0.862188821,
+      "tightness": 0.696425345,
+      "sizing": 1.060914119,
+      "stickiness": 0.969308959
     },
     {
-      "aggression": 1.388199767,
-      "bluff": 0.873445741,
-      "tightness": 0.69800205,
-      "sizing": 1.095258864,
-      "stickiness": 0.968054935
+      "aggression": 1.349096236,
+      "bluff": 0.837258952,
+      "tightness": 0.712336756,
+      "sizing": 1.0471789,
+      "stickiness": 0.946697651
     },
     {
-      "aggression": 1.385914392,
-      "bluff": 0.876458252,
-      "tightness": 0.691760357,
-      "sizing": 1.094432422,
-      "stickiness": 0.966172542
+      "aggression": 1.346984778,
+      "bluff": 0.839495808,
+      "tightness": 0.705869108,
+      "sizing": 1.045633061,
+      "stickiness": 0.944890753
     },
     {
-      "aggression": 1.53057819,
-      "bluff": 1.093496435,
-      "tightness": 0.642787517,
-      "sizing": 1.295801398,
-      "stickiness": 1.114539129
+      "aggression": 1.478034615,
+      "bluff": 1.026379815,
+      "tightness": 0.659297841,
+      "sizing": 1.224739379,
+      "stickiness": 1.078329207
     },
     {
-      "aggression": 1.488378733,
-      "bluff": 1.012920592,
-      "tightness": 0.666479435,
-      "sizing": 1.249218469,
-      "stickiness": 1.053734014
+      "aggression": 1.434843427,
+      "bluff": 0.952184097,
+      "tightness": 0.684843964,
+      "sizing": 1.179870871,
+      "stickiness": 1.020190903
     },
     {
-      "aggression": 1.478659685,
-      "bluff": 1.017412717,
-      "tightness": 0.656417788,
-      "sizing": 1.248533603,
-      "stickiness": 1.042273857
+      "aggression": 1.423791726,
+      "bluff": 0.95383304,
+      "tightness": 0.674302565,
+      "sizing": 1.176198196,
+      "stickiness": 1.00820277
     },
     {
-      "aggression": 1.524605362,
-      "bluff": 0.994025318,
-      "tightness": 0.710180974,
-      "sizing": 1.253305522,
-      "stickiness": 1.094188191
+      "aggression": 1.479881323,
+      "bluff": 0.944416674,
+      "tightness": 0.730910025,
+      "sizing": 1.196457925,
+      "stickiness": 1.065533396
     },
     {
-      "aggression": 1.555448168,
-      "bluff": 1.028981346,
-      "tightness": 0.694563909,
-      "sizing": 1.296750109,
-      "stickiness": 1.107737602
+      "aggression": 1.522675912,
+      "bluff": 0.990145681,
+      "tightness": 0.71003046,
+      "sizing": 1.254694879,
+      "stickiness": 1.086136509
     },
     {
-      "aggression": 1.624309327,
-      "bluff": 1.266404658,
-      "tightness": 0.609716943,
-      "sizing": 1.453956794,
-      "stickiness": 1.198954394
+      "aggression": 1.51682054,
+      "bluff": 1.11578119,
+      "tightness": 0.640508899,
+      "sizing": 1.30782393,
+      "stickiness": 1.119234273
     },
     {
-      "aggression": 1.606793494,
-      "bluff": 1.22330281,
-      "tightness": 0.618288304,
-      "sizing": 1.428800337,
-      "stickiness": 1.170749018
+      "aggression": 1.497133393,
+      "bluff": 1.074577506,
+      "tightness": 0.651123587,
+      "sizing": 1.281311169,
+      "stickiness": 1.091945049
     },
     {
-      "aggression": 1.591106413,
-      "bluff": 1.180045574,
-      "tightness": 0.627190296,
-      "sizing": 1.406211577,
-      "stickiness": 1.140789977
+      "aggression": 1.488413938,
+      "bluff": 1.046860061,
+      "tightness": 0.659294643,
+      "sizing": 1.271461541,
+      "stickiness": 1.069636183
     },
     {
-      "aggression": 1.58594432,
-      "bluff": 1.156087435,
-      "tightness": 0.635108443,
-      "sizing": 1.395434597,
-      "stickiness": 1.129058418
+      "aggression": 1.489344806,
+      "bluff": 1.034967202,
+      "tightness": 0.667035649,
+      "sizing": 1.271970533,
+      "stickiness": 1.063481399
     },
     {
-      "aggression": 1.503092846,
-      "bluff": 1.14086104,
-      "tightness": 0.603994884,
-      "sizing": 1.362565403,
-      "stickiness": 1.034406483
+      "aggression": 1.363613357,
+      "bluff": 0.958173341,
+      "tightness": 0.642515987,
+      "sizing": 1.167620104,
+      "stickiness": 0.952053523
     },
     {
-      "aggression": 1.491216707,
-      "bluff": 1.117405816,
-      "tightness": 0.607904262,
-      "sizing": 1.348710353,
-      "stickiness": 1.017973568
+      "aggression": 1.355841956,
+      "bluff": 0.951242033,
+      "tightness": 0.64450381,
+      "sizing": 1.168707825,
+      "stickiness": 0.940727472
     },
     {
-      "aggression": 1.479067717,
-      "bluff": 1.081370956,
-      "tightness": 0.615527526,
-      "sizing": 1.328882205,
-      "stickiness": 0.997100131
+      "aggression": 1.356577267,
+      "bluff": 0.948116706,
+      "tightness": 0.646784968,
+      "sizing": 1.182474346,
+      "stickiness": 0.928916774
     },
     {
-      "aggression": 1.470390141,
-      "bluff": 1.06270166,
-      "tightness": 0.620514759,
-      "sizing": 1.316421804,
-      "stickiness": 0.987749391
+      "aggression": 1.349536339,
+      "bluff": 0.936999442,
+      "tightness": 0.651620308,
+      "sizing": 1.176787924,
+      "stickiness": 0.921315335
     },
     {
-      "aggression": 1.460514992,
-      "bluff": 1.047992751,
-      "tightness": 0.62177353,
-      "sizing": 1.305544525,
-      "stickiness": 0.975425601
+      "aggression": 1.341787533,
+      "bluff": 0.929631012,
+      "tightness": 0.651516875,
+      "sizing": 1.173253566,
+      "stickiness": 0.910928842
     },
     {
-      "aggression": 1.313954141,
-      "bluff": 0.985260962,
-      "tightness": 0.603993999,
-      "sizing": 1.229028318,
-      "stickiness": 0.863356361
+      "aggression": 1.170947844,
+      "bluff": 0.855158911,
+      "tightness": 0.635072892,
+      "sizing": 1.071476137,
+      "stickiness": 0.802364532
     },
     {
-      "aggression": 1.313362949,
-      "bluff": 0.956026694,
-      "tightness": 0.616681718,
-      "sizing": 1.211047067,
-      "stickiness": 0.860729803
+      "aggression": 1.177604833,
+      "bluff": 0.843089941,
+      "tightness": 0.646638695,
+      "sizing": 1.071782801,
+      "stickiness": 0.801601302
     },
     {
-      "aggression": 1.327401524,
-      "bluff": 0.97129523,
-      "tightness": 0.617329644,
-      "sizing": 1.226661841,
-      "stickiness": 0.873699172
+      "aggression": 1.194696447,
+      "bluff": 0.856458359,
+      "tightness": 0.647621811,
+      "sizing": 1.087106118,
+      "stickiness": 0.8147968
     },
     {
-      "aggression": 1.33129492,
-      "bluff": 0.983326491,
-      "tightness": 0.612206217,
-      "sizing": 1.234354427,
-      "stickiness": 0.876578352
+      "aggression": 1.199383165,
+      "bluff": 0.865046742,
+      "tightness": 0.641884079,
+      "sizing": 1.091971581,
+      "stickiness": 0.818109048
     },
     {
-      "aggression": 1.412888961,
-      "bluff": 1.080207606,
-      "tightness": 0.601322707,
-      "sizing": 1.332847641,
-      "stickiness": 0.932989227
+      "aggression": 1.280979799,
+      "bluff": 0.95770761,
+      "tightness": 0.6254344,
+      "sizing": 1.201204611,
+      "stickiness": 0.865421365
     },
     {
-      "aggression": 1.370495263,
-      "bluff": 0.988140038,
-      "tightness": 0.622540115,
-      "sizing": 1.261173294,
-      "stickiness": 0.894384497
+      "aggression": 1.245963474,
+      "bluff": 0.88946673,
+      "tightness": 0.647440233,
+      "sizing": 1.148359116,
+      "stickiness": 0.8331338
     },
     {
-      "aggression": 1.376573747,
-      "bluff": 1.006387049,
-      "tightness": 0.616114942,
-      "sizing": 1.27483627,
-      "stickiness": 0.899235775
+      "aggression": 1.251415814,
+      "bluff": 0.904358225,
+      "tightness": 0.639992063,
+      "sizing": 1.159733385,
+      "stickiness": 0.83743089
     },
     {
-      "aggression": 1.390992854,
-      "bluff": 1.043630098,
-      "tightness": 0.605015881,
-      "sizing": 1.302358609,
-      "stickiness": 0.91100805
+      "aggression": 1.262448963,
+      "bluff": 0.932744022,
+      "tightness": 0.627692519,
+      "sizing": 1.180465064,
+      "stickiness": 0.846707008
     },
     {
-      "aggression": 1.377266209,
-      "bluff": 1.013661422,
-      "tightness": 0.610628808,
-      "sizing": 1.278540435,
-      "stickiness": 0.89737747
+      "aggression": 1.256535277,
+      "bluff": 0.914696738,
+      "tightness": 0.632156942,
+      "sizing": 1.167858686,
+      "stickiness": 0.837634411
     },
     {
-      "aggression": 1.320277728,
-      "bluff": 1.013913099,
-      "tightness": 0.593368806,
-      "sizing": 1.26554603,
-      "stickiness": 0.855274486
+      "aggression": 1.198443342,
+      "bluff": 0.915005915,
+      "tightness": 0.610920389,
+      "sizing": 1.153883639,
+      "stickiness": 0.8000579
     },
     {
-      "aggression": 1.324987356,
-      "bluff": 0.995651281,
-      "tightness": 0.602948914,
-      "sizing": 1.254280903,
-      "stickiness": 0.860235387
+      "aggression": 1.206231765,
+      "bluff": 0.901042439,
+      "tightness": 0.6220069,
+      "sizing": 1.146098456,
+      "stickiness": 0.805698773
     },
     {
-      "aggression": 1.312616304,
-      "bluff": 0.958878668,
-      "tightness": 0.611540748,
-      "sizing": 1.224004885,
-      "stickiness": 0.848138163
+      "aggression": 1.204576432,
+      "bluff": 0.878233785,
+      "tightness": 0.629354611,
+      "sizing": 1.129728953,
+      "stickiness": 0.798557053
     },
     {
-      "aggression": 1.3443083,
-      "bluff": 0.986876174,
-      "tightness": 0.612854886,
-      "sizing": 1.254607328,
-      "stickiness": 0.872876345
+      "aggression": 1.238917249,
+      "bluff": 0.904486402,
+      "tightness": 0.631105842,
+      "sizing": 1.161240649,
+      "stickiness": 0.822354806
     },
     {
-      "aggression": 1.389538962,
-      "bluff": 1.07805065,
-      "tightness": 0.592304799,
-      "sizing": 1.327548347,
-      "stickiness": 0.908009378
+      "aggression": 1.252684916,
+      "bluff": 0.959842276,
+      "tightness": 0.61248551,
+      "sizing": 1.20179093,
+      "stickiness": 0.83938385
     },
     {
-      "aggression": 1.38197918,
-      "bluff": 1.058383632,
-      "tightness": 0.596441492,
-      "sizing": 1.312066896,
-      "stickiness": 0.901835151
+      "aggression": 1.24569838,
+      "bluff": 0.943993576,
+      "tightness": 0.617023352,
+      "sizing": 1.188696127,
+      "stickiness": 0.833959701
     },
     {
-      "aggression": 1.3710852,
-      "bluff": 1.019916285,
-      "tightness": 0.605330159,
-      "sizing": 1.283621024,
-      "stickiness": 0.889918972
+      "aggression": 1.24552093,
+      "bluff": 0.921663328,
+      "tightness": 0.624681726,
+      "sizing": 1.175735481,
+      "stickiness": 0.827361032
     },
     {
-      "aggression": 1.356606388,
-      "bluff": 0.991672509,
-      "tightness": 0.611350382,
-      "sizing": 1.260273556,
-      "stickiness": 0.877782762
+      "aggression": 1.233043062,
+      "bluff": 0.898891469,
+      "tightness": 0.631076159,
+      "sizing": 1.156146604,
+      "stickiness": 0.817150863
     },
     {
-      "aggression": 1.349552754,
-      "bluff": 0.963071465,
-      "tightness": 0.620143096,
-      "sizing": 1.237140756,
-      "stickiness": 0.870937035
+      "aggression": 1.231936444,
+      "bluff": 0.877933107,
+      "tightness": 0.640263374,
+      "sizing": 1.139638975,
+      "stickiness": 0.813303819
     },
     {
-      "aggression": 1.265347067,
-      "bluff": 0.958747336,
-      "tightness": 0.597612387,
-      "sizing": 1.212615154,
-      "stickiness": 0.817455649
+      "aggression": 1.124308389,
+      "bluff": 0.856139945,
+      "tightness": 0.617416384,
+      "sizing": 1.090523235,
+      "stickiness": 0.757577831
     },
     {
-      "aggression": 1.293220203,
-      "bluff": 0.913927602,
-      "tightness": 0.632581263,
-      "sizing": 1.18797451,
-      "stickiness": 0.839410744
+      "aggression": 1.163424532,
+      "bluff": 0.824619294,
+      "tightness": 0.658569006,
+      "sizing": 1.077789237,
+      "stickiness": 0.781083195
     },
     {
-      "aggression": 1.281626104,
-      "bluff": 0.920438417,
-      "tightness": 0.624081219,
-      "sizing": 1.189832162,
-      "stickiness": 0.831230211
+      "aggression": 1.151784859,
+      "bluff": 0.830331264,
+      "tightness": 0.648059112,
+      "sizing": 1.079259699,
+      "stickiness": 0.773928645
     },
     {
-      "aggression": 1.286893219,
-      "bluff": 0.9477791,
-      "tightness": 0.611829425,
-      "sizing": 1.21162399,
-      "stickiness": 0.833981124
+      "aggression": 1.154606994,
+      "bluff": 0.852529325,
+      "tightness": 0.63360199,
+      "sizing": 1.097872736,
+      "stickiness": 0.775552629
     },
     {
-      "aggression": 1.374176001,
-      "bluff": 1.078655626,
-      "tightness": 0.594318468,
-      "sizing": 1.341785288,
-      "stickiness": 0.893535091
+      "aggression": 1.255206359,
+      "bluff": 0.986728294,
+      "tightness": 0.6090679,
+      "sizing": 1.248352035,
+      "stickiness": 0.832815028
     },
     {
-      "aggression": 1.359004894,
-      "bluff": 1.037543614,
-      "tightness": 0.604648553,
-      "sizing": 1.309748032,
-      "stickiness": 0.882733808
+      "aggression": 1.243281902,
+      "bluff": 0.950909722,
+      "tightness": 0.620721882,
+      "sizing": 1.218854009,
+      "stickiness": 0.824625151
     },
     {
-      "aggression": 1.360927844,
-      "bluff": 1.041386284,
-      "tightness": 0.603430909,
-      "sizing": 1.312358483,
-      "stickiness": 0.884018189
+      "aggression": 1.245640028,
+      "bluff": 0.954744904,
+      "tightness": 0.619232991,
+      "sizing": 1.221747184,
+      "stickiness": 0.825975473
     },
     {
-      "aggression": 1.367580875,
-      "bluff": 1.057224532,
-      "tightness": 0.599286301,
-      "sizing": 1.324116467,
-      "stickiness": 0.888971966
+      "aggression": 1.251735949,
+      "bluff": 0.968807782,
+      "tightness": 0.614521057,
+      "sizing": 1.23274095,
+      "stickiness": 0.830202064
     },
     {
-      "aggression": 1.377387072,
-      "bluff": 1.030539979,
-      "tightness": 0.60704,
-      "sizing": 1.306982233,
-      "stickiness": 0.889588709
+      "aggression": 1.284930065,
+      "bluff": 0.963427196,
+      "tightness": 0.619291978,
+      "sizing": 1.238246128,
+      "stickiness": 0.84071174
     },
     {
-      "aggression": 1.485671734,
-      "bluff": 1.216054447,
-      "tightness": 0.579285508,
-      "sizing": 1.453651157,
-      "stickiness": 0.980793618
+      "aggression": 1.337834902,
+      "bluff": 1.088610919,
+      "tightness": 0.596421816,
+      "sizing": 1.334836521,
+      "stickiness": 0.894788715
     },
     {
-      "aggression": 1.481471352,
-      "bluff": 1.204994937,
-      "tightness": 0.580305509,
-      "sizing": 1.444068516,
-      "stickiness": 0.976786307
+      "aggression": 1.333983307,
+      "bluff": 1.0774293,
+      "tightness": 0.597742199,
+      "sizing": 1.323999543,
+      "stickiness": 0.89154743
     },
     {
-      "aggression": 1.457301603,
-      "bluff": 1.134825164,
-      "tightness": 0.591859649,
-      "sizing": 1.393674029,
-      "stickiness": 0.951542214
+      "aggression": 1.318758277,
+      "bluff": 1.023835888,
+      "tightness": 0.60922214,
+      "sizing": 1.286284683,
+      "stickiness": 0.872857151
     },
     {
-      "aggression": 1.448995092,
-      "bluff": 1.108722034,
-      "tightness": 0.598091675,
-      "sizing": 1.374687706,
-      "stickiness": 0.944784314
+      "aggression": 1.312504948,
+      "bluff": 1.001219114,
+      "tightness": 0.616431558,
+      "sizing": 1.269156504,
+      "stickiness": 0.867828087
     },
     {
-      "aggression": 1.527742468,
-      "bluff": 1.243647898,
-      "tightness": 0.577909393,
-      "sizing": 1.470003554,
-      "stickiness": 1.02002728
+      "aggression": 1.380042919,
+      "bluff": 1.10449191,
+      "tightness": 0.597940923,
+      "sizing": 1.342380345,
+      "stickiness": 0.929228114
     },
     {
-      "aggression": 1.523201139,
-      "bluff": 1.231797464,
-      "tightness": 0.579753139,
-      "sizing": 1.461606562,
-      "stickiness": 1.015494268
+      "aggression": 1.376309125,
+      "bluff": 1.09435136,
+      "tightness": 0.600192975,
+      "sizing": 1.334992299,
+      "stickiness": 0.925836561
     },
     {
-      "aggression": 1.503610186,
-      "bluff": 1.176075784,
-      "tightness": 0.588684713,
-      "sizing": 1.423965002,
-      "stickiness": 0.992569227
+      "aggression": 1.367383747,
+      "bluff": 1.057590935,
+      "tightness": 0.608251222,
+      "sizing": 1.313327045,
+      "stickiness": 0.910674451
     },
     {
-      "aggression": 1.530757359,
-      "bluff": 1.132527255,
-      "tightness": 0.618933193,
-      "sizing": 1.403813684,
-      "stickiness": 1.029276603
+      "aggression": 1.410253964,
+      "bluff": 1.023721254,
+      "tightness": 0.646221558,
+      "sizing": 1.302063878,
+      "stickiness": 0.952748007
     },
     {
-      "aggression": 1.541921397,
-      "bluff": 1.165823903,
-      "tightness": 0.609502815,
-      "sizing": 1.426839508,
-      "stickiness": 1.039959812
+      "aggression": 1.422586694,
+      "bluff": 1.056094362,
+      "tightness": 0.634369248,
+      "sizing": 1.326522418,
+      "stickiness": 0.962971838
     },
     {
-      "aggression": 1.573059501,
-      "bluff": 1.308629158,
-      "tightness": 0.573600173,
-      "sizing": 1.519126775,
-      "stickiness": 1.068556283
+      "aggression": 1.452367761,
+      "bluff": 1.19219576,
+      "tightness": 0.590787018,
+      "sizing": 1.419870174,
+      "stickiness": 0.987805432
     },
     {
-      "aggression": 1.556668754,
-      "bluff": 1.267535418,
-      "tightness": 0.578145807,
-      "sizing": 1.491881067,
-      "stickiness": 1.046492198
+      "aggression": 1.44224815,
+      "bluff": 1.162228142,
+      "tightness": 0.594586775,
+      "sizing": 1.401676716,
+      "stickiness": 0.971368938
     },
     {
-      "aggression": 1.499744744,
-      "bluff": 1.141181263,
-      "tightness": 0.597101388,
-      "sizing": 1.403110067,
-      "stickiness": 0.984636675
+      "aggression": 1.387240008,
+      "bluff": 1.04622783,
+      "tightness": 0.615974908,
+      "sizing": 1.316960109,
+      "stickiness": 0.916384162
     },
     {
-      "aggression": 1.511032929,
-      "bluff": 1.164247624,
-      "tightness": 0.593272633,
-      "sizing": 1.419716606,
-      "stickiness": 0.996208557
+      "aggression": 1.398975444,
+      "bluff": 1.068045141,
+      "tightness": 0.61149421,
+      "sizing": 1.33359237,
+      "stickiness": 0.927128993
     },
     {
-      "aggression": 1.409996974,
-      "bluff": 1.108555074,
-      "tightness": 0.581769079,
-      "sizing": 1.361353121,
-      "stickiness": 0.905753471
+      "aggression": 1.261246007,
+      "bluff": 0.994562554,
+      "tightness": 0.599038306,
+      "sizing": 1.250766486,
+      "stickiness": 0.828506667
     },
     {
-      "aggression": 1.363679954,
-      "bluff": 0.999242415,
-      "tightness": 0.604309662,
-      "sizing": 1.273494373,
-      "stickiness": 0.870154811
+      "aggression": 1.227010954,
+      "bluff": 0.902187108,
+      "tightness": 0.625138762,
+      "sizing": 1.170694721,
+      "stickiness": 0.803018907
     },
     {
-      "aggression": 1.383822647,
-      "bluff": 1.023318076,
-      "tightness": 0.602705703,
-      "sizing": 1.296915185,
-      "stickiness": 0.886173822
+      "aggression": 1.24760671,
+      "bluff": 0.924006857,
+      "tightness": 0.623454674,
+      "sizing": 1.194514038,
+      "stickiness": 0.817244714
     },
     {
-      "aggression": 1.384969053,
-      "bluff": 1.035107675,
-      "tightness": 0.597919114,
-      "sizing": 1.305231308,
-      "stickiness": 0.885999023
+      "aggression": 1.248499543,
+      "bluff": 0.935300823,
+      "tightness": 0.617331073,
+      "sizing": 1.203438141,
+      "stickiness": 0.816880458
     },
     {
-      "aggression": 1.366894105,
-      "bluff": 0.975330056,
-      "tightness": 0.611163339,
-      "sizing": 1.254517534,
-      "stickiness": 0.868717194
+      "aggression": 1.254970499,
+      "bluff": 0.897764036,
+      "tightness": 0.629102032,
+      "sizing": 1.172658377,
+      "stickiness": 0.812261806
     },
     {
-      "aggression": 1.525818911,
-      "bluff": 1.277507603,
-      "tightness": 0.566866355,
-      "sizing": 1.496813881,
-      "stickiness": 1.005381768
+      "aggression": 1.37067096,
+      "bluff": 1.14915678,
+      "tightness": 0.582335687,
+      "sizing": 1.385566271,
+      "stickiness": 0.910100165
     },
     {
-      "aggression": 1.51472448,
-      "bluff": 1.259691021,
-      "tightness": 0.567449025,
-      "sizing": 1.482510092,
-      "stickiness": 0.993288812
+      "aggression": 1.359051051,
+      "bluff": 1.131987282,
+      "tightness": 0.582810941,
+      "sizing": 1.370542348,
+      "stickiness": 0.899339236
     },
     {
-      "aggression": 1.489172166,
-      "bluff": 1.200290129,
-      "tightness": 0.574232997,
-      "sizing": 1.439588972,
-      "stickiness": 0.966970134
+      "aggression": 1.335306741,
+      "bluff": 1.078989589,
+      "tightness": 0.590166485,
+      "sizing": 1.330492393,
+      "stickiness": 0.876976414
     },
     {
-      "aggression": 1.493945585,
-      "bluff": 1.214126488,
-      "tightness": 0.571693935,
-      "sizing": 1.4481811,
-      "stickiness": 0.971607347
+      "aggression": 1.338355394,
+      "bluff": 1.090331309,
+      "tightness": 0.587289373,
+      "sizing": 1.337299562,
+      "stickiness": 0.880085098
     },
     {
-      "aggression": 1.456577414,
-      "bluff": 1.178811983,
-      "tightness": 0.57003023,
-      "sizing": 1.413444306,
-      "stickiness": 0.938122277
+      "aggression": 1.294323288,
+      "bluff": 1.051611436,
+      "tightness": 0.585456335,
+      "sizing": 1.295225152,
+      "stickiness": 0.848561281
     },
     {
-      "aggression": 1.452474721,
-      "bluff": 1.149117146,
-      "tightness": 0.577412362,
-      "sizing": 1.394476656,
-      "stickiness": 0.935935848
+      "aggression": 1.292178058,
+      "bluff": 1.024752571,
+      "tightness": 0.59462128,
+      "sizing": 1.277430345,
+      "stickiness": 0.847508956
     },
     {
-      "aggression": 1.438541837,
-      "bluff": 1.102669825,
-      "tightness": 0.586102654,
-      "sizing": 1.360771928,
-      "stickiness": 0.922853778
+      "aggression": 1.289121874,
+      "bluff": 0.990807143,
+      "tightness": 0.60367826,
+      "sizing": 1.253517278,
+      "stickiness": 0.840977191
     },
     {
-      "aggression": 1.467512193,
-      "bluff": 1.115274539,
-      "tightness": 0.593598192,
-      "sizing": 1.378308984,
-      "stickiness": 0.95167627
+      "aggression": 1.323921193,
+      "bluff": 1.003934494,
+      "tightness": 0.613542526,
+      "sizing": 1.273839788,
+      "stickiness": 0.868916297
     },
     {
-      "aggression": 1.472091325,
-      "bluff": 1.128109415,
-      "tightness": 0.590415865,
-      "sizing": 1.387420485,
-      "stickiness": 0.955155035
+      "aggression": 1.328984581,
+      "bluff": 1.017029301,
+      "tightness": 0.609302058,
+      "sizing": 1.284341093,
+      "stickiness": 0.871956194
     },
     {
-      "aggression": 1.531928871,
-      "bluff": 1.274513168,
-      "tightness": 0.567237351,
-      "sizing": 1.491735646,
-      "stickiness": 1.011736116
+      "aggression": 1.378724209,
+      "bluff": 1.147196729,
+      "tightness": 0.582514281,
+      "sizing": 1.381771254,
+      "stickiness": 0.915458453
     },
     {
-      "aggression": 1.515078645,
-      "bluff": 1.225099431,
-      "tightness": 0.573679452,
-      "sizing": 1.457739521,
-      "stickiness": 0.992639164
+      "aggression": 1.369413749,
+      "bluff": 1.108560806,
+      "tightness": 0.588900905,
+      "sizing": 1.355800359,
+      "stickiness": 0.902520633
     },
     {
-      "aggression": 1.471424228,
-      "bluff": 1.119452214,
-      "tightness": 0.590916197,
-      "sizing": 1.381046629,
-      "stickiness": 0.951452049
+      "aggression": 1.325833561,
+      "bluff": 1.008726958,
+      "tightness": 0.609605462,
+      "sizing": 1.27810506,
+      "stickiness": 0.866653136
     },
     {
-      "aggression": 1.472861665,
-      "bluff": 1.127467983,
-      "tightness": 0.588098278,
-      "sizing": 1.38579722,
-      "stickiness": 0.951971613
+      "aggression": 1.326006088,
+      "bluff": 1.0159985,
+      "tightness": 0.606016004,
+      "sizing": 1.282648224,
+      "stickiness": 0.866257159
     },
     {
-      "aggression": 1.380018918,
-      "bluff": 1.082539302,
-      "tightness": 0.578583478,
-      "sizing": 1.334712143,
-      "stickiness": 0.878428388
+      "aggression": 1.213670847,
+      "bluff": 0.961681039,
+      "tightness": 0.595644168,
+      "sizing": 1.214020809,
+      "stickiness": 0.796356264
     },
     {
-      "aggression": 1.357945674,
-      "bluff": 1.026812539,
-      "tightness": 0.590230386,
-      "sizing": 1.290484926,
-      "stickiness": 0.863254595
+      "aggression": 1.197783118,
+      "bluff": 0.914268577,
+      "tightness": 0.609713029,
+      "sizing": 1.172892418,
+      "stickiness": 0.786232788
     },
     {
-      "aggression": 1.359179563,
-      "bluff": 1.031325051,
-      "tightness": 0.588599949,
-      "sizing": 1.293374963,
-      "stickiness": 0.863784327
+      "aggression": 1.199402639,
+      "bluff": 0.918803469,
+      "tightness": 0.607549687,
+      "sizing": 1.176315476,
+      "stickiness": 0.786820588
     },
     {
-      "aggression": 1.393072519,
-      "bluff": 1.030740039,
-      "tightness": 0.601738777,
-      "sizing": 1.303421932,
-      "stickiness": 0.892406364
+      "aggression": 1.239802822,
+      "bluff": 0.920294607,
+      "tightness": 0.62434834,
+      "sizing": 1.189799383,
+      "stickiness": 0.814166396
     },
     {
-      "aggression": 1.40768342,
-      "bluff": 1.034450832,
-      "tightness": 0.602235342,
-      "sizing": 1.309163728,
-      "stickiness": 0.900124271
+      "aggression": 1.276899016,
+      "bluff": 0.940885447,
+      "tightness": 0.621002106,
+      "sizing": 1.215967019,
+      "stickiness": 0.830434803
     },
     {
-      "aggression": 1.498600961,
-      "bluff": 1.250710119,
-      "tightness": 0.565580699,
-      "sizing": 1.474686586,
-      "stickiness": 0.975935792
+      "aggression": 1.302395529,
+      "bluff": 1.097604254,
+      "tightness": 0.582659152,
+      "sizing": 1.338864778,
+      "stickiness": 0.861734746
     },
     {
-      "aggression": 1.48417376,
-      "bluff": 1.212396477,
-      "tightness": 0.570344291,
-      "sizing": 1.447165093,
-      "stickiness": 0.961718013
+      "aggression": 1.288027076,
+      "bluff": 1.062656053,
+      "tightness": 0.588265215,
+      "sizing": 1.311883781,
+      "stickiness": 0.849600506
     },
     {
-      "aggression": 1.453521467,
-      "bluff": 1.138093814,
-      "tightness": 0.580324313,
-      "sizing": 1.391693029,
-      "stickiness": 0.932905655
+      "aggression": 1.265030768,
+      "bluff": 1.000171716,
+      "tightness": 0.59953328,
+      "sizing": 1.261887815,
+      "stickiness": 0.828994637
     },
     {
-      "aggression": 1.449186167,
-      "bluff": 1.128160964,
-      "tightness": 0.581533636,
-      "sizing": 1.383405532,
-      "stickiness": 0.929057249
+      "aggression": 1.26117413,
+      "bluff": 0.991304788,
+      "tightness": 0.600952543,
+      "sizing": 1.253650954,
+      "stickiness": 0.825970733
     },
     {
-      "aggression": 1.538207162,
-      "bluff": 1.291097705,
-      "tightness": 0.56139619,
-      "sizing": 1.500672353,
-      "stickiness": 1.010491562
+      "aggression": 1.363316899,
+      "bluff": 1.155210398,
+      "tightness": 0.575016926,
+      "sizing": 1.384517949,
+      "stickiness": 0.899232441
     },
     {
-      "aggression": 1.522054599,
-      "bluff": 1.255801811,
-      "tightness": 0.565169408,
-      "sizing": 1.476269928,
-      "stickiness": 0.993491557
+      "aggression": 1.34730958,
+      "bluff": 1.122559776,
+      "tightness": 0.579264851,
+      "sizing": 1.360779008,
+      "stickiness": 0.885007445
     },
     {
-      "aggression": 1.496783151,
-      "bluff": 1.188335281,
-      "tightness": 0.574330215,
-      "sizing": 1.429431811,
-      "stickiness": 0.967461213
+      "aggression": 1.329433659,
+      "bluff": 1.065353008,
+      "tightness": 0.589249429,
+      "sizing": 1.320304254,
+      "stickiness": 0.866439982
     },
     {
-      "aggression": 1.483360278,
-      "bluff": 1.158813908,
-      "tightness": 0.578454621,
-      "sizing": 1.407812374,
-      "stickiness": 0.954790294
+      "aggression": 1.316891733,
+      "bluff": 1.037713219,
+      "tightness": 0.594198892,
+      "sizing": 1.298381535,
+      "stickiness": 0.856299711
     },
     {
-      "aggression": 1.492136093,
-      "bluff": 1.170154265,
-      "tightness": 0.577301766,
-      "sizing": 1.416392542,
-      "stickiness": 0.962542232
+      "aggression": 1.32730704,
+      "bluff": 1.049906491,
+      "tightness": 0.592573797,
+      "sizing": 1.308905647,
+      "stickiness": 0.863349258
     },
     {
-      "aggression": 1.442559529,
-      "bluff": 1.203367104,
-      "tightness": 0.562162862,
-      "sizing": 1.43248998,
-      "stickiness": 0.921703056
+      "aggression": 1.257778147,
+      "bluff": 1.07350735,
+      "tightness": 0.574301283,
+      "sizing": 1.316935197,
+      "stickiness": 0.820428064
     },
     {
-      "aggression": 1.43456009,
-      "bluff": 1.16934957,
-      "tightness": 0.568144693,
-      "sizing": 1.409714974,
-      "stickiness": 0.915160992
+      "aggression": 1.256155662,
+      "bluff": 1.045391804,
+      "tightness": 0.581129789,
+      "sizing": 1.29804346,
+      "stickiness": 0.81777212
     },
     {
-      "aggression": 1.418446786,
-      "bluff": 1.123740678,
-      "tightness": 0.57655405,
-      "sizing": 1.376516344,
-      "stickiness": 0.903953298
+      "aggression": 1.24477807,
+      "bluff": 1.003307741,
+      "tightness": 0.591584648,
+      "sizing": 1.264420648,
+      "stickiness": 0.811182693
     },
     {
-      "aggression": 1.414728317,
-      "bluff": 1.117532286,
-      "tightness": 0.57639744,
-      "sizing": 1.370645444,
-      "stickiness": 0.899911877
+      "aggression": 1.242985658,
+      "bluff": 0.999274498,
+      "tightness": 0.591024025,
+      "sizing": 1.260146071,
+      "stickiness": 0.808589694
     },
     {
-      "aggression": 1.498990786,
-      "bluff": 1.241445696,
-      "tightness": 0.564765305,
-      "sizing": 1.467684729,
-      "stickiness": 0.970256422
+      "aggression": 1.330397868,
+      "bluff": 1.123439109,
+      "tightness": 0.576204572,
+      "sizing": 1.368317353,
+      "stickiness": 0.86671825
     },
     {
-      "aggression": 1.475173496,
-      "bluff": 1.180459999,
-      "tightness": 0.57370752,
-      "sizing": 1.42492984,
-      "stickiness": 0.948847228
+      "aggression": 1.308276999,
+      "bluff": 1.063894129,
+      "tightness": 0.587109493,
+      "sizing": 1.323218241,
+      "stickiness": 0.850048595
     },
     {
-      "aggression": 1.472956857,
-      "bluff": 1.179398206,
-      "tightness": 0.572668168,
-      "sizing": 1.422931047,
-      "stickiness": 0.945849914
+      "aggression": 1.305679302,
+      "bluff": 1.063351085,
+      "tightness": 0.585631175,
+      "sizing": 1.32158095,
+      "stickiness": 0.847137931
     },
     {
-      "aggression": 1.469549405,
-      "bluff": 1.174280865,
-      "tightness": 0.572491216,
-      "sizing": 1.418046924,
-      "stickiness": 0.942180177
+      "aggression": 1.301579868,
+      "bluff": 1.058285859,
+      "tightness": 0.58532599,
+      "sizing": 1.316292089,
+      "stickiness": 0.84360856
     },
     {
-      "aggression": 1.44644228,
-      "bluff": 1.088043135,
-      "tightness": 0.587317467,
-      "sizing": 1.354059495,
-      "stickiness": 0.918882308
+      "aggression": 1.30691535,
+      "bluff": 0.994818609,
+      "tightness": 0.600375547,
+      "sizing": 1.269053359,
+      "stickiness": 0.837845065
     },
     {
-      "aggression": 1.438759049,
-      "bluff": 1.15809908,
-      "tightness": 0.564140516,
-      "sizing": 1.39621043,
-      "stickiness": 0.907284188
+      "aggression": 1.253401235,
+      "bluff": 1.036671943,
+      "tightness": 0.574509581,
+      "sizing": 1.286272786,
+      "stickiness": 0.805368541
     },
     {
-      "aggression": 1.434121968,
-      "bluff": 1.136903587,
-      "tightness": 0.567467715,
-      "sizing": 1.380069462,
-      "stickiness": 0.903529987
+      "aggression": 1.249855501,
+      "bluff": 1.016148249,
+      "tightness": 0.578635827,
+      "sizing": 1.269200449,
+      "stickiness": 0.802782135
     },
     {
-      "aggression": 1.407029836,
-      "bluff": 1.071804488,
-      "tightness": 0.577113765,
-      "sizing": 1.328080085,
-      "stickiness": 0.882645767
+      "aggression": 1.233328184,
+      "bluff": 0.95939067,
+      "tightness": 0.590069887,
+      "sizing": 1.219574842,
+      "stickiness": 0.791062755
     },
     {
-      "aggression": 1.428070848,
-      "bluff": 1.057228756,
-      "tightness": 0.590987185,
-      "sizing": 1.327209159,
-      "stickiness": 0.903431528
+      "aggression": 1.261903473,
+      "bluff": 0.947434139,
+      "tightness": 0.607568201,
+      "sizing": 1.22127295,
+      "stickiness": 0.811950599
     },
     {
-      "aggression": 1.411156053,
-      "bluff": 1.094739054,
-      "tightness": 0.56928169,
-      "sizing": 1.34210669,
-      "stickiness": 0.881899879
+      "aggression": 1.2290987,
+      "bluff": 0.979264259,
+      "tightness": 0.580025918,
+      "sizing": 1.232887593,
+      "stickiness": 0.785535166
     },
     {
-      "aggression": 1.412278032,
-      "bluff": 1.094470816,
-      "tightness": 0.569761753,
-      "sizing": 1.342329768,
-      "stickiness": 0.883025055
+      "aggression": 1.229445696,
+      "bluff": 0.978420117,
+      "tightness": 0.580706997,
+      "sizing": 1.232606481,
+      "stickiness": 0.786082811
     },
     {
-      "aggression": 1.400765351,
-      "bluff": 1.059693525,
-      "tightness": 0.576049166,
-      "sizing": 1.315057309,
-      "stickiness": 0.874715983
+      "aggression": 1.228771399,
+      "bluff": 0.951394603,
+      "tightness": 0.587868434,
+      "sizing": 1.210139972,
+      "stickiness": 0.784513182
     },
     {
-      "aggression": 1.390290968,
-      "bluff": 1.035072767,
-      "tightness": 0.581219131,
-      "sizing": 1.295648693,
-      "stickiness": 0.868003554
+      "aggression": 1.221122347,
+      "bluff": 0.92913876,
+      "tightness": 0.594249775,
+      "sizing": 1.190542358,
+      "stickiness": 0.780662518
     },
     {
-      "aggression": 1.389288525,
-      "bluff": 1.029982555,
-      "tightness": 0.582531097,
-      "sizing": 1.29155042,
-      "stickiness": 0.867519228
+      "aggression": 1.221900368,
+      "bluff": 0.925340491,
+      "tightness": 0.595764984,
+      "sizing": 1.187335231,
+      "stickiness": 0.78111616
     },
     {
-      "aggression": 1.52499957,
-      "bluff": 1.265318076,
-      "tightness": 0.557539917,
-      "sizing": 1.48279205,
-      "stickiness": 0.97894176
+      "aggression": 1.352207236,
+      "bluff": 1.159559042,
+      "tightness": 0.564273,
+      "sizing": 1.397845388,
+      "stickiness": 0.865548869
     },
     {
-      "aggression": 1.51076337,
-      "bluff": 1.226224261,
-      "tightness": 0.561949711,
-      "sizing": 1.454870346,
-      "stickiness": 0.964794165
+      "aggression": 1.343804721,
+      "bluff": 1.122206645,
+      "tightness": 0.569405823,
+      "sizing": 1.369775405,
+      "stickiness": 0.857374049
     },
     {
-      "aggression": 1.470986269,
-      "bluff": 1.130160472,
-      "tightness": 0.575709909,
-      "sizing": 1.384091182,
-      "stickiness": 0.930799103
+      "aggression": 1.30380718,
+      "bluff": 1.022421813,
+      "tightness": 0.586814639,
+      "sizing": 1.288984782,
+      "stickiness": 0.830770825
     },
     {
-      "aggression": 1.522484918,
-      "bluff": 1.170994703,
-      "tightness": 0.580821794,
-      "sizing": 1.424968293,
-      "stickiness": 0.981751577
+      "aggression": 1.365345348,
+      "bluff": 1.066194826,
+      "tightness": 0.593037294,
+      "sizing": 1.337924566,
+      "stickiness": 0.877318943
     },
     {
-      "aggression": 1.572368713,
-      "bluff": 1.313359449,
-      "tightness": 0.557312456,
-      "sizing": 1.520446248,
-      "stickiness": 1.027715437
+      "aggression": 1.415159086,
+      "bluff": 1.220694061,
+      "tightness": 0.563051598,
+      "sizing": 1.450310145,
+      "stickiness": 0.912616008
     },
     {
-      "aggression": 1.567207562,
-      "bluff": 1.256428918,
-      "tightness": 0.570920369,
-      "sizing": 1.488210065,
-      "stickiness": 1.027078749
+      "aggression": 1.415287975,
+      "bluff": 1.158329894,
+      "tightness": 0.580275952,
+      "sizing": 1.412876462,
+      "stickiness": 0.916576548
     },
     {
-      "aggression": 1.572629602,
-      "bluff": 1.271176447,
-      "tightness": 0.568446375,
-      "sizing": 1.497508852,
-      "stickiness": 1.032625887
+      "aggression": 1.421026752,
+      "bluff": 1.174483673,
+      "tightness": 0.577131802,
+      "sizing": 1.423885708,
+      "stickiness": 0.921127194
     },
     {
-      "aggression": 1.578101904,
-      "bluff": 1.292607049,
-      "tightness": 0.564028814,
-      "sizing": 1.509998342,
-      "stickiness": 1.037346942
+      "aggression": 1.426106856,
+      "bluff": 1.198194043,
+      "tightness": 0.571514505,
+      "sizing": 1.438708539,
+      "stickiness": 0.92433412
     },
     {
-      "aggression": 1.576412614,
-      "bluff": 1.272071475,
-      "tightness": 0.566693837,
-      "sizing": 1.4967201,
-      "stickiness": 1.032512598
+      "aggression": 1.442558433,
+      "bluff": 1.190105113,
+      "tightness": 0.573300568,
+      "sizing": 1.436120825,
+      "stickiness": 0.930715176
     },
     {
-      "aggression": 1.61420888,
-      "bluff": 1.375519009,
-      "tightness": 0.553104529,
-      "sizing": 1.564241199,
-      "stickiness": 1.073408921
+      "aggression": 1.46677047,
+      "bluff": 1.297784069,
+      "tightness": 0.556989909,
+      "sizing": 1.507536061,
+      "stickiness": 0.955553459
     },
     {
-      "aggression": 1.612289051,
-      "bluff": 1.295117667,
-      "tightness": 0.572238018,
-      "sizing": 1.519010309,
-      "stickiness": 1.077909654
+      "aggression": 1.473509509,
+      "bluff": 1.206186336,
+      "tightness": 0.58142351,
+      "sizing": 1.454005447,
+      "stickiness": 0.966895276
     },
     {
-      "aggression": 1.609060821,
-      "bluff": 1.309454792,
-      "tightness": 0.566689692,
-      "sizing": 1.525404027,
-      "stickiness": 1.071560699
+      "aggression": 1.469505535,
+      "bluff": 1.22381538,
+      "tightness": 0.5740897,
+      "sizing": 1.462850229,
+      "stickiness": 0.960318031
     },
     {
-      "aggression": 1.611127336,
-      "bluff": 1.324669358,
-      "tightness": 0.563144702,
-      "sizing": 1.533682969,
-      "stickiness": 1.072958286
+      "aggression": 1.471063464,
+      "bluff": 1.241228537,
+      "tightness": 0.569559164,
+      "sizing": 1.472852513,
+      "stickiness": 0.960797063
     },
     {
-      "aggression": 1.618782686,
-      "bluff": 1.359665933,
-      "tightness": 0.555739306,
-      "sizing": 1.551131206,
-      "stickiness": 1.080419019
+      "aggression": 1.469257981,
+      "bluff": 1.273628292,
+      "tightness": 0.560897122,
+      "sizing": 1.486745271,
+      "stickiness": 0.960598423
     },
     {
-      "aggression": 1.611029779,
-      "bluff": 1.341804649,
-      "tightness": 0.557364185,
-      "sizing": 1.539055505,
-      "stickiness": 1.070699892
+      "aggression": 1.459068181,
+      "bluff": 1.252392497,
+      "tightness": 0.562977158,
+      "sizing": 1.471691232,
+      "stickiness": 0.950867717
     },
     {
-      "aggression": 1.595538931,
-      "bluff": 1.296486032,
-      "tightness": 0.56279864,
-      "sizing": 1.509543341,
-      "stickiness": 1.0514643
+      "aggression": 1.448468786,
+      "bluff": 1.20681953,
+      "tightness": 0.569275761,
+      "sizing": 1.441671007,
+      "stickiness": 0.937863776
     },
     {
-      "aggression": 1.574217506,
-      "bluff": 1.248125448,
-      "tightness": 0.568669687,
-      "sizing": 1.476878031,
-      "stickiness": 1.027589551
+      "aggression": 1.424437722,
+      "bluff": 1.152738916,
+      "tightness": 0.576769687,
+      "sizing": 1.402600994,
+      "stickiness": 0.916861804
     },
     {
-      "aggression": 1.570180902,
-      "bluff": 1.237662283,
-      "tightness": 0.569979546,
-      "sizing": 1.469262011,
-      "stickiness": 1.023289928
+      "aggression": 1.420845472,
+      "bluff": 1.141740193,
+      "tightness": 0.578402883,
+      "sizing": 1.394059667,
+      "stickiness": 0.913670782
     },
     {
-      "aggression": 1.49361271,
-      "bluff": 1.210030937,
-      "tightness": 0.559372766,
-      "sizing": 1.434594077,
-      "stickiness": 0.947973299
+      "aggression": 1.288795181,
+      "bluff": 1.080429846,
+      "tightness": 0.568213871,
+      "sizing": 1.322777996,
+      "stickiness": 0.824557634
     },
     {
-      "aggression": 1.470771488,
-      "bluff": 1.152446649,
-      "tightness": 0.566499596,
-      "sizing": 1.391553105,
-      "stickiness": 0.927825795
+      "aggression": 1.271248859,
+      "bluff": 1.025291867,
+      "tightness": 0.577044711,
+      "sizing": 1.277687903,
+      "stickiness": 0.811752297
     },
     {
-      "aggression": 1.434267145,
-      "bluff": 1.071396491,
-      "tightness": 0.579014236,
-      "sizing": 1.328135372,
-      "stickiness": 0.899416088
+      "aggression": 1.242205203,
+      "bluff": 0.949465599,
+      "tightness": 0.5929597,
+      "sizing": 1.210997249,
+      "stickiness": 0.794101476
     },
     {
-      "aggression": 1.447415031,
-      "bluff": 1.098986798,
-      "tightness": 0.574500024,
-      "sizing": 1.34996411,
-      "stickiness": 0.909580683
+      "aggression": 1.252983872,
+      "bluff": 0.974876469,
+      "tightness": 0.587258509,
+      "sizing": 1.233768095,
+      "stickiness": 0.800658538
     },
     {
-      "aggression": 1.391896547,
-      "bluff": 1.0849,
-      "tightness": 0.566281202,
-      "sizing": 1.325664109,
-      "stickiness": 0.868384568
+      "aggression": 1.182313291,
+      "bluff": 0.95226576,
+      "tightness": 0.578461545,
+      "sizing": 1.196300581,
+      "stickiness": 0.763190344
     },
     {
-      "aggression": 1.396762259,
-      "bluff": 1.03442724,
-      "tightness": 0.585520474,
-      "sizing": 1.297519182,
-      "stickiness": 0.876552011
+      "aggression": 1.198517677,
+      "bluff": 0.909198497,
+      "tightness": 0.602976426,
+      "sizing": 1.171064616,
+      "stickiness": 0.775117079
     },
     {
-      "aggression": 1.403166102,
-      "bluff": 1.050418581,
-      "tightness": 0.582121848,
-      "sizing": 1.310358398,
-      "stickiness": 0.880983209
+      "aggression": 1.203255462,
+      "bluff": 0.923301948,
+      "tightness": 0.598664836,
+      "sizing": 1.184068448,
+      "stickiness": 0.777723139
     },
     {
-      "aggression": 1.408858748,
-      "bluff": 1.073390361,
-      "tightness": 0.576029678,
-      "sizing": 1.326636509,
-      "stickiness": 0.884138493
+      "aggression": 1.20593912,
+      "bluff": 0.94373481,
+      "tightness": 0.590872392,
+      "sizing": 1.200428406,
+      "stickiness": 0.778599597
     },
     {
-      "aggression": 1.415435405,
-      "bluff": 1.062764441,
-      "tightness": 0.578663134,
-      "sizing": 1.319732018,
-      "stickiness": 0.886548446
+      "aggression": 1.238816854,
+      "bluff": 0.95197516,
+      "tightness": 0.591448916,
+      "sizing": 1.213634191,
+      "stickiness": 0.791598539
     },
     {
-      "aggression": 1.511523897,
-      "bluff": 1.261134482,
-      "tightness": 0.555178695,
-      "sizing": 1.475969913,
-      "stickiness": 0.965425798
+      "aggression": 1.270830092,
+      "bluff": 1.109716619,
+      "tightness": 0.564641888,
+      "sizing": 1.347724338,
+      "stickiness": 0.820075936
     },
     {
-      "aggression": 1.518577792,
-      "bluff": 1.199214047,
-      "tightness": 0.572097499,
-      "sizing": 1.441327229,
-      "stickiness": 0.977053249
+      "aggression": 1.290193014,
+      "bluff": 1.047719039,
+      "tightness": 0.587352425,
+      "sizing": 1.31071543,
+      "stickiness": 0.835590569
     },
     {
-      "aggression": 1.512566786,
-      "bluff": 1.206773818,
-      "tightness": 0.567518425,
-      "sizing": 1.443088497,
-      "stickiness": 0.969236598
+      "aggression": 1.283259059,
+      "bluff": 1.057379275,
+      "tightness": 0.580760254,
+      "sizing": 1.314628378,
+      "stickiness": 0.82864891
     },
     {
-      "aggression": 1.516029591,
-      "bluff": 1.224719118,
-      "tightness": 0.563553259,
-      "sizing": 1.453821088,
-      "stickiness": 0.971483701
+      "aggression": 1.284393949,
+      "bluff": 1.075375526,
+      "tightness": 0.575428839,
+      "sizing": 1.326594249,
+      "stickiness": 0.82880997
     },
     {
-      "aggression": 1.525490129,
-      "bluff": 1.259604549,
-      "tightness": 0.556149393,
-      "sizing": 1.474101988,
-      "stickiness": 0.976846136
+      "aggression": 1.293757493,
+      "bluff": 1.116714112,
+      "tightness": 0.564767066,
+      "sizing": 1.355679954,
+      "stickiness": 0.830827156
     },
     {
-      "aggression": 1.517257298,
-      "bluff": 1.241616672,
-      "tightness": 0.557853897,
-      "sizing": 1.461006375,
-      "stickiness": 0.968810876
+      "aggression": 1.285461929,
+      "bluff": 1.097760753,
+      "tightness": 0.56699974,
+      "sizing": 1.340396081,
+      "stickiness": 0.824913982
     },
     {
-      "aggression": 1.50240375,
-      "bluff": 1.19604844,
-      "tightness": 0.563906311,
-      "sizing": 1.429105542,
-      "stickiness": 0.954658452
+      "aggression": 1.281313511,
+      "bluff": 1.057578021,
+      "tightness": 0.574253767,
+      "sizing": 1.310498093,
+      "stickiness": 0.819715147
     },
     {
-      "aggression": 1.490132626,
-      "bluff": 1.167287296,
-      "tightness": 0.567858005,
-      "sizing": 1.408232797,
-      "stickiness": 0.943958959
+      "aggression": 1.271004199,
+      "bluff": 1.029115685,
+      "tightness": 0.579413418,
+      "sizing": 1.287210802,
+      "stickiness": 0.813024763
     },
     {
-      "aggression": 1.477281085,
-      "bluff": 1.134689618,
-      "tightness": 0.572611873,
-      "sizing": 1.383707777,
-      "stickiness": 0.932816836
+      "aggression": 1.262536875,
+      "bluff": 0.999137458,
+      "tightness": 0.585382456,
+      "sizing": 1.261937757,
+      "stickiness": 0.807010591
     },
     {
-      "aggression": 1.603452535,
-      "bluff": 1.376486918,
-      "tightness": 0.548735032,
-      "sizing": 1.558044094,
-      "stickiness": 1.057864018
+      "aggression": 1.397266889,
+      "bluff": 1.264799934,
+      "tightness": 0.553156588,
+      "sizing": 1.473592447,
+      "stickiness": 0.902880884
     },
     {
-      "aggression": 1.590712804,
-      "bluff": 1.340504346,
-      "tightness": 0.552174996,
-      "sizing": 1.534059483,
-      "stickiness": 1.042408364
+      "aggression": 1.388538702,
+      "bluff": 1.227306557,
+      "tightness": 0.557257872,
+      "sizing": 1.447902594,
+      "stickiness": 0.893274442
     },
     {
-      "aggression": 1.593172825,
-      "bluff": 1.278430609,
-      "tightness": 0.568663529,
-      "sizing": 1.501932598,
-      "stickiness": 1.051948274
+      "aggression": 1.403077685,
+      "bluff": 1.158912083,
+      "tightness": 0.578785346,
+      "sizing": 1.410863357,
+      "stickiness": 0.909623656
     },
     {
-      "aggression": 1.602368935,
-      "bluff": 1.314961105,
-      "tightness": 0.561591655,
-      "sizing": 1.523596441,
-      "stickiness": 1.060703177
+      "aggression": 1.411547207,
+      "bluff": 1.200440395,
+      "tightness": 0.569373874,
+      "sizing": 1.437678457,
+      "stickiness": 0.915177156
     },
     {
-      "aggression": 1.617160862,
-      "bluff": 1.375270345,
-      "tightness": 0.550974382,
-      "sizing": 1.55937553,
-      "stickiness": 1.073341013
+      "aggression": 1.438179766,
+      "bluff": 1.282680035,
+      "tightness": 0.554517028,
+      "sizing": 1.492387152,
+      "stickiness": 0.93025024
     },
     {
-      "aggression": 1.602935356,
-      "bluff": 1.289833523,
-      "tightness": 0.56780527,
-      "sizing": 1.510540029,
-      "stickiness": 1.061735073
+      "aggression": 1.428689034,
+      "bluff": 1.183494395,
+      "tightness": 0.576311698,
+      "sizing": 1.432093652,
+      "stickiness": 0.926097647
     },
     {
-      "aggression": 1.609184337,
-      "bluff": 1.306981806,
-      "tightness": 0.565207676,
-      "sizing": 1.521243868,
-      "stickiness": 1.068938888
+      "aggression": 1.435480955,
+      "bluff": 1.203032741,
+      "tightness": 0.572913806,
+      "sizing": 1.445319606,
+      "stickiness": 0.931884025
     },
     {
-      "aggression": 1.614971781,
-      "bluff": 1.32996262,
-      "tightness": 0.56082647,
-      "sizing": 1.53444507,
-      "stickiness": 1.074759209
+      "aggression": 1.440880578,
+      "bluff": 1.229524394,
+      "tightness": 0.567203987,
+      "sizing": 1.461672681,
+      "stickiness": 0.935717469
     },
     {
-      "aggression": 1.604628669,
-      "bluff": 1.286830561,
-      "tightness": 0.566087757,
-      "sizing": 1.506648957,
-      "stickiness": 1.058756074
+      "aggression": 1.454100012,
+      "bluff": 1.199380162,
+      "tightness": 0.572068991,
+      "sizing": 1.444455459,
+      "stickiness": 0.937029485
     },
     {
-      "aggression": 1.668113524,
-      "bluff": 1.445441813,
-      "tightness": 0.54758626,
-      "sizing": 1.606659047,
-      "stickiness": 1.138654398
+      "aggression": 1.497181965,
+      "bluff": 1.369605679,
+      "tightness": 0.550174006,
+      "sizing": 1.553318881,
+      "stickiness": 0.988388551
     },
     {
-      "aggression": 1.657619856,
-      "bluff": 1.424899343,
-      "tightness": 0.548616046,
-      "sizing": 1.592450776,
-      "stickiness": 1.123274453
+      "aggression": 1.482072999,
+      "bluff": 1.342120599,
+      "tightness": 0.551839878,
+      "sizing": 1.533902966,
+      "stickiness": 0.97279996
     },
     {
-      "aggression": 1.629961682,
-      "bluff": 1.352063305,
-      "tightness": 0.555911664,
-      "sizing": 1.545929381,
-      "stickiness": 1.085993812
+      "aggression": 1.451651063,
+      "bluff": 1.255558579,
+      "tightness": 0.561220035,
+      "sizing": 1.476773169,
+      "stickiness": 0.941087846
     },
     {
-      "aggression": 1.63128375,
-      "bluff": 1.350011075,
-      "tightness": 0.556742985,
-      "sizing": 1.545006922,
-      "stickiness": 1.088195981
+      "aggression": 1.454817296,
+      "bluff": 1.253598575,
+      "tightness": 0.562305853,
+      "sizing": 1.476115814,
+      "stickiness": 0.944147178
     },
     {
-      "aggression": 1.595619289,
-      "bluff": 1.341859536,
-      "tightness": 0.549177169,
-      "sizing": 1.528469805,
-      "stickiness": 1.042936206
+      "aggression": 1.388326122,
+      "bluff": 1.227420683,
+      "tightness": 0.553947763,
+      "sizing": 1.440497363,
+      "stickiness": 0.890367802
     },
     {
-      "aggression": 1.591519107,
-      "bluff": 1.302217783,
-      "tightness": 0.556993697,
-      "sizing": 1.506844247,
-      "stickiness": 1.040844898
+      "aggression": 1.3881044,
+      "bluff": 1.181403365,
+      "tightness": 0.564391936,
+      "sizing": 1.413911162,
+      "stickiness": 0.891912753
     },
     {
-      "aggression": 1.579080339,
-      "bluff": 1.264362653,
-      "tightness": 0.562117629,
-      "sizing": 1.48221671,
-      "stickiness": 1.027091775
+      "aggression": 1.382428196,
+      "bluff": 1.144016452,
+      "tightness": 0.570783502,
+      "sizing": 1.388740186,
+      "stickiness": 0.885446583
     },
     {
-      "aggression": 1.576483777,
-      "bluff": 1.257478314,
-      "tightness": 0.563190423,
-      "sizing": 1.477830077,
-      "stickiness": 1.024523691
+      "aggression": 1.379589898,
+      "bluff": 1.136082684,
+      "tightness": 0.572262857,
+      "sizing": 1.383145036,
+      "stickiness": 0.883490103
     },
     {
-      "aggression": 1.592291366,
-      "bluff": 1.298827395,
-      "tightness": 0.55760676,
-      "sizing": 1.504814451,
-      "stickiness": 1.041322234
+      "aggression": 1.398625463,
+      "bluff": 1.184806004,
+      "tightness": 0.564590422,
+      "sizing": 1.418188049,
+      "stickiness": 0.897607771
     },
     {
-      "aggression": 1.640866715,
-      "bluff": 1.407868124,
-      "tightness": 0.54745252,
-      "sizing": 1.577003442,
-      "stickiness": 1.100618421
+      "aggression": 1.456887706,
+      "bluff": 1.314112152,
+      "tightness": 0.551762726,
+      "sizing": 1.509818201,
+      "stickiness": 0.950035273
     },
     {
-      "aggression": 1.618105693,
-      "bluff": 1.347370719,
-      "tightness": 0.553311118,
-      "sizing": 1.537889379,
-      "stickiness": 1.070952844
+      "aggression": 1.43344168,
+      "bluff": 1.244671372,
+      "tightness": 0.559266269,
+      "sizing": 1.463530103,
+      "stickiness": 0.926157487
     },
     {
-      "aggression": 1.579775203,
-      "bluff": 1.256463307,
-      "tightness": 0.563241966,
-      "sizing": 1.476737746,
-      "stickiness": 1.026835632
+      "aggression": 1.38940771,
+      "bluff": 1.138616494,
+      "tightness": 0.572784862,
+      "sizing": 1.386497791,
+      "stickiness": 0.889293273
     },
     {
-      "aggression": 1.593450123,
-      "bluff": 1.289683112,
-      "tightness": 0.558829104,
-      "sizing": 1.498200604,
-      "stickiness": 1.041685133
+      "aggression": 1.40442334,
+      "bluff": 1.176539925,
+      "tightness": 0.56678772,
+      "sizing": 1.413310606,
+      "stickiness": 0.90109198
     },
     {
-      "aggression": 1.515063723,
-      "bluff": 1.236427507,
-      "tightness": 0.554452674,
-      "sizing": 1.44910371,
-      "stickiness": 0.962467314
+      "aggression": 1.274071983,
+      "bluff": 1.087921339,
+      "tightness": 0.564284929,
+      "sizing": 1.325785053,
+      "stickiness": 0.815626864
     },
     {
-      "aggression": 1.495466282,
-      "bluff": 1.183794435,
-      "tightness": 0.561704616,
-      "sizing": 1.412736921,
-      "stickiness": 0.945686699
+      "aggression": 1.25708029,
+      "bluff": 1.033585001,
+      "tightness": 0.574234386,
+      "sizing": 1.283504033,
+      "stickiness": 0.80531133
     },
     {
-      "aggression": 1.497455901,
-      "bluff": 1.188432494,
-      "tightness": 0.560734875,
-      "sizing": 1.415291823,
-      "stickiness": 0.947112809
+      "aggression": 1.258477867,
+      "bluff": 1.038346398,
+      "tightness": 0.572867439,
+      "sizing": 1.286608396,
+      "stickiness": 0.805875848
     },
     {
-      "aggression": 1.491709309,
-      "bluff": 1.180380892,
-      "tightness": 0.560640376,
-      "sizing": 1.407878012,
-      "stickiness": 0.941166252
+      "aggression": 1.253678725,
+      "bluff": 1.031654431,
+      "tightness": 0.572526596,
+      "sizing": 1.27952164,
+      "stickiness": 0.801808094
     },
     {
-      "aggression": 1.468423424,
-      "bluff": 1.099451043,
-      "tightness": 0.573480911,
-      "sizing": 1.349043078,
-      "stickiness": 0.919865894
+      "aggression": 1.269146163,
+      "bluff": 0.976059954,
+      "tightness": 0.586758803,
+      "sizing": 1.238640226,
+      "stickiness": 0.804412636
     },
     {
-      "aggression": 1.618666648,
-      "bluff": 1.403174351,
-      "tightness": 0.545532901,
-      "sizing": 1.575159863,
-      "stickiness": 1.071598498
+      "aggression": 1.387916309,
+      "bluff": 1.283170362,
+      "tightness": 0.550625928,
+      "sizing": 1.48604863,
+      "stickiness": 0.898935334
     }
   ]
 }

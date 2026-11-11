@@ -118,9 +118,11 @@ const SETTLED = 1e-9;
 
 export type Pending = Readonly<Partial<Record<Emotion, number>>>;
 
+export const massOf = (amount: number): number =>
+  -Math.log(1 - Math.min(MAX_IMPULSE, clamp01(amount)));
+
 export function queue(p: Pending, emotion: Emotion, amount: number): Pending {
-  const mass = -Math.log(1 - Math.min(MAX_IMPULSE, clamp01(amount)));
-  return { ...p, [emotion]: (p[emotion] ?? 0) + mass };
+  return { ...p, [emotion]: (p[emotion] ?? 0) + massOf(amount) };
 }
 
 export function rise(

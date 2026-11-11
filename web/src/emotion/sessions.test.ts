@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Decided, TableEvent } from './appraisal.ts';
+import type { Cause, Decided, TableEvent } from './appraisal.ts';
 import { BIAS_KEYS } from './biasKeys.ts';
 import type { BiasKey, PlayBias } from './biasKeys.ts';
 import { createEngine } from './engine.ts';
@@ -20,19 +20,26 @@ const deal = (equity: number, potBb = 3, streetsLeft = 3): TableEvent => ({
   streetsLeft,
 });
 
-const street = (equity: number, potBb: number, streetsLeft: number): TableEvent => ({
+const street = (
+  equity: number,
+  potBb: number,
+  streetsLeft: number,
+  cause: Cause = 'cards',
+): TableEvent => ({
   kind: 'street',
   equity,
+  cause,
   potBb,
   investedBb: potBb / 2,
   stackBb: 100 - potBb / 2,
   streetsLeft,
 });
 
-const result = (netBb: number, decided: Decided = 'showdown'): TableEvent => ({
+const result = (netBb: number, decided: Decided = 'showdown', lastEquity?: number): TableEvent => ({
   kind: 'result',
   netBb,
   decided,
+  ...(lastEquity === undefined ? {} : { lastEquity }),
 });
 
 const calmHand = (i: number): Beat[] => [
@@ -249,5 +256,165 @@ describe('the reference session of the addendum', () => {
         }
       }
     }
+  });
+});
+
+const raised = (equity: number): Beat[] => [
+  deal(equity, 1.5),
+  { wait: 3 },
+  { kind: 'ownMove', move: 'bet', amountBb: 2, potBb: 1.5, equity },
+  { wait: 2 },
+  { kind: 'opponentBet', sizeBb: 5.6, equity, raise: true },
+  street(equity - 0.06, 8, 3, 'opponent'),
+  { wait: 4 },
+];
+
+const bigWin = (netBb: number): Beat[] => [
+  ...raised(0.62),
+  { kind: 'opponentCall' },
+  street(0.8, 12, 2),
+  { wait: 5 },
+  { kind: 'opponentBet', sizeBb: 10, equity: 0.8 },
+  { wait: 5 },
+  street(0.85, 60, 1),
+  { wait: 5 },
+  { kind: 'opponentBet', sizeBb: 40, equity: 0.85, raise: true },
+  { wait: 4 },
+  result(netBb, 'showdown', 0.85),
+];
+
+const caughtBluff = (netBb: number): Beat[] => [
+  ...raised(0.3),
+  { kind: 'opponentCall' },
+  street(0.15, 12, 2),
+  { wait: 5 },
+  { kind: 'ownMove', move: 'bet', amountBb: 10, potBb: 12, equity: 0.15 },
+  { kind: 'opponentCall' },
+  { wait: 5 },
+  street(0.02, 32, 0),
+  { wait: 3 },
+  { kind: 'ownMove', move: 'bet', amountBb: -netBb - 16, potBb: 32, equity: 0.02 },
+  { kind: 'opponentCall' },
+  { wait: 2 },
+  result(netBb, 'showdown', 0.02),
+];
+
+const calledDown = (netBb: number): Beat[] => [
+  ...raised(0.45),
+  { kind: 'opponentCall' },
+  street(0.4, 12, 2),
+  { wait: 5 },
+  { kind: 'opponentBet', sizeBb: 8, equity: 0.4 },
+  { wait: 5 },
+  result(netBb, 'showdown', 0.4),
+];
+
+type Outcome = 'fold' | 'win' | 'bigWin' | 'caught' | 'calledDown';
+
+const AGGRESSIVE_NIGHT: readonly (readonly [Outcome, number])[] = [
+  ['bigWin', 100],
+  ['fold', -3],
+  ['bigWin', 100],
+  ['fold', -3],
+  ['fold', -6],
+  ['win', 8],
+  ['fold', -3],
+  ['caught', -111],
+  ['fold', -3],
+  ['fold', -6],
+  ['win', 6],
+  ['fold', -3],
+  ['calledDown', -20],
+  ['fold', -3],
+  ['win', 12],
+  ['fold', -6],
+  ['caught', -78],
+  ['fold', -3],
+  ['fold', -3],
+  ['win', 8],
+  ['fold', -6],
+  ['fold', -3],
+  ['win', 15],
+  ['fold', -3],
+  ['caught', -188],
+  ['fold', -3],
+  ['fold', -3],
+  ['win', 6],
+  ['fold', -6],
+  ['fold', -3],
+  ['win', 10],
+  ['fold', -3],
+  ['fold', -3],
+];
+
+const handOf = (outcome: Outcome, netBb: number): Beat[] => {
+  switch (outcome) {
+    case 'fold':
+      return [...raised(0.45), result(netBb, 'sheFolded')];
+    case 'win':
+      return [...raised(0.45), result(netBb, 'heFolded')];
+    case 'bigWin':
+      return bigWin(netBb);
+    case 'caught':
+      return caughtBluff(netBb);
+    case 'calledDown':
+      return calledDown(netBb);
+  }
+};
+
+interface Night {
+  rest: PlayBias;
+  hands: PlayBias[];
+  caught: PlayBias[];
+}
+
+function aggressiveNight(key: PersonalityKey): Night {
+  const run = createRun(key);
+  const rest = run.engine.snapshot().bias;
+  const hands: PlayBias[] = [];
+  const caught: PlayBias[] = [];
+  for (const [outcome, netBb] of AGGRESSIVE_NIGHT) {
+    const after = play(run, [...handOf(outcome, netBb), { wait: 5 }]);
+    hands.push(after);
+    if (outcome === 'caught') {
+      caught.push(after);
+    }
+  }
+  return { rest, hands, caught };
+}
+
+const NIGHTS = Object.fromEntries(KEYS.map((k) => [k, aggressiveNight(k)])) as Record<
+  (typeof KEYS)[number],
+  Night
+>;
+
+const meanOf = (styles: readonly PlayBias[], axis: BiasKey): number =>
+  styles.reduce((sum, s) => sum + s[axis], 0) / styles.length;
+
+describe('a night against an opponent who raises nearly every hand', () => {
+  it('keeps Sol visibly below the edge, though two big wins came early', () => {
+    const sol = NIGHTS.sol;
+    for (const axis of ['aggression', 'sizing'] as const) {
+      expect(meanOf(sol.hands, axis)).toBeLessThan(1.85);
+    }
+  });
+
+  it('shows her own caught bluffs in her play: all but Rita drop below rest', () => {
+    for (const k of KEYS) {
+      const night = NIGHTS[k];
+      for (const after of night.caught) {
+        if (k === 'rita') {
+          expect(after.aggression).toBeGreaterThan(night.rest.aggression);
+        } else {
+          expect(after.aggression).toBeLessThan(night.rest.aggression);
+        }
+      }
+    }
+  });
+
+  it('does not anger her at his raises once the hands are over', () => {
+    const sol = NIGHTS.sol;
+    const folds = sol.hands.filter((_, i) => AGGRESSIVE_NIGHT[i]?.[0] === 'fold');
+    expect(Math.min(...folds.map((s) => s.aggression))).toBeLessThan(sol.rest.aggression);
   });
 });

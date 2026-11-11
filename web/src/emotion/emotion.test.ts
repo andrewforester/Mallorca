@@ -374,6 +374,24 @@ describe('engine', () => {
     }
   });
 
+  it('holds the anger at his raise for the hand and lets it fade after, like hope and fear', () => {
+    const hand = (decided: 'heFolded' | 'sheFolded') => {
+      const engine = createEngine(PERSONALITIES.sol);
+      engine.event({ kind: 'deal', equity: 0.7, potBb: 20, investedBb: 10, streetsLeft: 1 });
+      engine.event({ kind: 'opponentBet', sizeBb: 30, equity: 0.5, raise: true });
+      engine.step(3);
+      const during = engine.snapshot().emotions.anger;
+      engine.event({ kind: 'result', netBb: decided === 'heFolded' ? 20 : -10, decided });
+      engine.step(10);
+      return { during, after: engine.snapshot().emotions.anger };
+    };
+    const won = hand('heFolded');
+    expect(won.during).toBeGreaterThan(0.1);
+    expect(won.after).toBeLessThan(0.01);
+    const pushed = hand('sheFolded');
+    expect(pushed.after).toBeGreaterThan(0.05);
+  });
+
   it('lets hope and fear fade after the hand instead of dropping them', () => {
     const engine = createEngine(MALLORCA);
     engine.event({

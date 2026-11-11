@@ -131,6 +131,7 @@ describe('setPersonality', () => {
   it('keeps emotions, mood, approach, pressure and the impulses still rising', () => {
     const engine = createEngine(MALLORCA, { changeTimeS: 20, returnTimeS: 1200 });
     engine.event({ kind: 'chat', signal: 'tease' });
+    engine.event({ kind: 'deal', equity: 0.5, potBb: 3, investedBb: 1.5 });
     engine.event({
       kind: 'opponentBet',
       sizeBb: 10,
