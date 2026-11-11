@@ -1,5 +1,5 @@
 import { appraise } from './appraisal.ts';
-import type { Impulse, Prospect, TableEvent } from './appraisal.ts';
+import type { Aggressor, Impulse, Prospect, TableEvent } from './appraisal.ts';
 import { RELEASE_S, beliefOf, foldChanceOf, tensionTargets } from './tension.ts';
 import { APPROACH, CERTAINTY, decay, noEmotions, queue, rise } from './emotions.ts';
 import type { Pending } from './emotions.ts';
@@ -66,6 +66,7 @@ class EmotionEngine implements Engine {
   private approach = 0;
   private certainty = 0;
   private foldChance = 0;
+  private aggressor: Aggressor | undefined = undefined;
   private prospect: Prospect | null = null;
   private sessionNetBb = 0;
   private pressure = 0;
@@ -99,7 +100,11 @@ class EmotionEngine implements Engine {
       return { ...e, previousEquity: e.previousEquity ?? p.equity };
     }
     if (e.kind === 'result') {
-      return { ...e, lastEquity: e.lastEquity ?? beliefOf(lastEquityOf(p), this.foldChance) };
+      return {
+        ...e,
+        lastEquity: e.lastEquity ?? beliefOf(lastEquityOf(p), this.foldChance),
+        aggressor: e.aggressor ?? this.aggressor,
+      };
     }
     return e;
   }
@@ -119,6 +124,17 @@ class EmotionEngine implements Engine {
     }
     this.foldChance =
       e.kind === 'ownMove' ? foldChanceOf(e.amountBb, e.potBb) : this.keptFoldChance(e);
+    this.aggressor = this.aggressorAfter(e);
+  }
+
+  private aggressorAfter(e: TableEvent): Aggressor | undefined {
+    if (e.kind === 'ownMove') {
+      return 'her';
+    }
+    if (e.kind === 'opponentBet') {
+      return 'him';
+    }
+    return e.kind === 'deal' || e.kind === 'result' ? undefined : this.aggressor;
   }
 
   private keptFoldChance(e: TableEvent): number {
@@ -236,6 +252,7 @@ class EmotionEngine implements Engine {
     this.approach = 0;
     this.certainty = 0;
     this.foldChance = 0;
+    this.aggressor = undefined;
     this.prospect = null;
     this.sessionNetBb = 0;
     this.pressure = 0;

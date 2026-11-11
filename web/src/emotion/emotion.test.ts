@@ -326,6 +326,24 @@ describe('engine', () => {
     expect(anger(second)).toBeGreaterThan(anger(first));
   });
 
+  it('remembers who put the money in last and lets it decide the blame', () => {
+    const lose = (her: boolean) => {
+      const engine = createEngine(PERSONALITIES.sol);
+      engine.event({ kind: 'deal', equity: 0.3, potBb: 20, investedBb: 10, streetsLeft: 0 });
+      engine.event(
+        her
+          ? { kind: 'ownMove', move: 'bet', amountBb: 60, potBb: 20, equity: 0.02 }
+          : { kind: 'opponentBet', sizeBb: 60, equity: 0.02 },
+      );
+      engine.event({ kind: 'opponentCall' });
+      const impulses = engine.event({ kind: 'result', netBb: -80, decided: 'showdown' });
+      const of = (e: string) => impulses.find((i) => i.emotion === e)?.amount ?? 0;
+      return { shame: of('shame'), anger: of('anger') };
+    };
+    expect(lose(true).shame).toBeGreaterThan(lose(true).anger);
+    expect(lose(false).anger).toBeGreaterThan(lose(false).shame);
+  });
+
   it('judges the result by the equity before the deciding card', () => {
     const engine = createEngine(MALLORCA);
     engine.event({ kind: 'deal', equity: 0.8, potBb: 120, investedBb: 60 });

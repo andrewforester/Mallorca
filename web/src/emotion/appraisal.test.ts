@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { appraisalOf, appraise } from './appraisal.ts';
-import type { Appraisal, AppraisalContext, Cause, TableEvent } from './appraisal.ts';
+import type { Aggressor, Appraisal, AppraisalContext, Cause, TableEvent } from './appraisal.ts';
 import { noEmotions, smoothstep } from './emotions.ts';
 import type { Emotion, Emotions } from './emotions.ts';
 import { impulsesOf } from './feelings.ts';
 import { traitsOf } from './personality.ts';
 import type { Personality, Traits } from './personality.ts';
-import { MALLORCA } from './profiles.ts';
+import { MALLORCA, PERSONALITIES } from './profiles.ts';
 import { leaningOf } from './tension.ts';
 
 const scaled = (bb: number): number => 1 - Math.exp(-Math.abs(bb) / 20);
@@ -233,9 +233,9 @@ describe('who decided the outcome', () => {
     const through: TableEvent = { kind: 'result', netBb: 20, lastEquity: 0, decided: 'heFolded' };
     const a = axes(through, t);
     expect([a.luck, a.unexpected]).toEqual([0, 0]);
-    expect(a.self).toBeCloseTo(0.75, 12);
+    expect(a.self).toBeCloseTo(0.9, 12);
     const won = felt(through, t);
-    expect(won.pride).toBeCloseTo(scaled(20) * 0.75 * t.gains.pride, 12);
+    expect(won.pride).toBeCloseTo(scaled(20) * 0.9 * t.gains.pride, 12);
     expect(won.surprise).toBe(0);
     expect(Object.values(won).every(Number.isFinite)).toBe(true);
   });
@@ -246,6 +246,31 @@ describe('who decided the outcome', () => {
     expect(humble.shame).toBeGreaterThan(humble.anger);
     const proud = felt(caught, stance(0.75, 0.1));
     expect(proud.anger).toBeGreaterThan(proud.shame);
+  });
+
+  it('makes a pot lost to her own bet mostly her doing, one lost calling his bet mostly his', () => {
+    const t = stance(0.6, 0.29);
+    const lost = (aggressor?: Aggressor): Appraisal =>
+      axes({ kind: 'result', netBb: -40, lastEquity: 0.35, decided: 'showdown', aggressor }, t);
+    const share = (x: number): number => 1 / (1 + ((1 - x) / x) * Math.exp(-Math.log(3)));
+    expect(lost().self).toBeCloseTo(0.29 * (1 - lost().luck), 12);
+    expect(lost('her').self).toBeCloseTo(share(0.29) * (1 - lost('her').luck), 12);
+    expect(lost('him').self).toBeLessThan(lost().self);
+    expect(lost('her').self + lost('her').opponent).toBeCloseTo(1 - lost('her').luck, 12);
+  });
+
+  it('feels her own caught bluff as shame more than anger, even when she rarely blames herself', () => {
+    const sol = traitsOf(PERSONALITIES.sol);
+    const caught = felt(
+      { kind: 'result', netBb: -111, lastEquity: 0.02, decided: 'showdown', aggressor: 'her' },
+      sol,
+    );
+    expect(caught.shame).toBeGreaterThan(caught.anger);
+    const called = felt(
+      { kind: 'result', netBb: -111, lastEquity: 0.02, decided: 'showdown', aggressor: 'him' },
+      sol,
+    );
+    expect(called.anger).toBeGreaterThan(called.shame);
   });
 
   it('feels being pushed off a hand she believed in by her coping', () => {
