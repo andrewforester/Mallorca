@@ -1,3 +1,4 @@
+import { NEGATIVE } from '../../../src/emotion/index.ts';
 import type { Emotion, Octant, BiasKey, LoadReading, Part } from '../../../src/emotion/index.ts';
 
 export const EMOTION_LABEL: Readonly<Record<Emotion, string>> = {
@@ -20,10 +21,11 @@ export const PART_LABEL: Readonly<Record<Part, string>> = {
 };
 
 export function strainText(load: LoadReading): string {
-  const [top] = [...load.parts].sort((a, b) => b[1] - a[1]);
+  const strained = load.parts.filter(([part]) => part === 'mood' || NEGATIVE.has(part));
+  const [top] = strained.sort((a, b) => b[1] - a[1]);
   const dominant =
     top !== undefined && load.overload > 0.05 ? `, в основном ${PART_LABEL[top[0]]}` : '';
-  return `перегрузка ${load.overload.toFixed(2)}${dominant}, интенсивность ${load.intensity.toFixed(2)} при самообладании ${load.composure.toFixed(2)}, до игры доходит ${Math.round(load.reach * 100)}% (дисциплина ${load.discipline.toFixed(2)})`;
+  return `перегрузка ${load.overload.toFixed(2)} от негатива ${load.strain.toFixed(2)}${dominant}, интенсивность ${load.intensity.toFixed(2)} при самообладании ${load.composure.toFixed(2)}, до игры доходит ${Math.round(load.reach * 100)}% (дисциплина ${load.discipline.toFixed(2)})`;
 }
 
 export const OCTANT_LABEL: Readonly<Record<Octant, string>> = {
