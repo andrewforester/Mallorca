@@ -4,6 +4,8 @@ export const pct = (v: number): string => `${Math.round(v * 100)}%`;
 
 export const f2 = (v: number): string => v.toFixed(2);
 
+export const signed = (v: number): string => `${v >= 0 ? '+' : ''}${f2(v)}`;
+
 export const bb = (v: number): string => `${v >= 0 ? '+' : ''}${v.toFixed(1)} bb`;
 
 export const padText = (p: Pad): string => `P ${f2(p[0])}  A ${f2(p[1])}  D ${f2(p[2])}`;
