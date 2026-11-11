@@ -295,6 +295,17 @@ describe('engine', () => {
     expect(lola.bias.looseness).toBeGreaterThan(ingrid.bias.looseness);
   });
 
+  it('feels a big win strongly and lets it reach the play, but is not on tilt', () => {
+    const engine = createEngine(hot);
+    engine.event({ kind: 'result', netBb: 100, decided: 'showdown', lastEquity: 0.85 });
+    engine.step(6);
+    const s = engine.snapshot();
+    expect(s.emotions.joy).toBeGreaterThan(0.8);
+    expect(s.load.reach).toBeGreaterThan(0);
+    expect(s.load.strain).toBe(0);
+    expect(s.load.overload).toBe(0);
+  });
+
   it('remembers raises against her and angers more with each one', () => {
     const engine = createEngine({
       ...average,
@@ -313,6 +324,24 @@ describe('engine', () => {
     const anger = (list: typeof first) => list.find((i) => i.emotion === 'anger')?.amount ?? 0;
     expect(anger(first)).toBeGreaterThan(0.1);
     expect(anger(second)).toBeGreaterThan(anger(first));
+  });
+
+  it('remembers who put the money in last and lets it decide the blame', () => {
+    const lose = (her: boolean) => {
+      const engine = createEngine(PERSONALITIES.sol);
+      engine.event({ kind: 'deal', equity: 0.3, potBb: 20, investedBb: 10, streetsLeft: 0 });
+      engine.event(
+        her
+          ? { kind: 'ownMove', move: 'bet', amountBb: 60, potBb: 20, equity: 0.02 }
+          : { kind: 'opponentBet', sizeBb: 60, equity: 0.02 },
+      );
+      engine.event({ kind: 'opponentCall' });
+      const impulses = engine.event({ kind: 'result', netBb: -80, decided: 'showdown' });
+      const of = (e: string) => impulses.find((i) => i.emotion === e)?.amount ?? 0;
+      return { shame: of('shame'), anger: of('anger') };
+    };
+    expect(lose(true).shame).toBeGreaterThan(lose(true).anger);
+    expect(lose(false).anger).toBeGreaterThan(lose(false).shame);
   });
 
   it('judges the result by the equity before the deciding card', () => {
@@ -343,6 +372,24 @@ describe('engine', () => {
       const { bias, traits } = createEngine(personality).snapshot();
       expect(BIAS_KEYS.every((k) => Math.abs(bias[k] - traits.baseline[k]) < 1e-12)).toBe(true);
     }
+  });
+
+  it('holds the anger at his raise for the hand and lets it fade after, like hope and fear', () => {
+    const hand = (decided: 'heFolded' | 'sheFolded') => {
+      const engine = createEngine(PERSONALITIES.sol);
+      engine.event({ kind: 'deal', equity: 0.7, potBb: 20, investedBb: 10, streetsLeft: 1 });
+      engine.event({ kind: 'opponentBet', sizeBb: 30, equity: 0.5, raise: true });
+      engine.step(3);
+      const during = engine.snapshot().emotions.anger;
+      engine.event({ kind: 'result', netBb: decided === 'heFolded' ? 20 : -10, decided });
+      engine.step(10);
+      return { during, after: engine.snapshot().emotions.anger };
+    };
+    const won = hand('heFolded');
+    expect(won.during).toBeGreaterThan(0.1);
+    expect(won.after).toBeLessThan(0.01);
+    const pushed = hand('sheFolded');
+    expect(pushed.after).toBeGreaterThan(0.05);
   });
 
   it('lets hope and fear fade after the hand instead of dropping them', () => {

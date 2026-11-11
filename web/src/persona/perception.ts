@@ -1,6 +1,6 @@
 import type { Card, Rng } from '../cards/index.ts';
 import { MALLORCA, createEngine } from '../emotion/index.ts';
-import type { Engine, Money, Personality, Snapshot, TableEvent } from '../emotion/index.ts';
+import type { Cause, Engine, Money, Personality, Snapshot, TableEvent } from '../emotion/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { equityVsHand, equityVsRange } from '../equity/index.ts';
 import type { WeightedHands } from '../equity/index.ts';
@@ -104,7 +104,7 @@ class TableFeeling implements Feeling {
     if (range.length === 0) return;
     this.range = range;
     this.equities.clear();
-    this.moved(hand);
+    this.moved(hand, 'opponent');
   }
 
   hear(signals: readonly Signal[]): void {
@@ -156,8 +156,8 @@ class TableFeeling implements Feeling {
     this.feel({ kind: 'deal', equity: this.equity(hand), ...this.money(hand) });
   }
 
-  private moved(hand: HandState): void {
-    this.feel({ kind: 'street', equity: this.equity(hand), ...this.money(hand) });
+  private moved(hand: HandState, cause: Cause = 'cards'): void {
+    this.feel({ kind: 'street', equity: this.equity(hand), cause, ...this.money(hand) });
   }
 
   private acted(event: Extract<EngineEvent, { type: 'acted' }>, hand: HandState): void {

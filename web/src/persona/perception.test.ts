@@ -127,6 +127,8 @@ describe("her equity against the player's range", () => {
     const after = read.feeling.at(4500).emotions;
     expect(after.disappointment).toBeGreaterThan(before.disappointment + 0.1);
     expect(after.surprise).toBeGreaterThan(before.surprise + 0.1);
+    expect(after.injustice).toBeCloseTo(before.injustice, 12);
+    expect(after.anger).toBeGreaterThan(before.anger);
     read.feeling.advance(5000);
     plain.feeling.advance(5000);
     expect(read.feeling.snapshot().emotions.fear).toBeGreaterThan(

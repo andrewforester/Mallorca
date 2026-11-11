@@ -15,12 +15,22 @@ export type ChatSignal =
 
 export type TableEvent =
   | ({ kind: 'deal'; equity: number } & Money)
-  | ({ kind: 'street'; equity: number; previousEquity?: number } & Money)
+  | ({ kind: 'street'; equity: number; previousEquity?: number; cause?: Cause } & Money)
   | { kind: 'opponentBet'; sizeBb: number; equity: number; raise?: boolean; pressure?: number }
   | { kind: 'opponentCall' }
-  | { kind: 'result'; netBb: number; decided: Decided; lastEquity?: number }
+  | {
+      kind: 'result';
+      netBb: number;
+      decided: Decided;
+      lastEquity?: number;
+      aggressor?: Aggressor;
+    }
   | { kind: 'ownMove'; move: 'bet'; amountBb: number; potBb: number; equity: number }
   | { kind: 'chat'; signal: ChatSignal };
+
+export type Cause = 'cards' | 'opponent';
+
+export type Aggressor = 'her' | 'him';
 
 export type Decided = 'showdown' | 'heFolded' | 'sheFolded';
 
@@ -30,7 +40,11 @@ export interface AppraisalContext {
   traits: Traits;
 }
 
+export const PRESSURE_SCALE = 3;
+
 export const scaled = (bb: number): number => saturate(Math.abs(bb) / STAKE_BB);
+
+export const settled = (bb: number): number => Math.abs(bb) / (Math.abs(bb) + STAKE_BB);
 
 const pct = (x: number): string => `${Math.round(x * 100)}%`;
 
@@ -61,7 +75,7 @@ function street(e: Extract<TableEvent, { kind: 'street' }>): Axes | null {
   return {
     ...BLANK,
     value: delta * (0.3 + 0.7 * scaled(atStakeOf(e))),
-    luck: 1,
+    ...(e.cause === 'opponent' ? { opponent: 1 } : { luck: 1 }),
     resolved: swing,
     expected: before,
     unexpected: saturate(3 * (swing - 0.15)),
@@ -71,25 +85,35 @@ function street(e: Extract<TableEvent, { kind: 'street' }>): Axes | null {
 
 function opponentBet(e: Extract<TableEvent, { kind: 'opponentBet' }>, c: AppraisalContext): Axes {
   const open = 4 * e.equity * (1 - e.equity);
-  const pressure = Math.min(3, e.pressure ?? c.pressure);
-  const challenge = e.raise === true ? 0.12 * (1 + 0.5 * pressure) : 0;
+  const pressure = saturate((e.pressure ?? c.pressure) / PRESSURE_SCALE);
+  const challenge = e.raise === true ? 0.5 * (1 + pressure) : 0;
   return {
     ...BLANK,
     realized: false,
     opponent: 1,
-    value: -(0.6 * scaled(e.sizeBb) * open + challenge),
+    value: -0.6 * scaled(e.sizeBb) * open * (1 + challenge),
     control: leaningOf(c.traits.coping, e.equity),
     reason: `the opponent ${e.raise === true ? 'raises' : 'bets'} ${e.sizeBb} bb, her equity ${pct(e.equity)}`,
   };
 }
 
+const DRIVE = Math.log(3);
+const logit = (p: number): number => Math.log(p / (1 - p));
+const sigmoid = (x: number): number => 1 / (1 + Math.exp(-x));
+
+export function shareOf(stance: number, aggressor?: Aggressor): number {
+  const drive = aggressor === undefined ? 0 : aggressor === 'her' ? DRIVE : -DRIVE;
+  return sigmoid(logit(Math.min(0.99, Math.max(0.01, stance))) + drive);
+}
+
 function heFolded(netBb: number, traits: Traits): Axes {
+  const mine = shareOf(traits.coping, 'her');
   return {
     ...BLANK,
-    value: scaled(netBb),
+    value: settled(netBb),
     resolved: 1,
-    self: traits.coping,
-    opponent: 1 - traits.coping,
+    self: mine,
+    opponent: 1 - mine,
     reason: `he folded to her, she won ${Math.abs(netBb)} bb`,
   };
 }
@@ -100,18 +124,20 @@ function sheFolded(netBb: number, belief: number): Axes {
     opponent: 1,
     resolved: 1,
     expected: belief,
-    value: -0.35 * scaled(netBb) * smoothstep(0.35, 0.75, belief),
+    value: -0.35 * settled(netBb) * smoothstep(0.35, 0.75, belief),
     reason: `she folded, ${Math.abs(netBb)} bb gone, belief ${pct(belief)}`,
   };
 }
 
-function showdown(netBb: number, expected: number, traits: Traits): Axes {
+function showdown(e: Extract<TableEvent, { kind: 'result' }>, traits: Traits): Axes {
+  const { netBb } = e;
+  const expected = e.lastEquity ?? 0.5;
   const lost = netBb < 0;
   const luck = lost ? smoothstep(0.5, 0.95, expected) : smoothstep(0.5, 0.9, 1 - expected);
-  const mine = lost ? traits.selfBlame : traits.coping;
+  const mine = shareOf(lost ? traits.selfBlame : traits.coping, e.aggressor);
   return {
     ...BLANK,
-    value: lost ? -scaled(netBb) : scaled(netBb),
+    value: lost ? -settled(netBb) : settled(netBb),
     resolved: 1,
     expected,
     luck,
@@ -127,9 +153,7 @@ function result(e: Extract<TableEvent, { kind: 'result' }>, traits: Traits): Axe
   if (e.decided === 'heFolded') {
     return heFolded(e.netBb, traits);
   }
-  return e.decided === 'sheFolded'
-    ? sheFolded(e.netBb, expected)
-    : showdown(e.netBb, expected, traits);
+  return e.decided === 'sheFolded' ? sheFolded(e.netBb, expected) : showdown(e, traits);
 }
 
 const CHAT: Readonly<Record<ChatSignal, readonly [number, boolean]>> = {

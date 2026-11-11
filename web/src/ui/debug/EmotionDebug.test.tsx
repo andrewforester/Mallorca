@@ -140,7 +140,13 @@ describe('EmotionDebug', () => {
     expect(within(emotions).getByText(COPY.emotion.anger)).toBeTruthy();
     expect(within(screen.getByTestId('debug-mood')).getAllByText(/^P [-\d.]+/)[0]).toBeTruthy();
     const strain = within(screen.getByTestId('debug-load'));
-    for (const label of ['Intensity', 'Composure', 'Overload', 'Reaches the play']) {
+    for (const label of [
+      'Intensity',
+      'Composure',
+      'Negative strain',
+      'Overload',
+      'Reaches the play',
+    ]) {
       expect(strain.getByText(label)).toBeTruthy();
     }
     expect(strain.getByText(COPY.part.mood)).toBeTruthy();

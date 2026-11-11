@@ -1,15 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { appraisalOf, appraise } from './appraisal.ts';
-import type { Appraisal, AppraisalContext, TableEvent } from './appraisal.ts';
+import type { Aggressor, Appraisal, AppraisalContext, Cause, TableEvent } from './appraisal.ts';
 import { noEmotions, smoothstep } from './emotions.ts';
 import type { Emotion, Emotions } from './emotions.ts';
 import { impulsesOf } from './feelings.ts';
 import { traitsOf } from './personality.ts';
 import type { Personality, Traits } from './personality.ts';
-import { MALLORCA } from './profiles.ts';
+import { MALLORCA, PERSONALITIES } from './profiles.ts';
 import { leaningOf } from './tension.ts';
 
 const scaled = (bb: number): number => 1 - Math.exp(-Math.abs(bb) / 20);
+const settled = (bb: number): number => Math.abs(bb) / (Math.abs(bb) + 20);
 
 const stance = (coping: number, selfBlame = traitsOf(MALLORCA).selfBlame): Traits => ({
   ...traitsOf(MALLORCA),
@@ -55,19 +56,26 @@ describe('a lost pot', () => {
     const a = axes(badBeat);
     expect(a.realized).toBe(true);
     expect(a.resolved).toBe(1);
-    expect(a.value).toBeCloseTo(-scaled(100), 12);
+    expect(a.value).toBeCloseTo(-settled(100), 12);
     expect(a.luck).toBeCloseTo(smoothstep(0.5, 0.95, 0.91), 12);
     expect(a.expected).toBe(0.91);
   });
 
   it('feels a bad beat as injustice, and as distress when she cannot cope', () => {
     const calm = felt(badBeat, stance(0.75));
-    const m = scaled(100);
+    const m = settled(100);
     const luck = smoothstep(0.5, 0.95, 0.91);
     expect(calm.injustice).toBeCloseTo(m * luck * 0.91 * traitsOf(MALLORCA).gains.injustice, 9);
     expect(calm.distress).toBeLessThan(calm.injustice);
     const lost = felt(badBeat, stance(0.18));
     expect(lost.distress).toBeGreaterThan(lost.injustice);
+  });
+
+  it('keeps growing with the size of a result, so a lost stack hurts more than a lost buy-in share', () => {
+    const lost = (netBb: number) =>
+      felt({ kind: 'result', netBb, lastEquity: 0.02, decided: 'showdown' }, traitsOf(MALLORCA));
+    expect(lost(-188).distress / lost(-78).distress).toBeGreaterThan(1.1);
+    expect(Math.abs(settled(12) - scaled(12))).toBeLessThan(0.1);
   });
 
   it('blames the opponent with anger or herself with shame by her stance', () => {
@@ -102,9 +110,9 @@ describe('a won pot', () => {
 });
 
 describe('a bet against her', () => {
-  const bet = (equity: number, raise = false): TableEvent => ({
+  const bet = (equity: number, raise = false, sizeBb = 20): TableEvent => ({
     kind: 'opponentBet',
-    sizeBb: 20,
+    sizeBb,
     equity,
     raise,
   });
@@ -117,10 +125,25 @@ describe('a bet against her', () => {
     expect(axes(bet(0.5)).realized).toBe(false);
   });
 
-  it('adds a challenge for a raise that grows with the pressure', () => {
-    const plain = axes(bet(0.5)).value;
-    expect(axes(bet(0.5, true), traitsOf(MALLORCA), 3).value - plain).toBeCloseTo(-0.12 * 2.5, 12);
-    expect(axes(bet(0.5, true), traitsOf(MALLORCA), 9).value - plain).toBeCloseTo(-0.12 * 2.5, 12);
+  const challenge = (equity: number, pressure: number, sizeBb = 20): number =>
+    axes(bet(equity, true, sizeBb), traitsOf(MALLORCA), pressure).value /
+      axes(bet(equity, false, sizeBb)).value -
+    1;
+
+  it('makes a raise a bet that challenges her, more so under pressure, softly', () => {
+    expect(challenge(0.5, 0)).toBeCloseTo(0.5, 12);
+    expect(challenge(0.5, 3)).toBeCloseTo(0.5 * (2 - Math.exp(-1)), 12);
+    expect(challenge(0.5, 9)).toBeGreaterThan(challenge(0.5, 3));
+    expect(challenge(0.5, 100)).toBeLessThan(1);
+  });
+
+  it('weighs the challenge of a raise by its size and by how open the outcome is', () => {
+    const raise = (equity: number, sizeBb: number): number =>
+      axes(bet(equity, true, sizeBb), traitsOf(MALLORCA), 3).value;
+    expect(raise(0.9, 20)).toBeCloseTo(0.36 * raise(0.5, 20), 12);
+    expect(raise(0.98, 20)).toBeGreaterThan(-0.06);
+    expect(raise(0.5, 5)).toBeGreaterThan(0.5 * raise(0.5, 20));
+    expect(raise(0.5, 5)).toBeCloseTo((scaled(5) / scaled(20)) * raise(0.5, 20), 12);
   });
 
   it('is felt through her leaning: anger when she copes, fear when she does not', () => {
@@ -144,10 +167,11 @@ describe('a bet against her', () => {
 });
 
 describe('a new card', () => {
-  const street = (previousEquity: number, equity: number): TableEvent => ({
+  const street = (previousEquity: number, equity: number, cause?: Cause): TableEvent => ({
     kind: 'street',
     equity,
     previousEquity,
+    ...(cause === undefined ? {} : { cause }),
     potBb: 6,
     investedBb: 3,
     stackBb: 97,
@@ -173,6 +197,18 @@ describe('a new card', () => {
     const flopped = felt(street(0.46, 0.85), traitsOf(MALLORCA));
     expect(flopped.joy).toBeGreaterThan(0.2);
     expect(flopped.surprise).toBeGreaterThan(0.4);
+  });
+
+  it('blames the opponent, not the cards, when his action narrows his range', () => {
+    const narrowed = street(0.8, 0.3, 'opponent');
+    const a = axes(narrowed);
+    expect(a.luck).toBe(0);
+    expect(a.opponent).toBe(1);
+    expect(a.value).toBeCloseTo(axes(street(0.8, 0.3)).value, 12);
+    const f = felt(narrowed, traitsOf(MALLORCA));
+    expect(f.injustice).toBe(0);
+    expect(f.anger).toBeGreaterThan(0.05);
+    expect(felt(street(0.8, 0.3), traitsOf(MALLORCA)).injustice).toBeGreaterThan(0.05);
   });
 
   it('is unknown without the equity before it', () => {
@@ -205,9 +241,9 @@ describe('who decided the outcome', () => {
     const through: TableEvent = { kind: 'result', netBb: 20, lastEquity: 0, decided: 'heFolded' };
     const a = axes(through, t);
     expect([a.luck, a.unexpected]).toEqual([0, 0]);
-    expect(a.self).toBeCloseTo(0.75, 12);
+    expect(a.self).toBeCloseTo(0.9, 12);
     const won = felt(through, t);
-    expect(won.pride).toBeCloseTo(scaled(20) * 0.75 * t.gains.pride, 12);
+    expect(won.pride).toBeCloseTo(settled(20) * 0.9 * t.gains.pride, 12);
     expect(won.surprise).toBe(0);
     expect(Object.values(won).every(Number.isFinite)).toBe(true);
   });
@@ -220,9 +256,34 @@ describe('who decided the outcome', () => {
     expect(proud.anger).toBeGreaterThan(proud.shame);
   });
 
+  it('makes a pot lost to her own bet mostly her doing, one lost calling his bet mostly his', () => {
+    const t = stance(0.6, 0.29);
+    const lost = (aggressor?: Aggressor): Appraisal =>
+      axes({ kind: 'result', netBb: -40, lastEquity: 0.35, decided: 'showdown', aggressor }, t);
+    const share = (x: number): number => 1 / (1 + ((1 - x) / x) * Math.exp(-Math.log(3)));
+    expect(lost().self).toBeCloseTo(0.29 * (1 - lost().luck), 12);
+    expect(lost('her').self).toBeCloseTo(share(0.29) * (1 - lost('her').luck), 12);
+    expect(lost('him').self).toBeLessThan(lost().self);
+    expect(lost('her').self + lost('her').opponent).toBeCloseTo(1 - lost('her').luck, 12);
+  });
+
+  it('feels her own caught bluff as shame more than anger, even when she rarely blames herself', () => {
+    const sol = traitsOf(PERSONALITIES.sol);
+    const caught = felt(
+      { kind: 'result', netBb: -111, lastEquity: 0.02, decided: 'showdown', aggressor: 'her' },
+      sol,
+    );
+    expect(caught.shame).toBeGreaterThan(caught.anger);
+    const called = felt(
+      { kind: 'result', netBb: -111, lastEquity: 0.02, decided: 'showdown', aggressor: 'him' },
+      sol,
+    );
+    expect(called.anger).toBeGreaterThan(called.shame);
+  });
+
   it('feels being pushed off a hand she believed in by her coping', () => {
     const fold: TableEvent = { kind: 'result', netBb: -20, lastEquity: 0.7, decided: 'sheFolded' };
-    expect(axes(fold).value).toBeCloseTo(-0.35 * scaled(20) * smoothstep(0.35, 0.75, 0.7), 12);
+    expect(axes(fold).value).toBeCloseTo(-0.35 * settled(20) * smoothstep(0.35, 0.75, 0.7), 12);
     expect(axes(fold).opponent).toBe(1);
     const calm = felt(fold, stance(0.75));
     expect(calm.anger).toBeGreaterThan(calm.distress);

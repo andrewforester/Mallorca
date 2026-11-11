@@ -223,6 +223,7 @@ export function createRunner(
         send(`Его диапазон по блупринту после его действия: эквити ${pct(equity ?? 0)}`, {
           kind: 'street',
           equity: equity ?? 0.5,
+          cause: 'opponent',
           ...moneyNow(),
         });
         return true;

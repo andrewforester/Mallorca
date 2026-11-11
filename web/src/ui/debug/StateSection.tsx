@@ -62,7 +62,14 @@ function Mood({ view }: { view: DebugView }) {
   );
 }
 
-const NO_LOAD: DebugLoad = { intensity: 0, composure: 0, overload: 0, reach: 0, parts: [] };
+const NO_LOAD: DebugLoad = {
+  intensity: 0,
+  composure: 0,
+  strain: 0,
+  overload: 0,
+  reach: 0,
+  parts: [],
+};
 
 function Load({ view }: { view: DebugView }) {
   const load = view.load ?? NO_LOAD;
@@ -71,6 +78,7 @@ function Load({ view }: { view: DebugView }) {
       <h4>{COPY.load.title}</h4>
       <Bar label={COPY.load.intensity} value={load.intensity / 2} text={f2(load.intensity)} />
       <Bar label={COPY.load.composure} value={load.composure / 2} text={f2(load.composure)} />
+      <Bar label={COPY.load.strain} value={load.strain / 2} text={f2(load.strain)} />
       <Bar label={COPY.load.overload} value={load.overload} text={pct(load.overload)} />
       <Bar label={COPY.load.reach} value={load.reach} text={pct(load.reach)} />
       {load.parts.map(([part, value]) => (

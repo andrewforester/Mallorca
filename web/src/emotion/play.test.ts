@@ -11,8 +11,10 @@ import {
   PUSH_GAIN,
   URGENCY_PUSH,
   affectOf,
+  overloadOf,
   partsOf,
   playOf,
+  strainOf,
 } from './play.ts';
 import { MALLORCA, PERSONALITIES } from './profiles.ts';
 import { STYLE_SHARE } from './style.ts';
@@ -143,13 +145,39 @@ describe('partsOf', () => {
   });
 });
 
+describe('strainOf', () => {
+  it('counts only the negative emotions', () => {
+    expect(strainOf(feeling({ joy: 1, pride: 1, relief: 1, hope: 1 }), STILL)).toBe(0);
+    const pad = EMOTION_PAD.anger;
+    expect(strainOf(feeling({ anger: 0.5, joy: 1 }), STILL)).toBeCloseTo(
+      0.5 * Math.hypot(pad[0], pad[1], APPROACH.anger),
+      12,
+    );
+  });
+
+  it('counts the mood only by how unpleasant its shift is', () => {
+    const glad = { shift: [0.3, 0.2, 0.1] as Pad, approach: 0.2, certainty: 0.3 };
+    expect(strainOf(noEmotions(), glad)).toBe(0);
+    const sore = { shift: [-0.3, 0, 0] as Pad, approach: 0, certainty: 0 };
+    expect(strainOf(noEmotions(), sore)).toBeCloseTo(MOOD_WEIGHT * 0.3, 12);
+  });
+});
+
+describe('overloadOf', () => {
+  it('is the smooth threshold of the strain at composure', () => {
+    expect(overloadOf(0, 0.5)).toBe(0);
+    expect(overloadOf(0.5, 0.5)).toBeCloseTo(0.5, 12);
+    expect(overloadOf(1.5, 0.5)).toBeCloseTo(0.9, 12);
+  });
+});
+
 describe('playOf', () => {
   it('plays the natural style when she feels nothing', () => {
     const t = traitsOf(MALLORCA);
     const reading = playOf(affectOf(noEmotions(), STILL, t.urgency), t);
     expect(reading.intensity).toBe(0);
     expect(reading.reach).toBe(0);
-    expect(reading.overload).toBe(0);
+    expect(reading.gate).toBe(0);
     expect(reading.bias).toEqual(t.baseline);
   });
 
@@ -158,7 +186,7 @@ describe('playOf', () => {
     const a: Affect = [0, 0, t.composure, 0.3];
     const reading = playOf(a, t);
     expect(reading.intensity).toBeCloseTo(t.composure, 12);
-    expect(reading.overload).toBeCloseTo(0.5, 12);
+    expect(reading.gate).toBeCloseTo(0.5, 12);
     expect(reading.reach).toBeCloseTo(0.5 * (1 - t.discipline), 12);
   });
 

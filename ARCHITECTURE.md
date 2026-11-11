@@ -356,17 +356,23 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   (`rise`), so its steps add up to exactly one saturated impulse; every emotion decays with its own half-life.
 - Appraisal (`appraisal.ts`, `feelings.ts`): `appraisalOf(event, { prospect, pressure, traits })` maps every
   `TableEvent` to the same axes (`Appraisal`: `value` signed, `realized`, `resolved`, the shares `self`, `opponent`
-  and `luck`, `expected`, `unexpected`, `control`), sizes in bb through `1 - e^(-|bb| / 20)`; `impulsesOf` turns the
+  and `luck`, `expected`, `unexpected`, `control`), sizes of bets and equity changes in bb through
+  `scaled(bb) = 1 - e^(-|bb| / 20)` and of results through `settled(bb) = |bb| / (|bb| + 20)`, the same slope for
+  small pots and still growing past 60 bb; `impulsesOf` turns the
   axes into impulses by one set of formulas (a bad realized outcome is distress, injustice, anger, shame and
   disappointment split by blame and coping; a bad prospect fear or anger; a good outcome joy, pride and relief of the
   fear held; a good prospect hope; surprise is `unexpected`) times her gains. No event kind names an emotion.
   `TableEvent`s: `deal` and `street` (her perceived equity and the money: pot, invested, stack behind, streets
-  left; every change of equity is felt, with no threshold), `opponentBet` (with `raise` for a raise against her,
-  which also builds a session `pressure`; felt through `leaningOf(coping, equity)`), `opponentCall`, `ownMove` (her
-  bet with the pot before it), `result` with `decided` (`heFolded`: hers, pride by coping, no luck; `showdown`:
-  luck by how unexpected, the rest by self-blame or coping; `sheFolded`: pushed off by her belief in the hand,
-  relief otherwise) and `chat` (a `ChatSignal`, the opponent's, realized or prospective). Her bet and his call
-  have no impulses of their own. A `street` after the hand is over is ignored.
+  left; every change of equity is felt, with no threshold; its `cause` is `cards` for a new card or the reveal, the
+  luck's share, or `opponent` when his action narrowed his range), `opponentBet` (`-0.6 scaled(size) 4 eq (1 - eq)`,
+  and a `raise` against her multiplies it by `1 + 0.5 (1 + sat(pressure / 3))` and builds a session `pressure`;
+  felt through `leaningOf(coping, equity)`), `opponentCall`, `ownMove` (her bet with the pot before it), `result`
+  with `decided` and `aggressor`, who bet or raised last (`heFolded`: hers, pride by coping, no luck; `showdown`:
+  luck by how unexpected, the rest split by `shareOf(stance, aggressor) = σ(logit stance ± ln 3)` with self-blame
+  on a loss and coping on a win as the stance: her own bet that got called is mostly her doing, his bet she called
+  mostly his; `sheFolded`: pushed off by her belief in the hand, relief otherwise) and `chat` (a `ChatSignal`, the
+  opponent's, realized or prospective). Her bet and his call have no impulses of their own; the engine remembers
+  the aggressor of the hand and fills it in. A `street` after the hand is over is ignored.
 - Belief (`tension.ts`): her bet sets `foldChanceOf(bet, pot) = bet / (pot + bet)`; his call or bet, a deal and
   a result reset it to 0. `beliefOf(equity, foldChance) = foldChance + (1 - foldChance) equity` replaces the
   equity in the tension, the leaning and the expectation of a result; `Snapshot.belief` is the belief now (null
@@ -374,7 +380,9 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
 - Tension (`tension.ts`): while a hand runs hope and fear track `tensionTargets`, the tension `sat(atStake / 20) *
   4 eq (1 - eq)` split by the leaning `σ(logit coping + 0.5 logit eq)`, where `atStake = pot / 2 + future |2 eq -
   1| / 2`; hope rises with a half-life of 0.8 s, fear of 0.25 s, and both fade with `RELEASE_S = 1.5` s once the
-  hand ends.
+  hand ends. The anger of a prospect, a bet against her, is held for the hand the same way (`Held`, `stepHeld`):
+  it decays with the half-life of anger while the hand runs and with `RELEASE_S` after it, and `Snapshot.emotions`
+  reads it combined with the anger of what happened.
 - Mood is a PAD point moved by ALMA's pull and push toward the intensity weighted centre of the active emotions and
   back to the default mood when none is active (`GAME_MOOD`: 600 s to change, 1200 s to return). Every emotion has
   an `APPROACH` and a `CERTAINTY`; the mood holds both beside PAD with a rest of 0 (`Snapshot.approach`,
@@ -384,10 +392,12 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
 - Play (`play.ts`): `affectOf(emotions, { shift, approach, certainty }, urgency)` is the `Affect` of four numbers,
   the sum of every emotion's (P, A, approach, certainty) plus `MOOD_WEIGHT = 2` times the mood shift, approach and
   certainty, with `URGENCY_PUSH * urgency * max(0, arousal)` added to approach. `playOf(affect, traits)` gives
-  `intensity = |(P, A, approach)|`, `overload = I² / (I² + composure²)`, `reach = (1 - discipline) overload`
+  `intensity = |(P, A, approach)|`, `gate = I² / (I² + composure²)`, `reach = (1 - discipline) gate`
   and the bias `styleFrom(nature, pushOf(affect, reach, I))`, `PUSH_GAIN * reach * (PLAY_AXES[k] · affect) / I`
-  with four weights per axis. `Snapshot.load` is `{
-  intensity, overload, reach, composure, discipline, parts }` (`partsOf`: the length of each emotion's contribution
+  with four weights per axis. `strainOf(emotions, mood)` is the length of the negative emotions' (P, A, approach)
+  plus the mood's part times how unpleasant its shift is, and `overloadOf(strain, composure)` the same threshold on
+  it: joy and pride reach the play but never put her on tilt. `Snapshot.load` is `{
+  intensity, strain, overload, reach, composure, discipline, parts }` (`partsOf`: the length of each emotion's contribution
   and the mood's), `Snapshot.affect` the affect and `Snapshot.bias` the `PlayBias` of five multipliers
   (`aggression`, `looseness`, `bluff`, `sizing`, `stickiness`) that tilt the blueprint's action probabilities at one
   decision; with no feeling it is `Traits.baseline`. The session result has no direct term. The bot's `BotBias`
