@@ -43,6 +43,9 @@ const THINK_SPOTS: ReadonlyArray<readonly [number, number]> = [
   [0, 0.3],
 ];
 
+export const EYE_CLOSURE_CAP = 0.9;
+const EYE_CLOSERS = ['eyeSquint', 'cheekSquint', 'eyeBlink'];
+
 const GLANCES: readonly GazeTarget[] = ['cards', 'board', 'away', 'down'];
 const BACK_AFTER_S = 0.9;
 
@@ -66,6 +69,15 @@ const clamp = (v: number, low: number, high: number): number => Math.max(low, Ma
 const add = (w: Weights, name: string, v: number): void => {
   w[name] = (w[name] ?? 0) + v;
 };
+
+function capEyeClosure(w: Weights): void {
+  for (const side of ['Left', 'Right']) {
+    const names = EYE_CLOSERS.map((n) => `${n}${side}`);
+    const sum = names.reduce((s, n) => s + Math.max(0, w[n] ?? 0), 0);
+    if (sum <= EYE_CLOSURE_CAP) continue;
+    for (const n of names) w[n] = Math.max(0, w[n] ?? 0) * (EYE_CLOSURE_CAP / sum);
+  }
+}
 
 export class Motion {
   private readonly random: () => number;
@@ -137,6 +149,7 @@ export class Motion {
     const weights = this.expression(dt);
     this.addSpeech(weights);
     const eyes = this.look(dt, weights);
+    capEyeClosure(weights);
     const blink = this.blink();
     weights.eyeBlinkLeft = Math.max(weights.eyeBlinkLeft ?? 0, blink);
     weights.eyeBlinkRight = Math.max(weights.eyeBlinkRight ?? 0, blink);
@@ -153,13 +166,15 @@ export class Motion {
       this.values[name] = ease(this.values[name] ?? 0, clamp(target[name] ?? 0, 0, 1), 3.2, dt);
       out[name] = this.values[name];
     }
+    const peak: Weights = {};
     this.pulses = this.pulses.filter(({ pulse, t0 }) => {
       const e = envelope(this.time - t0, pulse.attack, pulse.hold, pulse.release);
       for (const [name, v] of Object.entries(pulse.weights)) {
-        add(out, name, v * pulse.amp * Math.max(0, e));
+        peak[name] = Math.max(peak[name] ?? 0, v * pulse.amp * Math.max(0, e));
       }
       return e >= 0;
     });
+    for (const [name, v] of Object.entries(peak)) add(out, name, v);
     return out;
   }
 
