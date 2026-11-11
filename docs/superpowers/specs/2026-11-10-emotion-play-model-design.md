@@ -364,8 +364,8 @@ general tendencies of the appraisal. The changes, on top of the first addendum:
 
 The reference rows and the night of the first addendum move as listed in `docs/emotion/README.md`, section "После
 второй проверки чувств": rest, bluff caught and bluff through do not move, the heater within 0.08, the bad beat, the losses and the quiet hands
-lower by up to 0.30 (Lola's bluff after the bad beat 1.43 to 1.13: no double count of the reveal, no joy from aces,
-a folded blind is a small loss), and the mean aggression of the night against a raiser 0 to 0.11 lower (each fold is
+lower by up to 0.35 (Lola's bluff after the bad beat 1.45 to 1.10: no double count of the reveal, no joy from aces,
+a folded blind is a small loss), and the mean aggression of the night against a raiser 0 to 0.12 lower (each fold is
 now a small loss). All shape assertions hold.
 
 ## Delivery
