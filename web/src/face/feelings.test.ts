@@ -71,6 +71,7 @@ describe('every emotion has a face', () => {
     expect(total(x.weights)).toBe(0);
     expect(x.head).toEqual([0, 0, 0]);
     expect(x.blink).toBe(1);
+    expect(x.shine).toBe(1);
   });
 
   it('shows anger as a cold stare: drawn brows, tight lids and lips, raised chin, head down', () => {
@@ -129,6 +130,16 @@ describe('every emotion has a face', () => {
         .join(),
     );
     expect(new Set(keys).size).toBe(EMOTIONS.length);
+  });
+});
+
+describe('the shine of her eyes', () => {
+  it('brightens with joy and hope and dims with sad feelings, continuously', () => {
+    expect(of({ joy: 0.8 }).shine).toBeGreaterThan(1.15);
+    expect(of({ hope: 0.8 }).shine).toBeGreaterThan(1.1);
+    expect(of({ distress: 0.8 }).shine).toBeLessThan(0.6);
+    expect(of({ disappointment: 0.8 }).shine).toBeLessThan(0.65);
+    expect(of({ shame: 0.4 }).shine).toBeGreaterThan(of({ shame: 0.8 }).shine);
   });
 });
 

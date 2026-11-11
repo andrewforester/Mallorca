@@ -16,6 +16,7 @@ export interface Pose {
   neck: Angles;
   spine: Angles;
   shoulder: number;
+  shine: number;
 }
 
 export interface MotionOptions {
@@ -97,6 +98,7 @@ export class Motion {
   private offset: [number, number] = [0, 0];
   private eyes: [number, number] = [0, 0];
   private head: Angles = [0, 0, 0];
+  private shine = 1;
   private breathPhase = 0;
   private nextBlink = 1.5;
   private nextSaccade = 0;
@@ -157,7 +159,8 @@ export class Motion {
     for (const name of Object.keys(weights)) {
       weights[name] = clamp(weights[name] ?? 0, 0, 1);
     }
-    return { weights, eyes, ...this.body(dt) };
+    this.shine = ease(this.shine, this.frame?.shine ?? 1, 1.5, dt);
+    return { weights, eyes, ...this.body(dt), shine: this.shine };
   }
 
   private expression(dt: number): Weights {
@@ -246,7 +249,7 @@ export class Motion {
     return [yaw, pitch];
   }
 
-  private body(dt: number): Omit<Pose, 'weights' | 'eyes'> {
+  private body(dt: number): Omit<Pose, 'weights' | 'eyes' | 'shine'> {
     const d = this.frame?.shown[2] ?? 0;
     const [pitch, yaw, roll] = this.frame?.head ?? [0, 0, 0];
     const nervous = this.frame?.idle.nervous ?? 0;

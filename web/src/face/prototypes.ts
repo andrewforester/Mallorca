@@ -8,6 +8,7 @@ export interface FacePrototype {
   head: Angles;
   gaze: readonly [number, number];
   blink: number;
+  shine: number;
 }
 
 type Cues = Record<string, Cue>;
@@ -34,9 +35,14 @@ const face = (
   head: Angles = [0, 0, 0],
   gaze: readonly [number, number] = [0, 0],
   blink = 1,
-): FacePrototype => ({ weights, head, gaze, blink });
+): FacePrototype => ({ weights, head, gaze, blink, shine: 1 });
 
-export const EMOTION_FACES: Readonly<Record<Emotion, FacePrototype>> = {
+const shining = (prototype: FacePrototype, shine: number): FacePrototype => ({
+  ...prototype,
+  shine,
+});
+
+const FACES: Readonly<Record<Emotion, FacePrototype>> = {
   anger: face(
     {
       ...sides('browLateral', 0.7),
@@ -196,6 +202,24 @@ export const EMOTION_FACES: Readonly<Record<Emotion, FacePrototype>> = {
     0.3,
   ),
 };
+
+const SHINE: Readonly<Record<Emotion, number>> = {
+  joy: 1.3,
+  hope: 1.25,
+  surprise: 1.2,
+  pride: 1.15,
+  relief: 1.1,
+  fear: 1,
+  anger: 0.95,
+  injustice: 0.8,
+  shame: 0.5,
+  disappointment: 0.45,
+  distress: 0.4,
+};
+
+export const EMOTION_FACES: Readonly<Record<Emotion, FacePrototype>> = Object.fromEntries(
+  Object.entries(FACES).map(([e, prototype]) => [e, shining(prototype, SHINE[e as Emotion])]),
+) as Record<Emotion, FacePrototype>;
 
 export const CONTROL_FACE: FacePrototype = face({
   ...sides('mouthLipsPress', 0.6),

@@ -19,6 +19,7 @@ export interface Expression {
   head: [number, number, number];
   gaze: [number, number];
   blink: number;
+  shine: number;
 }
 
 export const TONIC = 0.9;
@@ -101,6 +102,7 @@ export function expressionOf(f: Feelings): Expression {
   const head: [number, number, number] = [0, 0, 0];
   const gaze: [number, number] = [0, 0];
   let blink = 1;
+  let shine = 1;
   for (const { face, level, hidden } of layersOf(f)) {
     for (const [name, [value, threshold]] of Object.entries(face.weights)) {
       const share = shownShare(hidden, CONTROLLABLE[regionOf(name)], level);
@@ -109,10 +111,12 @@ export function expressionOf(f: Feelings): Expression {
     }
     addScaled(head, face.head, level * shownShare(hidden, HEAD_CONTROLLABLE, level));
     addScaled(gaze, face.gaze, level * shownShare(hidden, GAZE_CONTROLLABLE, level));
-    blink *= 1 + activation(level, 0) * (face.blink - 1);
+    const a = activation(level, 0);
+    blink *= 1 + a * (face.blink - 1);
+    shine *= 1 + a * (face.shine - 1);
   }
   const weights: Weights = {};
   for (const [name, values] of parts) weights[name] = combine(values);
   oppose(weights);
-  return { weights, head, gaze, blink };
+  return { weights, head, gaze, blink, shine };
 }

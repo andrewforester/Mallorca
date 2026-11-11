@@ -425,14 +425,14 @@ what it returns.
   saturating at 1); layers combine per control by the soft maximum `1 - Π(1 - v)`, and a smile and a frown, or a
   raised lid and a blink, give way to each other by `0.8 min`. The mask hides a felt emotion per region (mouth 0.9,
   eyes 0.5, brows 0.35, head 0.7, gaze 0.6) and leaks up to half of it as the feeling nears 1; the temperament is not
-  masked. Head and gaze offsets sum, blink factors multiply. `ANCHORS`, `blendOf` and `faceOf` (PAD-placed anchors)
+  masked. Head and gaze offsets grow linearly with the level and sum; blink and eye shine factors multiply (shine brightens with joy, hope, surprise and pride, dims with distress, disappointment and shame). `ANCHORS`, `blendOf` and `faceOf` (PAD-placed anchors)
   remain only for the emotion lab.
 - `maskOf` is the poker face of `emotion`, re-exported, so the face and the prompt read the same mask;
   `feltPadOf(snapshot)` is half the mood plus every emotion's PAD point (surprise left out); `shownPadOf(felt,
 mask, acted)` blends the felt point toward the acted one (neutral when null).
 - `STANCES` gives the acted face of a `Stance`: a bluff acts confident `(0.2, 0, 0.6)`, a hidden strong hand keeps a
   neutral face (null).
-- `faceFrame(snapshot, presenting, look)` takes what her persona presents (`{ stance, effort }`, or null) and returns a `FaceFrame`: `felt`, `shown`, `mask`, the `weights` of `expressionOf` shaped by the look and kept in [0, 1], the `head` and `gaze` offsets that `Motion` adds to her pose,
+- `faceFrame(snapshot, presenting, look)` takes what her persona presents (`{ stance, effort }`, or null) and returns a `FaceFrame`: `felt`, `shown`, `mask`, the `weights` of `expressionOf` shaped by the look and kept in [0, 1], the `head` and `gaze` offsets that `Motion` adds to her pose, the eye `shine` that `Motion` eases into the pose and `RigAvatar` turns into the gloss, clearcoat and iris light of her eyes (`eyeShineOf`, today's glossy eye at 1),
   with `mask = maskOf(traits.mask, effort or 0, overload)`, the view's own mask,
   `idle` (`nervous = 0.7 fear + 0.4 shame + 0.3 max(0, -approach of mood)`, `arousal` of the felt point and the look's
   `blinkRate` times the blink factor of her feelings) and the `prosody` of her voice. Nervousness reads the felt state, so the mask never hides it.

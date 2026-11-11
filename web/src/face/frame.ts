@@ -23,6 +23,7 @@ export interface FaceFrame {
   weights: Weights;
   head: [number, number, number];
   gaze: [number, number];
+  shine: number;
   idle: IdleState;
   prosody: Prosody;
 }
@@ -56,6 +57,7 @@ export function faceFrame(
     weights: withinRange(shaped(face.weights, look, 1)),
     head: face.head,
     gaze: face.gaze,
+    shine: face.shine,
     idle: { nervous: nervousOf(s), arousal: felt[1], blinkRate: look.blink * face.blink },
     prosody: prosodyOf(shown, s.load.overload, sadnessOf(s)),
   };

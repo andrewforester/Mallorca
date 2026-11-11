@@ -154,7 +154,7 @@ function render(): void {
     `маска ${f.mask.toFixed(2)}`,
     '',
     `голова: наклон ${f.head[0].toFixed(2)}, поворот ${f.head[1].toFixed(2)}, крен ${f.head[2].toFixed(2)}`,
-    `взгляд: ${f.gaze[0].toFixed(2)} ${f.gaze[1].toFixed(2)}, моргание ×${(f.idle.blinkRate / MALLORCA_LOOK.blink).toFixed(2)}`,
+    `взгляд: ${f.gaze[0].toFixed(2)} ${f.gaze[1].toFixed(2)}, моргание ×${(f.idle.blinkRate / MALLORCA_LOOK.blink).toFixed(2)}, блеск ×${f.shine.toFixed(2)}`,
     '',
     'сильнейшие мышцы:',
     ...top,
