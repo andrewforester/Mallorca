@@ -24,6 +24,7 @@ export type TableEvent =
       decided: Decided;
       lastEquity?: number;
       aggressor?: Aggressor;
+      toCallBb?: number;
     }
   | { kind: 'ownMove'; move: 'bet'; amountBb: number; potBb: number; equity: number }
   | { kind: 'chat'; signal: ChatSignal };
@@ -50,7 +51,7 @@ const pct = (x: number): string => `${Math.round(x * 100)}%`;
 
 const BLANK = {
   realized: true,
-  resolved: 0,
+  spared: 0,
   self: 0,
   opponent: 0,
   luck: 0,
@@ -62,7 +63,25 @@ type Axes = Omit<Appraisal, 'control'> & { control?: number };
 
 function deal(e: Extract<TableEvent, { kind: 'deal' }>): Axes {
   const value = 0.6 * smoothstep(0.6, 0.85, e.equity);
-  return { ...BLANK, value, luck: 1, reason: `a starting hand, equity ${pct(e.equity)}` };
+  return {
+    ...BLANK,
+    realized: false,
+    value,
+    luck: 1,
+    reason: `a starting hand, equity ${pct(e.equity)}`,
+  };
+}
+
+const priceOf = (m: Money): number => {
+  const toCall = m.toCallBb ?? 0;
+  return toCall > 0 ? toCall / (m.potBb + toCall) : 0;
+};
+
+function improbability(before: number, after: number): number {
+  if (after > before) {
+    return 1 - before / after;
+  }
+  return after < before ? 1 - (1 - before) / (1 - after) : 0;
 }
 
 function street(e: Extract<TableEvent, { kind: 'street' }>): Axes | null {
@@ -70,15 +89,19 @@ function street(e: Extract<TableEvent, { kind: 'street' }>): Axes | null {
   if (before === undefined) {
     return null;
   }
-  const delta = e.equity - before;
-  const swing = Math.abs(delta);
+  const price = priceOf(e);
+  const above = (equity: number): number => Math.max(0, equity - price);
+  const delta = above(e.equity) - above(before);
+  const opponent = e.cause === 'opponent';
+  const open = e.equity > 0 && e.equity < 1;
   return {
     ...BLANK,
+    realized: !open,
     value: delta * (0.3 + 0.7 * scaled(atStakeOf(e))),
-    ...(e.cause === 'opponent' ? { opponent: 1 } : { luck: 1 }),
-    resolved: swing,
+    ...(opponent ? { opponent: 1 } : { luck: 1 }),
+    spared: Math.max(0, delta),
     expected: before,
-    unexpected: saturate(3 * (swing - 0.15)),
+    unexpected: opponent ? 0 : smoothstep(0.3, 0.95, improbability(before, e.equity)),
     reason: `equity ${pct(before)} to ${pct(e.equity)}`,
   };
 }
@@ -111,21 +134,24 @@ function heFolded(netBb: number, traits: Traits): Axes {
   return {
     ...BLANK,
     value: settled(netBb),
-    resolved: 1,
+    spared: 1,
     self: mine,
     opponent: 1 - mine,
     reason: `he folded to her, she won ${Math.abs(netBb)} bb`,
   };
 }
 
-function sheFolded(netBb: number, belief: number): Axes {
+function sheFolded(e: Extract<TableEvent, { kind: 'result' }>, traits: Traits): Axes {
+  const belief = e.lastEquity ?? 0.5;
+  const mine = shareOf(traits.selfBlame, e.aggressor);
   return {
     ...BLANK,
-    opponent: 1,
-    resolved: 1,
+    value: -settled(e.netBb),
+    self: mine,
+    opponent: 1 - mine,
     expected: belief,
-    value: -0.35 * settled(netBb) * smoothstep(0.35, 0.75, belief),
-    reason: `she folded, ${Math.abs(netBb)} bb gone, belief ${pct(belief)}`,
+    spared: settled((1 - belief) * (e.toCallBb ?? 0)),
+    reason: `she folded, ${Math.abs(e.netBb)} bb gone, belief ${pct(belief)}`,
   };
 }
 
@@ -138,7 +164,7 @@ function showdown(e: Extract<TableEvent, { kind: 'result' }>, traits: Traits): A
   return {
     ...BLANK,
     value: lost ? -settled(netBb) : settled(netBb),
-    resolved: 1,
+    spared: lost ? 0 : 1,
     expected,
     luck,
     unexpected: luck,
@@ -149,11 +175,10 @@ function showdown(e: Extract<TableEvent, { kind: 'result' }>, traits: Traits): A
 }
 
 function result(e: Extract<TableEvent, { kind: 'result' }>, traits: Traits): Axes {
-  const expected = e.lastEquity ?? 0.5;
   if (e.decided === 'heFolded') {
     return heFolded(e.netBb, traits);
   }
-  return e.decided === 'sheFolded' ? sheFolded(e.netBb, expected) : showdown(e, traits);
+  return e.decided === 'sheFolded' ? sheFolded(e, traits) : showdown(e, traits);
 }
 
 const CHAT: Readonly<Record<ChatSignal, readonly [number, boolean]>> = {

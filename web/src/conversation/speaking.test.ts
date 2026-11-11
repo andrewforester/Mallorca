@@ -341,7 +341,7 @@ describe('what the face reads', () => {
     const t = chatty();
     t.begin('Ah Ad', '7c 2d', 'Qs Jh 8d 4c 9h');
     const dealt = t.conversation.impulses();
-    expect(dealt.some((i) => i.emotion === 'joy')).toBe(true);
+    expect(dealt.some((i) => i.emotion === 'hope')).toBe(true);
     expect(t.conversation.impulses()).toEqual([]);
   });
 

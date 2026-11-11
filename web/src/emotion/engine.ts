@@ -121,9 +121,10 @@ class EmotionEngine implements Engine {
       return { ...e, previousEquity: e.previousEquity ?? p.equity };
     }
     if (e.kind === 'result') {
+      const equity = e.decided === 'showdown' ? lastEquityOf(p) : (p?.equity ?? 0.5);
       return {
         ...e,
-        lastEquity: e.lastEquity ?? beliefOf(lastEquityOf(p), this.foldChance),
+        lastEquity: e.lastEquity ?? beliefOf(equity, this.foldChance),
         aggressor: e.aggressor ?? this.aggressor,
       };
     }

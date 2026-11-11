@@ -246,7 +246,18 @@ describe('a persona at the table', () => {
     played.act({ kind: 'fold' }, 3000);
     expect(entries(played.persona, 'ownMove')).toEqual([]);
     const [end] = entries(played.persona, 'result');
-    expect(end?.event).toMatchObject({ kind: 'result', decided: 'sheFolded' });
+    expect(end?.event).toMatchObject({ kind: 'result', decided: 'sheFolded', toCallBb: 2 });
+  });
+
+  it('reads a narrowed range against the price of his bet she faces', () => {
+    const played = deal('Kh Qd', '7c 6c', 'Kc 8d 4s 2h 3c');
+    [call, check, check, raiseTo(40)].forEach((action, k) => played.act(action, (k + 1) * 500));
+    played.persona.narrow(SETS_AND_TWO_PAIR, 1);
+    const [narrowed] = entries(played.persona, 'street');
+    expect(narrowed?.event).toMatchObject({ kind: 'street', cause: 'opponent', toCallBb: 2 });
+    played.act(call, 3000);
+    const [called] = entries(played.persona, 'street');
+    expect(called?.event).toMatchObject({ toCallBb: 0 });
   });
 
   it('ends a hand he folds to her bet as decided by him', () => {

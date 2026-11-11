@@ -388,13 +388,20 @@ describe('engine', () => {
   });
 
   it('ignores cards shown after the hand is over', () => {
-    const engine = createEngine(MALLORCA);
-    engine.event({ kind: 'deal', equity: 0.7, potBb: 40, investedBb: 20 });
-    engine.event({ kind: 'result', netBb: -20, decided: 'showdown' });
-    engine.event({ kind: 'street', equity: 0.9, potBb: 40, investedBb: 20 });
-    engine.step(2);
-    expect(engine.snapshot().prospect).toBeNull();
-    expect(engine.snapshot().emotions.hope).toBe(0);
+    const played = (shown: boolean) => {
+      const engine = createEngine(MALLORCA);
+      engine.event({ kind: 'deal', equity: 0.7, potBb: 40, investedBb: 20 });
+      engine.event({ kind: 'result', netBb: -20, decided: 'showdown' });
+      const late = shown
+        ? engine.event({ kind: 'street', equity: 0.9, potBb: 40, investedBb: 20 })
+        : [];
+      engine.step(2);
+      return { late, snapshot: engine.snapshot() };
+    };
+    const { late, snapshot } = played(true);
+    expect(late).toEqual([]);
+    expect(snapshot.prospect).toBeNull();
+    expect(snapshot.emotions).toEqual(played(false).snapshot.emotions);
   });
 
   it('starts a neutral character from the blueprint', () => {
@@ -424,6 +431,27 @@ describe('engine', () => {
     expect(won.after).toBeLessThan(0.01);
     const pushed = hand('sheFolded');
     expect(pushed.after).toBeGreaterThan(0.05);
+  });
+
+  it('folds with the belief she holds now, not the one before the last change', () => {
+    const engine = createEngine(MALLORCA);
+    engine.event({ kind: 'deal', equity: 0.14, potBb: 19.3, investedBb: 9.65, streetsLeft: 0 });
+    engine.event({
+      kind: 'street',
+      equity: 0.37,
+      cause: 'opponent',
+      potBb: 38.6,
+      investedBb: 9.65,
+      streetsLeft: 0,
+      toCallBb: 19.3,
+    });
+    const impulses = engine.event({
+      kind: 'result',
+      netBb: -9.65,
+      decided: 'sheFolded',
+      toCallBb: 19.3,
+    });
+    expect(impulses[0]?.reason).toContain('belief 37%');
   });
 
   it('lets hope and fear fade after the hand instead of dropping them', () => {

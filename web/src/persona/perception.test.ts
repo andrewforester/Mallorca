@@ -117,7 +117,7 @@ function raisedOnTheFlop(her: string): Hand {
 const equityOf = (hand: Hand): number => hand.feeling.snapshot().prospect?.equity ?? Number.NaN;
 
 describe("her equity against the player's range", () => {
-  it('drops on her top pair when his raise narrows him to strength', () => {
+  it('makes her afraid and angry, not robbed, when his raise narrows him to strength', () => {
     const plain = raisedOnTheFlop('Kh Qd');
     const read = raisedOnTheFlop('Kh Qd');
     read.feeling.narrow(SETS_AND_TWO_PAIR, read.state());
@@ -125,10 +125,13 @@ describe("her equity against the player's range", () => {
     expect(equityOf(read)).toBeLessThan(0.3);
     const before = plain.feeling.at(4500).emotions;
     const after = read.feeling.at(4500).emotions;
-    expect(after.disappointment).toBeGreaterThan(before.disappointment + 0.1);
-    expect(after.surprise).toBeGreaterThan(before.surprise + 0.1);
-    expect(after.injustice).toBeCloseTo(before.injustice, 12);
+    expect(after.fear).toBeGreaterThan(before.fear);
     expect(after.anger).toBeGreaterThan(before.anger);
+    expect(after.disappointment).toBeGreaterThan(before.disappointment);
+    expect(after.disappointment).toBeLessThan(after.fear);
+    expect(after.surprise).toBeCloseTo(before.surprise, 12);
+    expect(after.injustice).toBeCloseTo(before.injustice, 12);
+    expect(after.distress).toBeCloseTo(before.distress, 12);
     read.feeling.advance(5000);
     plain.feeling.advance(5000);
     expect(read.feeling.snapshot().emotions.fear).toBeGreaterThan(
