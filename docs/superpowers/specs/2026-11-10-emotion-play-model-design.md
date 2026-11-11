@@ -358,8 +358,9 @@ general tendencies of the appraisal. The changes, on top of the first addendum:
    above the price, `max(0, eq − toCall / (pot + toCall))`, before and after at the same price. A polarizing river bet
    that lifts her equity from 14% to 37% at a price of 33% is now hope +0.03 instead of joy +0.18.
 4. **Surprise is improbability.** Equity is a martingale, so a rise from `e0` to `e1` has probability at most `e0 / e1`
-   and a fall at most `(1 − e0) / (1 − e1)`. `unexpected = smoothstep(0.3, 0.95, 1 − bound)` for a card; a 78%
-   favourite who wins is not surprised, a 90% favourite who loses is.
+   and a fall at most `(1 − e0) / (1 − e1)`. `unexpected = smoothstep(0.3, 0.95, 1 − bound) · sat(4 · |Δequity|)` for a card, unlikely and
+   large at once; a 78% favourite who wins is not surprised, a 90% favourite who loses is, and a drop from 93% to 82%
+   barely.
 
 The reference rows and the night of the first addendum move as listed in `docs/emotion/README.md`, section "После
 второй проверки чувств": rest, bluff caught and bluff through do not move, the heater within 0.08, the bad beat, the losses and the quiet hands

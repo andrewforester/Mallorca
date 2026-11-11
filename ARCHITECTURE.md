@@ -359,28 +359,27 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   `0.5 ^ ((seconds / T + hands / H) / halfLifeFactor)` (`decay` with a `Clock`); at `REFERENCE_HAND_S = 20` s per
   hand both give half.
 - Appraisal (`appraisal.ts`, `feelings.ts`): `appraisalOf(event, { prospect, pressure, traits })` maps every
-  `TableEvent` to the same axes (`Appraisal`: `value` signed, `realized`, `spared`, the shares `self`, `opponent`
-  and `luck`, `expected`, `unexpected`, `control`), sizes of bets and equity changes in bb through
-  `scaled(bb) = 1 - e^(-|bb| / 20)` and of results through `settled(bb) = |bb| / (|bb| + 20)`, the same slope for
-  small pots and still growing past 60 bb; `impulsesOf` turns the
-  axes into impulses by one set of formulas (a bad realized outcome is distress, injustice, anger, shame and
-  disappointment split by blame and coping; a bad prospect fear or anger and a light disappointment of the hope
-  held; a good outcome joy and pride; a good prospect hope; relief is the fear held times `spared`, what the event
-  spared her; surprise is `unexpected`) times her gains. No event kind names an emotion.
-  `TableEvent`s: `deal` and `street` (her perceived equity and the money: pot, invested, stack behind, streets
-  left, `toCallBb` the price of his bet she faces; every change of equity is felt, with no threshold, as a prospect,
-  realized only when it settles the outcome at 0 or 1; facing his bet only the equity above the price counts; its
-  `cause` is `cards` for a new card or the reveal, the luck's share, with surprise by how improbable the change
-  was, or `opponent` when his action narrowed his range, with no surprise), `opponentBet` (`-0.6 scaled(size) 4 eq (1 - eq)`,
-  and a `raise` against her multiplies it by `1 + 0.5 (1 + sat(pressure / 3))` and builds a session `pressure`;
-  felt through `leaningOf(coping, equity)`), `opponentCall`, `ownMove` (her bet with the pot before it), `result`
-  with `decided` and `aggressor`, who bet or raised last (`heFolded`: hers, pride by coping, no luck; `showdown`:
-  luck by how unexpected, the rest split by `shareOf(stance, aggressor) = σ(logit stance ± ln 3)` with self-blame
-  on a loss and coping on a win as the stance: her own bet that got called is mostly her doing, his bet she called
-  mostly his; `sheFolded`: the money she put in is a loss shared by the same rule with self-blame, the belief she
-  gave up disappoints, and relief comes only from what the fold spared, `settled((1 - belief) toCallBb)`) and `chat` (a `ChatSignal`, the
-  opponent's, realized or prospective). Her bet and his call have no impulses of their own; the engine remembers
-  the aggressor of the hand and fills it in. A `street` after the hand is over is ignored.
+  `TableEvent` to the same axes (`Appraisal`: `value` signed, `realized`, `spared`, the shares `self`, `opponent` and
+  `luck`, `expected`, `unexpected`, `control`), sizes of bets and equity changes in bb through `scaled(bb) = 1 -
+  e^(-|bb| / 20)` and of results through `settled(bb) = |bb| / (|bb| + 20)`, the same slope for small pots and still
+  growing past 60 bb; `impulsesOf` turns the axes into impulses by one set of formulas (a bad realized outcome is
+  distress, injustice, anger, shame and disappointment split by blame and coping; a bad prospect fear or anger and a
+  light disappointment of the hope held; a good outcome joy and pride; a good prospect hope; relief is the fear held
+  times `spared`, what the event spared her; surprise is `unexpected`) times her gains. No event kind names an
+  emotion. `TableEvent`s: `deal` and `street` (her perceived equity and the money: pot, invested, stack behind,
+  streets left, `toCallBb` the price of his bet she faces; every change of equity is felt, with no threshold, as a
+  prospect, realized only when it settles the outcome at 0 or 1; facing his bet only the equity above the price
+  counts; its `cause` is `cards` for a new card or the reveal, the luck's share, with surprise by how improbable and
+  how large the change was, or `opponent` when his action narrowed his range, with no surprise), `opponentBet` (`-0.6
+  scaled(size) 4 eq (1 - eq)`, and a `raise` against her multiplies it by `1 + 0.5 (1 + sat(pressure / 3))` and builds
+  a session `pressure`; felt through `leaningOf(coping, equity)`), `opponentCall`, `ownMove` (her bet with the pot
+  before it), `result` with `decided` and `aggressor`, who bet or raised last (`heFolded`: hers, pride by coping, no
+  luck; `showdown`: luck by how unexpected, the rest split by `shareOf(stance, aggressor) = σ(logit stance ± ln 3)`
+  with self-blame on a loss and coping on a win as the stance: her own bet that got called is mostly her doing, his
+  bet she called mostly his; `sheFolded`: the money she put in is a loss shared by the same rule with self-blame, the
+  belief she gave up disappoints, and relief comes only from what the fold spared, `settled((1 - belief) toCallBb)`)
+  and `chat` (a `ChatSignal`, the opponent's, realized or prospective). Her bet and his call have no impulses of their
+  own; the engine remembers the aggressor of the hand and fills it in. A `street` after the hand is over is ignored.
 - Belief (`tension.ts`): her bet sets `foldChanceOf(bet, pot) = bet / (pot + bet)`; his call or bet, a deal and
   a result reset it to 0. `beliefOf(equity, foldChance) = foldChance + (1 - foldChance) equity` replaces the
   equity in the tension, the leaning and the expectation of a result; `Snapshot.belief` is the belief now (null
