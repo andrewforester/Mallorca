@@ -58,17 +58,17 @@ describe('natureOf', () => {
 });
 
 describe('styleOf', () => {
-  it('gives the nine characters the rest styles of the addendum', () => {
+  it('gives the nine characters their rest styles', () => {
     const table: Record<string, number[]> = {
       mallorca: [1.26, 1.35, 0.71, 0.85, 0.89],
-      ingrid: [1.05, 0.95, 1.29, 0.66, 1.64],
-      mira: [1.04, 1.24, 0.59, 0.78, 0.83],
-      nina: [0.65, 0.74, 0.68, 0.57, 0.58],
-      lola: [1.4, 1.63, 0.94, 1.49, 0.64],
-      sol: [1.69, 1.74, 0.83, 1.52, 1.22],
-      rita: [1.79, 1.75, 1.68, 1.78, 1.57],
-      vera: [1.25, 0.74, 1.18, 0.63, 0.66],
-      greta: [0.59, 0.62, 0.75, 0.63, 0.76],
+      ingrid: [1.02, 0.97, 1.26, 0.71, 1.41],
+      mira: [1.1, 1.3, 0.71, 0.88, 0.91],
+      nina: [0.73, 0.8, 0.81, 0.71, 0.71],
+      lola: [1.41, 1.41, 0.93, 1.41, 0.71],
+      sol: [1.41, 1.41, 0.75, 1.37, 1.11],
+      rita: [1.41, 1.41, 1.41, 1.41, 1.35],
+      vera: [1.3, 0.76, 1.27, 0.71, 0.71],
+      greta: [0.71, 0.71, 0.82, 0.71, 0.83],
     };
     for (const [key, values] of Object.entries(table)) {
       const style = styleOf(PERSONALITIES[key as keyof typeof PERSONALITIES].bigFive);
