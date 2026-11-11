@@ -203,7 +203,12 @@ class TableFeeling implements Feeling {
       return;
     }
     const won = hand.awarded[this.seat] > 0;
-    this.feel({ kind: 'result', netBb, decided: won ? 'heFolded' : 'sheFolded' });
+    this.feel({
+      kind: 'result',
+      netBb,
+      decided: won ? 'heFolded' : 'sheFolded',
+      toCallBb: this.toCall(hand),
+    });
   }
 
   private whenMoneyWentIn(hand: HandState): number {
@@ -221,7 +226,13 @@ class TableFeeling implements Feeling {
       investedBb: (hand.startStack - behind) / bb,
       stackBb: behind / bb,
       streetsLeft: STREETS_LEFT[hand.board.length] ?? 0,
+      toCallBb: this.toCall(hand),
     };
+  }
+
+  private toCall(hand: HandState): number {
+    const his = this.streetChips[this.seat === 0 ? 1 : 0];
+    return Math.max(0, his - this.streetChips[this.seat]) / hand.bigBlind;
   }
 
   private equity(hand: HandState): number {

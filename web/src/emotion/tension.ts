@@ -10,6 +10,7 @@ export interface Money {
   investedBb: number;
   stackBb?: number;
   streetsLeft?: number;
+  toCallBb?: number;
 }
 
 export interface Prospect extends Money {
