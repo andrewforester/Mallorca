@@ -8,6 +8,7 @@ const NAMES = [
   'eyeLookLeftR',
   'eyeLookDownL',
   'eyeLookUpL',
+  'jawChinRaiseDL',
 ];
 const INDEX = new Map(NAMES.map((n, i) => [n, i]));
 const MAPPING = {
@@ -15,6 +16,8 @@ const MAPPING = {
   mouthSmileLeft: { mouthCornerPullL: 0.5 },
   eyeLookUpLeft: { eyeLookUpL: 1 },
 };
+
+const at = (name: string) => NAMES.indexOf(name);
 
 const run = (weights: Record<string, number>, eyes: [number, number] = [0, 0]) => {
   const out = new Float32Array(NAMES.length);
@@ -24,16 +27,25 @@ const run = (weights: Record<string, number>, eyes: [number, number] = [0, 0]) =
 
 describe('controlsOf', () => {
   it('clamps a weight above 1 to the full control', () => {
-    expect(run({ jawOpen: 1.4 })[0]).toBe(1);
+    expect(run({ jawOpen: 1.4 })[at('jawOpen')]).toBe(1);
+  });
+
+  it('softly limits a control that breaks the face beyond its range', () => {
+    const raise = (w: number) => run({ jawChinRaiseDL: w })[at('jawChinRaiseDL')]!;
+    expect(raise(0.1)).toBeCloseTo(0.1, 1);
+    expect(raise(1)).toBeLessThan(0.3);
+    expect(raise(1)).toBeGreaterThan(raise(0.5));
   });
 
   it('scales a weight by its mapping gain', () => {
-    expect(run({ mouthSmileLeft: 0.6 })[1]).toBeCloseTo(0.3);
+    expect(run({ mouthSmileLeft: 0.6 })[at('mouthCornerPullL')]).toBeCloseTo(0.3);
   });
 
   it('drives a rig control named directly by its own name', () => {
-    expect(run({ mouthCornerPullL: 0.4 })[1]).toBeCloseTo(0.4);
-    expect(run({ mouthCornerPullL: 0.4, mouthSmileLeft: 0.6 })[1]).toBeCloseTo(0.7);
+    expect(run({ mouthCornerPullL: 0.4 })[at('mouthCornerPullL')]).toBeCloseTo(0.4);
+    expect(run({ mouthCornerPullL: 0.4, mouthSmileLeft: 0.6 })[at('mouthCornerPullL')]).toBeCloseTo(
+      0.7,
+    );
   });
 
   it('ignores a name with no mapping', () => {
