@@ -1,10 +1,12 @@
 import { EMOTIONS, EMOTION_PAD } from '../emotion/index.ts';
 export { OVERLOAD_MASK_LOSS, maskOf } from '../emotion/index.ts';
-import type { Impulse, Pad, Snapshot } from '../emotion/index.ts';
+import type { Emotion, Impulse, Pad, Snapshot } from '../emotion/index.ts';
 import { clamp, smoothstep } from './math.ts';
-import { EMOTION_PULSE, PULSE_FACES, shaped } from './anchors.ts';
+import { shaped } from './anchors.ts';
 import type { Weights } from './anchors.ts';
 import type { FaceLook } from './look.ts';
+import { CONTROL_FACE, EMOTION_FACES } from './prototypes.ts';
+import type { FacePrototype } from './prototypes.ts';
 
 export const EMOTION_DISPLAY_GAIN = 1;
 export const MOOD_DISPLAY_GAIN = 0.5;
@@ -52,7 +54,7 @@ export function pulsesFor(impulses: readonly Impulse[], mask: number, leak: numb
     if (i.amount < PULSE_THRESHOLD) {
       continue;
     }
-    const face = EMOTION_PULSE[i.emotion];
+    const face = i.emotion;
     strongest.set(face, Math.max(strongest.get(face) ?? 0, i.amount));
   }
   const s = smoothstep(0.3, 0.75, mask);
@@ -80,6 +82,12 @@ export function pulsesFor(impulses: readonly Impulse[], mask: number, leak: numb
   return plans;
 }
 
+const fullFace = (key: string): Weights => {
+  const face: FacePrototype =
+    key === 'control' ? CONTROL_FACE : (EMOTION_FACES[key as Emotion] ?? CONTROL_FACE);
+  return Object.fromEntries(Object.entries(face.weights).map(([n, [v]]) => [n, v]));
+};
+
 export interface Pulse {
   weights: Weights;
   amp: number;
@@ -92,7 +100,7 @@ export interface Pulse {
 
 export function pulsesOf(impulses: readonly Impulse[], mask: number, look: FaceLook): Pulse[] {
   return pulsesFor(impulses, mask, look.leak).map((plan) => ({
-    weights: shaped(PULSE_FACES[plan.face] ?? {}, look, 1),
+    weights: shaped(fullFace(plan.face), look, 1),
     amp: plan.amp,
     attack: plan.attack,
     hold: plan.hold,

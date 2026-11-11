@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MALLORCA, createEngine } from '../emotion/index.ts';
+import { MALLORCA, PERSONALITIES, createEngine } from '../emotion/index.ts';
 import type { Impulse, Personality, Snapshot } from '../emotion/index.ts';
 import { ANCHORS, blendOf, faceOf } from './anchors.ts';
 import { maskOf, pulsesFor, pulsesOf, shownPadOf } from './expression.ts';
@@ -111,6 +111,13 @@ describe('poker face', () => {
     expect(masked.some((p) => p.face === 'control')).toBe(true);
   });
 
+  it('plays the face of the emotion itself in a pulse', () => {
+    const anger: Impulse[] = [{ emotion: 'anger', amount: 0.6, reason: '' }];
+    const shame: Impulse[] = [{ emotion: 'shame', amount: 0.6, reason: '' }];
+    expect(pulsesOf(anger, 0, MALLORCA_LOOK)[0]!.weights.mouthLipsTightenUL).toBeGreaterThan(0.3);
+    expect(pulsesOf(shame, 0, MALLORCA_LOOK)[0]!.weights.mouthLipsPressL).toBeGreaterThan(0.3);
+  });
+
   it('resolves pulses into weights and blinks the control pulse twice', () => {
     const joy: Impulse[] = [{ emotion: 'joy', amount: 0.6, reason: '' }];
     const pulses = pulsesOf(joy, 0.95, MALLORCA_LOOK);
@@ -137,11 +144,38 @@ describe('frame', () => {
     expect(given.shown).not.toEqual(own.shown);
   });
 
-  it('is calm and neutral without feelings', () => {
-    const frame = faceFrame(createEngine(MALLORCA).snapshot(), null, MALLORCA_LOOK);
+  it('is calm and neutral without feelings on a neutral character', () => {
+    const frame = faceFrame(createEngine(PERSONALITIES.neutral).snapshot(), null, MALLORCA_LOOK);
     expect(frame.idle.nervous).toBeCloseTo(0);
-    expect(total(frame.weights)).toBeLessThan(0.5);
+    expect(total(frame.weights)).toBe(0);
+    expect(frame.head).toEqual([0, 0, 0]);
     expect(frame.idle.blinkRate).toBe(MALLORCA_LOOK.blink);
+  });
+
+  it('shows her temperament at rest: a hostile character looks hard, a warm one soft', () => {
+    const rest = (key: keyof typeof PERSONALITIES) =>
+      faceFrame(createEngine(PERSONALITIES[key]).snapshot(), null, MALLORCA_LOOK, 0);
+    const bully = rest('hotheadBraggart');
+    const warm = rest('lifeOfTheParty');
+    expect(bully.weights.mouthFrownLeft ?? 0).toBeGreaterThan(warm.weights.mouthFrownLeft ?? 0);
+    expect(warm.weights.mouthSmileLeft ?? 0).toBeGreaterThan(bully.weights.mouthSmileLeft ?? 0);
+    expect(warm.weights.mouthSmileLeft).toBeGreaterThan(0.15);
+  });
+
+  it('shows anger on her face at the levels the game reaches', () => {
+    const s = createEngine(MALLORCA).snapshot();
+    const angry = faceFrame({ ...s, emotions: { ...s.emotions, anger: 0.5 } }, null, MALLORCA_LOOK);
+    expect(angry.weights.browDownLeft).toBeGreaterThan(0.4);
+    expect(angry.weights.mouthLipsTightenUL).toBeGreaterThan(0.2);
+    expect(angry.head[0]).toBeGreaterThan(0.03);
+  });
+
+  it('keeps every weight within the range of the rig', () => {
+    const s = badBeat(HOT);
+    for (const v of Object.values(faceFrame(s, null, LOUD).weights)) {
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(1);
+    }
   });
 
   it('shows a bad beat on a hot temperament and barely on a cold one', () => {
