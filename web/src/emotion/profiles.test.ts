@@ -8,7 +8,6 @@ import { STYLE_SHARE, natureOf, styleOf } from './style.ts';
 const NINE = ['mallorca', 'ingrid', 'mira', 'nina', 'lola', 'sol', 'rita', 'vera', 'greta'];
 
 const EXTREMES: [string, string, number[]][] = [
-  ['boldSchemer', '+-+--', [0.43, -0.29, 0.34, -0.35, -0.34, 0.05]],
   ['nervousCareerist', '+++-+', [0.49, 0.67, 0.54, -0.63, 0.63, 0.35]],
   ['lifeOfTheParty', '+-++-', [0.4, -0.45, 0.45, 0.71, -0.54, 0.05]],
   ['caringActivist', '+++++', [0.46, 0.5, 0.65, 0.43, 0.43, 0.35]],
@@ -23,7 +22,6 @@ const EXTREMES: [string, string, number[]][] = [
   ['unshakableLoner', '-----', [-0.46, -0.5, -0.65, -0.43, -0.43, 0.35]],
   ['suspiciousGrump', '-+--+', [-0.4, 0.45, -0.45, -0.71, 0.54, 0.83]],
   ['easygoingHomebody', '---+-', [-0.49, -0.67, -0.54, 0.63, -0.63, 0.35]],
-  ['timidStickler', '-+-++', [-0.43, 0.29, -0.34, 0.35, 0.34, 0.83]],
 ];
 
 const MIDDLE: [string, number[]][] = [
@@ -34,7 +32,6 @@ const MIDDLE: [string, number[]][] = [
   ['quietTidy', [-0.22, 0.29, -0.48, 0.43, -0.2, 0.59]],
   ['softMiddle', [0.17, 0.21, -0.17, 0.16, -0.24, 0.46]],
   ['calmCurious', [0.58, 0.12, -0.03, 0.11, -0.45, 0.39]],
-  ['reservedConservative', [-0.4, 0.25, -0.4, 0.32, 0.05, 0.54]],
 ];
 
 function traitRow(key: string): number[] {
@@ -51,7 +48,7 @@ function traitRow(key: string): number[] {
 }
 
 describe('PERSONALITIES', () => {
-  it('holds the nine characters, the sixteen extremes, the eight intermediate and neutral', () => {
+  it('holds the nine characters, the fourteen extremes, the seven intermediate and neutral', () => {
     expect(Object.keys(PERSONALITIES)).toEqual([
       ...NINE,
       ...EXTREMES.map(([k]) => k),

@@ -69,12 +69,6 @@ export const CHARACTER_SHEETS: Readonly<Record<PersonalityKey, CharacterSheet>> 
     'Greta speaks rarely and notices everything. Quiet, cautious and patient, she waits for her moment.',
     'A rock: very few hands, small bets and the odd careful bluff.',
   ),
-  boldSchemer: sheet(
-    'Carla',
-    'a bold, smooth-talking schemer',
-    'Carla runs three side businesses, none of them on paper. Charming, quick and never nervous, she enjoys getting her way more than the prize.',
-    'A maniac: she plays almost every hand, raises and reraises, bluffs often and big, and will not let go once she is in.',
-  ),
   nervousCareerist: sheet(
     'Diana',
     'an ambitious, restless careerist',
@@ -159,12 +153,6 @@ export const CHARACTER_SHEETS: Readonly<Record<PersonalityKey, CharacterSheet>> 
     'Martha would rather be home with a pot of soup and a crossword. Unhurried, kind and content, very little upsets her.',
     'Tight, passive and honest: few hands, big bets when she has it, and she does not fold once she has decided to play.',
   ),
-  timidStickler: sheet(
-    'Edith',
-    'a timid, honest stickler',
-    'Edith is a librarian who returns her books before they are due. Careful, shy and kind, she hates taking risks.',
-    'A nit: very few hands, small bets, no bluffs, and she folds at the first sign of trouble.',
-  ),
   nervousPragmatist: sheet(
     'Joanna',
     'a blunt, slightly anxious mechanic',
@@ -206,12 +194,6 @@ export const CHARACTER_SHEETS: Readonly<Record<PersonalityKey, CharacterSheet>> 
     'a calm, curious museum guide',
     'Ada asks questions for a living and never tires of the answers. Curious and serene, she wants to know how every story ends.',
     'She plays lots of hands without much aggression and calls them down to the end.',
-  ),
-  reservedConservative: sheet(
-    'Ruth',
-    'a reserved, traditional choir singer',
-    'Ruth has sung in the church choir for thirty years and kept the same haircut for as long. Reserved and careful, she trusts what she knows.',
-    'A rock: tight and passive, small bets and few bluffs.',
   ),
   neutral: sheet(
     'Eva',

@@ -11,8 +11,8 @@ Flags: `--a`, `--b` (`math`, `cfr`, `cfr:<play file>`, a cfr bot with a bias aft
 
 Character bots: `style:<character>` plays cfr with the constant bias of her natural style without emotion
 (`2^tanh(atanh(0.7) nature)` per axis, strictly inside 0.5 to 2), and `persona:<character>` plays cfr with her
-persona feeling the session, for every one of the 34 keys of `PERSONALITIES` (the nine of the start screen such as
-`mallorca` or `rita`, the extremes such as `boldSchemer` or `timidStickler`, the intermediate such as `plainRealist`,
+persona feeling the session, for every one of the 31 keys of `PERSONALITIES` (the nine of the start screen such as
+`mallorca` or `rita`, the extremes such as `toughBoss` or `dreamyArtist`, the intermediate such as `plainRealist`,
 and `neutral`). Overrides follow `@`: Big Five traits in -1 to 1 and `suppression` in 0 to 1, for example
 `persona:nina@neuroticism=0.4,suppression=0.6`.
 
