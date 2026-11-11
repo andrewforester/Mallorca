@@ -5,6 +5,8 @@ import {
   CERTAINTY,
   EMOTIONS,
   EMOTION_PAD,
+  HALF_LIFE_S,
+  REFERENCE_HAND_S,
   addImpulse,
   decay,
   noEmotions,
@@ -24,7 +26,12 @@ const average: Personality = {
   suppression: 0.3,
 };
 
-const FAST_MOOD = { changeTimeS: 20, returnTimeS: 40 };
+const FAST_MOOD = {
+  changeTimeS: 20,
+  returnTimeS: 40,
+  changeHands: Infinity,
+  returnHands: Infinity,
+};
 
 const hot: Personality = {
   bigFive: {
@@ -133,7 +140,7 @@ describe('emotions', () => {
 
   it('halves an emotion after its half-life', () => {
     const start = withEmotions({ joy: 0.8 });
-    const later = decay(start, 30, () => 1);
+    const later = decay(start, { seconds: HALF_LIFE_S.joy, hands: 0 }, () => 1);
     expect(later.joy).toBeCloseTo(0.4);
   });
 
@@ -176,7 +183,12 @@ describe('emotions', () => {
 });
 
 describe('mood', () => {
-  const config = { changeTimeS: 600, returnTimeS: 1200 };
+  const config = {
+    changeTimeS: 600,
+    returnTimeS: 1200,
+    changeHands: Infinity,
+    returnHands: Infinity,
+  };
 
   it('finds the emotion center as the intensity weighted mean', () => {
     const center = emotionCenter(withEmotions({ joy: 0.5, anger: 0.5 }));
@@ -185,35 +197,55 @@ describe('mood', () => {
   });
 
   it('pulls the mood toward the emotion center and returns it to default without emotions', () => {
-    const pulled = stepMood([0, 0, 0], withEmotions({ anger: 1 }), 60, {
-      ...config,
-      defaultMood: [0, 0, 0],
-    });
+    const pulled = stepMood(
+      [0, 0, 0],
+      withEmotions({ anger: 1 }),
+      { seconds: 60, hands: 0 },
+      {
+        ...config,
+        defaultMood: [0, 0, 0],
+      },
+    );
     expect(pulled[0]).toBeLessThan(0);
     expect(pulled[1]).toBeGreaterThan(0);
-    const back = stepMood([-0.5, 0.5, 0.2], noEmotions(), 1200, {
-      ...config,
-      defaultMood: [0.1, 0, 0.1],
-    });
+    const back = stepMood(
+      [-0.5, 0.5, 0.2],
+      noEmotions(),
+      { seconds: 1200, hands: 0 },
+      {
+        ...config,
+        defaultMood: [0.1, 0, 0.1],
+      },
+    );
     expect(back[0]).toBeCloseTo(0.1);
   });
 
   it('lets steady emotions win over the return to the default mood', () => {
     let mood: readonly [number, number, number] = [0.3, 0.1, 0.1];
     for (let i = 0; i < 90; i++) {
-      mood = stepMood(mood, withEmotions({ distress: 0.6 }), 0.1, {
-        ...FAST_MOOD,
-        defaultMood: [0.3, 0.1, 0.1],
-      });
+      mood = stepMood(
+        mood,
+        withEmotions({ distress: 0.6 }),
+        { seconds: 0.1, hands: 0 },
+        {
+          ...FAST_MOOD,
+          defaultMood: [0.3, 0.1, 0.1],
+        },
+      );
     }
     expect(mood[0]).toBeLessThan(0.25);
   });
 
   it('pushes a mood beyond the center further into its octant', () => {
-    const pushed = stepMood([-0.6, 0.6, 0.3], withEmotions({ anger: 1 }), 30, {
-      ...config,
-      defaultMood: [0, 0, 0],
-    });
+    const pushed = stepMood(
+      [-0.6, 0.6, 0.3],
+      withEmotions({ anger: 1 }),
+      { seconds: 30, hands: 0 },
+      {
+        ...config,
+        defaultMood: [0, 0, 0],
+      },
+    );
     expect(pushed[0]).toBeLessThan(-0.6);
   });
 
@@ -224,10 +256,12 @@ describe('mood', () => {
 });
 
 describe('approach and certainty of the mood', () => {
+  const REFERENCE_SECOND = { seconds: 1, hands: 1 / REFERENCE_HAND_S };
+  const ONE_SECOND = { seconds: 1, hands: 0 };
   const held = (e: Partial<Emotions>, seconds: number, weights = APPROACH): number => {
     let value = 0;
     for (let t = 0; t < seconds; t++) {
-      value = stepAxis(value, withEmotions(e), 1, { ...GAME_MOOD, weights });
+      value = stepAxis(value, withEmotions(e), REFERENCE_SECOND, { ...GAME_MOOD, weights });
     }
     return value;
   };
@@ -246,7 +280,7 @@ describe('approach and certainty of the mood', () => {
     const seconds = Math.ceil((GAME_MOOD.returnTimeS / Math.sqrt(3)) * 0.5);
     let value = 0.5;
     for (let t = 0; t < seconds; t++) {
-      value = stepAxis(value, noEmotions(), 1, { ...GAME_MOOD, weights: CERTAINTY });
+      value = stepAxis(value, noEmotions(), ONE_SECOND, { ...GAME_MOOD, weights: CERTAINTY });
       expect(value).toBeGreaterThanOrEqual(0);
     }
     expect(value).toBe(0);

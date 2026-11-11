@@ -1,12 +1,25 @@
 import { EMOTIONS, EMOTION_PAD, clamp } from './emotions.ts';
-import type { Emotion, Emotions, Pad } from './emotions.ts';
+import type { Clock, Emotion, Emotions, Pad } from './emotions.ts';
 
 export interface MoodConfig {
   changeTimeS: number;
   returnTimeS: number;
+  changeHands: number;
+  returnHands: number;
 }
 
-export const GAME_MOOD: MoodConfig = { changeTimeS: 600, returnTimeS: 1200 };
+export const GAME_MOOD: MoodConfig = {
+  changeTimeS: 2400,
+  returnTimeS: 4800,
+  changeHands: 40,
+  returnHands: 80,
+};
+
+const changeOf = (clock: Clock, config: MoodConfig): number =>
+  clock.seconds / config.changeTimeS + clock.hands / config.changeHands;
+
+const returnOf = (clock: Clock, config: MoodConfig): number =>
+  clock.seconds / config.returnTimeS + clock.hands / config.returnHands;
 
 const ACTIVE = 0.05;
 const SQRT3 = Math.sqrt(3);
@@ -71,15 +84,13 @@ export interface MoodFrame extends MoodConfig {
   defaultMood: Pad;
 }
 
-export function stepMood(mood: Pad, e: Emotions, dt: number, frame: MoodFrame): Pad {
-  const { defaultMood } = frame;
-  const config = frame;
+export function stepMood(mood: Pad, e: Emotions, clock: Clock, frame: MoodFrame): Pad {
   const c = emotionCenter(e);
   if (!c) {
-    return moveToward(mood, defaultMood, (SQRT3 / config.returnTimeS) * dt);
+    return moveToward(mood, frame.defaultMood, SQRT3 * returnOf(clock, frame));
   }
   let next = mood;
-  const step = (c.intensity / config.changeTimeS) * dt;
+  const step = c.intensity * changeOf(clock, frame);
   if (dot(next, c.center) < dot(c.center, c.center)) {
     next = moveToward(next, c.center, step);
   } else {
@@ -119,18 +130,18 @@ export interface AxisFrame extends MoodConfig {
   weights: Readonly<Record<Emotion, number>>;
 }
 
-export function stepAxis(value: number, e: Emotions, dt: number, frame: AxisFrame): number {
+export function stepAxis(value: number, e: Emotions, clock: Clock, frame: AxisFrame): number {
   const c = axisCenter(e, frame.weights);
   const strength = c?.intensity ?? 0;
   let next = value;
   if (c) {
-    const distance = (strength / frame.changeTimeS) * dt;
+    const distance = strength * changeOf(clock, frame);
     next =
       value * c.center < c.center * c.center
         ? toward(value, c.center, distance)
         : value + Math.sign(c.center) * distance;
   }
-  const pull = (1 - Math.min(1, 3 * strength)) * (SQRT3 / frame.returnTimeS) * dt;
+  const pull = (1 - Math.min(1, 3 * strength)) * SQRT3 * returnOf(clock, frame);
   return clamp(toward(next, 0, pull));
 }
 

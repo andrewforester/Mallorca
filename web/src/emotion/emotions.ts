@@ -30,18 +30,39 @@ export const EMOTION_PAD: Readonly<Record<Emotion, Pad>> = {
   surprise: [0.1, 0.6, -0.1],
 };
 
+export const REFERENCE_HAND_S = 20;
+
+export interface Clock {
+  seconds: number;
+  hands: number;
+}
+
 export const HALF_LIFE_S: Readonly<Record<Emotion, number>> = {
   hope: 6,
   fear: 6,
-  joy: 30,
-  distress: 40,
+  joy: 60,
+  distress: 80,
   relief: 15,
-  disappointment: 30,
-  pride: 45,
-  shame: 60,
-  anger: 60,
-  injustice: 90,
+  disappointment: 60,
+  pride: 90,
+  shame: 120,
+  anger: 120,
+  injustice: 180,
   surprise: 1.2,
+};
+
+export const HALF_LIFE_HANDS: Readonly<Record<Emotion, number>> = {
+  hope: Infinity,
+  fear: Infinity,
+  joy: 3,
+  distress: 4,
+  relief: Infinity,
+  disappointment: 3,
+  pride: 4.5,
+  shame: 6,
+  anger: 6,
+  injustice: 9,
+  surprise: Infinity,
 };
 
 export const POSITIVE: ReadonlySet<Emotion> = new Set<Emotion>(['hope', 'joy', 'relief', 'pride']);
@@ -75,10 +96,11 @@ export function addImpulse(emotions: Emotions, emotion: Emotion, amount: number)
   return { ...emotions, [emotion]: 1 - (1 - emotions[emotion]) * (1 - a) };
 }
 
-export function decay(emotions: Emotions, dt: number, factor: (e: Emotion) => number): Emotions {
+export function decay(emotions: Emotions, clock: Clock, factor: (e: Emotion) => number): Emotions {
   const next = { ...emotions };
   for (const e of EMOTIONS) {
-    next[e] = emotions[e] * 0.5 ** (dt / (HALF_LIFE_S[e] * factor(e)));
+    const halfLives = clock.seconds / HALF_LIFE_S[e] + clock.hands / HALF_LIFE_HANDS[e];
+    next[e] = emotions[e] * 0.5 ** (halfLives / factor(e));
   }
   return next;
 }

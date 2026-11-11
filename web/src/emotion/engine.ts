@@ -13,8 +13,7 @@ import {
 } from './tension.ts';
 import type { Held } from './tension.ts';
 import { APPROACH, CERTAINTY, HALF_LIFE_S, decay, noEmotions, queue, rise } from './emotions.ts';
-import type { Pending } from './emotions.ts';
-import type { Emotions, Pad } from './emotions.ts';
+import type { Clock, Emotions, Pad, Pending } from './emotions.ts';
 import { GAME_MOOD, octantOf, stepAxis, stepMood } from './mood.ts';
 import type { MoodConfig } from './mood.ts';
 import { traitsOf } from './personality.ts';
@@ -63,6 +62,8 @@ const prospectOf = (e: Prospect): Prospect => ({
 
 const lastEquityOf = (p: Prospect | null): number => p?.previousEquity ?? p?.equity ?? 0.5;
 
+const ONE_HAND: Clock = { seconds: 0, hands: 1 };
+
 const tracked = (current: number, target: number, dt: number, worse: boolean): number => {
   const halfLife = worse ? PROSPECT_DROP_HALF_LIFE_S : PROSPECT_HALF_LIFE_S;
   return current + (target - current) * (1 - 0.5 ** (dt / halfLife));
@@ -93,6 +94,9 @@ class EmotionEngine implements Engine {
   event(e: TableEvent): Impulse[] {
     if (e.kind === 'street' && !this.prospect) {
       return [];
+    }
+    if (e.kind === 'deal') {
+      this.advance(ONE_HAND);
     }
     const a = appraisalOf(this.completed(e), {
       prospect: this.prospect,
@@ -165,23 +169,28 @@ class EmotionEngine implements Engine {
   }
 
   step(dt: number): void {
+    this.advance({ seconds: dt, hands: 0 });
+  }
+
+  private advance(clock: Clock): void {
+    const dt = clock.seconds;
     this.time += dt;
-    const risen = rise(this.emotions, this.pending, dt);
+    const risen = rise(this.emotions, this.pending, clock.hands > 0 ? Infinity : dt);
     this.pending = risen.pending;
-    this.emotions = decay(risen.emotions, dt, (name) => this.traits.halfLifeFactor[name]);
+    this.emotions = decay(risen.emotions, clock, (name) => this.traits.halfLifeFactor[name]);
     this.trackProspect(dt);
     const holding = HALF_LIFE_S.anger * this.traits.halfLifeFactor.anger;
     this.held = stepHeld(this.held, dt, this.prospect ? holding : RELEASE_S);
     const felt = this.felt();
-    this.mood = stepMood(this.mood, felt, dt, {
+    this.mood = stepMood(this.mood, felt, clock, {
       ...this.config,
       defaultMood: this.traits.defaultMood,
     });
-    this.approach = stepAxis(this.approach, felt, dt, {
+    this.approach = stepAxis(this.approach, felt, clock, {
       ...this.config,
       weights: APPROACH,
     });
-    this.certainty = stepAxis(this.certainty, felt, dt, {
+    this.certainty = stepAxis(this.certainty, felt, clock, {
       ...this.config,
       weights: CERTAINTY,
     });

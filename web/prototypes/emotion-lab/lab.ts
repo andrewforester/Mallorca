@@ -4,6 +4,8 @@ export const LAB_SPEEDUP = 30;
 export const LAB_MOOD: MoodConfig = {
   changeTimeS: 600 / LAB_SPEEDUP,
   returnTimeS: 1200 / LAB_SPEEDUP,
+  changeHands: Infinity,
+  returnHands: Infinity,
 };
 
 export const clamp = (value: number, low = -1, high = 1): number =>
