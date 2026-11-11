@@ -725,7 +725,8 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   hand end `player`. The cursor moves also while it is off and when it is switched, so switching it on shows no old
   reaction. `faceNow()` is `faceFrame(view.snapshot, view.presenting, MALLORCA_LOOK)` of `persona.view(now())`, or null while it is off or before
   `start`; it never moves the engine, so the face changes no move and no seed. `toViewModel` adds `face` (`on`,
-  `cues`). `game` re-exports `FaceFrame`, `FaceCue`, `GazeTarget`, `Pulse`, `Weights`, `VisemeCue` and `speechOf`.
+  `cues`). `restingFaceOf(character)` is the frame of a fresh persona of that character, her temperament at rest,
+  cached per character. `game` re-exports `FaceFrame`, `FaceCue`, `GazeTarget`, `Pulse`, `Weights`, `VisemeCue` and `speechOf`.
 - The payload builders (`conversationClient.ts`) send version 2 bodies (`toPlanLinePayload`, `toPlanReplyPayload`):
   the plan with its cards as text, the Big Five, the last 8 chat lines and `debug` in a traced session; `quick` on a
   reply; the summary with only its counts (not `notable`) and `netBb` as the player's net (the negated net of hers).
@@ -960,7 +961,7 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   the arms and their correctives in the baked seated pose (`header.pose.sitting`) from the first frame, after the
   meshes bind in the DNA pose, and turns `head`, `neck_01`/`neck_02`, `spine_05` and the clavicles by the pose in
   world axes; her body and knit sweater are skinned meshes on the same skeleton, framed down to under the bust; blendshapes and the head's normals are updated on the CPU, hair cards follow
-  their head vertex, and the skin shader blends the wrinkle normal maps by mask. `Motion` (`motion.ts`, no WebGL) eases toward `faceNow()` (read about
+  their head vertex, and the skin shader blends the wrinkle normal maps by mask. `Motion` (`motion.ts`, no WebGL) eases toward `seatFrame`, which is `faceNow()` or before a game `restingFaceOf` the chosen character (read about
   ten times a second), plays new `FaceCue`s once (pulses, gaze with a glance back), blinks, saccades and glances
   away from `idle`, poses the head from the shown PAD and breathes; `thinking` turns her gaze to one of seven spots, drawn anew for each decision (up to either side, up, aside, her cards, the board). It
   pauses while the document is hidden, calms the idle motion under `prefers-reduced-motion`, and falls back to the

@@ -1,7 +1,9 @@
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { MALLORCA_LOOK, faceFrame, pulsesOf } from '../face/index.ts';
 import type { FaceFrame, GazeTarget, Pulse } from '../face/index.ts';
-import type { Impulse, Persona } from '../persona/index.ts';
+import { PERSONALITIES, createPersona } from '../persona/index.ts';
+import type { Impulse, Persona, PersonalityKey } from '../persona/index.ts';
+import { mulberry32 } from '../cards/index.ts';
 import { gazeOf } from './faceCues.ts';
 
 export type FaceCue =
@@ -33,14 +35,27 @@ const MAX_CUES = 24;
 
 export const initialFace = (on: boolean): FaceState => ({ on, cues: [] });
 
+const frameOf = (persona: Persona, now: number): FaceFrame => {
+  const view = persona.view(now);
+  return faceFrame(view.snapshot, view.presenting, MALLORCA_LOOK, view.mask);
+};
+
+const resting = new Map<PersonalityKey, FaceFrame>();
+
+export function restingFaceOf(character: PersonalityKey): FaceFrame {
+  let frame = resting.get(character);
+  if (frame === undefined) {
+    const personality = PERSONALITIES[character];
+    frame = frameOf(createPersona({ seat: 0, rng: mulberry32(1), personality }), 0);
+    resting.set(character, frame);
+  }
+  return frame;
+}
+
 export function sessionFace(host: FaceHost): SessionFace {
   let nextId = 0;
   let seen: Persona | null = null;
   let cursor = 0;
-  const frameOf = (persona: Persona): FaceFrame => {
-    const view = persona.view(host.now());
-    return faceFrame(view.snapshot, view.presenting, MALLORCA_LOOK, view.mask);
-  };
   const fresh = (persona: Persona): Impulse[] => {
     const from = persona === seen ? cursor : 0;
     seen = persona;
@@ -59,7 +74,7 @@ export function sessionFace(host: FaceHost): SessionFace {
       if (persona === null) return;
       const impulses = fresh(persona);
       if (!host.read().on) return;
-      const pulses = pulsesOf(impulses, frameOf(persona).mask, MALLORCA_LOOK);
+      const pulses = pulsesOf(impulses, frameOf(persona, host.now()).mask, MALLORCA_LOOK);
       const gaze = gazeOf(events, host.botSeat);
       add([
         ...pulses.map((pulse): NewCue => ({ kind: 'pulse', pulse })),
@@ -73,7 +88,7 @@ export function sessionFace(host: FaceHost): SessionFace {
     },
     now() {
       const persona = host.persona();
-      return persona === null || !host.read().on ? null : frameOf(persona);
+      return persona === null || !host.read().on ? null : frameOf(persona, host.now());
     },
   };
 }
