@@ -217,13 +217,14 @@ describe('a new card', () => {
     expect(hoping).toBeCloseTo(Math.abs(axes(drop).value) * 0.5 * t.gains.disappointment, 12);
   });
 
-  it('surprises by how unlikely the new card was, not by the size of the swing', () => {
+  it('surprises by how unlikely the new card was and how much it changed', () => {
     const t = traitsOf(MALLORCA);
     expect(felt(street(0.78, 1), t).surprise).toBe(0);
     expect(felt(street(0.45, 0.24), t).surprise).toBeLessThan(0.02);
     expect(felt(street(0.9, 0), t).surprise).toBeGreaterThan(0.9);
     expect(felt(street(0.1, 1), t).surprise).toBeGreaterThan(0.9);
     expect(felt(street(0.3, 1), t).surprise).toBeGreaterThan(felt(street(0.6, 1), t).surprise);
+    expect(felt(street(0.93, 0.82), t).surprise).toBeLessThan(0.2);
   });
 
   it('makes a change that settles the outcome realized, the luck of the cards', () => {

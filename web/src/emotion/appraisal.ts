@@ -84,6 +84,9 @@ function improbability(before: number, after: number): number {
   return after < before ? 1 - (1 - before) / (1 - after) : 0;
 }
 
+const surpriseOf = (before: number, after: number): number =>
+  smoothstep(0.3, 0.95, improbability(before, after)) * saturate(4 * Math.abs(after - before));
+
 function street(e: Extract<TableEvent, { kind: 'street' }>): Axes | null {
   const before = e.previousEquity;
   if (before === undefined) {
@@ -101,7 +104,7 @@ function street(e: Extract<TableEvent, { kind: 'street' }>): Axes | null {
     ...(opponent ? { opponent: 1 } : { luck: 1 }),
     spared: Math.max(0, delta),
     expected: before,
-    unexpected: opponent ? 0 : smoothstep(0.3, 0.95, improbability(before, e.equity)),
+    unexpected: opponent ? 0 : surpriseOf(before, e.equity),
     reason: `equity ${pct(before)} to ${pct(e.equity)}`,
   };
 }
