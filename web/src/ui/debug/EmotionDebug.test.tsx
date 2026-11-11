@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CASH, createSession, inProcessBot, memoryStore } from '../../game/index.ts';
 import type { BotClient, HandStore, Session } from '../../game/index.ts';
 import { EmotionDebug } from './EmotionDebug.tsx';
+import { CHARACTER_SHEETS } from '../../game/index.ts';
 import { COPY } from './copy.ts';
 
 afterEach(() => {
@@ -91,6 +92,14 @@ describe('EmotionDebug', () => {
     expect(resetFeeling).toHaveBeenCalled();
   });
 
+  it('lists every character by her name, with who she is in life', async () => {
+    await opened(await seated());
+    const boss = screen.getByTestId('debug-personality-toughBoss');
+    expect(boss.textContent).toBe(CHARACTER_SHEETS.toughBoss.name);
+    expect(boss.getAttribute('title')).toBe(CHARACTER_SHEETS.toughBoss.short);
+    expect(screen.getAllByTestId(/^debug-personality-/)).toHaveLength(34);
+  });
+
   it('turns a Big Five slider into a custom personality', async () => {
     const session = await seated();
     const setPersonality = vi.spyOn(session.getState(), 'setPersonality');
@@ -99,17 +108,23 @@ describe('EmotionDebug', () => {
     expect(setPersonality).toHaveBeenCalledWith(
       expect.objectContaining({
         bigFive: expect.objectContaining({ neuroticism: 0.9 }),
-        control: expect.any(Number),
+        suppression: expect.any(Number),
       }),
     );
   });
 
-  it('carries her self-control slider into a custom personality', async () => {
-    const session = await seated();
-    const setPersonality = vi.spyOn(session.getState(), 'setPersonality');
-    await opened(session);
-    fireEvent.input(screen.getByLabelText(COPY.control), { target: { value: '0.1' } });
-    expect(setPersonality).toHaveBeenCalledWith(expect.objectContaining({ control: 0.1 }));
+  it('shows whom she blames, how she copes and how rash she gets, and no experience', async () => {
+    await opened(await seated());
+    for (const label of ['Blames herself', 'Coping', 'Urgency']) {
+      expect(screen.getByText(label)).toBeTruthy();
+    }
+    expect(screen.queryByLabelText('Poker experience')).toBeNull();
+  });
+
+  it('has no self-control slider, a character is her Big Five and her poker face habit', async () => {
+    await opened(await seated());
+    expect(screen.queryByLabelText('Self-control')).toBeNull();
+    expect(screen.getByLabelText(COPY.suppression)).toBeTruthy();
   });
 
   it('says no bias was sent before her first decision', async () => {
@@ -124,14 +139,30 @@ describe('EmotionDebug', () => {
     const emotions = screen.getByTestId('debug-emotions');
     expect(within(emotions).getByText(COPY.emotion.anger)).toBeTruthy();
     expect(within(screen.getByTestId('debug-mood')).getAllByText(/^P [-\d.]+/)[0]).toBeTruthy();
-    expect(within(screen.getByTestId('debug-load')).getByText(COPY.load.overload)).toBeTruthy();
+    const strain = within(screen.getByTestId('debug-load'));
+    for (const label of [
+      'Intensity',
+      'Composure',
+      'Negative strain',
+      'Overload',
+      'Reaches the play',
+    ]) {
+      expect(strain.getByText(label)).toBeTruthy();
+    }
+    expect(strain.getByText(COPY.part.mood)).toBeTruthy();
+    expect(strain.getByText(COPY.emotion.fear)).toBeTruthy();
+    expect(within(screen.getByTestId('debug-mood')).getByText(/^Approach /)).toBeTruthy();
+    expect(within(screen.getByTestId('debug-mood')).getByText(/^Certainty /)).toBeTruthy();
     const bias = screen.getByTestId('debug-bias');
     expect(
       within(screen.getByTestId('debug-bias-now')).getByText(COPY.bias.looseness),
     ).toBeTruthy();
     expect(within(bias).getByText(COPY.sent.tightness)).toBeTruthy();
-    expect(within(bias).getByText(COPY.styleTitle)).toBeTruthy();
+    for (const title of ['Now', 'Nature at rest', 'Push of her state', 'Sent to the bot']) {
+      expect(within(bias).getByText(title)).toBeTruthy();
+    }
     expect(within(screen.getByTestId('debug-style')).getByText(COPY.bias.looseness)).toBeTruthy();
+    expect(within(screen.getByTestId('debug-push')).getByText(COPY.bias.looseness)).toBeTruthy();
   });
 
   it('shows the last decision with the blueprint and the biased shares', async () => {

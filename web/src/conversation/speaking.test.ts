@@ -3,12 +3,19 @@ import { fullDeck, mulberry32, parseCards, shuffle } from '../cards/index.ts';
 import { applyAction } from '../engine/hand.ts';
 import { call, check, deckOf, fold, raiseTo, startHand } from '../engine/testDeck.ts';
 import type { Action, Step } from '../engine/types.ts';
+import { MALLORCA } from '../emotion/index.ts';
+import { FEELS_AFTER_MS } from './planner.ts';
 import type { Planned } from './planner.ts';
 import { RULES } from './rules.ts';
 import type { Rule } from './rules.ts';
 import { createSpeaker } from './testSpeaker.ts';
 import type { Speaker } from './testSpeaker.ts';
 import type { OccasionKind } from './types.ts';
+
+const PRICKLY = {
+  ...MALLORCA,
+  bigFive: { ...MALLORCA.bigFive, agreeableness: -0.6 },
+};
 
 const ALWAYS: Rule[] = RULES.filter((r) => r.occasion !== 'card').map((r) => ({ ...r, chance: 1 }));
 const NEVER: Rule[] = RULES.map((r) => ({ ...r, chance: r.occasion === 'playerSaid' ? 1 : 0 }));
@@ -131,11 +138,14 @@ describe('observe', () => {
       t.act(action, 1000 * (i + 1) * 2);
     }
     t.act(raiseTo(40), 20000);
+    t.conversation.impulses();
     const end = t.act(call, 40000);
     expect(end.verdicts[0]?.occasion.end).toBe('bluffCaught');
     expect(end.plan?.claim).toBeNull();
-    expect(t.conversation.feeling().emotions.shame).toBeGreaterThan(0);
-    expect(t.conversation.feeling().emotions.injustice).toBe(0);
+    const felt = t.conversation.impulses();
+    expect(felt.some((i) => i.emotion === 'shame' && i.amount > 0)).toBe(true);
+    expect(felt.filter((i) => i.emotion === 'injustice')).toEqual([]);
+    expect(t.conversation.feelingAt(40000 + FEELS_AFTER_MS).emotions.shame).toBeGreaterThan(0);
   });
 
   it('says lost without a bluff when she only checked and lost', () => {
@@ -165,13 +175,14 @@ describe('outcomes', () => {
     t.begin('2c 3d', '4c 5d', 'As Ks Qs Js Ts');
     t.act(raiseTo(100), 0);
     t.act(call, 2000);
-    let end: Planned | null = null;
-    for (let i = 0; i < 6; i++) {
-      end = t.act(check, 4000 + 2000 * i);
+    for (let i = 0; i < 5; i++) {
+      t.act(check, 4000 + 2000 * i);
     }
-    expect(end?.verdicts[0]?.occasion.end).toBe('won');
+    t.conversation.impulses();
+    const end = t.act(check, 14000);
+    expect(end.verdicts[0]?.occasion.end).toBe('won');
     expect(t.conversation.feeling().sessionNetBb).toBe(0);
-    expect(t.conversation.feeling().emotions.distress).toBe(0);
+    expect(t.conversation.impulses().filter((i) => i.emotion === 'distress')).toEqual([]);
   });
 
   it('feels robbed after an all-in runout lost from ahead and overloads', () => {
@@ -179,7 +190,7 @@ describe('outcomes', () => {
     t.begin('Ah Ad', '7c 2d', '7h 7d 2s 3c 4c');
     t.act(raiseTo(2000), 0);
     expect(t.act(call, 2000).verdicts[0]?.occasion.end).toBe('lost');
-    const feeling = t.conversation.feeling();
+    const feeling = t.conversation.feelingAt(2000 + FEELS_AFTER_MS);
     expect(feeling.emotions.injustice).toBeGreaterThan(0.3);
     expect(feeling.load.overload).toBeGreaterThan(0.5);
   });
@@ -264,16 +275,22 @@ describe('replies', () => {
 
   it('moves her feeling and bias with the signals it hears', () => {
     const conversation = createSpeaker({ seat: 1, rng: mulberry32(2) });
+    conversation.setPersonality(PRICKLY);
+    conversation.observe([], 0);
     conversation.hear(['mockBluff', 'tease']);
-    expect(conversation.feeling().emotions.anger).toBeGreaterThan(0.4);
+    conversation.observe([], 2000);
+    expect(conversation.feeling().emotions.anger).toBeGreaterThan(0.2);
     expect(conversation.moodWords()).toContain('annoyed');
     expect(conversation.bias().bluff).toBeGreaterThan(1);
   });
 
   it('hears the anger in her voice once her mask lets it through', () => {
     const conversation = createSpeaker({ seat: 1, rng: mulberry32(2) });
+    conversation.setPersonality(PRICKLY);
+    conversation.observe([], 0);
     conversation.hear(['mockBluff', 'tease']);
     const voice = conversation.reply().plan?.voice;
+    conversation.observe([], FEELS_AFTER_MS);
     expect(voice?.emotion).toBe('anger');
     const anger = conversation.feeling().emotions.anger * (1 - conversation.mask());
     expect(voice?.intensity).toBeCloseTo(anger, 2);

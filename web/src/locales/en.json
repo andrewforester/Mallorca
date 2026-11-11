@@ -23,33 +23,57 @@
     "characters": {
       "mallorca": {
         "name": "Mallorca",
-        "line": "Warm and calm. Rarely loses her temper.",
-        "hard": "A real game",
+        "line": "Warm and curious. Opens up when the cards are kind.",
+        "hard": "A fair fight",
         "hello": "Oh, it's you. Sit, I'll deal."
-      },
-      "mira": {
-        "name": "Mira",
-        "line": "Even-tempered and kind.",
-        "hard": "Comfortable",
-        "hello": "Shall we? No hurry."
       },
       "ingrid": {
         "name": "Ingrid",
-        "line": "A professional. Plays to win.",
+        "line": "A professional. Nothing rattles her.",
         "hard": "The toughest",
         "hello": "Your blind."
       },
-      "lola": {
-        "name": "Lola",
-        "line": "The life of the party.",
-        "hard": "Easy-going",
-        "hello": "Finally! Deal me in, I feel lucky."
+      "mira": {
+        "name": "Mira",
+        "line": "Kind and easy-going.",
+        "hard": "Comfortable",
+        "hello": "Shall we? No hurry."
       },
       "nina": {
         "name": "Nina",
-        "line": "Nervous, and new to the game.",
+        "line": "Anxious and exacting. Hates her own mistakes.",
         "hard": "A gentle start",
         "hello": "Um, hi. Go easy on me?"
+      },
+      "lola": {
+        "name": "Lola",
+        "line": "Quick to laugh, quick to take offence.",
+        "hard": "A wild ride",
+        "hello": "Finally! Deal me in, I feel lucky."
+      },
+      "sol": {
+        "name": "Sol",
+        "line": "Cheerful and bold. Loves a gamble.",
+        "hard": "Lively",
+        "hello": "Ooh, a new face! Let's make it interesting."
+      },
+      "rita": {
+        "name": "Rita",
+        "line": "Brash and stubborn. Never backs down.",
+        "hard": "Relentless",
+        "hello": "Sit down. I'm not going easy on you."
+      },
+      "vera": {
+        "name": "Vera",
+        "line": "Sharp-tongued, but her nerves betray her.",
+        "hard": "Prickly",
+        "hello": "You're late. Shuffle properly, please."
+      },
+      "greta": {
+        "name": "Greta",
+        "line": "Quiet and careful. Waits for her moment.",
+        "hard": "Patient",
+        "hello": "Good evening. Let's begin."
       }
     }
   },

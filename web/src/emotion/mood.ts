@@ -1,5 +1,5 @@
 import { EMOTIONS, EMOTION_PAD, clamp } from './emotions.ts';
-import type { Emotions, Pad } from './emotions.ts';
+import type { Emotion, Emotions, Pad } from './emotions.ts';
 
 export interface MoodConfig {
   changeTimeS: number;
@@ -91,6 +91,47 @@ export function stepMood(mood: Pad, e: Emotions, dt: number, frame: MoodFrame): 
     ];
   }
   return clampPad(next);
+}
+
+function axisCenter(
+  e: Emotions,
+  weights: Readonly<Record<Emotion, number>>,
+): { center: number; intensity: number } | null {
+  let sum = 0;
+  let weight = 0;
+  let count = 0;
+  for (const name of EMOTIONS) {
+    const v = e[name];
+    if (v >= ACTIVE) {
+      sum += v * weights[name];
+      weight += v;
+      count++;
+    }
+  }
+  return count === 0 ? null : { center: sum / weight, intensity: Math.min(1, weight / count) };
+}
+
+function toward(from: number, to: number, distance: number): number {
+  return Math.abs(to - from) <= distance ? to : from + Math.sign(to - from) * distance;
+}
+
+export interface AxisFrame extends MoodConfig {
+  weights: Readonly<Record<Emotion, number>>;
+}
+
+export function stepAxis(value: number, e: Emotions, dt: number, frame: AxisFrame): number {
+  const c = axisCenter(e, frame.weights);
+  const strength = c?.intensity ?? 0;
+  let next = value;
+  if (c) {
+    const distance = (strength / frame.changeTimeS) * dt;
+    next =
+      value * c.center < c.center * c.center
+        ? toward(value, c.center, distance)
+        : value + Math.sign(c.center) * distance;
+  }
+  const pull = (1 - Math.min(1, 3 * strength)) * (SQRT3 / frame.returnTimeS) * dt;
+  return clamp(toward(next, 0, pull));
 }
 
 export function octantOf(p: Pad): {

@@ -52,6 +52,8 @@ export type Said = (journalId: number) => string | null;
 const pct = (v: number): string => `${Math.round(v * 100)}%`;
 const bb = (v: number): string => `${v >= 0 ? '+' : ''}${v.toFixed(1)} bb`;
 
+const DECIDED = { showdown: 'showdown', heFolded: 'he folded', sheFolded: 'she folded' };
+
 function eventText(e: TableEvent): string {
   switch (e.kind) {
     case 'deal':
@@ -60,22 +62,23 @@ function eventText(e: TableEvent): string {
       return `equity now ${pct(e.equity)}, pot ${e.potBb.toFixed(1)} bb`;
     case 'opponentBet':
       return `player ${e.raise === true ? 'raises' : 'bets'} ${e.sizeBb.toFixed(1)} bb, equity ${pct(e.equity)}`;
+    case 'opponentCall':
+      return 'player calls';
     case 'result':
-      return `hand over, ${bb(e.netBb)}`;
-    case 'bluff':
-      return e.succeeded ? 'her bluff got through' : 'her bluff was caught';
-    case 'mistake':
-      return `her mistake, ${bb(-e.costBb)}`;
+      return `hand over, ${DECIDED[e.decided]}, ${bb(e.netBb)}`;
     case 'ownMove':
-      return e.move === 'bet'
-        ? `she bets ${e.amountBb.toFixed(1)} bb, equity ${pct(e.equity)}`
-        : `she folds to ${e.facingBb.toFixed(1)} bb, equity ${pct(e.equity)}`;
+      return `she bets ${e.amountBb.toFixed(1)} bb into ${e.potBb.toFixed(1)} bb, equity ${pct(e.equity)}`;
     case 'chat':
       return `player says ${e.signal}`;
   }
 }
 
-const QUIET: ReadonlySet<TableEvent['kind']> = new Set(['deal', 'street', 'ownMove']);
+const QUIET: ReadonlySet<TableEvent['kind']> = new Set([
+  'deal',
+  'street',
+  'ownMove',
+  'opponentCall',
+]);
 
 export function worthALine(felt: RecordedFeeling): boolean {
   return felt.impulses.length > 0 || !QUIET.has(felt.event.kind);

@@ -223,6 +223,7 @@ export function createRunner(
         send(`Его диапазон по блупринту после его действия: эквити ${pct(equity ?? 0)}`, {
           kind: 'street',
           equity: equity ?? 0.5,
+          cause: 'opponent',
           ...moneyNow(),
         });
         return true;
@@ -230,22 +231,22 @@ export function createRunner(
         send(beat.netBb >= 0 ? `Выиграла ${beat.netBb} бб` : `Проиграла ${-beat.netBb} бб`, {
           kind: 'result',
           netBb: beat.netBb,
+          decided: beat.decided ?? 'showdown',
           lastEquity: beat.lastEquity,
         });
         equity = null;
         return true;
-      case 'bluff':
-        send(beat.succeeded ? 'Блеф прошёл' : 'Блеф поймали', {
-          kind: 'bluff',
-          succeeded: beat.succeeded,
-          potBb,
+      case 'herBet':
+        send(`Она ставит ${beat.amountBb} бб в банк ${beat.potBb} бб`, {
+          kind: 'ownMove',
+          move: 'bet',
+          amountBb: beat.amountBb,
+          potBb: beat.potBb,
+          equity: equity ?? 0.5,
         });
         return true;
-      case 'mistake':
-        send(`Ошибка: сбросила лучшую руку, потеряла ${beat.costBb} бб`, {
-          kind: 'mistake',
-          costBb: beat.costBb,
-        });
+      case 'call':
+        send('Соперник коллирует', { kind: 'opponentCall' });
         return true;
       case 'player':
         hooks.player(beat.text);

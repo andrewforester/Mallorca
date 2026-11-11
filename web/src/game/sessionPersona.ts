@@ -1,6 +1,6 @@
 import type { Rng } from '../cards/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
-import { createPersona } from '../persona/index.ts';
+import { REACTION_S, createPersona } from '../persona/index.ts';
 import type { Bias, Moment, Persona, Personality, Signal } from '../persona/index.ts';
 import type { Opponent } from './opponent.ts';
 
@@ -68,7 +68,7 @@ class Her implements SessionPersona {
   }
 
   bias(): Bias | undefined {
-    return this.solver ? this.persona?.view(this.host.now()).bias : undefined;
+    return this.solver ? this.persona?.view(this.host.now() + REACTION_S * 1000).bias : undefined;
   }
 
   setPersonality(p: Personality): void {

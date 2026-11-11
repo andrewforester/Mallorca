@@ -1,6 +1,6 @@
 import type { Card, Rng } from '../cards/index.ts';
 import { MALLORCA, createEngine } from '../emotion/index.ts';
-import type { Engine, Money, Personality, Snapshot, TableEvent } from '../emotion/index.ts';
+import type { Cause, Engine, Money, Personality, Snapshot, TableEvent } from '../emotion/index.ts';
 import type { EngineEvent, SeatIndex } from '../engine/index.ts';
 import { equityVsHand, equityVsRange } from '../equity/index.ts';
 import type { WeightedHands } from '../equity/index.ts';
@@ -9,7 +9,7 @@ import type { Felt } from './journal.ts';
 import { netOf, playerCardsShown } from './hand.ts';
 import { liveRange } from './range.ts';
 import type { Signal } from './signals.ts';
-import { ALL_HANDS, classOf } from './strength.ts';
+import { ALL_HANDS } from './strength.ts';
 import { wordsOf } from './view.ts';
 
 export interface FeelingOptions {
@@ -35,7 +35,6 @@ export interface Feeling {
 const SAMPLES = 600;
 const STREETS_LEFT: Readonly<Record<number, number>> = { 0: 3, 3: 2, 4: 1, 5: 0 };
 const NO_SHOWDOWN_EQUITY = 0.5;
-const FULL_BOARD = 5;
 
 class TableFeeling implements Feeling {
   private readonly seat: SeatIndex;
@@ -47,7 +46,6 @@ class TableFeeling implements Feeling {
   private range: WeightedHands = ALL_HANDS;
   private lastPerceived = NO_SHOWDOWN_EQUITY;
   private streetChips: [number, number] = [0, 0];
-  private riverCall: { costBb: number; weak: boolean } | null = null;
   private handNumber = 0;
   private felt: Felt[] = [];
 
@@ -73,7 +71,6 @@ class TableFeeling implements Feeling {
         this.range = ALL_HANDS;
         this.lastPerceived = NO_SHOWDOWN_EQUITY;
         this.streetChips = [0, 0];
-        this.riverCall = null;
         return;
       case 'blindPosted':
         this.streetChips[event.seat] += event.amount;
@@ -107,7 +104,7 @@ class TableFeeling implements Feeling {
     if (range.length === 0) return;
     this.range = range;
     this.equities.clear();
-    this.moved(hand);
+    this.moved(hand, 'opponent');
   }
 
   hear(signals: readonly Signal[]): void {
@@ -159,8 +156,8 @@ class TableFeeling implements Feeling {
     this.feel({ kind: 'deal', equity: this.equity(hand), ...this.money(hand) });
   }
 
-  private moved(hand: HandState): void {
-    this.feel({ kind: 'street', equity: this.equity(hand), ...this.money(hand) });
+  private moved(hand: HandState, cause: Cause = 'cards'): void {
+    this.feel({ kind: 'street', equity: this.equity(hand), cause, ...this.money(hand) });
   }
 
   private acted(event: Extract<EngineEvent, { type: 'acted' }>, hand: HandState): void {
@@ -168,6 +165,8 @@ class TableFeeling implements Feeling {
     if (event.seat === this.seat) {
       this.herAggressive ||= raise;
       this.own(event, hand);
+    } else if (event.action.kind === 'call') {
+      this.feel({ kind: 'opponentCall' });
     } else if (raise) {
       this.feel({
         kind: 'opponentBet',
@@ -181,39 +180,30 @@ class TableFeeling implements Feeling {
   }
 
   private own(event: Extract<EngineEvent, { type: 'acted' }>, hand: HandState): void {
+    if (event.action.kind !== 'raise') return;
     const bb = hand.bigBlind;
-    const equity = this.equity(hand);
-    const other = this.seat === 0 ? 1 : 0;
-    const facingBb = (this.streetChips[other] - this.streetChips[this.seat]) / bb;
-    const { kind } = event.action;
-    if (kind === 'raise') {
-      this.feel({ kind: 'ownMove', move: 'bet', amountBb: event.amount / bb, equity });
-    } else if (kind === 'fold') {
-      this.feel({ kind: 'ownMove', move: 'fold', facingBb, equity });
-    } else if (kind === 'call' && hand.board.length === FULL_BOARD) {
-      const weak = classOf(equity, hand.board.length) === 'weak';
-      this.riverCall = { costBb: event.amount / bb, weak };
-    }
+    this.feel({
+      kind: 'ownMove',
+      move: 'bet',
+      amountBb: event.amount / bb,
+      potBb: (hand.pot - event.amount) / bb,
+      equity: this.equity(hand),
+    });
   }
 
   private ended(hand: HandState): void {
-    const won = hand.awarded[this.seat] > 0;
     const netBb = netOf(hand, this.seat);
-    this.feel({ kind: 'result', netBb, lastEquity: this.whenMoneyWentIn(hand) });
-    const caught = this.bluffed(hand, won);
-    if (!caught && !won && hand.showdown !== null && this.riverCall?.weak === true) {
-      this.feel({ kind: 'mistake', costBb: this.riverCall.costBb });
+    if (hand.showdown !== null) {
+      this.feel({
+        kind: 'result',
+        netBb,
+        decided: 'showdown',
+        lastEquity: this.whenMoneyWentIn(hand),
+      });
+      return;
     }
-  }
-
-  private bluffed(hand: HandState, won: boolean): boolean {
-    if (hand.her === null || !hand.herLateBet) return false;
-    if (classOf(this.lastPerceived, hand.board.length) !== 'weak') return false;
-    const potBb = (hand.awarded[0] + hand.awarded[1]) / hand.bigBlind;
-    const caught = !won && hand.showdown !== null;
-    if (caught) this.feel({ kind: 'bluff', succeeded: false, potBb });
-    if (won && hand.showdown === null) this.feel({ kind: 'bluff', succeeded: true, potBb });
-    return caught;
+    const won = hand.awarded[this.seat] > 0;
+    this.feel({ kind: 'result', netBb, decided: won ? 'heFolded' : 'sheFolded' });
   }
 
   private whenMoneyWentIn(hand: HandState): number {

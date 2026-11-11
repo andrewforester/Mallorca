@@ -3,8 +3,8 @@ import { parseCards } from '../cards/index.ts';
 import {
   BIAS_KEYS,
   EMOTIONS,
-  LOAD_SOURCES,
   PERSONALITIES,
+  STYLE_SHARE,
   createPersona,
   styleOf,
 } from '../persona/index.ts';
@@ -15,10 +15,11 @@ import { toDebugView } from './debugView.ts';
 
 function state(extra: Partial<DebugState> = {}): DebugState {
   const persona = createPersona({ seat: 1, rng: mulberry32(1) });
+  persona.observe([], 0);
   persona.hear(['mockBluff']);
   return {
     personality: { key: 'lola' },
-    snapshot: persona.view(0).snapshot,
+    snapshot: persona.view(2000).snapshot,
     sentBias: { aggression: 1.2, bluff: 1, tightness: 0.8, sizing: 1, stickiness: 1 },
     decision: null,
     journal: persona.journal().map((e) => ({ ...e, spoke: false })),
@@ -33,19 +34,32 @@ describe('toDebugView', () => {
     expect(view.personality).toEqual({ key: 'lola' });
     expect(view.bigFive).toEqual(PERSONALITIES.lola.bigFive);
     expect(view.suppression).toBe(PERSONALITIES.lola.suppression);
-    expect(view.experience).toBe(PERSONALITIES.lola.experience);
-    expect(view.control).toBe(PERSONALITIES.lola.control);
+    expect('experience' in view).toBe(false);
+    expect('control' in view).toBe(false);
     expect(view.traits?.gains.map(([e]) => e)).toEqual([...EMOTIONS]);
+    const traits = state().snapshot?.traits;
+    expect(view.traits?.selfBlame).toBe(traits?.selfBlame);
+    expect(view.traits?.coping).toBe(traits?.coping);
+    expect(view.traits?.urgency).toBe(traits?.urgency);
   });
 
-  it('lists the emotions, the load sources and the bias in their fixed order', () => {
+  it('lists the emotions, the parts of the strain and the bias in their fixed order', () => {
     const view = toDebugView(state());
     expect(view.emotions.map(([e]) => e)).toEqual([...EMOTIONS]);
     expect(view.emotions.find(([e]) => e === 'anger')?.[1]).toBeGreaterThan(0);
-    expect(view.load?.sources.map(([s]) => s)).toEqual([...LOAD_SOURCES]);
+    expect(view.load?.parts.map(([s]) => s)).toEqual([...EMOTIONS, 'mood']);
+    const load = state().snapshot?.load;
+    expect(view.load?.intensity).toBe(load?.intensity);
+    expect(view.load?.reach).toBe(load?.reach);
+    expect(view.load?.overload).toBe(load?.overload);
+    expect(view.load?.strain).toBe(load?.strain);
+    expect(view.load?.composure).toBe(load?.composure);
+    expect(view.approach).toBe(state().snapshot?.approach);
+    expect(view.certainty).toBe(state().snapshot?.certainty);
+    expect(view.push.map(([k]) => k)).toEqual([...BIAS_KEYS]);
     expect(view.engineBias.map(([k]) => k)).toEqual([...BIAS_KEYS]);
     expect(view.baseline).toEqual(
-      BIAS_KEYS.map((k) => [k, styleOf(PERSONALITIES.lola.bigFive, 0.2)[k]]),
+      BIAS_KEYS.map((k) => [k, styleOf(PERSONALITIES.lola.bigFive)[k]]),
     );
     expect(view.sentBias).toEqual(state().sentBias);
     expect(view.journal).toHaveLength(1);
@@ -56,6 +70,9 @@ describe('toDebugView', () => {
     expect(view.traits).toBeNull();
     expect(view.load).toBeNull();
     expect(view.mood).toBeNull();
+    expect(view.approach).toBeNull();
+    expect(view.certainty).toBeNull();
+    expect(view.push.every(([, v]) => v === 0)).toBe(true);
     expect(view.emotions.every(([, v]) => v === 0)).toBe(true);
     expect(view.engineBias.every(([, v]) => v === 1)).toBe(true);
     expect(view.baseline.map(([k]) => k)).toEqual([...BIAS_KEYS]);
@@ -90,5 +107,19 @@ describe('toDebugView', () => {
     const custom = { ...PERSONALITIES.nina, suppression: 1 };
     const view = toDebugView(state({ personality: { key: 'custom', personality: custom } }));
     expect(view.suppression).toBe(1);
+  });
+});
+
+describe('the push of her state', () => {
+  it('is the exponent that moves her nature to the bias she plays now', () => {
+    const view = toDebugView(state());
+    const s = state().snapshot;
+    for (const [k, push] of view.push) {
+      const nature = s?.traits.nature[k] ?? 0;
+      expect(2 ** Math.tanh(Math.atanh(STYLE_SHARE) * nature + push)).toBeCloseTo(
+        s?.bias[k] ?? 0,
+        9,
+      );
+    }
   });
 });

@@ -1,4 +1,4 @@
-import type { ChatSignal, Pad } from '../../../src/emotion/index.ts';
+import type { ChatSignal, Decided, Pad } from '../../../src/emotion/index.ts';
 import type { GazeTarget } from '../face/avatar.ts';
 
 export interface Hand {
@@ -16,9 +16,9 @@ export type Beat =
   | { at: number; do: 'reveal' }
   | { at: number; do: 'oppBet'; sizeBb: number; potBb: number; raise?: boolean }
   | { at: number; do: 'narrow'; after: number }
-  | { at: number; do: 'result'; netBb: number; lastEquity?: number }
-  | { at: number; do: 'bluff'; succeeded: boolean }
-  | { at: number; do: 'mistake'; costBb: number }
+  | { at: number; do: 'result'; netBb: number; lastEquity?: number; decided?: Decided }
+  | { at: number; do: 'herBet'; amountBb: number; potBb: number }
+  | { at: number; do: 'call' }
   | { at: number; do: 'player'; text: string; signal?: ChatSignal }
   | { at: number; do: 'say'; text: string }
   | { at: number; do: 'gaze'; target: GazeTarget }
@@ -262,11 +262,11 @@ export const SCENES: readonly Scene[] = [
       { at: 5.4, do: 'effort', effort: 0.6, acted: CONFIDENT },
       { at: 5.6, do: 'gaze', target: 'player' },
       { at: 5.8, do: 'say', text: 'Pot.' },
+      { at: 5.8, do: 'herBet', amountBb: 30, potBb: 40 },
       { at: 5.8, do: 'pot', potBb: 70, investedBb: 50 },
       { at: 7, do: 'player', text: 'Hmm. Let me think about this one.' },
       { at: 10, do: 'player', text: 'Fine. Fold.' },
-      { at: 10.4, do: 'bluff', succeeded: true },
-      { at: 10.4, do: 'result', netBb: 20 },
+      { at: 10.4, do: 'result', netBb: 20, decided: 'heFolded' },
       { at: 11.2, do: 'effort', effort: 0, acted: null },
       { at: 11.4, do: 'say', text: 'Thanks.' },
     ],
@@ -291,12 +291,13 @@ export const SCENES: readonly Scene[] = [
       { at: 5.4, do: 'effort', effort: 0.6, acted: CONFIDENT },
       { at: 5.6, do: 'gaze', target: 'player' },
       { at: 5.8, do: 'say', text: 'Pot.' },
+      { at: 5.8, do: 'herBet', amountBb: 30, potBb: 40 },
       { at: 5.8, do: 'pot', potBb: 70, investedBb: 50 },
       { at: 7.4, do: 'player', text: 'I call.' },
+      { at: 7.4, do: 'call' },
       { at: 7.4, do: 'pot', potBb: 100, investedBb: 50 },
       { at: 8, do: 'reveal' },
       { at: 8, do: 'effort', effort: 0, acted: null },
-      { at: 8.2, do: 'bluff', succeeded: false },
       { at: 8.2, do: 'result', netBb: -50 },
       { at: 8.4, do: 'gaze', target: 'down' },
       { at: 10.4, do: 'player', text: 'Nice bluff. Do it again.', signal: 'mockBluff' },
@@ -309,7 +310,7 @@ export const SCENES: readonly Scene[] = [
     title: 'Сбросила лучшую руку',
     hint: 'Дамы, крупная ставка на ривере, фолд, а у соперника был блеф',
     watch:
-      'Ставка соперника 40 бб поднимает страх, она думает и сбрасывает. Соперник показывает 7♣6♣ без пары. Ошибка стоила 80 бб, это стыд. Перегрузка в основном от стыда, а стыд делает игру зажатой: агрессия и блеф ниже единицы.',
+      'Ставка соперника 40 бб поднимает страх, она думает и сбрасывает. Сброс руки, в которую она верила: её вытеснили, и по её совладанию это злость или огорчение. Отдельного события ошибки больше нет: соперник показывает 7♣6♣ без пары, но исход решила она сама.',
     length: 13,
     moment: 10.9,
     hands: [{ hero: 'Qh Qd', villain: '7c 6c', board: ['Ks 8c 4d', '2h', '9s'] }],
@@ -326,10 +327,9 @@ export const SCENES: readonly Scene[] = [
       { at: 6, do: 'gaze', target: 'think' },
       { at: 8.6, do: 'gaze', target: 'player' },
       { at: 8.8, do: 'say', text: 'Fold.' },
-      { at: 9.2, do: 'result', netBb: -20, lastEquity: 0.5 },
+      { at: 9.2, do: 'result', netBb: -20, lastEquity: 0.5, decided: 'sheFolded' },
       { at: 9.8, do: 'player', text: 'Had nothing, by the way.' },
       { at: 9.8, do: 'reveal' },
-      { at: 10.2, do: 'mistake', costBb: 80 },
       { at: 10.2, do: 'gaze', target: 'down' },
     ],
   },

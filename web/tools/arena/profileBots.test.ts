@@ -11,10 +11,14 @@ describe('profileOfName', () => {
       personality: PERSONALITIES.lola,
       label: 'style-lola',
     });
-    expect(profileOfName('persona:nina@experience=0.9,control=0.1')).toEqual({
+    expect(profileOfName('persona:nina@suppression=0.9,neuroticism=0.1')).toEqual({
       kind: 'persona',
-      personality: { ...PERSONALITIES.nina, experience: 0.9, control: 0.1 },
-      label: 'persona-nina-experience0.9-control0.1',
+      personality: {
+        ...PERSONALITIES.nina,
+        suppression: 0.9,
+        bigFive: { ...PERSONALITIES.nina.bigFive, neuroticism: 0.1 },
+      },
+      label: 'persona-nina-suppression0.9-neuroticism0.1',
     });
     expect(profileOfName('persona:ingrid@neuroticism=-0.5')?.personality.bigFive).toEqual({
       ...PERSONALITIES.ingrid.bigFive,
@@ -25,10 +29,12 @@ describe('profileOfName', () => {
   it.each([
     'style:nobody',
     'persona:lola@luck=1',
-    'persona:lola@experience=1.5',
-    'persona:lola@control=-0.1',
+    'persona:lola@suppression=1.5',
+    'persona:lola@experience=0.5',
+    'persona:lola@control=0.5',
+    'persona:lola@suppression=-0.1',
     'persona:lola@neuroticism=2',
-    'persona:lola@experience=',
+    'persona:lola@suppression=',
     'persona:',
     'cfr',
   ])('does not read %s', (name) => {
@@ -36,26 +42,27 @@ describe('profileOfName', () => {
   });
 
   it('makes the bot names known to the arena', () => {
-    expect(isBotName('persona:lola@experience=0.9,control=0.1')).toBe(true);
+    expect(isBotName('persona:lola@suppression=0.9,openness=0.1')).toBe(true);
     expect(isBotName('style:mallorca')).toBe(true);
-    expect(isBotName('persona:lola@experience=2')).toBe(false);
-    expect(botLabel('persona:lola@experience=0.9,control=0.1')).toBe(
-      'persona-lola-experience0.9-control0.1',
+    expect(isBotName('persona:lola@suppression=2')).toBe(false);
+    expect(botLabel('persona:lola@suppression=0.9,openness=0.1')).toBe(
+      'persona-lola-suppression0.9-openness0.1',
     );
   });
 });
 
 describe('styleBiasOf', () => {
-  it('keeps an extreme style inside the range of the bias, as her persona does at rest', () => {
+  it('keeps an extreme style strictly inside the range of the bias', () => {
     const wild = profileOfName(
-      'style:lola@openness=1,extraversion=1,conscientiousness=-1,agreeableness=-1,neuroticism=-1,experience=0',
+      'style:lola@openness=1,extraversion=1,conscientiousness=-1,agreeableness=-1,neuroticism=-1',
     );
     const bias = styleBiasOf(wild!.personality);
-    expect(bias.aggression).toBe(2);
-    expect(bias.bluff).toBeLessThanOrEqual(2);
-    expect(bias.tightness).toBeGreaterThanOrEqual(0.5);
+    expect(bias.aggression).toBeGreaterThan(1.7);
+    expect(bias.aggression).toBeLessThan(2);
+    expect(bias.bluff).toBeLessThan(2);
+    expect(bias.tightness).toBeGreaterThan(0.5);
     const lola = PERSONALITIES.lola;
-    expect(styleBiasOf(lola)).toEqual(toBotBias(styleOf(lola.bigFive, lola.experience)));
+    expect(styleBiasOf(lola)).toEqual(toBotBias(styleOf(lola.bigFive)));
   });
 });
 
@@ -64,7 +71,7 @@ describe('profile bots', () => {
 
   it('a style bot plays its natural style as a constant bias', () => {
     const lola = PERSONALITIES.lola;
-    const bias = toBotBias(styleOf(lola.bigFive, lola.experience));
+    const bias = toBotBias(styleOf(lola.bigFive));
     const styled = playPair(botFactory('style:lola'), botFactory('cfr'), 3, 0, 20);
     const fixed = playPair(botFactory(`cfr@${axes(bias)}`), botFactory('cfr'), 3, 0, 20);
     expect(styled).toEqual(fixed);
@@ -72,7 +79,7 @@ describe('profile bots', () => {
 
   it('a persona bot plays differently from its constant style', () => {
     const nina = PERSONALITIES.nina;
-    const bias = toBotBias(styleOf(nina.bigFive, nina.experience));
+    const bias = toBotBias(styleOf(nina.bigFive));
     const felt = playPair(botFactory('persona:nina'), botFactory('always-raise'), 2, 0, 40);
     const fixed = playPair(botFactory(`cfr@${axes(bias)}`), botFactory('always-raise'), 2, 0, 40);
     expect(felt.hands).toHaveLength(80);

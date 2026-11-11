@@ -2,7 +2,13 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { mulberry32 } from '../../src/cards/index.ts';
 import type { BotBias } from '../../src/brains/index.ts';
 import type { EngineEvent } from '../../src/engine/index.ts';
-import { PERSONALITIES, createPersona, styleOf, toBotBias } from '../../src/persona/index.ts';
+import {
+  PERSONALITIES,
+  REACTION_S,
+  createPersona,
+  styleOf,
+  toBotBias,
+} from '../../src/persona/index.ts';
 import type { Persona } from '../../src/persona/index.ts';
 import { botFactory, prepareBots } from './bots.ts';
 import type { BotFactory } from './bots.ts';
@@ -46,11 +52,32 @@ function watched(seen: Watched, personality = PERSONALITIES.nina): BotFactory {
 describe('createPersonaBot', () => {
   beforeAll(() => prepareBots(['cfr']));
 
+  it('decides with what she feels a reaction time after the last step', () => {
+    const seen: Watched = { biases: [], persona: null, steps: [] };
+    const reads: number[] = [];
+    const factory = watched(seen);
+    const spied: BotFactory = (rng, seat) => {
+      const bot = factory(rng, seat);
+      const view = seen.persona!.view.bind(seen.persona!);
+      vi.spyOn(seen.persona!, 'view').mockImplementation((now) => {
+        reads.push(now);
+        return view(now);
+      });
+      return bot;
+    };
+    playPair(spied, botFactory('always-raise'), 1, 0, 3);
+    const lastSteps = seen.steps.map((s) => s.now);
+    expect(reads.some((t) => lastSteps.includes(t - REACTION_S * 1000))).toBe(true);
+  }, 60_000);
+
   it('starts from her natural style and moves it as she feels the session', () => {
     const seen: Watched = { biases: [], persona: null, steps: [] };
     playPair(watched(seen), botFactory('always-raise'), 2, 0, 40);
     const nina = PERSONALITIES.nina;
-    expect(seen.biases[0]).toEqual(toBotBias(styleOf(nina.bigFive, nina.experience)));
+    const natural = toBotBias(styleOf(nina.bigFive));
+    for (const [axis, value] of Object.entries(natural)) {
+      expect(Math.abs((seen.biases[0]?.[axis as keyof BotBias] ?? 0) - value)).toBeLessThan(0.01);
+    }
     const moved = seen.biases.some(
       (b) => Math.abs(b.aggression - seen.biases[0]!.aggression) > 0.01,
     );

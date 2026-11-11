@@ -73,21 +73,26 @@ describe('StartScreen', () => {
     expect(screen.getByTestId('start-loading').textContent).toContain('10%');
   });
 
-  it('lets the player choose her character among five, with her line and how hard she is', () => {
+  it('lets the player choose her character among nine, with her line and how hard she is', () => {
     const onCharacter = vi.fn();
     render(<StartScreen onStart={vi.fn()} character="mallorca" onCharacter={onCharacter} />);
     const choices = screen.getAllByTestId(/^character-/);
     expect(choices.map((node) => node.getAttribute('data-testid'))).toEqual([
       'character-mallorca',
-      'character-mira',
       'character-ingrid',
-      'character-lola',
+      'character-mira',
       'character-nina',
+      'character-lola',
+      'character-sol',
+      'character-rita',
+      'character-vera',
+      'character-greta',
     ]);
     expect(screen.getByTestId('character-mallorca').getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByTestId('character-ingrid').textContent).toContain(
-      'A professional. Plays to win.',
+      'A professional. Nothing rattles her.',
     );
+    expect(screen.getByTestId('character-greta').textContent).toContain('Patient');
     expect(screen.getByTestId('character-ingrid').textContent).toContain('The toughest');
     fireEvent.click(screen.getByTestId('character-nina'));
     expect(onCharacter).toHaveBeenCalledWith('nina');
@@ -98,6 +103,55 @@ describe('StartScreen', () => {
     expect(screen.getByTestId('tonight-face').textContent).toContain(
       'Finally! Deal me in, I feel lucky.',
     );
+  });
+
+  it('has the copy of the spec for every character, without capitals or dashes', () => {
+    const copy: Record<string, [string, string, string]> = {
+      mallorca: [
+        'Warm and curious. Opens up when the cards are kind.',
+        'A fair fight',
+        "Oh, it's you. Sit, I'll deal.",
+      ],
+      ingrid: ['A professional. Nothing rattles her.', 'The toughest', 'Your blind.'],
+      mira: ['Kind and easy-going.', 'Comfortable', 'Shall we? No hurry.'],
+      nina: [
+        'Anxious and exacting. Hates her own mistakes.',
+        'A gentle start',
+        'Um, hi. Go easy on me?',
+      ],
+      lola: [
+        'Quick to laugh, quick to take offence.',
+        'A wild ride',
+        'Finally! Deal me in, I feel lucky.',
+      ],
+      sol: [
+        'Cheerful and bold. Loves a gamble.',
+        'Lively',
+        "Ooh, a new face! Let's make it interesting.",
+      ],
+      rita: [
+        'Brash and stubborn. Never backs down.',
+        'Relentless',
+        "Sit down. I'm not going easy on you.",
+      ],
+      vera: [
+        'Sharp-tongued, but her nerves betray her.',
+        'Prickly',
+        "You're late. Shuffle properly, please.",
+      ],
+      greta: ['Quiet and careful. Waits for her moment.', 'Patient', "Good evening. Let's begin."],
+    };
+    const characters = en.start.characters as Record<string, Record<string, string>>;
+    expect(Object.keys(characters)).toEqual(Object.keys(copy));
+    for (const [key, [line, hard, hello]] of Object.entries(copy)) {
+      const c = characters[key];
+      expect(c?.name).toBe(key[0]?.toUpperCase() + key.slice(1));
+      expect([c?.line, c?.hard, c?.hello]).toEqual([line, hard, hello]);
+      for (const text of Object.values(c ?? {})) {
+        expect(text).not.toMatch(/[\u2013\u2014]/);
+        expect(text).not.toMatch(/\b[A-Z]{2,}\b/);
+      }
+    }
   });
 
   it('hides the coach switch when the coach is not offered', () => {

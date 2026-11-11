@@ -25,7 +25,7 @@ export interface FaceFrame {
 }
 
 export const nervousOf = (s: Snapshot): number =>
-  clamp01(0.7 * s.emotions.fear + 0.4 * s.emotions.shame + 0.3 * Math.max(0, -s.mood[2]));
+  clamp01(0.7 * s.emotions.fear + 0.4 * s.emotions.shame + 0.3 * Math.max(0, -s.approach));
 
 export const sadnessOf = (s: Snapshot): number =>
   clamp01(s.emotions.distress + s.emotions.disappointment);

@@ -82,3 +82,67 @@ export function decay(emotions: Emotions, dt: number, factor: (e: Emotion) => nu
   }
   return next;
 }
+
+export const APPROACH: Readonly<Record<Emotion, number>> = {
+  hope: -0.1,
+  fear: -0.43,
+  joy: 0.1,
+  distress: -0.5,
+  relief: 0.4,
+  disappointment: -0.4,
+  pride: 0.3,
+  shame: -0.6,
+  anger: 0.6,
+  injustice: 0.4,
+  surprise: -0.1,
+};
+
+export const CERTAINTY: Readonly<Record<Emotion, number>> = {
+  anger: 0.6,
+  pride: 0.6,
+  joy: 0.5,
+  relief: 0.4,
+  injustice: 0.3,
+  disappointment: 0,
+  distress: -0.1,
+  shame: -0.2,
+  hope: -0.2,
+  surprise: -0.6,
+  fear: -0.7,
+};
+
+export const ATTACK_S = 0.5;
+export const REACTION_S = 1;
+const MAX_IMPULSE = 0.999999;
+const SETTLED = 1e-9;
+
+export type Pending = Readonly<Partial<Record<Emotion, number>>>;
+
+export const massOf = (amount: number): number =>
+  -Math.log(1 - Math.min(MAX_IMPULSE, clamp01(amount)));
+
+export function queue(p: Pending, emotion: Emotion, amount: number): Pending {
+  return { ...p, [emotion]: (p[emotion] ?? 0) + massOf(amount) };
+}
+
+export function rise(
+  e: Emotions,
+  p: Pending,
+  dt: number,
+): { emotions: Emotions; pending: Pending } {
+  const share = 1 - 0.5 ** (dt / ATTACK_S);
+  const emotions = { ...e };
+  const pending: Partial<Record<Emotion, number>> = {};
+  for (const name of EMOTIONS) {
+    const mass = p[name];
+    if (mass === undefined) {
+      continue;
+    }
+    const landed = mass * share;
+    emotions[name] = 1 - (1 - e[name]) * Math.exp(-landed);
+    if (mass - landed > SETTLED) {
+      pending[name] = mass - landed;
+    }
+  }
+  return { emotions, pending };
+}

@@ -1,4 +1,5 @@
 import type { Rng } from '../cards/index.ts';
+import { REACTION_S } from '../emotion/index.ts';
 import type { SeatIndex } from '../engine/index.ts';
 import type { Moment, PersonaReader, PersonaView, Signal } from '../persona/index.ts';
 import { COOL_LINES, drawHumour } from './humour.ts';
@@ -13,6 +14,8 @@ import type { SessionSummary } from './summary.ts';
 import type { Occasion, OccasionKind } from './types.ts';
 import { judge, streetKey } from './verdict.ts';
 import type { Verdict } from './verdict.ts';
+
+export const FEELS_AFTER_MS = REACTION_S * 1000;
 
 export interface Planned {
   verdicts: Verdict[];
@@ -60,11 +63,11 @@ class TablePlanner implements Planner {
         this.endHand(occasion, moments);
       }
     }
-    return this.decide(occasions, persona.view(nowMs), nowMs);
+    return this.decide(occasions, persona.view(nowMs + FEELS_AFTER_MS), nowMs);
   }
 
   reply(text: string, persona: PersonaReader, nowMs: number): Planned {
-    const view = persona.view(nowMs);
+    const view = persona.view(nowMs + FEELS_AFTER_MS);
     const occasion = replyOccasion(text, view.hand, persona.strength(), this.previous);
     return this.decide([occasion], view, nowMs);
   }

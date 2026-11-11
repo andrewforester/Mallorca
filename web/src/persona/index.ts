@@ -1,4 +1,6 @@
 export type { Bias } from './bias.ts';
+export { CHARACTER_SHEETS } from './characters.ts';
+export type { CharacterSheet } from './characters.ts';
 export { NEUTRAL_BIAS } from './bias.ts';
 export type { HandState } from './hand.ts';
 export { netOf, playerCardsShown } from './hand.ts';
@@ -21,11 +23,12 @@ export { classOf, strengthOf } from './strength.ts';
 export { toBotBias, wordsOf } from './view.ts';
 export {
   BIAS_KEYS,
-  BIAS_RANGE,
   EMOTIONS,
-  LOAD_SOURCES,
   MALLORCA,
   PERSONALITIES,
+  pushOf,
+  REACTION_S,
+  STYLE_SHARE,
   styleOf,
 } from '../emotion/index.ts';
 export type {
@@ -33,8 +36,8 @@ export type {
   BigFive,
   Emotion,
   Impulse,
-  LoadSource,
   Octant,
+  Part,
   Pad,
   Personality,
   PersonalityKey,

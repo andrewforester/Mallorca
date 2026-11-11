@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { mulberry32 } from '../cards/index.ts';
-import { PERSONALITIES } from '../persona/index.ts';
+import { PERSONALITIES, REACTION_S, toBotBias } from '../persona/index.ts';
 import { applyAction } from '../engine/hand.ts';
 import { call, deckOf, raiseTo, startHand } from '../engine/testDeck.ts';
 import type { Step } from '../engine/types.ts';
@@ -31,14 +31,30 @@ function badBeat(observe: (step: Step) => void, clock: { ms: number }): void {
 }
 
 describe('her persona in the session', () => {
-  it('gives the bias of her view at that moment against a Solver', () => {
+  it('gives the bias she feels a reaction time after the moment against a Solver', () => {
     const clock = { ms: 0 };
     const her = sessionPersona(host(clock));
     her.begin('cfr', mulberry32(1));
     badBeat((step) => her.observe(step.events), clock);
     clock.ms += 4000;
-    expect(her.bias()).toEqual(her.current()?.view(clock.ms).bias);
-    expect(her.bias()?.tightness).toBeLessThan(1);
+    expect(REACTION_S).toBe(1);
+    expect(her.bias()).toEqual(her.current()?.view(clock.ms + 1000).bias);
+    const rest = toBotBias(her.current()!.view(0).snapshot.traits.baseline);
+    expect(Math.abs((her.bias()?.tightness ?? 1) - rest.tightness)).toBeGreaterThan(0.02);
+  });
+
+  it('decides on a raise with the feeling the raise gave her', () => {
+    const clock = { ms: 0 };
+    const her = sessionPersona(host(clock));
+    her.setPersonality(PERSONALITIES.rita);
+    her.begin('cfr', mulberry32(1));
+    let step = startHand([2000, 2000], deckOf('Kh Qd', '7c 6c', 'Kc 8d 4s 2h 3c'), 0);
+    her.observe(step.events);
+    clock.ms += 1000;
+    step = applyAction(step.hand, step.seats, raiseTo(240));
+    her.observe(step.events);
+    const before = her.current()?.view(clock.ms).bias.aggression ?? 0;
+    expect(her.bias()?.aggression).toBeGreaterThan(before);
   });
 
   it('gives no bias against the math bot', () => {

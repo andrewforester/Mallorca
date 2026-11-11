@@ -1,21 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { appraise, prospectTargets } from './appraisal.ts';
-import type { Prospect } from './appraisal.ts';
-import { addImpulse, decay, noEmotions } from './emotions.ts';
+import {
+  APPROACH,
+  ATTACK_S,
+  CERTAINTY,
+  EMOTIONS,
+  EMOTION_PAD,
+  addImpulse,
+  decay,
+  noEmotions,
+  queue,
+  rise,
+} from './emotions.ts';
 import type { Emotions } from './emotions.ts';
 import { createEngine } from './engine.ts';
-import { emotionCenter, octantOf, stepMood } from './mood.ts';
+import { GAME_MOOD, emotionCenter, octantOf, stepAxis, stepMood } from './mood.ts';
 import { defaultMoodOf, traitsOf } from './personality.ts';
 import type { Personality } from './personality.ts';
-import { MALLORCA } from './profiles.ts';
-import { BIAS_KEYS, BIAS_RANGE, biasOf, driversOf } from './bias.ts';
-import { LEAK_FLOOR, loadOf } from './load.ts';
+import { MALLORCA, PERSONALITIES } from './profiles.ts';
+import { BIAS_KEYS } from './biasKeys.ts';
 
 const average: Personality = {
   bigFive: { openness: 0, conscientiousness: 0, extraversion: 0, agreeableness: 0, neuroticism: 0 },
   suppression: 0.3,
-  experience: 0.5,
-  control: 0.5,
 };
 
 const FAST_MOOD = { changeTimeS: 20, returnTimeS: 40 };
@@ -29,8 +35,6 @@ const hot: Personality = {
     neuroticism: 0.5,
   },
   suppression: 0.08,
-  experience: 0.2,
-  control: 0.2,
 };
 
 const cold: Personality = {
@@ -42,8 +46,6 @@ const cold: Personality = {
     neuroticism: -0.6,
   },
   suppression: 0.85,
-  experience: 0.9,
-  control: 0.9,
 };
 
 const withEmotions = (values: Partial<Emotions>): Emotions => ({ ...noEmotions(), ...values });
@@ -70,6 +72,50 @@ describe('personality', () => {
     expect(anxious.composure).toBeLessThan(calm.composure);
   });
 
+  it('takes composure from stability and discipline from conscientiousness', () => {
+    const t = traitsOf(MALLORCA);
+    expect(t.composure).toBeCloseTo(0.55 - 0.35 * 0.1 + 0.1 * 0.2, 12);
+    expect(t.discipline).toBeCloseTo(0.45 + 0.3 * 0.2 - 0.25 * 0.1, 12);
+    const shaky = { ...average.bigFive, neuroticism: 1, conscientiousness: -1 };
+    expect(traitsOf({ ...average, bigFive: shaky }).composure).toBe(0.15);
+    const steady = { ...average.bigFive, neuroticism: -1, conscientiousness: 1 };
+    expect(traitsOf({ ...average, bigFive: steady }).discipline).toBe(0.95);
+  });
+
+  it('derives whom she blames, how she copes and how rash she gets', () => {
+    const b = MALLORCA.bigFive;
+    const s = (x: number): number => 1 / (1 + Math.exp(-x));
+    const c = b.conscientiousness;
+    const n = b.neuroticism;
+    const a = b.agreeableness;
+    const e = b.extraversion;
+    const t = traitsOf(MALLORCA);
+    expect(t.selfBlame).toBeCloseTo(s(1.2 * c + 0.8 * n + 0.8 * a - 0.6 * e), 12);
+    expect(t.coping).toBeCloseTo(s(-1.2 * n + 0.6 * e - 0.5 * a), 12);
+    expect(t.urgency).toBe(0);
+    const rash = { ...average.bigFive, neuroticism: 0.8, conscientiousness: -0.6 };
+    expect(traitsOf({ ...average, bigFive: rash }).urgency).toBeCloseTo(0.7, 12);
+  });
+
+  it('keeps the stances inside zero and one at the corners', () => {
+    for (const sign of [-1, 1]) {
+      const corner = {
+        openness: sign,
+        conscientiousness: sign,
+        extraversion: -sign,
+        agreeableness: sign,
+        neuroticism: sign,
+      };
+      const t = traitsOf({ ...average, bigFive: corner });
+      for (const v of [t.coping, t.selfBlame]) {
+        expect(v).toBeGreaterThan(0);
+        expect(v).toBeLessThan(1);
+      }
+      expect(t.urgency).toBeGreaterThanOrEqual(0);
+      expect(t.urgency).toBeLessThanOrEqual(1);
+    }
+  });
+
   it('makes a disagreeable personality angrier at the same provocation', () => {
     const kind = traitsOf({ ...average, bigFive: { ...average.bigFive, agreeableness: 0.8 } });
     const rude = traitsOf({ ...average, bigFive: { ...average.bigFive, agreeableness: -0.8 } });
@@ -90,148 +136,42 @@ describe('emotions', () => {
     const later = decay(start, 30, () => 1);
     expect(later.joy).toBeCloseTo(0.4);
   });
-});
 
-describe('appraisal', () => {
-  const traits = traitsOf(average);
+  const risen = (amount: number, steps: number, dt: number): Emotions => {
+    let state = { emotions: noEmotions(), pending: queue({}, 'joy', amount) };
+    for (let i = 0; i < steps; i++) {
+      state = rise(state.emotions, state.pending, dt);
+    }
+    return state.emotions;
+  };
 
-  it('raises hope with equity and fear with what is invested', () => {
-    const strong: Prospect = { equity: 0.9, potBb: 60, investedBb: 30 };
-    const weak: Prospect = { equity: 0.2, potBb: 60, investedBb: 30 };
-    expect(prospectTargets(strong, traits).hope).toBeGreaterThan(
-      prospectTargets(weak, traits).hope,
-    );
-    expect(prospectTargets(weak, traits).fear).toBeGreaterThan(
-      prospectTargets(strong, traits).fear,
-    );
+  it('lands a queued impulse as exactly one saturated impulse', () => {
+    expect(ATTACK_S).toBe(0.5);
+    expect(risen(0.42, 200, 0.05).joy).toBeCloseTo(addImpulse(noEmotions(), 'joy', 0.42).joy, 6);
   });
 
-  it('turns a loss from a winning position into injustice and surprise', () => {
-    const emotions = withEmotions({ hope: 0.7, fear: 0.1 });
-    const badBeat = appraise({ kind: 'result', netBb: -60, lastEquity: 0.86 }, emotions, traits);
-    const cooler = appraise({ kind: 'result', netBb: -60, lastEquity: 0.1 }, emotions, traits);
-    const amount = (list: typeof badBeat, emotion: string) =>
-      list.filter((i) => i.emotion === emotion).reduce((sum, i) => sum + i.amount, 0);
-    expect(amount(badBeat, 'injustice')).toBeGreaterThan(0.3);
-    expect(amount(badBeat, 'surprise')).toBeGreaterThan(0.3);
-    expect(amount(cooler, 'injustice')).toBeLessThan(0.05);
-    expect(amount(badBeat, 'disappointment')).toBeCloseTo(0.7 * traits.gains.disappointment);
+  it('lands half of the log mass after the attack time, in any split of steps', () => {
+    const half = 1 - Math.exp(Math.log(0.58) / 2);
+    expect(risen(0.42, 10, 0.05).joy).toBeCloseTo(half, 9);
+    expect(risen(0.42, 1, 0.5).joy).toBeCloseTo(half, 9);
   });
 
-  it('turns fear into relief when the hand is won', () => {
-    const impulses = appraise(
-      { kind: 'result', netBb: 40, lastEquity: 0.5 },
-      withEmotions({ fear: 0.5 }),
-      traits,
-    );
-    const relief = impulses.find((i) => i.emotion === 'relief');
-    expect(relief?.amount).toBeCloseTo(0.5 * traits.gains.relief);
+  it('queues a full impulse without infinity', () => {
+    const joy = risen(1, 40, 0.25).joy;
+    expect(Number.isFinite(joy)).toBe(true);
+    expect(joy).toBeGreaterThanOrEqual(0.999);
+    expect(joy).toBeLessThan(1);
   });
 
-  it('counts what can still be won on later streets, not only the pot', () => {
-    const now: Prospect = { equity: 0.85, potBb: 6, investedBb: 3 };
-    const ahead: Prospect = { ...now, stackBb: 97, streetsLeft: 2 };
-    expect(prospectTargets(ahead, traits).hope).toBeGreaterThan(
-      prospectTargets(now, traits).hope + 0.2,
-    );
-  });
-
-  it('meets a flopped straight with joy as well as surprise', () => {
-    const impulses = appraise(
-      {
-        kind: 'street',
-        equity: 0.85,
-        potBb: 6,
-        investedBb: 3,
-        stackBb: 97,
-        streetsLeft: 2,
-        previousEquity: 0.46,
-      },
-      noEmotions(),
-      traits,
-    );
-    expect(impulses.find((i) => i.emotion === 'joy')?.amount).toBeGreaterThan(0.2);
-    expect(impulses.find((i) => i.emotion === 'surprise')?.amount).toBeGreaterThan(0.4);
-  });
-
-  it('takes a raise as a challenge: anger for the disagreeable, fear for the anxious', () => {
-    const rude = traitsOf({ ...average, bigFive: { ...average.bigFive, agreeableness: -0.8 } });
-    const anxious = traitsOf({ ...average, bigFive: { ...average.bigFive, neuroticism: 0.8 } });
-    const raise = {
-      kind: 'opponentBet',
-      sizeBb: 14,
-      equity: 0.6,
-      raise: true,
-      pressure: 0,
-    } as const;
-    const amount = (t: typeof rude, emotion: string) =>
-      appraise(raise, noEmotions(), t).find((i) => i.emotion === emotion)?.amount ?? 0;
-    expect(amount(rude, 'anger')).toBeGreaterThan(amount(anxious, 'anger'));
-    expect(amount(anxious, 'fear')).toBeGreaterThan(amount(rude, 'fear'));
-  });
-
-  it('greets a premium starting hand with joy', () => {
-    const aces = appraise(
-      { kind: 'deal', equity: 0.85, potBb: 3, investedBb: 1.5 },
-      noEmotions(),
-      traits,
-    );
-    const trash = appraise(
-      { kind: 'deal', equity: 0.35, potBb: 3, investedBb: 1.5 },
-      noEmotions(),
-      traits,
-    );
-    expect(aces.find((i) => i.emotion === 'joy')?.amount).toBeGreaterThan(0.4);
-    expect(trash).toEqual([]);
-  });
-
-  it('answers a big swing on a street with surprise', () => {
-    const impulses = appraise(
-      { kind: 'street', equity: 0.9, potBb: 20, investedBb: 10, previousEquity: 0.3 },
-      noEmotions(),
-      traits,
-    );
-    expect(impulses.some((i) => i.emotion === 'surprise' && i.amount > 0.3)).toBe(true);
-  });
-});
-
-describe('her own moves', () => {
-  const traits = traitsOf(MALLORCA);
-  const felt = (event: Parameters<typeof appraise>[0], emotion: string): number =>
-    appraise(event, noEmotions(), traits).find((i) => i.emotion === emotion)?.amount ?? 0;
-
-  it('frightens her by what she risks when she bets behind a weak hand', () => {
-    const bluff = { kind: 'ownMove', move: 'bet', amountBb: 20, equity: 0.2 } as const;
-    expect(felt(bluff, 'fear')).toBeGreaterThan(0.2);
-    expect(felt(bluff, 'pride')).toBe(0);
-    const small = { ...bluff, amountBb: 2 };
-    expect(felt(small, 'fear')).toBeLessThan(felt(bluff, 'fear'));
-  });
-
-  it('makes her a little proud when she takes the lead with a strong hand', () => {
-    const value = { kind: 'ownMove', move: 'bet', amountBb: 20, equity: 0.9 } as const;
-    expect(felt(value, 'pride')).toBeGreaterThan(0.05);
-    expect(felt(value, 'pride')).toBeLessThan(0.2);
-    expect(felt(value, 'fear')).toBe(0);
-  });
-
-  it('angers her to fold a hand she believed in and relieves her to fold junk', () => {
-    const pushed = {
-      kind: 'ownMove',
-      move: 'fold',
-      equity: 0.75,
-      facingBb: 30,
-    } as const;
-    expect(felt(pushed, 'anger')).toBeGreaterThan(0.1);
-    expect(felt(pushed, 'relief')).toBe(0);
-    const junk = { ...pushed, equity: 0.1 };
-    expect(felt(junk, 'relief')).toBeGreaterThan(0.1);
-    expect(felt(junk, 'anger')).toBe(0);
-  });
-
-  it('leaves a small bet with a middling hand unfelt', () => {
-    const plain = { kind: 'ownMove', move: 'bet', amountBb: 2, equity: 0.55 } as const;
-    expect(appraise(plain, noEmotions(), traits)).toEqual([]);
+  it('gives every emotion the approach of its dominance, except anger and injustice', () => {
+    for (const e of EMOTIONS) {
+      if (e === 'anger' || e === 'injustice') {
+        continue;
+      }
+      expect(APPROACH[e]).toBe(EMOTION_PAD[e][2]);
+    }
+    expect(APPROACH.anger).toBe(0.6);
+    expect(APPROACH.injustice).toBe(0.4);
   });
 });
 
@@ -283,83 +223,49 @@ describe('mood', () => {
   });
 });
 
-describe('load', () => {
-  const traits = traitsOf(average);
+describe('approach and certainty of the mood', () => {
+  const held = (e: Partial<Emotions>, seconds: number, weights = APPROACH): number => {
+    let value = 0;
+    for (let t = 0; t < seconds; t++) {
+      value = stepAxis(value, withEmotions(e), 1, { ...GAME_MOOD, weights });
+    }
+    return value;
+  };
 
-  it('adds up the negative emotions, the bad mood and the session loss', () => {
-    const reading = loadOf(withEmotions({ anger: 0.5, shame: 0.5 }), [-0.4, 0, 0], -200, traits);
-    expect(reading.parts.anger).toBeCloseTo(0.5);
-    expect(reading.parts.shame).toBeCloseTo(0.4);
-    expect(reading.parts.mood).toBeCloseTo(0.2);
-    expect(reading.parts.desperation).toBeGreaterThan(0.5);
-    expect(reading.load).toBeCloseTo(Object.values(reading.parts).reduce((a, b) => a + b, 0));
+  it('lets small emotions lose to the pull to rest', () => {
+    expect(Math.abs(held({ joy: 0.06 }, 600))).toBeLessThan(0.02);
   });
 
-  it('does not call a single lost pot desperation', () => {
-    expect(loadOf(noEmotions(), [0, 0, 0], -60, traits).parts.desperation).toBeLessThan(0.15);
+  it('lets strong emotions switch the pull off and move the mood', () => {
+    expect(held({ anger: 0.8 }, 600)).toBeGreaterThan(0.2);
+    expect(held({ shame: 0.8 }, 600)).toBeLessThan(-0.2);
+    expect(held({ fear: 0.5 }, 600, CERTAINTY)).toBeLessThan(-0.1);
   });
 
-  it('lets a calm player leak only the floor and an overloaded one almost everything', () => {
-    const calm = loadOf(withEmotions({ distress: 0.2 }), [0, 0, 0], 0, traits);
-    const boiling = loadOf(withEmotions({ anger: 1, injustice: 1 }), [0, 0, 0], 0, traits);
-    expect(calm.overload).toBeLessThan(0.05);
-    expect(calm.leakage).toBeCloseTo((1 - traits.discipline) * LEAK_FLOOR, 1);
-    expect(boiling.overload).toBeGreaterThan(0.95);
-    expect(boiling.leakage).toBeCloseTo(1 - traits.discipline, 1);
+  it('returns to zero without emotions and never overshoots', () => {
+    const seconds = Math.ceil((GAME_MOOD.returnTimeS / Math.sqrt(3)) * 0.5);
+    let value = 0.5;
+    for (let t = 0; t < seconds; t++) {
+      value = stepAxis(value, noEmotions(), 1, { ...GAME_MOOD, weights: CERTAINTY });
+      expect(value).toBeGreaterThanOrEqual(0);
+    }
+    expect(value).toBe(0);
   });
 
-  it('names the emotion that feeds the load most', () => {
-    expect(loadOf(withEmotions({ anger: 0.9 }), [0, 0, 0], 0, traits).dominant).toBe('anger');
-    expect(loadOf(noEmotions(), [0, 0, 0], -400, traits).dominant).toBe('desperation');
-  });
-});
-
-describe('bias', () => {
-  it('is neutral when calm', () => {
-    const bias = biasOf(driversOf(noEmotions(), [0, 0, 0], 0), 0.3);
-    expect(Object.values(bias).every((v) => Math.abs(v - 1) < 1e-9)).toBe(true);
-  });
-
-  it('plays fear tighter and anger more aggressively, with more bluffs', () => {
-    const fear = biasOf(driversOf(withEmotions({ fear: 0.8 }), [0, 0, 0], 0), 0.8);
-    const anger = biasOf(driversOf(withEmotions({ anger: 0.8 }), [0, 0, 0], 0), 0.8);
-    expect(fear.aggression).toBeLessThan(1);
-    expect(fear.looseness).toBeLessThan(1);
-    expect(anger.aggression).toBeGreaterThan(1.3);
-    expect(anger.bluff).toBeGreaterThan(anger.aggression);
-  });
-
-  it('plays a big session loss loose and sticky', () => {
-    const bias = biasOf(driversOf(noEmotions(), [0, 0, 0], -300), 0.8);
-    expect(bias.looseness).toBeGreaterThan(1.2);
-    expect(bias.stickiness).toBeGreaterThan(1.2);
-  });
-
-  it('multiplies her baseline', () => {
-    const calm = driversOf(noEmotions(), [0, 0, 0], 0);
-    const ones = Object.fromEntries(BIAS_KEYS.map((k) => [k, 1])) as Record<
-      (typeof BIAS_KEYS)[number],
-      number
-    >;
-    expect(biasOf(calm, 0.3, { ...ones, aggression: 1.2 }).aggression).toBeCloseTo(1.2, 9);
-  });
-
-  it('clamps the baseline times the emotional part', () => {
-    const angry = driversOf(withEmotions({ anger: 0.8 }), [0, 0, 0], 0);
-    const ones = Object.fromEntries(BIAS_KEYS.map((k) => [k, 1])) as Record<
-      (typeof BIAS_KEYS)[number],
-      number
-    >;
-    expect(biasOf(angry, 0.8, { ...ones, aggression: 1.8 }).aggression).toBe(BIAS_RANGE[1]);
-  });
-
-  it('starts a neutral character from a neutral baseline', () => {
-    expect(Object.values(traitsOf(average).baseline)).toEqual(BIAS_KEYS.map(() => 1));
-  });
-
-  it('holds the bias near neutral with little leakage', () => {
-    const drivers = driversOf(withEmotions({ fear: 0.8 }), [0, 0, 0], 0);
-    expect(Math.abs(biasOf(drivers, 0.05).aggression - 1)).toBeLessThan(0.03);
+  it('gives every emotion the certainty of the addendum', () => {
+    expect(CERTAINTY).toEqual({
+      anger: 0.6,
+      pride: 0.6,
+      joy: 0.5,
+      relief: 0.4,
+      injustice: 0.3,
+      disappointment: 0,
+      distress: -0.1,
+      shame: -0.2,
+      hope: -0.2,
+      surprise: -0.6,
+      fear: -0.7,
+    });
   });
 });
 
@@ -374,7 +280,7 @@ describe('engine', () => {
     engine.step(2);
     engine.event({ kind: 'street', equity: 0, potBb: 120, investedBb: 60 });
     engine.step(0.5);
-    engine.event({ kind: 'result', netBb: -60 });
+    engine.event({ kind: 'result', netBb: -60, decided: 'showdown' });
     engine.step(6);
     return engine.snapshot();
   };
@@ -383,9 +289,21 @@ describe('engine', () => {
     const lola = badBeat(hot);
     const ingrid = badBeat(cold);
     expect(lola.emotions.injustice).toBeGreaterThan(ingrid.emotions.injustice);
-    expect(lola.load.overload).toBeGreaterThan(0.9);
+    expect(lola.load.overload).toBeGreaterThan(0.85);
     expect(ingrid.load.overload).toBeLessThan(lola.load.overload);
+    expect(lola.load.reach).toBeGreaterThan(4 * ingrid.load.reach);
     expect(lola.bias.looseness).toBeGreaterThan(ingrid.bias.looseness);
+  });
+
+  it('feels a big win strongly and lets it reach the play, but is not on tilt', () => {
+    const engine = createEngine(hot);
+    engine.event({ kind: 'result', netBb: 100, decided: 'showdown', lastEquity: 0.85 });
+    engine.step(6);
+    const s = engine.snapshot();
+    expect(s.emotions.joy).toBeGreaterThan(0.8);
+    expect(s.load.reach).toBeGreaterThan(0);
+    expect(s.load.strain).toBe(0);
+    expect(s.load.overload).toBe(0);
   });
 
   it('remembers raises against her and angers more with each one', () => {
@@ -408,31 +326,45 @@ describe('engine', () => {
     expect(anger(second)).toBeGreaterThan(anger(first));
   });
 
+  it('remembers who put the money in last and lets it decide the blame', () => {
+    const lose = (her: boolean) => {
+      const engine = createEngine(PERSONALITIES.sol);
+      engine.event({ kind: 'deal', equity: 0.3, potBb: 20, investedBb: 10, streetsLeft: 0 });
+      engine.event(
+        her
+          ? { kind: 'ownMove', move: 'bet', amountBb: 60, potBb: 20, equity: 0.02 }
+          : { kind: 'opponentBet', sizeBb: 60, equity: 0.02 },
+      );
+      engine.event({ kind: 'opponentCall' });
+      const impulses = engine.event({ kind: 'result', netBb: -80, decided: 'showdown' });
+      const of = (e: string) => impulses.find((i) => i.emotion === e)?.amount ?? 0;
+      return { shame: of('shame'), anger: of('anger') };
+    };
+    expect(lose(true).shame).toBeGreaterThan(lose(true).anger);
+    expect(lose(false).anger).toBeGreaterThan(lose(false).shame);
+  });
+
   it('judges the result by the equity before the deciding card', () => {
     const engine = createEngine(MALLORCA);
     engine.event({ kind: 'deal', equity: 0.8, potBb: 120, investedBb: 60 });
     engine.event({ kind: 'street', equity: 0.86, potBb: 120, investedBb: 60 });
     engine.event({ kind: 'street', equity: 0, potBb: 120, investedBb: 60 });
-    const impulses = engine.event({ kind: 'result', netBb: -60 });
+    const impulses = engine.event({ kind: 'result', netBb: -60, decided: 'showdown' });
     expect(impulses.some((i) => i.emotion === 'injustice' && i.amount > 0.3)).toBe(true);
-  });
-
-  it('damps the joy of the deal when the hand is lost', () => {
-    const engine = createEngine(MALLORCA);
-    engine.event({ kind: 'deal', equity: 0.85, potBb: 3, investedBb: 1.5 });
-    const before = engine.snapshot().emotions.joy;
-    engine.event({ kind: 'result', netBb: -30 });
-    expect(engine.snapshot().emotions.joy).toBeCloseTo(before * 0.3);
   });
 
   it('ignores cards shown after the hand is over', () => {
     const engine = createEngine(MALLORCA);
     engine.event({ kind: 'deal', equity: 0.7, potBb: 40, investedBb: 20 });
-    engine.event({ kind: 'result', netBb: -20 });
+    engine.event({ kind: 'result', netBb: -20, decided: 'showdown' });
     engine.event({ kind: 'street', equity: 0.9, potBb: 40, investedBb: 20 });
     engine.step(2);
     expect(engine.snapshot().prospect).toBeNull();
     expect(engine.snapshot().emotions.hope).toBe(0);
+  });
+
+  it('starts a neutral character from the blueprint', () => {
+    expect(Object.values(traitsOf(average).baseline)).toEqual(BIAS_KEYS.map(() => 1));
   });
 
   it('plays her natural style while calm, whatever her default mood', () => {
@@ -442,18 +374,112 @@ describe('engine', () => {
     }
   });
 
-  it('clears hope and fear when the hand ends', () => {
-    const after = badBeat(MALLORCA);
-    expect(after.emotions.hope).toBeLessThan(0.05);
-    expect(after.prospect).toBeNull();
-    expect(after.sessionNetBb).toBe(-60);
+  it('holds the anger at his raise for the hand and lets it fade after, like hope and fear', () => {
+    const hand = (decided: 'heFolded' | 'sheFolded') => {
+      const engine = createEngine(PERSONALITIES.sol);
+      engine.event({ kind: 'deal', equity: 0.7, potBb: 20, investedBb: 10, streetsLeft: 1 });
+      engine.event({ kind: 'opponentBet', sizeBb: 30, equity: 0.5, raise: true });
+      engine.step(3);
+      const during = engine.snapshot().emotions.anger;
+      engine.event({ kind: 'result', netBb: decided === 'heFolded' ? 20 : -10, decided });
+      engine.step(10);
+      return { during, after: engine.snapshot().emotions.anger };
+    };
+    const won = hand('heFolded');
+    expect(won.during).toBeGreaterThan(0.1);
+    expect(won.after).toBeLessThan(0.01);
+    const pushed = hand('sheFolded');
+    expect(pushed.after).toBeGreaterThan(0.05);
+  });
+
+  it('lets hope and fear fade after the hand instead of dropping them', () => {
+    const engine = createEngine(MALLORCA);
+    engine.event({
+      kind: 'deal',
+      equity: 0.5,
+      potBb: 120,
+      investedBb: 60,
+      stackBb: 40,
+      streetsLeft: 1,
+    });
+    engine.step(3);
+    const during = engine.snapshot().emotions;
+    expect(during.hope + during.fear).toBeGreaterThan(0.3);
+    engine.event({ kind: 'result', netBb: -60, decided: 'showdown' });
+    expect(engine.snapshot().prospect).toBeNull();
+    expect(engine.snapshot().sessionNetBb).toBe(-60);
+    engine.step(0.5);
+    expect(engine.snapshot().emotions.hope).toBeGreaterThan(0);
+    expect(engine.snapshot().emotions.fear).toBeGreaterThan(0);
+    engine.step(9.5);
+    expect(engine.snapshot().emotions.hope).toBeLessThan(0.01);
+    expect(engine.snapshot().emotions.fear).toBeLessThan(0.01);
+  });
+});
+
+describe('her belief while she bets', () => {
+  const riverBluff = (key: 'nina' | 'rita') => {
+    const engine = createEngine(PERSONALITIES[key]);
+    engine.event({
+      kind: 'deal',
+      equity: 0.1,
+      potBb: 20,
+      investedBb: 10,
+      stackBb: 90,
+      streetsLeft: 0,
+    });
+    engine.step(5);
+    const before = engine.snapshot().emotions;
+    engine.event({ kind: 'ownMove', move: 'bet', amountBb: 15, potBb: 20, equity: 0.1 });
+    engine.event({
+      kind: 'street',
+      equity: 0.1,
+      potBb: 35,
+      investedBb: 25,
+      stackBb: 75,
+      streetsLeft: 0,
+    });
+    engine.step(5);
+    return { engine, before, after: engine.snapshot().emotions };
+  };
+
+  it('frightens the anxious and excites the bold with the same bluff', () => {
+    const nina = riverBluff('nina');
+    expect(nina.after.fear).toBeGreaterThan(nina.before.fear + 0.1);
+    const rita = riverBluff('rita');
+    expect(rita.after.hope).toBeGreaterThan(rita.before.hope + 0.1);
+  });
+
+  it('goes back to her equity when he calls', () => {
+    const { engine } = riverBluff('nina');
+    const held = engine.snapshot().emotions.fear;
+    engine.event({ kind: 'opponentCall' });
+    engine.step(5);
+    expect(engine.snapshot().emotions.fear).toBeLessThan(held);
+  });
+
+  it('changes nothing when he calls without a bet of hers', () => {
+    const engine = createEngine(MALLORCA);
+    engine.event({
+      kind: 'deal',
+      equity: 0.4,
+      potBb: 20,
+      investedBb: 10,
+      stackBb: 90,
+      streetsLeft: 1,
+    });
+    engine.step(3);
+    const before = engine.snapshot();
+    engine.event({ kind: 'opponentCall' });
+    expect(engine.snapshot()).toEqual(before);
   });
 });
 
 describe('looking ahead', () => {
   it('reads the snapshot a step later without moving the engine', () => {
     const engine = createEngine(MALLORCA);
-    engine.event({ kind: 'bluff', succeeded: false, potBb: 40 });
+    engine.event({ kind: 'result', netBb: -40, lastEquity: 0.1, decided: 'showdown' });
+    engine.step(10);
     const before = engine.snapshot();
     const ahead = engine.ahead(3);
     expect(engine.snapshot()).toEqual(before);

@@ -1,45 +1,46 @@
-import { appraise, prospectTargets } from './appraisal.ts';
-import type { Impulse, Prospect, TableEvent } from './appraisal.ts';
-import { addImpulse, decay, noEmotions } from './emotions.ts';
+import { appraisalOf } from './appraisal.ts';
+import type { Aggressor, Impulse, Prospect, TableEvent } from './appraisal.ts';
+import { impulsesOf } from './feelings.ts';
+import {
+  NOTHING_HELD,
+  RELEASE_S,
+  beliefOf,
+  foldChanceOf,
+  holdOf,
+  stepHeld,
+  tensionTargets,
+  withHeld,
+} from './tension.ts';
+import type { Held } from './tension.ts';
+import { APPROACH, CERTAINTY, HALF_LIFE_S, decay, noEmotions, queue, rise } from './emotions.ts';
+import type { Pending } from './emotions.ts';
 import type { Emotions, Pad } from './emotions.ts';
-import { GAME_MOOD, octantOf, stepMood } from './mood.ts';
+import { GAME_MOOD, octantOf, stepAxis, stepMood } from './mood.ts';
 import type { MoodConfig } from './mood.ts';
 import { traitsOf } from './personality.ts';
 import type { Personality, Traits } from './personality.ts';
-import { biasOf, driversOf } from './bias.ts';
-import type { Drivers, PlayBias } from './bias.ts';
-import { loadOf } from './load.ts';
-import type { LoadReading } from './load.ts';
+import type { PlayBias } from './biasKeys.ts';
+import { affectOf, overloadOf, partsOf, playOf, strainOf } from './play.ts';
+import type { Affect, LoadReading } from './play.ts';
 
 export const PROSPECT_HALF_LIFE_S = 0.8;
 export const PROSPECT_DROP_HALF_LIFE_S = 0.25;
-export const OUTCOME_DAMPING = 0.3;
 export const PRESSURE_HALF_LIFE_S = 300;
-
-export function settle(e: Emotions, netBb: number): Emotions {
-  const won = netBb >= 0;
-  return {
-    ...e,
-    hope: 0,
-    fear: 0,
-    joy: won ? e.joy : e.joy * OUTCOME_DAMPING,
-    pride: won ? e.pride : e.pride * OUTCOME_DAMPING,
-    distress: won ? e.distress * OUTCOME_DAMPING : e.distress,
-    disappointment: won ? e.disappointment * OUTCOME_DAMPING : e.disappointment,
-  };
-}
 
 export interface Snapshot {
   time: number;
   traits: Traits;
   emotions: Emotions;
   mood: Pad;
+  approach: number;
+  certainty: number;
+  belief: number | null;
   octant: ReturnType<typeof octantOf>;
   prospect: Prospect | null;
   sessionNetBb: number;
   pressure: number;
   load: LoadReading;
-  drivers: Drivers;
+  affect: Affect;
   bias: PlayBias;
 }
 
@@ -71,7 +72,13 @@ class EmotionEngine implements Engine {
   private traits: Traits;
   private time = 0;
   private emotions: Emotions = noEmotions();
+  private pending: Pending = {};
+  private held: Held = NOTHING_HELD;
   private mood: Pad;
+  private approach = 0;
+  private certainty = 0;
+  private foldChance = 0;
+  private aggressor: Aggressor | undefined = undefined;
   private prospect: Prospect | null = null;
   private sessionNetBb = 0;
   private pressure = 0;
@@ -87,9 +94,18 @@ class EmotionEngine implements Engine {
     if (e.kind === 'street' && !this.prospect) {
       return [];
     }
-    const impulses = appraise(this.completed(e), this.emotions, this.traits);
+    const a = appraisalOf(this.completed(e), {
+      prospect: this.prospect,
+      pressure: this.pressure,
+      traits: this.traits,
+    });
+    const impulses = a === null ? [] : impulsesOf(a, this.felt(), this.traits);
     for (const i of impulses) {
-      this.emotions = addImpulse(this.emotions, i.emotion, i.amount);
+      if (a?.realized === false && i.emotion === 'anger') {
+        this.held = holdOf(this.held, i.amount);
+      } else {
+        this.pending = queue(this.pending, i.emotion, i.amount);
+      }
     }
     this.remember(e);
     return impulses;
@@ -100,11 +116,12 @@ class EmotionEngine implements Engine {
     if (e.kind === 'street' && p) {
       return { ...e, previousEquity: e.previousEquity ?? p.equity };
     }
-    if (e.kind === 'opponentBet' && e.raise) {
-      return { ...e, pressure: e.pressure ?? this.pressure };
-    }
     if (e.kind === 'result') {
-      return { ...e, lastEquity: e.lastEquity ?? lastEquityOf(p) };
+      return {
+        ...e,
+        lastEquity: e.lastEquity ?? beliefOf(lastEquityOf(p), this.foldChance),
+        aggressor: e.aggressor ?? this.aggressor,
+      };
     }
     return e;
   }
@@ -121,26 +138,67 @@ class EmotionEngine implements Engine {
     } else if (e.kind === 'result') {
       this.prospect = null;
       this.sessionNetBb += e.netBb;
-      this.emotions = settle(this.emotions, e.netBb);
     }
+    this.foldChance =
+      e.kind === 'ownMove' ? foldChanceOf(e.amountBb, e.potBb) : this.keptFoldChance(e);
+    this.aggressor = this.aggressorAfter(e);
+  }
+
+  private aggressorAfter(e: TableEvent): Aggressor | undefined {
+    if (e.kind === 'ownMove') {
+      return 'her';
+    }
+    if (e.kind === 'opponentBet') {
+      return 'him';
+    }
+    return e.kind === 'deal' || e.kind === 'result' ? undefined : this.aggressor;
+  }
+
+  private keptFoldChance(e: TableEvent): number {
+    const resets = ['deal', 'opponentBet', 'opponentCall', 'result'];
+    return resets.includes(e.kind) ? 0 : this.foldChance;
+  }
+
+  private believed(): Prospect | null {
+    const p = this.prospect;
+    return p === null ? null : { ...p, equity: beliefOf(p.equity, this.foldChance) };
   }
 
   step(dt: number): void {
     this.time += dt;
-    this.emotions = decay(this.emotions, dt, (name) => this.traits.halfLifeFactor[name]);
+    const risen = rise(this.emotions, this.pending, dt);
+    this.pending = risen.pending;
+    this.emotions = decay(risen.emotions, dt, (name) => this.traits.halfLifeFactor[name]);
     this.trackProspect(dt);
-    this.mood = stepMood(this.mood, this.emotions, dt, {
+    const holding = HALF_LIFE_S.anger * this.traits.halfLifeFactor.anger;
+    this.held = stepHeld(this.held, dt, this.prospect ? holding : RELEASE_S);
+    const felt = this.felt();
+    this.mood = stepMood(this.mood, felt, dt, {
       ...this.config,
       defaultMood: this.traits.defaultMood,
+    });
+    this.approach = stepAxis(this.approach, felt, dt, {
+      ...this.config,
+      weights: APPROACH,
+    });
+    this.certainty = stepAxis(this.certainty, felt, dt, {
+      ...this.config,
+      weights: CERTAINTY,
     });
     this.pressure *= 0.5 ** (dt / PRESSURE_HALF_LIFE_S);
   }
 
   private trackProspect(dt: number): void {
     if (!this.prospect) {
+      const fade = 0.5 ** (dt / RELEASE_S);
+      this.emotions = {
+        ...this.emotions,
+        hope: this.emotions.hope * fade,
+        fear: this.emotions.fear * fade,
+      };
       return;
     }
-    const target = prospectTargets(this.prospect, this.traits);
+    const target = tensionTargets(this.believed() ?? this.prospect, this.traits);
     const { hope, fear } = this.emotions;
     this.emotions = {
       ...this.emotions,
@@ -149,31 +207,62 @@ class EmotionEngine implements Engine {
     };
   }
 
+  private felt(): Emotions {
+    return { ...this.emotions, anger: withHeld(this.emotions.anger, this.held) };
+  }
+
   snapshot(): Snapshot {
     const base = this.traits.defaultMood;
     const shift: Pad = [this.mood[0] - base[0], this.mood[1] - base[1], this.mood[2] - base[2]];
-    const load = loadOf(this.emotions, shift, this.sessionNetBb, this.traits);
-    const drivers = driversOf(this.emotions, shift, this.sessionNetBb);
+    const { traits, approach, certainty } = this;
+    const emotions = this.felt();
+    const moodShift = { shift, approach, certainty };
+    const affect = affectOf(emotions, moodShift, traits.urgency);
+    const play = playOf(affect, traits);
+    const strain = strainOf(emotions, moodShift);
     return {
       time: this.time,
       traits: this.traits,
-      emotions: this.emotions,
+      emotions,
       mood: this.mood,
+      approach: this.approach,
+      certainty: this.certainty,
+      belief: this.believed()?.equity ?? null,
       octant: octantOf(this.mood),
       prospect: this.prospect,
       sessionNetBb: this.sessionNetBb,
       pressure: this.pressure,
-      load,
-      drivers,
-      bias: biasOf(drivers, load.leakage, this.traits.baseline),
+      load: {
+        intensity: play.intensity,
+        strain,
+        overload: overloadOf(strain, traits.composure),
+        reach: play.reach,
+        composure: traits.composure,
+        discipline: traits.discipline,
+        parts: partsOf(emotions, moodShift),
+      },
+      affect,
+      bias: play.bias,
     };
   }
 
   ahead(dt: number): Snapshot {
-    const { time, emotions, mood, prospect, pressure } = this;
+    const { time, emotions, pending, held, mood, approach, certainty, prospect, pressure } = this;
+    const { foldChance } = this;
     this.step(dt);
     const later = this.snapshot();
-    Object.assign(this, { time, emotions, mood, prospect, pressure });
+    Object.assign(this, {
+      time,
+      emotions,
+      pending,
+      held,
+      mood,
+      approach,
+      certainty,
+      prospect,
+      pressure,
+      foldChance,
+    });
     return later;
   }
 
@@ -184,7 +273,13 @@ class EmotionEngine implements Engine {
   reset(): void {
     this.time = 0;
     this.emotions = noEmotions();
+    this.pending = {};
+    this.held = NOTHING_HELD;
     this.mood = this.traits.defaultMood;
+    this.approach = 0;
+    this.certainty = 0;
+    this.foldChance = 0;
+    this.aggressor = undefined;
     this.prospect = null;
     this.sessionNetBb = 0;
     this.pressure = 0;

@@ -1,16 +1,33 @@
-export type { ChatSignal, Impulse, Money, Prospect, TableEvent } from './appraisal.ts';
-export { EMOTIONS, EMOTION_PAD } from './emotions.ts';
+export type {
+  Cause,
+  ChatSignal,
+  Decided,
+  Impulse,
+  Money,
+  Prospect,
+  TableEvent,
+} from './appraisal.ts';
+export { APPROACH, CERTAINTY, EMOTIONS, EMOTION_PAD, NEGATIVE, REACTION_S } from './emotions.ts';
 export type { Emotion, Emotions, Pad } from './emotions.ts';
 export { createEngine } from './engine.ts';
 export type { Engine, Snapshot } from './engine.ts';
-export { LOAD_SOURCES } from './load.ts';
-export type { LoadReading, LoadSource } from './load.ts';
+export {
+  MOOD_WEIGHT,
+  PLAY_AXES,
+  PUSH_GAIN,
+  URGENCY_PUSH,
+  affectOf,
+  pushOf,
+  partsOf,
+  playOf,
+} from './play.ts';
+export type { Affect, LoadReading, MoodShift, Part, PlayReading } from './play.ts';
 export { OVERLOAD_MASK_LOSS, maskOf } from './mask.ts';
 export { GAME_MOOD } from './mood.ts';
 export type { MoodConfig, Octant } from './mood.ts';
 export type { BigFive, Personality, Traits } from './personality.ts';
 export { MALLORCA, PERSONALITIES } from './profiles.ts';
 export type { PersonalityKey } from './profiles.ts';
-export { BIAS_KEYS, BIAS_RANGE, NEUTRAL_PLAY_BIAS } from './bias.ts';
-export type { BiasKey, PlayBias } from './bias.ts';
-export { STYLE_COEFFICIENTS, styleOf } from './style.ts';
+export { BIAS_KEYS, NEUTRAL_PLAY_BIAS } from './biasKeys.ts';
+export type { BiasKey, PlayBias } from './biasKeys.ts';
+export { STYLE_SHARE, STYLE_WEIGHTS, natureOf, styleFrom, styleOf } from './style.ts';

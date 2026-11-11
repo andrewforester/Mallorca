@@ -1,4 +1,4 @@
-import { PERSONALITIES } from '../../game/index.ts';
+import { CHARACTER_SHEETS, PERSONALITIES } from '../../game/index.ts';
 import type { BigFive, DebugView, Personality, PersonalityKey, Session } from '../../game/index.ts';
 import { COPY } from './copy.ts';
 import { f2, padText } from './format.ts';
@@ -31,20 +31,6 @@ function slidersOf(view: DebugView): Slider[] {
       value: view.suppression,
       put: (p, v) => ({ ...p, suppression: v }),
     },
-    {
-      id: 'experience',
-      label: COPY.experience,
-      min: 0,
-      value: view.experience,
-      put: (p, v) => ({ ...p, experience: v }),
-    },
-    {
-      id: 'control',
-      label: COPY.control,
-      min: 0,
-      value: view.control,
-      put: (p, v) => ({ ...p, control: v }),
-    },
   ];
 }
 
@@ -52,8 +38,6 @@ function current(view: DebugView): Personality {
   return {
     bigFive: view.bigFive,
     suppression: view.suppression,
-    experience: view.experience,
-    control: view.control,
   };
 }
 
@@ -76,6 +60,18 @@ function Traits({ view }: { view: DebugView }) {
         <tr>
           <td>{COPY.traits.discipline}</td>
           <td>{f2(t.discipline)}</td>
+        </tr>
+        <tr>
+          <td>{COPY.traits.selfBlame}</td>
+          <td>{f2(t.selfBlame)}</td>
+        </tr>
+        <tr>
+          <td>{COPY.traits.coping}</td>
+          <td>{f2(t.coping)}</td>
+        </tr>
+        <tr>
+          <td>{COPY.traits.urgency}</td>
+          <td>{f2(t.urgency)}</td>
         </tr>
         {t.gains.map(([emotion, gain]) => (
           <tr key={emotion}>
@@ -128,12 +124,13 @@ export function PersonalitySection({ view, session }: { view: DebugView; session
             class="debug-pick"
             data-testid={`debug-personality-${key}`}
             aria-pressed={chosen === key}
+            title={CHARACTER_SHEETS[key].short}
             onClick={() => session.getState().setPersonality(key)}
           >
-            {COPY.personality[key]}
+            {CHARACTER_SHEETS[key].name}
           </button>
         ))}
-        {chosen === 'custom' && <span class="debug-note">{COPY.personality.custom}</span>}
+        {chosen === 'custom' && <span class="debug-note">{COPY.custom}</span>}
       </div>
       <button
         type="button"
