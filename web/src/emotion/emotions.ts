@@ -147,6 +147,19 @@ export function queue(p: Pending, emotion: Emotion, amount: number): Pending {
   return { ...p, [emotion]: (p[emotion] ?? 0) + massOf(amount) };
 }
 
+export function ease(
+  e: Emotions,
+  p: Pending,
+  emotion: Emotion,
+  keep: number,
+): { emotions: Emotions; pending: Pending } {
+  const mass = p[emotion];
+  return {
+    emotions: { ...e, [emotion]: e[emotion] * keep },
+    pending: mass === undefined ? p : { ...p, [emotion]: mass * keep },
+  };
+}
+
 export function rise(
   e: Emotions,
   p: Pending,
