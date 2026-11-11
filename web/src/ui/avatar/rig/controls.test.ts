@@ -31,6 +31,11 @@ describe('controlsOf', () => {
     expect(run({ mouthSmileLeft: 0.6 })[1]).toBeCloseTo(0.3);
   });
 
+  it('drives a rig control named directly by its own name', () => {
+    expect(run({ mouthCornerPullL: 0.4 })[1]).toBeCloseTo(0.4);
+    expect(run({ mouthCornerPullL: 0.4, mouthSmileLeft: 0.6 })[1]).toBeCloseTo(0.7);
+  });
+
   it('ignores a name with no mapping', () => {
     expect([...run({ unknownName: 1 })]).toEqual(new Array(NAMES.length).fill(0));
   });

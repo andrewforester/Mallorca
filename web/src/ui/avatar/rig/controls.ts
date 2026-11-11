@@ -17,7 +17,7 @@ function addMapped(
   out: Float32Array,
 ): void {
   for (const [name, w] of Object.entries(weights)) {
-    const map = mapping[name];
+    const map = mapping[name] ?? (index.has(name) ? { [name]: 1 } : undefined);
     if (!w || !map || name.startsWith('eyeLook')) continue;
     for (const [control, gain] of Object.entries(map)) {
       const i = index.get(control);
