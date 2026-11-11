@@ -166,7 +166,7 @@ describe('frame', () => {
     const s = createEngine(MALLORCA).snapshot();
     const angry = faceFrame({ ...s, emotions: { ...s.emotions, anger: 0.5 } }, null, MALLORCA_LOOK);
     expect(angry.weights.browDownLeft).toBeGreaterThan(0.4);
-    expect(angry.weights.mouthLipsTightenUL).toBeGreaterThan(0.2);
+    expect(angry.weights.mouthPressUL).toBeGreaterThan(0.2);
     expect(angry.head[0]).toBeGreaterThan(0.03);
   });
 

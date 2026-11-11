@@ -35,6 +35,10 @@ const OPPOSED: ReadonlyArray<readonly [string, string]> = [
   ['mouthSmileRight', 'mouthFrownRight'],
   ['eyeUpperLidUpL', 'eyeBlinkLeft'],
   ['eyeUpperLidUpR', 'eyeBlinkRight'],
+  ['eyeUpperLidUpL', 'eyeRelaxL'],
+  ['eyeUpperLidUpR', 'eyeRelaxR'],
+  ['eyePupilWideL', 'eyePupilNarrowL'],
+  ['eyePupilWideR', 'eyePupilNarrowR'],
 ];
 
 interface Layer {
@@ -103,10 +107,9 @@ export function expressionOf(f: Feelings): Expression {
       const v = value * activation(level, threshold) * share;
       if (v > 0) parts.set(name, [...(parts.get(name) ?? []), v]);
     }
-    const a = activation(level, 0);
-    addScaled(head, face.head, a * shownShare(hidden, HEAD_CONTROLLABLE, level));
-    addScaled(gaze, face.gaze, a * shownShare(hidden, GAZE_CONTROLLABLE, level));
-    blink *= 1 + a * (face.blink - 1);
+    addScaled(head, face.head, level * shownShare(hidden, HEAD_CONTROLLABLE, level));
+    addScaled(gaze, face.gaze, level * shownShare(hidden, GAZE_CONTROLLABLE, level));
+    blink *= 1 + activation(level, 0) * (face.blink - 1);
   }
   const weights: Weights = {};
   for (const [name, values] of parts) weights[name] = combine(values);

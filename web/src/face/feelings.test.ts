@@ -78,12 +78,31 @@ describe('every emotion has a face', () => {
     expect(x.weights.browDownLeft).toBeGreaterThan(0.6);
     expect(x.weights.browLateralL).toBeGreaterThan(0.3);
     expect(x.weights.eyeLowerLidUpL).toBeGreaterThan(0.3);
-    expect(x.weights.mouthLipsTightenUL).toBeGreaterThan(0.3);
+    expect(x.weights.mouthPressUL).toBeGreaterThan(0.3);
     expect(x.weights.jawChinRaiseDL).toBeGreaterThan(0.2);
     expect(x.weights.mouthSmileLeft ?? 0).toBe(0);
     expect(x.head[0]).toBeGreaterThan(0.05);
     expect(x.gaze[1]).toBeLessThan(0);
     expect(x.blink).toBeLessThan(1);
+  });
+
+  it('shows anger from its first quarter in the lids, the lips and the furrow', () => {
+    const x = of({ anger: 0.2 }).weights;
+    expect(x.eyeLowerLidUpL).toBeGreaterThan(0.2);
+    expect(x.mouthPressUL).toBeGreaterThan(0.15);
+    expect(x.browLateralL).toBeGreaterThan(0.2);
+  });
+
+  it('narrows her eyes in resentment and dims them in disappointment', () => {
+    const resentment = of({ injustice: 0.8 }).weights;
+    expect(resentment.eyeRelaxL).toBeGreaterThan(0.3);
+    expect(resentment.eyeSquintInnerL).toBeGreaterThan(0.2);
+    expect(resentment.eyeUpperLidUpL ?? 0).toBe(0);
+    expect(of({ disappointment: 0.8 }).weights.eyeRelaxL).toBeGreaterThan(0.3);
+  });
+
+  it('keeps lowering her head in shame up to the strongest shame', () => {
+    expect(of({ shame: 1 }).head[0] - of({ shame: 0.7 }).head[0]).toBeGreaterThan(0.05);
   });
 
   it('smiles in joy with her eyes, cheeks and dimples and only parts her lips', () => {
