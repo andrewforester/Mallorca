@@ -31,15 +31,20 @@ const CONTROLLABLE = { brows: 0.35, eyes: 0.5, mouth: 0.9 } as const;
 const HEAD_CONTROLLABLE = 0.7;
 const GAZE_CONTROLLABLE = 0.6;
 
-const OPPOSED: ReadonlyArray<readonly [string, string]> = [
-  ['mouthSmileLeft', 'mouthFrownLeft'],
-  ['mouthSmileRight', 'mouthFrownRight'],
-  ['eyeUpperLidUpL', 'eyeBlinkLeft'],
-  ['eyeUpperLidUpR', 'eyeBlinkRight'],
-  ['eyeUpperLidUpL', 'eyeRelaxL'],
-  ['eyeUpperLidUpR', 'eyeRelaxR'],
-  ['eyePupilWideL', 'eyePupilNarrowL'],
-  ['eyePupilWideR', 'eyePupilNarrowR'],
+const OPPOSED: ReadonlyArray<readonly [string, string, number, number]> = [
+  ['mouthSmileLeft', 'mouthFrownLeft', YIELD, YIELD],
+  ['mouthSmileRight', 'mouthFrownRight', YIELD, YIELD],
+  ['eyeUpperLidUpL', 'eyeBlinkLeft', YIELD, YIELD],
+  ['eyeUpperLidUpR', 'eyeBlinkRight', YIELD, YIELD],
+  ['eyeUpperLidUpL', 'eyeRelaxL', YIELD, YIELD],
+  ['eyeUpperLidUpR', 'eyeRelaxR', YIELD, YIELD],
+  ['eyePupilWideL', 'eyePupilNarrowL', YIELD, YIELD],
+  ['eyePupilWideR', 'eyePupilNarrowR', YIELD, YIELD],
+  ...(['UL', 'DL', 'UR', 'DR'] as const).map(
+    (c) => [`mouthPress${c}`, `mouthUpperLipRaise${c.at(-1)}`, 1, 0.1] as const,
+  ),
+  ['mouthLipsPressL', 'mouthUpperLipRaiseL', 1, 0.1],
+  ['mouthLipsPressR', 'mouthUpperLipRaiseR', 1, 0.1],
 ];
 
 interface Layer {
@@ -83,11 +88,11 @@ function layersOf(f: Feelings): Layer[] {
 }
 
 function oppose(w: Weights): void {
-  for (const [a, b] of OPPOSED) {
+  for (const [a, b, yieldA, yieldB] of OPPOSED) {
     const shared = Math.min(w[a] ?? 0, w[b] ?? 0);
     if (shared <= 0) continue;
-    w[a] = w[a]! - YIELD * shared;
-    w[b] = w[b]! - YIELD * shared;
+    w[a] = w[a]! - yieldA * shared;
+    w[b] = w[b]! - yieldB * shared;
   }
 }
 

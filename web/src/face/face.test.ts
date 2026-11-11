@@ -114,7 +114,7 @@ describe('poker face', () => {
   it('plays the face of the emotion itself in a pulse', () => {
     const anger: Impulse[] = [{ emotion: 'anger', amount: 0.6, reason: '' }];
     const shame: Impulse[] = [{ emotion: 'shame', amount: 0.6, reason: '' }];
-    expect(pulsesOf(anger, 0, MALLORCA_LOOK)[0]!.weights.mouthLipsTightenUL).toBeGreaterThan(0.3);
+    expect(pulsesOf(anger, 0, MALLORCA_LOOK)[0]!.weights.mouthUpperLipRaiseL).toBeGreaterThan(0.3);
     expect(pulsesOf(shame, 0, MALLORCA_LOOK)[0]!.weights.mouthLipsPressL).toBeGreaterThan(0.3);
   });
 

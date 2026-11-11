@@ -74,17 +74,27 @@ describe('every emotion has a face', () => {
     expect(x.shine).toBe(1);
   });
 
-  it('shows anger as a cold stare: drawn brows, tight lids and lips, raised chin, head down', () => {
+  it('shows anger as a hard stare: drawn brows, tight lids, a wrinkled nose, head down', () => {
     const x = of({ anger: 0.8 });
     expect(x.weights.browDownLeft).toBeGreaterThan(0.6);
     expect(x.weights.browLateralL).toBeGreaterThan(0.3);
     expect(x.weights.eyeLowerLidUpL).toBeGreaterThan(0.3);
-    expect(x.weights.mouthPressUL).toBeGreaterThan(0.3);
-    expect(x.weights.jawChinRaiseDL).toBeGreaterThan(0.2);
+    expect(x.weights.noseWrinkleL).toBeGreaterThan(0.3);
     expect(x.weights.mouthSmileLeft ?? 0).toBe(0);
     expect(x.head[0]).toBeGreaterThan(0.05);
     expect(x.gaze[1]).toBeLessThan(0);
     expect(x.blink).toBeLessThan(1);
+  });
+
+  it('presses her lips in cold anger and bares her clenched teeth in strong anger', () => {
+    const cold = of({ anger: 0.35 }).weights;
+    const strong = of({ anger: 1 }).weights;
+    expect(cold.mouthPressUL).toBeGreaterThan(0.25);
+    expect(cold.mouthUpperLipRaiseL ?? 0).toBe(0);
+    expect(strong.mouthUpperLipRaiseL).toBeGreaterThan(0.6);
+    expect(strong.mouthLowerLipDepressL).toBeGreaterThan(0.5);
+    expect(strong.mouthPressUL ?? 0).toBeLessThan(0.05);
+    expect(strong.jawOpen ?? 0).toBe(0);
   });
 
   it('shows anger from its first quarter in the lids, the lips and the furrow', () => {
@@ -99,11 +109,16 @@ describe('every emotion has a face', () => {
     expect(resentment.eyeRelaxL).toBeGreaterThan(0.3);
     expect(resentment.eyeSquintInnerL).toBeGreaterThan(0.2);
     expect(resentment.eyeUpperLidUpL ?? 0).toBe(0);
+    expect(resentment.mouthSmileLeft ?? 0).toBe(0);
+    expect(resentment.mouthSharpCornerPullL ?? 0).toBe(0);
+    expect(resentment.mouthFrownLeft).toBeGreaterThan(0.3);
     expect(of({ disappointment: 0.8 }).weights.eyeRelaxL).toBeGreaterThan(0.3);
   });
 
-  it('keeps lowering her head in shame up to the strongest shame', () => {
-    expect(of({ shame: 1 }).head[0] - of({ shame: 0.7 }).head[0]).toBeGreaterThan(0.05);
+  it('keeps lowering her head in shame up to the strongest shame, without a smile', () => {
+    expect(of({ shame: 1 }).head[0] - of({ shame: 0.7 }).head[0]).toBeGreaterThan(0.04);
+    expect(of({ shame: 1 }).head[0]).toBeLessThan(0.2);
+    expect(of({ shame: 1 }).weights.mouthSmileLeft ?? 0).toBe(0);
   });
 
   it('smiles in joy with her eyes, cheeks and dimples and only parts her lips', () => {
