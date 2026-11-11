@@ -337,6 +337,36 @@ sizing at rest, their mean and maximum over the night, and aggression after each
 Tests assert that Sol's mean aggression and sizing stay below 1.85, that every character but Rita drops below her
 rest after each caught bluff, and that the anger of his raises no longer holds her style after the folds.
 
+## Second addendum: outcomes, not recalculations (2026-11-11)
+
+A feeling-check of a session with Vera (O −0.4, C 0.8, E 0.4, A −0.5, N 0.6, a tight, nervous pedant) found four
+general tendencies of the appraisal. The changes, on top of the first addendum:
+
+1. **Equity changes inside a hand are prospective.** A `street` event is `realized` only when it settles the outcome
+   (the new equity is 0 or 1); otherwise it moves hope and fear. Bad and prospective now also gives
+   `disappointment = m · hope now`, a light disappointment of the hope she held. Distress, anger at the outcome,
+   injustice and shame come from the `result`, sized by `settled(net)`. The `deal` is prospective as well: a premium
+   hand flashes hope instead of a joy that outlived a bad beat.
+2. **Relief is what was spared.** The axis `resolved` is renamed `spared`: how much of her fear the event takes away.
+   `relief = fear now · spared` in every branch where it applies. A win spares all (`spared = 1`); a rising equity
+   spares its rise; a fold spares `settled((1 − belief) · toCall)`. A fold is a realized loss of the money she put in,
+   `value = −settled(net)`, `self = shareOf(selfBlame, aggressor)`, `expected = belief`, so it mixes relief with
+   distress, shame or anger, and disappointment that grows with the belief she gave up. The belief at a fold is her
+   current equity, not the equity before the last change.
+3. **His range narrowing is not luck, and his bet is priced.** A `street` with `cause: 'opponent'` has no surprise. The
+   persona layer sends `toCallBb` with every `street` and with a fold; while she faces his bet her equity counts only
+   above the price, `max(0, eq − toCall / (pot + toCall))`, before and after at the same price. A polarizing river bet
+   that lifts her equity from 14% to 37% at a price of 33% is now hope +0.03 instead of joy +0.18.
+4. **Surprise is improbability.** Equity is a martingale, so a rise from `e0` to `e1` has probability at most `e0 / e1`
+   and a fall at most `(1 − e0) / (1 − e1)`. `unexpected = smoothstep(0.3, 0.95, 1 − bound)` for a card; a 78%
+   favourite who wins is not surprised, a 90% favourite who loses is.
+
+The reference rows and the night of the first addendum move as listed in `docs/emotion/README.md`, section "После
+второй проверки чувств": rest, bluff caught and bluff through do not move, the heater within 0.08, the bad beat, the losses and the quiet hands
+lower by up to 0.30 (Lola's bluff after the bad beat 1.43 to 1.13: no double count of the reveal, no joy from aces,
+a folded blind is a small loss), and the mean aggression of the night against a raiser 0 to 0.11 lower (each fold is
+now a small loss). All shape assertions hold.
+
 ## Delivery
 
 One branch, `feat/emotion-play-model`, one pull request, atomic commits in this order, each with its failing test
