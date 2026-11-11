@@ -7,28 +7,30 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 
 ## Repository layout
 
-| Path                                                                | Owns                                                                               |
-| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `MallorcaBrains/`, `MallorcaCore/`, `MallorcaEquilator/`, `Tools/`  | Java bot, game model and equilator; the source of the golden fixtures              |
-| Other Gradle modules (`MallorcaUI/`, `PokerRobot/`, `HHParser/`, …) | Java archive, not used by `web/`                                                   |
-| `web/src/`                                                          | The game, in layers (see "Layers")                                                 |
-| `web/src/locales/en.json`                                           | Every string the UI shows                                                          |
-| `web/e2e/`                                                          | Playwright tests and the contact sheet script                                      |
-| `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                                |
-| `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`                   |
-| `web/tools/evaluator-golden/`                                       | Writes the evaluator fixture of `solver/crates/core`, see its `README.md`          |
-| `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena"              |
-| `web/tools/arena/external/`                                         | Matches against external bots over their APIs, see "arena"                         |
-| `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                              |
-| `web/prototypes/emotion-lab/`                                       | Emotion sandbox: the `emotion` engine with a face and a voice, see `docs/emotion`  |
+| Path                                                                | Owns                                                                                                                                                                                         |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MallorcaBrains/`, `MallorcaCore/`, `MallorcaEquilator/`, `Tools/`  | Java bot, game model and equilator; the source of the golden fixtures                                                                                                                        |
+| Other Gradle modules (`MallorcaUI/`, `PokerRobot/`, `HHParser/`, …) | Java archive, not used by `web/`                                                                                                                                                             |
+| `web/src/`                                                          | The game, in layers (see "Layers")                                                                                                                                                           |
+| `web/src/locales/en.json`                                           | Every string the UI shows                                                                                                                                                                    |
+| `web/e2e/`                                                          | Playwright tests and the contact sheet script                                                                                                                                                |
+| `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                                                                                                                                          |
+| `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`                                                                                                                             |
+| `web/tools/evaluator-golden/`                                       | Writes the evaluator fixture of `solver/crates/core`, see its `README.md`                                                                                                                    |
+| `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena"                                                                                                                        |
+| `web/tools/arena/external/`                                         | Matches against external bots over their APIs, see "arena"                                                                                                                                   |
+| `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                                                                                                                                        |
+| `web/prototypes/emotion-lab/`                                       | Emotion sandbox: the `emotion` engine with a face and a voice, see `docs/emotion`                                                                                                            |
+| `web/prototypes/face-sandbox/`                                      | Face sandbox (`npm run face`): her real face from sliders of every emotion, the mood and the mask, pulses, and what `faceFrame` gives, see `docs/emotion/face`                               |
+| `web/prototypes/face-probe/`                                        | Raw rig controls on her face from the query, `?w=jawChinRaiseDL:0.6,browLateralL:1`, to see what one control does                                                                            |
 | `web/public/avatar/`                                                | Her MetaHuman face and upper body `her/` with a folder per hairstyle `her/hair/<key>/` (cards, scalp mask), a still per hairstyle in `portraits/`, the fallback `mallorca.glb`, `LICENSE.md` |
-| `web/tools/avatar/`                                                 | Blender script that converts the Rocketbox source into `mallorca.glb`, see README  |
-| `web/tools/avatar/metahuman/`                                       | Workstation, Unreal scripts, export to `public/avatar/her/` and the RigLogic wasm, see README |
-| `docs/emotion/`                                                     | Emotion model document, its screenshots and generated tables                       |
-| `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`               |
-| `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`               |
-| `supabase/`                                                         | Table talk server: schema, limits and the `talk` Edge Function                     |
-| `.github/workflows/`                                                | `web-ci.yml`, `talk-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master` |
+| `web/tools/avatar/`                                                 | Blender script that converts the Rocketbox source into `mallorca.glb`, see README                                                                                                            |
+| `web/tools/avatar/metahuman/`                                       | Workstation, Unreal scripts, export to `public/avatar/her/` and the RigLogic wasm, see README                                                                                                |
+| `docs/emotion/`                                                     | Emotion model document, its screenshots and generated tables                                                                                                                                 |
+| `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`                                                                                                                         |
+| `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`                                                                                                                         |
+| `supabase/`                                                         | Table talk server: schema, limits and the `talk` Edge Function                                                                                                                               |
+| `.github/workflows/`                                                | `web-ci.yml`, `talk-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master`                                                                                                           |
 
 Generated and never committed: `web/dist`, `web/test-results`, `web/playwright-report`, `web/e2e/contact/`,
 `web/tools/golden/build`, `web/arena-out/` (the arena results, see "arena") and `web/src/cfr/mallorca.wasm`, which
@@ -334,7 +336,7 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
 - `Personality` is the Big Five in [-1, 1] plus `suppression` (habitual poker face) in [0, 1]. `traitsOf` derives
   the default mood (Mehrabian's weights, as in ALMA), the gain and the half-life factor of every emotion,
   `composure = clamp(0.55 - 0.35 N + 0.1 C, 0.15, 1.1)` (emotional stability), `discipline = clamp(0.45 + 0.3 C -
-  0.25 N, 0, 0.95)` (conscientiousness and calm), `expressiveness`, `mask`, `talkativeness`, three stances (logistic, in (0, 1),
+0.25 N, 0, 0.95)` (conscientiousness and calm), `expressiveness`, `mask`, `talkativeness`, three stances (logistic, in (0, 1),
   and one clamp): `selfBlame` (whom she blames for a loss), `coping` (`σ(-1.2 N + 0.6 E - 0.5 A)`, whether pressure
   is a challenge or a threat) and `urgency` (negative urgency of UPPS, `clamp01(0.5 N - 0.5 C)`), her `nature` per
   axis and `baseline`, her natural style (`style.ts`): every axis has one leading trait in `STYLE_WEIGHTS`
@@ -378,8 +380,8 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   equity in the tension, the leaning and the expectation of a result; `Snapshot.belief` is the belief now (null
   between hands).
 - Tension (`tension.ts`): while a hand runs hope and fear track `tensionTargets`, the tension `sat(atStake / 20) *
-  4 eq (1 - eq)` split by the leaning `σ(logit coping + 0.5 logit eq)`, where `atStake = pot / 2 + future |2 eq -
-  1| / 2`; hope rises with a half-life of 0.8 s, fear of 0.25 s, and both fade with `RELEASE_S = 1.5` s once the
+4 eq (1 - eq)` split by the leaning `σ(logit coping + 0.5 logit eq)`, where `atStake = pot / 2 + future |2 eq -
+1| / 2`; hope rises with a half-life of 0.8 s, fear of 0.25 s, and both fade with `RELEASE_S = 1.5` s once the
   hand ends. The anger of a prospect, a bet against her, is held for the hand the same way (`Held`, `stepHeld`):
   it decays with the half-life of anger while the hand runs and with `RELEASE_S` after it, and `Snapshot.emotions`
   reads it combined with the anger of what happened.
@@ -397,7 +399,7 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   with four weights per axis. `strainOf(emotions, mood)` is the length of the negative emotions' (P, A, approach)
   plus the mood's part times how unpleasant its shift is, and `overloadOf(strain, composure)` the same threshold on
   it: joy and pride reach the play but never put her on tilt. `Snapshot.load` is `{
-  intensity, strain, overload, reach, composure, discipline, parts }` (`partsOf`: the length of each emotion's contribution
+intensity, strain, overload, reach, composure, discipline, parts }` (`partsOf`: the length of each emotion's contribution
   and the mood's), `Snapshot.affect` the affect and `Snapshot.bias` the `PlayBias` of five multipliers
   (`aggression`, `looseness`, `bluff`, `sizing`, `stickiness`) that tilt the blueprint's action probabilities at one
   decision; with no feeling it is `Traits.baseline`. The session result has no direct term. The bot's `BotBias`
@@ -414,20 +416,30 @@ what it returns.
 - `FaceLook` is the face of a character: gains of `brows`, `eyes` and `mouth`, `smileSide` (smile asymmetry),
   `blink` (blink rate), `lettersPerSecond` (speech pace) and `leak` (`1 + 0.5 N`, how hard a masked reaction leaks).
   `MALLORCA_LOOK` is hers.
-- `ANCHORS` are eleven expressions placed in PAD, each a set of ARKit blendshape `Weights`. `blendOf(pad)` weighs
-  them by `exp(-d² / 0.27²)` and normalises; `faceOf(mix, look, expressiveness)` sums the anchors and scales each
-  shape by its region gain, the smile side and `expressiveness * 1.4`.
+- `EMOTION_FACES` (`prototypes.ts`) give every emotion its own face from FACS: target `[value, threshold]` per
+  ARKit blendshape or raw MetaHuman control (`browLateralL`, `eyeLowerLidUpL`, `mouthLipsTightenUL`, ...), a head
+  offset (pitch, yaw, roll), a gaze offset and a blink rate factor. `MOOD_FACES` give each PAD axis a face per sign
+  (her temperament at rest), `CONTROL_FACE` the effort of hiding (pressed lips, raised chin).
+- `expressionOf(feelings)` (`feelings.ts`) is the one mapping from feelings to the face. Each emotion is a layer at
+  `level = emotion * expressiveness`, each mood axis a layer at `0.9 |axis| * expressiveness`, the acted stance a
+  layer per axis at `mask |axis|`, the control face a layer at `mask * strongest emotion`. A control shows
+  `value * activation(level, threshold)` with `activation = 1 - (1 - x)²` from its threshold (visible at 0.2,
+  saturating at 1); layers combine per control by the soft maximum `1 - Π(1 - v)`, and a smile and a frown, or a
+  raised lid and a blink, give way to each other by `0.8 min`. The mask hides a felt emotion per region (mouth 0.9,
+  eyes 0.5, brows 0.35, head 0.7, gaze 0.6) and leaks up to half of it as the feeling nears 1; the temperament is not
+  masked. Head and gaze offsets grow linearly with the level and sum; blink and eye shine factors multiply (shine brightens with joy, hope, surprise and pride, dims with distress, disappointment and shame). `ANCHORS`, `blendOf` and `faceOf` (PAD-placed anchors)
+  remain only for the emotion lab.
 - `maskOf` is the poker face of `emotion`, re-exported, so the face and the prompt read the same mask;
   `feltPadOf(snapshot)` is half the mood plus every emotion's PAD point (surprise left out); `shownPadOf(felt,
 mask, acted)` blends the felt point toward the acted one (neutral when null).
 - `STANCES` gives the acted face of a `Stance`: a bluff acts confident `(0.2, 0, 0.6)`, a hidden strong hand keeps a
   neutral face (null).
-- `faceFrame(snapshot, presenting, look)` takes what her persona presents (`{ stance, effort }`, or null) and returns a `FaceFrame`: `felt`, `shown`, `mask`, the blendshape `weights`,
+- `faceFrame(snapshot, presenting, look)` takes what her persona presents (`{ stance, effort }`, or null) and returns a `FaceFrame`: `felt`, `shown`, `mask`, the `weights` of `expressionOf` shaped by the look and kept in [0, 1], the `head` and `gaze` offsets that `Motion` adds to her pose, the eye `shine` that `Motion` eases into the pose and `RigAvatar` turns into the gloss, clearcoat and iris light of her eyes (`eyeShineOf`, today's glossy eye at 1),
   with `mask = maskOf(traits.mask, effort or 0, overload)`, the view's own mask,
   `idle` (`nervous = 0.7 fear + 0.4 shame + 0.3 max(0, -approach of mood)`, `arousal` of the felt point and the look's
-  `blinkRate`) and the `prosody` of her voice. Nervousness reads the felt state, so the mask never hides it.
+  `blinkRate` times the blink factor of her feelings) and the `prosody` of her voice. Nervousness reads the felt state, so the mask never hides it.
 - `pulsesOf(impulses, mask, look)` gives a `Pulse` (`weights`, `amp`, `attack`, `hold`, `release`, `delay`,
-  `blinks`) for the strongest impulse of each reaction face of at least 0.12: long and open with an open face, a
+  `blinks`) with the full face of `EMOTION_FACES` for the strongest impulse of each emotion of at least 0.12: long and open with an open face, a
   micro-expression of about 0.3 s behind a mask, followed 0.3 s later by a control pulse of pressed lips with two
   blinks.
 - `prosodyOf(shown, overload, sadness)` gives the `rate`, `pitch` and `volume` of speech;
@@ -629,7 +641,7 @@ class, mask)` moves a per-class chance toward the mean of its classes by her mas
   it, or null for the math brain. A `warm` request (`{ opponent }`, no reply, never queued behind a `select`) starts
   loading a cfr opponent's model, so the start screen can begin the download as soon as the player picks the
   solver (`prepare(opponent)` of the session). While a model downloads the worker posts `{ progress: { opponent,
-  received, total } }` (`readWithProgress` in `progressRead.ts`, at most one notice per percent); `onProgress` of the
+received, total } }` (`readWithProgress` in `progressRead.ts`, at most one notice per percent); `onProgress` of the
   client hands it to the session, whose `loading` holds it until the download is complete (`loadingOf`), and the
   start screen shows "Bringing the solver to the table · N%" over a thin amber bar (`start-loading`, a
   `progressbar`; without a known size the line has no number and the bar sweeps). A shared worker's client stops its
@@ -713,7 +725,8 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   hand end `player`. The cursor moves also while it is off and when it is switched, so switching it on shows no old
   reaction. `faceNow()` is `faceFrame(view.snapshot, view.presenting, MALLORCA_LOOK)` of `persona.view(now())`, or null while it is off or before
   `start`; it never moves the engine, so the face changes no move and no seed. `toViewModel` adds `face` (`on`,
-  `cues`). `game` re-exports `FaceFrame`, `FaceCue`, `GazeTarget`, `Pulse`, `Weights`, `VisemeCue` and `speechOf`.
+  `cues`). `restingFaceOf(character)` is the frame of a fresh persona of that character, her temperament at rest,
+  cached per character. `game` re-exports `FaceFrame`, `FaceCue`, `GazeTarget`, `Pulse`, `Weights`, `VisemeCue` and `speechOf`.
 - The payload builders (`conversationClient.ts`) send version 2 bodies (`toPlanLinePayload`, `toPlanReplyPayload`):
   the plan with its cards as text, the Big Five, the last 8 chat lines and `debug` in a traced session; `quick` on a
   reply; the summary with only its counts (not `notable`) and `netBb` as the player's net (the negated net of hers).
@@ -942,13 +955,13 @@ text)` (the caller's localized label) append the player's line at once, plan an 
   `FaceRenderer` (`canvas`, `load`, `resize`, `render(pose)`, `dispose`); `FaceSeat` tries `RigAvatar` first and the
   Rocketbox `Avatar` (`mallorca.glb`, 52 ARKit blendshapes and 15 Oculus visemes) when it fails (`firstOf`).
   `RigAvatar` (`ui/avatar/rig/`) is her MetaHuman from `public/avatar/her/`: `controlsOf` maps the pose's ARKit and
-  viseme weights through `mapping.json` to raw MetaHuman controls clamped to [0, 1] and the eye angles to eyeLook;
+  viseme weights through `mapping.json` to raw MetaHuman controls (a weight named after a raw control drives it directly), clamped to [0, 1], and the eye angles to eyeLook;
   RigLogic (`riglogic.wasm`, `createRig`) gives joint deltas, blendshape weights and wrinkle map weights; `RigState`
   sets the bones (neck joints only from `Pose.neck`), adds her body bones (`header.body`, parented by name), holds
   the arms and their correctives in the baked seated pose (`header.pose.sitting`) from the first frame, after the
   meshes bind in the DNA pose, and turns `head`, `neck_01`/`neck_02`, `spine_05` and the clavicles by the pose in
   world axes; her body and knit sweater are skinned meshes on the same skeleton, framed down to under the bust; blendshapes and the head's normals are updated on the CPU, hair cards follow
-  their head vertex, and the skin shader blends the wrinkle normal maps by mask. `Motion` (`motion.ts`, no WebGL) eases toward `faceNow()` (read about
+  their head vertex, and the skin shader blends the wrinkle normal maps by mask. `Motion` (`motion.ts`, no WebGL) eases toward `seatFrame`, which is `faceNow()` or before a game `restingFaceOf` the chosen character (read about
   ten times a second), plays new `FaceCue`s once (pulses, gaze with a glance back), blinks, saccades and glances
   away from `idle`, poses the head from the shown PAD and breathes; `thinking` turns her gaze to one of seven spots, drawn anew for each decision (up to either side, up, aside, her cards, the board). It
   pauses while the document is hidden, calms the idle motion under `prefers-reduced-motion`, and falls back to the

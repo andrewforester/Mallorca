@@ -10,6 +10,7 @@ import { NormalTracker, applyBlends, followHead } from './blend.ts';
 import type { MeshData } from './geometry.ts';
 import { meshGeometry } from './geometry.ts';
 import { wearGlasses } from './glasses.ts';
+import { shineEyes } from './eyes.ts';
 import type { Materials } from './materials.ts';
 import { CARDS_SOFT_ORDER, loadMaterials, renderOrderOf } from './materials.ts';
 import { createRig } from './riglogic.ts';
@@ -67,6 +68,7 @@ export class RigAvatar implements FaceRenderer {
   private layout: WrinkleLayout | null = null;
   private live: LiveMesh[] = [];
   private head: LiveMesh | null = null;
+  private eye: THREE.MeshPhysicalMaterial | null = null;
 
   constructor(base: string, hair: HairKey) {
     this.base = base;
@@ -102,6 +104,7 @@ export class RigAvatar implements FaceRenderer {
     this.state = state;
     this.scene.add(state.root);
     this.buildMeshes(sectionsOf(assets, hair), state, materials);
+    this.eye = materials.eye;
     wrinkleWeights(maps, masks, state.update(this.restPose()).maps, weights);
     await this.dress(state);
     await this.compile();
@@ -126,6 +129,7 @@ export class RigAvatar implements FaceRenderer {
       neck: [0, 0, 0],
       spine: [0, 0, 0],
       shoulder: 0,
+      shine: 1,
     };
   }
 
@@ -185,6 +189,7 @@ export class RigAvatar implements FaceRenderer {
       const frame = this.state.update(pose);
       this.deform(frame.blends);
       this.layout.lids.set(...frame.lids);
+      if (this.eye) shineEyes(this.eye, pose.shine);
       wrinkleWeights(
         this.assets.header.maps,
         this.assets.header.masks,

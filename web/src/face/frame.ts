@@ -1,7 +1,8 @@
 import type { Pad, Snapshot } from '../emotion/index.ts';
-import { blendOf, faceOf } from './anchors.ts';
+import { shaped } from './anchors.ts';
 import type { Weights } from './anchors.ts';
 import { feltPadOf, maskOf, shownPadOf } from './expression.ts';
+import { expressionOf } from './feelings.ts';
 import type { FaceLook } from './look.ts';
 import { clamp01 } from './math.ts';
 import { prosodyOf } from './prosody.ts';
@@ -20,6 +21,9 @@ export interface FaceFrame {
   shown: Pad;
   mask: number;
   weights: Weights;
+  head: [number, number, number];
+  gaze: [number, number];
+  shine: number;
   idle: IdleState;
   prosody: Prosody;
 }
@@ -37,13 +41,29 @@ export function faceFrame(
   mask = maskOf(s.traits.mask, presenting?.effort ?? 0, s.load.overload),
 ): FaceFrame {
   const felt = feltPadOf(s);
-  const shown = shownPadOf(felt, mask, presenting === null ? null : STANCES[presenting.stance]);
+  const acted = presenting === null ? null : STANCES[presenting.stance];
+  const shown = shownPadOf(felt, mask, acted);
+  const face = expressionOf({
+    emotions: s.emotions,
+    mood: s.mood,
+    mask,
+    acted,
+    expressiveness: s.traits.expressiveness,
+  });
   return {
     felt,
     shown,
     mask,
-    weights: faceOf(blendOf(shown), look, s.traits.expressiveness),
-    idle: { nervous: nervousOf(s), arousal: felt[1], blinkRate: look.blink },
+    weights: withinRange(shaped(face.weights, look, 1)),
+    head: face.head,
+    gaze: face.gaze,
+    shine: face.shine,
+    idle: { nervous: nervousOf(s), arousal: felt[1], blinkRate: look.blink * face.blink },
     prosody: prosodyOf(shown, s.load.overload, sadnessOf(s)),
   };
+}
+
+function withinRange(w: Weights): Weights {
+  for (const name of Object.keys(w)) w[name] = clamp01(w[name] ?? 0);
+  return w;
 }
