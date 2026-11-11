@@ -17,6 +17,7 @@ export interface DebugTraits {
 export interface DebugLoad {
   intensity: number;
   composure: number;
+  strain: number;
   overload: number;
   reach: number;
   parts: [Part, number][];
@@ -59,8 +60,8 @@ function traitsOf(s: Snapshot): DebugTraits {
 }
 
 function loadOf(s: Snapshot): DebugLoad {
-  const { intensity, composure, overload, reach, parts } = s.load;
-  return { intensity, composure, overload, reach, parts };
+  const { intensity, composure, strain, overload, reach, parts } = s.load;
+  return { intensity, composure, strain, overload, reach, parts };
 }
 
 function pushRows(s: Snapshot): [BiasKey, number][] {

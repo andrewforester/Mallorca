@@ -277,7 +277,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.41
+          "intensity": 0.42
         },
         "words": {
           "min": 2,
@@ -459,7 +459,7 @@
         "occasion": "you bet on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.42
+          "intensity": 0.39
         },
         "words": {
           "min": 2,
@@ -569,7 +569,7 @@
         "occasion": "you lost a 16 bb pot",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.44
+          "intensity": 0.45
         },
         "words": {
           "min": 2,
@@ -696,11 +696,11 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.53
+          "intensity": 0.54
         },
         "words": {
           "min": 2,
-          "max": 7
+          "max": 4
         },
         "humour": null,
         "claim": {
@@ -815,7 +815,7 @@
         "occasion": "you bet on the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.53
+          "intensity": 0.54
         },
         "words": {
           "min": 2,
@@ -937,7 +937,7 @@
         "occasion": "the player raised before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.55
+          "intensity": 0.56
         },
         "words": {
           "min": 2,
@@ -1058,7 +1058,7 @@
         "occasion": "the player raised on the river",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.38
+          "intensity": 0.41
         },
         "words": {
           "min": 2,
@@ -1189,7 +1189,7 @@
         "occasion": "you stayed in before the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.62
+          "intensity": 0.64
         },
         "words": {
           "min": 2,
@@ -1312,7 +1312,7 @@
         "occasion": "you stayed in on the turn",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.47
+          "intensity": 0.49
         },
         "words": {
           "min": 2,
@@ -1447,7 +1447,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.53
+          "intensity": 0.55
         },
         "words": {
           "min": 2,
@@ -1579,7 +1579,7 @@
         "occasion": "you won a 18 bb pot",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.59
+          "intensity": 0.61
         },
         "words": {
           "min": 2,
@@ -1723,7 +1723,7 @@
         "occasion": "you bet before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.45
+          "intensity": 0.48
         },
         "words": {
           "min": 2,
@@ -1998,7 +1998,7 @@
         "occasion": "you stayed in before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.64
+          "intensity": 0.65
         },
         "words": {
           "min": 2,
@@ -2122,7 +2122,7 @@
         "occasion": "you lost a 18 bb pot",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.57
+          "intensity": 0.58
         },
         "words": {
           "min": 2,
@@ -2267,7 +2267,7 @@
         "occasion": "you bet before the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.54
+          "intensity": 0.55
         },
         "words": {
           "min": 2,
@@ -2393,7 +2393,7 @@
         "occasion": "the player raised on the turn",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.65
+          "intensity": 0.66
         },
         "words": {
           "min": 1,
@@ -2525,7 +2525,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.57
+          "intensity": 0.58
         },
         "words": {
           "min": 2,
@@ -2663,7 +2663,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.6
+          "intensity": 0.61
         },
         "words": {
           "min": 1,
@@ -2791,7 +2791,7 @@
         "occasion": "you lost a 18 bb pot",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.59
+          "intensity": 0.6
         },
         "words": {
           "min": 2,
@@ -2936,7 +2936,7 @@
         "occasion": "the river came Ad",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.44
+          "intensity": 0.45
         },
         "words": {
           "min": 1,
@@ -3215,7 +3215,7 @@
         "occasion": "you bet before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.48
+          "intensity": 0.5
         },
         "words": {
           "min": 2,
@@ -3344,7 +3344,7 @@
         "occasion": "you stayed in on the river",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.62
+          "intensity": 0.63
         },
         "words": {
           "min": 1,
@@ -3480,7 +3480,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "anger",
-          "intensity": 0.42
+          "intensity": 0.43
         },
         "words": {
           "min": 1,
@@ -3608,7 +3608,7 @@
         "occasion": "you won a 18 bb pot",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.72
+          "intensity": 0.73
         },
         "words": {
           "min": 1,
@@ -3753,7 +3753,7 @@
         "occasion": "the player raised before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.51
+          "intensity": 0.54
         },
         "words": {
           "min": 2,
@@ -3877,7 +3877,7 @@
         "occasion": "you bet on the river",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.47
+          "intensity": 0.49
         },
         "words": {
           "min": 2,
@@ -4015,7 +4015,7 @@
         "occasion": "you stayed in before the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.66
+          "intensity": 0.67
         },
         "words": {
           "min": 2,
@@ -4273,7 +4273,7 @@
         "occasion": "you bet before the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.51
+          "intensity": 0.52
         },
         "words": {
           "min": 2,
@@ -4538,7 +4538,7 @@
         "occasion": "you stayed in on the turn",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.52
+          "intensity": 0.53
         },
         "words": {
           "min": 2,
@@ -4674,7 +4674,7 @@
         "occasion": "the player raised on the river",
         "voice": {
           "emotion": "anger",
-          "intensity": 0.43
+          "intensity": 0.44
         },
         "words": {
           "min": 1,
@@ -4810,7 +4810,7 @@
         "occasion": "you bet on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.56
+          "intensity": 0.57
         },
         "words": {
           "min": 2,
@@ -4942,7 +4942,7 @@
         "occasion": "you won a 16 bb pot",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.71
+          "intensity": 0.72
         },
         "words": {
           "min": 2,
@@ -5087,7 +5087,7 @@
         "occasion": "you bet before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.64
+          "intensity": 0.65
         },
         "words": {
           "min": 2,
@@ -5213,7 +5213,7 @@
         "occasion": "the player called your bet and you lost a 18 bb pot",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.56
+          "intensity": 0.57
         },
         "words": {
           "min": 1,
@@ -5359,7 +5359,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.54
+          "intensity": 0.55
         },
         "words": {
           "min": 1,
@@ -5761,7 +5761,7 @@
         "occasion": "the player raised on the river",
         "voice": {
           "emotion": "anger",
-          "intensity": 0.45
+          "intensity": 0.46
         },
         "words": {
           "min": 2,
@@ -6027,7 +6027,7 @@
         "occasion": "you stayed in on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.63
+          "intensity": 0.64
         },
         "words": {
           "min": 1,
@@ -6575,7 +6575,7 @@
         "occasion": "you bet before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.5
+          "intensity": 0.51
         },
         "words": {
           "min": 2,
@@ -7100,7 +7100,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "anger",
-          "intensity": 0.43
+          "intensity": 0.44
         },
         "words": {
           "min": 2,
@@ -7233,7 +7233,7 @@
         "occasion": "you bet on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.46
+          "intensity": 0.47
         },
         "words": {
           "min": 2,
@@ -7365,7 +7365,7 @@
         "occasion": "you lost a 18 bb pot",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.56
+          "intensity": 0.57
         },
         "words": {
           "min": 2,
@@ -7510,7 +7510,7 @@
         "occasion": "the player raised before the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.43
+          "intensity": 0.44
         },
         "words": {
           "min": 2,
@@ -7636,11 +7636,11 @@
         "occasion": "the player said something",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.58
+          "intensity": 0.61
         },
         "words": {
           "min": 3,
-          "max": 13
+          "max": 4
         },
         "humour": null,
         "claim": null,
@@ -7770,7 +7770,7 @@
         "occasion": "the player said something",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.6
+          "intensity": 0.61
         },
         "words": {
           "min": 3,
@@ -8203,7 +8203,7 @@
         "occasion": "the player said something",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.62
+          "intensity": 0.63
         },
         "words": {
           "min": 3,
@@ -8348,7 +8348,7 @@
         "occasion": "the player said something",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.75
+          "intensity": 0.76
         },
         "words": {
           "min": 3,

@@ -9,7 +9,7 @@ import type { MoodConfig } from './mood.ts';
 import { traitsOf } from './personality.ts';
 import type { Personality, Traits } from './personality.ts';
 import type { PlayBias } from './biasKeys.ts';
-import { affectOf, partsOf, playOf } from './play.ts';
+import { affectOf, overloadOf, partsOf, playOf, strainOf } from './play.ts';
 import type { Affect, LoadReading } from './play.ts';
 
 export const PROSPECT_HALF_LIFE_S = 0.8;
@@ -178,6 +178,7 @@ class EmotionEngine implements Engine {
     const moodShift = { shift, approach, certainty };
     const affect = affectOf(emotions, moodShift, traits.urgency);
     const play = playOf(affect, traits);
+    const strain = strainOf(emotions, moodShift);
     return {
       time: this.time,
       traits: this.traits,
@@ -192,7 +193,8 @@ class EmotionEngine implements Engine {
       pressure: this.pressure,
       load: {
         intensity: play.intensity,
-        overload: play.overload,
+        strain,
+        overload: overloadOf(strain, traits.composure),
         reach: play.reach,
         composure: traits.composure,
         discipline: traits.discipline,

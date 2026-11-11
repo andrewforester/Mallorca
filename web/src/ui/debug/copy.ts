@@ -74,6 +74,7 @@ export const COPY = {
     title: 'Strain',
     intensity: 'Intensity',
     composure: 'Composure',
+    strain: 'Negative strain',
     overload: 'Overload',
     reach: 'Reaches the play',
     session: 'Session result',

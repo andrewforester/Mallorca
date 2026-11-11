@@ -1,6 +1,6 @@
 import { BIAS_KEYS } from './biasKeys.ts';
 import type { BiasKey, PlayBias } from './biasKeys.ts';
-import { APPROACH, CERTAINTY, EMOTIONS, EMOTION_PAD } from './emotions.ts';
+import { APPROACH, CERTAINTY, EMOTIONS, EMOTION_PAD, NEGATIVE, clamp01 } from './emotions.ts';
 import type { Emotion, Emotions, Pad } from './emotions.ts';
 import type { Traits } from './personality.ts';
 import { styleFrom } from './style.ts';
@@ -29,6 +29,7 @@ export type Part = Emotion | 'mood';
 
 export interface LoadReading {
   intensity: number;
+  strain: number;
   overload: number;
   reach: number;
   composure: number;
@@ -38,7 +39,7 @@ export interface LoadReading {
 
 export interface PlayReading {
   intensity: number;
-  overload: number;
+  gate: number;
   reach: number;
   bias: PlayBias;
 }
@@ -76,6 +77,31 @@ export function partsOf(e: Emotions, mood: MoodShift): [Part, number][] {
   return parts;
 }
 
+const unpleasantness = (shift: Pad): number => {
+  const length = Math.hypot(shift[0], shift[1], shift[2]);
+  return length === 0 ? 0 : clamp01(-shift[0] / length);
+};
+
+export function strainOf(e: Emotions, mood: MoodShift): number {
+  const share = unpleasantness(mood.shift);
+  const sum = moodPart(mood).map((v) => v * share);
+  for (const name of NEGATIVE) {
+    const axes = axesOf(name);
+    for (let i = 0; i < 3; i++) {
+      sum[i] = (sum[i] ?? 0) + e[name] * (axes[i] ?? 0);
+    }
+  }
+  const [p = 0, a = 0, ap = 0] = sum;
+  return Math.hypot(p, a, ap);
+}
+
+const thresholdOf = (x: number, composure: number): number => {
+  const squared = x * x;
+  return squared === 0 ? 0 : squared / (squared + composure ** 2);
+};
+
+export const overloadOf = thresholdOf;
+
 export function pushOf(affect: Affect, reach: number, intensity: number): Record<BiasKey, number> {
   return Object.fromEntries(
     BIAS_KEYS.map((k) => [
@@ -87,9 +113,8 @@ export function pushOf(affect: Affect, reach: number, intensity: number): Record
 
 export function playOf(affect: Affect, traits: Traits): PlayReading {
   const intensity = lengthOf(affect);
-  const squared = intensity * intensity;
-  const overload = squared === 0 ? 0 : squared / (squared + traits.composure ** 2);
-  const reach = (1 - traits.discipline) * overload;
+  const gate = thresholdOf(intensity, traits.composure);
+  const reach = (1 - traits.discipline) * gate;
   const bias = styleFrom(traits.nature, pushOf(affect, reach, intensity));
-  return { intensity, overload, reach, bias };
+  return { intensity, gate, reach, bias };
 }

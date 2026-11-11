@@ -52,6 +52,7 @@ describe('toDebugView', () => {
     expect(view.load?.intensity).toBe(load?.intensity);
     expect(view.load?.reach).toBe(load?.reach);
     expect(view.load?.overload).toBe(load?.overload);
+    expect(view.load?.strain).toBe(load?.strain);
     expect(view.load?.composure).toBe(load?.composure);
     expect(view.approach).toBe(state().snapshot?.approach);
     expect(view.certainty).toBe(state().snapshot?.certainty);

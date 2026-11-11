@@ -295,6 +295,17 @@ describe('engine', () => {
     expect(lola.bias.looseness).toBeGreaterThan(ingrid.bias.looseness);
   });
 
+  it('feels a big win strongly and lets it reach the play, but is not on tilt', () => {
+    const engine = createEngine(hot);
+    engine.event({ kind: 'result', netBb: 100, decided: 'showdown', lastEquity: 0.85 });
+    engine.step(6);
+    const s = engine.snapshot();
+    expect(s.emotions.joy).toBeGreaterThan(0.8);
+    expect(s.load.reach).toBeGreaterThan(0);
+    expect(s.load.strain).toBe(0);
+    expect(s.load.overload).toBe(0);
+  });
+
   it('remembers raises against her and angers more with each one', () => {
     const engine = createEngine({
       ...average,
