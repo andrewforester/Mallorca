@@ -147,6 +147,31 @@ describe('motion', () => {
     expect(calm.chest).toBeLessThan(lively.chest);
   });
 
+  it('keeps her shoulders smooth when a feeling changes her breathing pace', () => {
+    const motion = new Motion({ random: half, calm: false });
+    motion.setFrame(frame({}, 0));
+    const before = run(motion, 600).at(-1)!;
+    const steps = [0.4, 0.1, 0.12].map((nervous) => {
+      motion.setFrame(frame({}, nervous));
+      const next = motion.tick(STEP);
+      const step = Math.abs(next.shoulder - before.shoulder);
+      Object.assign(before, next);
+      return step;
+    });
+    expect(Math.max(...steps)).toBeLessThan(0.001);
+  });
+
+  it('breathes faster when nervous', () => {
+    const crossings = (nervous: number) => {
+      const motion = new Motion({ random: half, calm: false });
+      motion.setFrame(frame({}, nervous));
+      const shoulders = run(motion, 30).map((p) => p.shoulder);
+      return shoulders.filter((v, i) => i > 0 && Math.sign(v) !== Math.sign(shoulders[i - 1]!))
+        .length;
+    };
+    expect(crossings(0.8)).toBeGreaterThan(crossings(0) * 1.2);
+  });
+
   it('keeps her head still while her chest breathes under it', () => {
     const range = (values: number[]) => Math.max(...values) - Math.min(...values);
     const poses = run(new Motion({ random: half, calm: false }), 10);
