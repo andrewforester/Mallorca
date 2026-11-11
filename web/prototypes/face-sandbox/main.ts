@@ -1,6 +1,6 @@
 import { EMOTIONS, PERSONALITIES, createEngine } from '../../src/emotion/index.ts';
 import type { Emotion, Emotions, Pad, PersonalityKey, Snapshot } from '../../src/emotion/index.ts';
-import { ANCHORS, MALLORCA_LOOK, blendOf, faceFrame, pulsesOf } from '../../src/face/index.ts';
+import { MALLORCA_LOOK, faceFrame, pulsesOf } from '../../src/face/index.ts';
 import type { FaceFrame } from '../../src/face/index.ts';
 import { HAIR } from '../../src/ui/avatar/hair.ts';
 import { mountFace, rigRenderer } from '../../src/ui/avatar/live.ts';
@@ -29,16 +29,20 @@ const ORDER: readonly Emotion[] = [...MAIN, ...EMOTIONS.filter((e) => !MAIN.incl
 interface Preset {
   name: string;
   emotions: Partial<Record<Emotion, number>>;
-  mood: Pad;
   pulse?: Emotion;
 }
 
 const PRESETS: readonly Preset[] = [
-  { name: 'Спокойствие', emotions: {}, mood: [0, 0, 0] },
-  { name: 'Злость, отыграться', emotions: { anger: 0.8, injustice: 0.5 }, mood: [-0.3, 0.5, 0.5] },
-  { name: 'Тревога', emotions: { fear: 0.7 }, mood: [-0.3, 0.4, -0.4] },
-  { name: 'Радость', emotions: { joy: 0.8, pride: 0.3 }, mood: [0.5, 0.3, 0.2] },
-  { name: 'Удивление', emotions: { surprise: 0.9 }, mood: [0, 0.2, 0], pulse: 'surprise' },
+  { name: 'Характер в покое', emotions: {} },
+  { name: 'Злость, отыграться', emotions: { anger: 0.6, injustice: 0.3 } },
+  { name: 'Обида', emotions: { injustice: 0.6 } },
+  { name: 'Тревога', emotions: { fear: 0.6 } },
+  { name: 'Надежда', emotions: { hope: 0.6 } },
+  { name: 'Радость', emotions: { joy: 0.7, pride: 0.2 } },
+  { name: 'Гордость', emotions: { pride: 0.6 } },
+  { name: 'Стыд', emotions: { shame: 0.6 } },
+  { name: 'Огорчение', emotions: { distress: 0.6 } },
+  { name: 'Удивление', emotions: {}, pulse: 'surprise' },
 ];
 
 const zero = (): Record<Emotion, number> =>
@@ -130,7 +134,7 @@ function buildSliders(): void {
 
 function applyPreset(p: Preset): void {
   state.emotions = { ...zero(), ...p.emotions };
-  state.mood = [...p.mood];
+  state.mood = [...base.mood];
   buildSliders();
   render();
   if (p.pulse) pulse(p.pulse);
@@ -140,11 +144,6 @@ const fmt = (p: Pad): string => p.map((v) => v.toFixed(2).padStart(5)).join(' ')
 
 function render(): void {
   const f = frame();
-  const mix = blendOf(f.shown)
-    .map((w, i) => [ANCHORS[i]?.id ?? '?', w] as const)
-    .filter(([, w]) => w > 0.02)
-    .sort((a, b) => b[1] - a[1])
-    .map(([id, w]) => `  ${id.padEnd(10)} ${(w * 100).toFixed(0)}%`);
   const top = Object.entries(f.weights)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
@@ -154,8 +153,8 @@ function render(): void {
     `показывает PAD ${fmt(f.shown)}`,
     `маска ${f.mask.toFixed(2)}`,
     '',
-    'смесь якорей:',
-    ...mix,
+    `голова: наклон ${f.head[0].toFixed(2)}, поворот ${f.head[1].toFixed(2)}, крен ${f.head[2].toFixed(2)}`,
+    `взгляд: ${f.gaze[0].toFixed(2)} ${f.gaze[1].toFixed(2)}, моргание ×${(f.idle.blinkRate / MALLORCA_LOOK.blink).toFixed(2)}`,
     '',
     'сильнейшие мышцы:',
     ...top,
@@ -183,7 +182,7 @@ function setup(): void {
   select.addEventListener('change', () => {
     state.character = select.value as PersonalityKey;
     base = createEngine(PERSONALITIES[state.character]).snapshot();
-    render();
+    applyPreset(PRESETS[0]!);
     void mount();
   });
   for (const p of PRESETS) {
@@ -200,6 +199,7 @@ function setup(): void {
     state.ownMask = (ev.target as HTMLInputElement).checked;
     render();
   });
+  state.mood = [...base.mood];
   buildSliders();
   render();
   void mount();
