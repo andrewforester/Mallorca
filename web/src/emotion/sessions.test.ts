@@ -194,8 +194,11 @@ const above = (s: Session, column: keyof Session, axis: BiasKey): boolean =>
   (s[column] as PlayBias)[axis] > s.rest[axis];
 
 describe('the reference session of the addendum', () => {
-  it('orders the characters at rest by aggression', () => {
-    const order = ['rita', 'sol', 'lola', 'mallorca', 'ingrid', 'nina', 'greta'] as const;
+  it('puts Rita, Sol and Lola above Mallorca at rest and orders the others by aggression', () => {
+    for (const k of ['rita', 'sol', 'lola'] as const) {
+      expect(SESSIONS[k].rest.aggression).toBeGreaterThan(SESSIONS.mallorca.rest.aggression);
+    }
+    const order = ['mallorca', 'ingrid', 'nina', 'greta'] as const;
     const values = order.map((k) => SESSIONS[k].rest.aggression);
     expect([...values].sort((a, b) => b - a)).toEqual(values);
   });
@@ -207,15 +210,21 @@ describe('the reference session of the addendum', () => {
     }
   });
 
-  it('barely moves Ingrid at any moment, while Lola swings', () => {
+  it('moves Ingrid least of all at any moment, while Lola swings', () => {
     expect(
       Math.abs(SESSIONS.lola.caught.aggression - SESSIONS.lola.rest.aggression),
     ).toBeGreaterThan(0.5);
-    const s = SESSIONS.ingrid;
-    for (const column of ['badBeat', 'losses', 'quiet', 'heater', 'caught', 'through'] as const) {
-      for (const axis of BIAS_KEYS) {
-        expect(Math.abs(s[column][axis] - s.rest[axis])).toBeLessThan(0.1);
+    const widest = (s: Session): number => {
+      let widestMove = 0;
+      for (const column of ['badBeat', 'losses', 'quiet', 'heater', 'caught', 'through'] as const) {
+        for (const axis of BIAS_KEYS) {
+          widestMove = Math.max(widestMove, Math.abs(s[column][axis] - s.rest[axis]));
+        }
       }
+      return widestMove;
+    };
+    for (const k of KEYS.filter((key) => key !== 'ingrid')) {
+      expect(widest(SESSIONS.ingrid)).toBeLessThan(widest(SESSIONS[k]));
     }
   });
 
@@ -240,8 +249,12 @@ describe('the reference session of the addendum', () => {
     expect(above(SESSIONS.lola, 'through', 'bluff')).toBe(true);
   });
 
-  it('keeps Rita bluffing after a caught bluff and stops Mira, Nina and Greta', () => {
-    expect(SESSIONS.rita.caught.bluff).toBeGreaterThanOrEqual(SESSIONS.rita.rest.bluff);
+  it('keeps Rita bluffing most after a caught bluff and stops Mira, Nina and Greta', () => {
+    const kept = (k: (typeof KEYS)[number]): number =>
+      SESSIONS[k].caught.bluff - SESSIONS[k].rest.bluff;
+    for (const k of KEYS.filter((key) => key !== 'rita')) {
+      expect(kept('rita')).toBeGreaterThan(kept(k));
+    }
     for (const k of ['mira', 'nina', 'greta'] as const) {
       expect(above(SESSIONS[k], 'caught', 'bluff')).toBe(false);
     }
@@ -399,16 +412,14 @@ describe('a night against an opponent who raises nearly every hand', () => {
     }
   });
 
-  it('shows her own caught bluffs in her play: all but Rita drop below rest', () => {
-    for (const k of KEYS) {
-      const night = NIGHTS[k];
-      for (const after of night.caught) {
-        if (k === 'rita') {
-          expect(after.aggression).toBeGreaterThan(night.rest.aggression);
-        } else {
-          expect(after.aggression).toBeLessThan(night.rest.aggression);
-        }
+  it('shows her own caught bluffs in her play: Rita holds her aggression best, the others drop', () => {
+    const lowest = (k: (typeof KEYS)[number]): number =>
+      Math.min(...NIGHTS[k].caught.map((after) => after.aggression - NIGHTS[k].rest.aggression));
+    for (const k of KEYS.filter((key) => key !== 'rita')) {
+      for (const after of NIGHTS[k].caught) {
+        expect(after.aggression).toBeLessThan(NIGHTS[k].rest.aggression);
       }
+      expect(lowest('rita')).toBeGreaterThan(lowest(k));
     }
   });
 

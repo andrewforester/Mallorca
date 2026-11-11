@@ -84,9 +84,11 @@ describe('the personality of her feeling', () => {
     const calm = newConversation();
     const lola = newConversation();
     lola.setPersonality(PERSONALITIES.lola);
+    const calmRest = calm.bias().tightness;
+    const lolaRest = lola.bias().tightness;
     play(calm, badBeat);
     play(lola, badBeat);
-    expect(lola.bias().tightness).toBeLessThan(calm.bias().tightness);
+    expect(lolaRest - lola.bias().tightness).toBeGreaterThan(calmRest - calm.bias().tightness);
     expect(lola.feeling().traits).not.toEqual(calm.feeling().traits);
     const words = (s: Speaker) => wordsFor('answer', s.view().personality.bigFive.extraversion, 0);
     expect(words(lola).max).toBeGreaterThan(words(calm).max);

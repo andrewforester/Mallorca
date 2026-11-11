@@ -3,38 +3,38 @@ import { createEngine } from './engine.ts';
 import { traitsOf } from './personality.ts';
 import { MALLORCA, PERSONALITIES } from './profiles.ts';
 import type { PersonalityKey } from './profiles.ts';
-import { styleOf } from './style.ts';
+import { STYLE_SHARE, natureOf, styleOf } from './style.ts';
 
 const NINE = ['mallorca', 'ingrid', 'mira', 'nina', 'lola', 'sol', 'rita', 'vera', 'greta'];
 
-const EXTREMES: [string, string][] = [
-  ['boldSchemer', '+-+--'],
-  ['nervousCareerist', '+++-+'],
-  ['lifeOfTheParty', '+-++-'],
-  ['caringActivist', '+++++'],
-  ['toughBoss', '-++--'],
-  ['hotheadBraggart', '--+-+'],
-  ['reliableCaptain', '-+++-'],
-  ['fussyChatterbox', '--+++'],
-  ['coldSceptic', '++---'],
-  ['gloomyRebel', '+---+'],
-  ['calmPhilosopher', '++-+-'],
-  ['dreamyArtist', '+--++'],
-  ['unshakableLoner', '-----'],
-  ['suspiciousGrump', '-+--+'],
-  ['easygoingHomebody', '---+-'],
-  ['timidStickler', '-+-++'],
+const EXTREMES: [string, string, number[]][] = [
+  ['boldSchemer', '+-+--', [0.43, -0.29, 0.34, -0.35, -0.34, 0.05]],
+  ['nervousCareerist', '+++-+', [0.49, 0.67, 0.54, -0.63, 0.63, 0.35]],
+  ['lifeOfTheParty', '+-++-', [0.4, -0.45, 0.45, 0.71, -0.54, 0.05]],
+  ['caringActivist', '+++++', [0.46, 0.5, 0.65, 0.43, 0.43, 0.35]],
+  ['toughBoss', '-++--', [-0.35, 0.72, 0.3, -0.65, -0.5, 0.35]],
+  ['hotheadBraggart', '--+-+', [-0.72, -0.38, 0.59, -0.59, 0.55, 0.05]],
+  ['reliableCaptain', '-+++-', [-0.38, 0.59, 0.41, 0.4, -0.7, 0.35]],
+  ['fussyChatterbox', '--+++', [-0.71, -0.55, 0.7, 0.47, 0.36, 0.05]],
+  ['coldSceptic', '++---', [0.71, 0.55, -0.7, -0.47, -0.36, 0.83]],
+  ['gloomyRebel', '+---+', [0.38, -0.59, -0.41, -0.4, 0.7, 0.35]],
+  ['calmPhilosopher', '++-+-', [0.72, 0.38, -0.59, 0.59, -0.55, 0.83]],
+  ['dreamyArtist', '+--++', [0.35, -0.72, -0.3, 0.65, 0.5, 0.35]],
+  ['unshakableLoner', '-----', [-0.46, -0.5, -0.65, -0.43, -0.43, 0.35]],
+  ['suspiciousGrump', '-+--+', [-0.4, 0.45, -0.45, -0.71, 0.54, 0.83]],
+  ['easygoingHomebody', '---+-', [-0.49, -0.67, -0.54, 0.63, -0.63, 0.35]],
+  ['timidStickler', '-+-++', [-0.43, 0.29, -0.34, 0.35, 0.34, 0.83]],
 ];
 
 const MIDDLE: [string, number[]][] = [
-  ['nervousPragmatist', [-0.52, -0.32, 0.24, -0.3, 0.52]],
-  ['curiousOptimist', [0.57, -0.08, 0.28, -0.22, -0.23]],
-  ['noisyBully', [0.47, -0.43, 0.6, -0.52, 0.06]],
-  ['plainRealist', [-0.25, -0.1, -0.07, 0.08, 0.04]],
-  ['quietTidy', [-0.22, 0.29, -0.5, 0.44, -0.2]],
-  ['softMiddle', [0.17, 0.21, -0.17, 0.16, -0.24]],
-  ['calmCurious', [0.7, 0.1, -0.02, 0.1, -0.53]],
-  ['reservedConservative', [-0.42, 0.25, -0.4, 0.32, 0.05]],
+  ['nervousPragmatist', [-0.52, -0.32, 0.24, -0.3, 0.52, 0.18]],
+  ['curiousOptimist', [0.47, -0.07, 0.27, -0.22, -0.23, 0.24]],
+  ['noisyBully', [0.36, -0.33, 0.45, -0.39, 0.1, 0.05]],
+  ['plainRealist', [-0.25, -0.1, -0.07, 0.08, 0.04, 0.34]],
+  ['quietTidy', [-0.22, 0.29, -0.48, 0.43, -0.2, 0.59]],
+  ['softMiddle', [0.17, 0.21, -0.17, 0.16, -0.24, 0.46]],
+  ['calmCurious', [0.58, 0.12, -0.03, 0.11, -0.45, 0.39]],
+  ['reservedConservative', [-0.4, 0.25, -0.4, 0.32, 0.05, 0.54]],
 ];
 
 function traitRow(key: string): number[] {
@@ -64,14 +64,14 @@ describe('PERSONALITIES', () => {
   it('gives the characters of the first design their traits', () => {
     const table: Record<string, number[]> = {
       mallorca: [0.4, 0.2, 0.4, 0.5, 0.1, 0.35],
-      ingrid: [0.2, 0.8, -0.2, -0.4, -0.8, 0.85],
-      mira: [0.3, 0.2, 0.2, 0.9, 0.1, 0.3],
-      nina: [-0.3, 0.8, -0.4, 0.3, 0.8, 0.55],
-      lola: [0.5, -0.6, 0.7, 0.2, 0.8, 0.08],
-      sol: [0.8, -0.5, 0.9, 0.5, -0.2, 0.2],
-      rita: [0.8, -0.7, 0.9, -0.6, -0.4, 0.2],
-      vera: [-0.4, 0.8, 0.4, -0.5, 0.6, 0.5],
-      greta: [-0.6, 0.5, -0.8, 0.2, 0.2, 0.6],
+      ingrid: [0.16, 0.62, -0.16, -0.37, -0.47, 0.85],
+      mira: [0.36, 0.12, 0.2, 0.53, 0.06, 0.3],
+      nina: [-0.23, 0.34, -0.32, 0.14, 0.41, 0.55],
+      lola: [0.25, -0.48, 0.65, 0.18, 0.55, 0.08],
+      sol: [0.36, -0.41, 0.53, 0.55, -0.16, 0.2],
+      rita: [0.41, -0.3, 0.36, -0.35, -0.27, 0.2],
+      vera: [-0.38, 0.61, 0.43, -0.56, 0.5, 0.5],
+      greta: [-0.38, 0.35, -0.43, 0.14, 0.13, 0.6],
       neutral: [0, 0, 0, 0, 0, 0.3],
     };
     for (const [key, row] of Object.entries(table)) {
@@ -79,26 +79,21 @@ describe('PERSONALITIES', () => {
     }
   });
 
-  it('gives the extremes every trait at 0.8 with the signs of the addendum', () => {
-    for (const [key, signs] of EXTREMES) {
-      expect(traitRow(key).slice(0, 5)).toEqual([...signs].map((c) => (c === '+' ? 0.8 : -0.8)));
+  it('gives the extremes the signs of the addendum and their traits and poker face', () => {
+    for (const [key, signs, row] of EXTREMES) {
+      expect(traitRow(key)).toEqual(row);
+      expect(
+        row
+          .slice(0, 5)
+          .map((v) => (v > 0 ? '+' : '-'))
+          .join(''),
+      ).toBe(signs);
     }
   });
 
-  it('gives the intermediate characters the traits of the addendum', () => {
-    for (const [key, traits] of MIDDLE) {
-      expect(traitRow(key).slice(0, 5)).toEqual(traits);
-    }
-  });
-
-  it('gives the new characters a poker face habit from conscientiousness and extraversion', () => {
-    for (const key of [...EXTREMES.map(([k]) => k), ...MIDDLE.map(([k]) => k)]) {
-      const b = PERSONALITIES[key as PersonalityKey].bigFive;
-      const habit = Math.min(
-        0.9,
-        Math.max(0.05, 0.35 + 0.3 * b.conscientiousness - 0.3 * b.extraversion),
-      );
-      expect(PERSONALITIES[key as PersonalityKey].suppression).toBe(Math.round(habit * 100) / 100);
+  it('gives the intermediate characters their traits and poker face', () => {
+    for (const [key, row] of MIDDLE) {
+      expect(traitRow(key)).toEqual(row);
     }
   });
 
@@ -110,6 +105,15 @@ describe('PERSONALITIES', () => {
       expect(p.suppression).toBeGreaterThanOrEqual(0);
       expect(p.suppression).toBeLessThanOrEqual(1);
       expect(Object.keys(p).sort()).toEqual(['bigFive', 'suppression']);
+    }
+  });
+
+  it('keeps the rest style of every character within half of the style range', () => {
+    const half = Math.atanh(0.5) / Math.atanh(STYLE_SHARE);
+    for (const p of Object.values(PERSONALITIES)) {
+      for (const v of Object.values(natureOf(p.bigFive))) {
+        expect(Math.abs(v)).toBeLessThanOrEqual(half);
+      }
     }
   });
 

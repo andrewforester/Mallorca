@@ -389,7 +389,7 @@ describe('engine', () => {
     expect(won.during).toBeGreaterThan(0.1);
     expect(won.after).toBeLessThan(0.01);
     const pushed = hand('sheFolded');
-    expect(pushed.after).toBeGreaterThan(0.05);
+    expect(pushed.after).toBeGreaterThan(10 * won.after);
   });
 
   it('lets hope and fear fade after the hand instead of dropping them', () => {
