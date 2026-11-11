@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { FaceCue, FaceFrame } from '../../game/index.ts';
 import { speechOf } from '../../game/index.ts';
-import { Motion } from './motion.ts';
+import { EYE_CLOSURE_CAP, Motion } from './motion.ts';
 import type { Pose } from './motion.ts';
 
 const half = () => 0.5;
@@ -51,6 +51,34 @@ describe('motion', () => {
     const poses = run(motion, 1);
     expect(poses[15]!.weights.mouthSmileLeft).toBeCloseTo(0.8);
     expect(poses.at(-1)!.weights.mouthSmileLeft ?? 0).toBe(0);
+  });
+
+  it('takes the strongest of overlapping reactions instead of their sum', () => {
+    const motion = new Motion({ random: half, calm: false });
+    motion.cue(smile);
+    motion.cue({ ...smile, id: 3 });
+    const poses = run(motion, 0.3);
+    expect(poses[15]!.weights.mouthSmileLeft).toBeCloseTo(0.8);
+  });
+
+  it('adds a reaction on top of the frame', () => {
+    const motion = new Motion({ random: half, calm: false });
+    motion.setFrame(frame({ mouthSmileLeft: 0.1 }));
+    run(motion, 4);
+    motion.cue(smile);
+    const poses = run(motion, 0.3);
+    expect(poses[15]!.weights.mouthSmileLeft).toBeCloseTo(0.9, 2);
+  });
+
+  it('keeps her eyes open through a broad smile but still blinks fully', () => {
+    const motion = new Motion({ random: half, calm: false });
+    motion.setFrame(frame({ eyeSquintLeft: 0.9, cheekSquintLeft: 0.9, eyeBlinkLeft: 0.3 }));
+    const poses = run(motion, 6);
+    const closure = (p: Pose): number =>
+      (p.weights.eyeSquintLeft ?? 0) + (p.weights.cheekSquintLeft ?? 0);
+    expect(Math.max(...poses.map(closure))).toBeLessThanOrEqual(EYE_CLOSURE_CAP + 1e-9);
+    expect(closure(poses.at(-1)!)).toBeGreaterThan(0.5);
+    expect(Math.max(...poses.map((p) => p.weights.eyeBlinkLeft ?? 0))).toBeGreaterThan(0.9);
   });
 
   it('looks at the chips and comes back to the player', () => {
