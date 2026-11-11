@@ -12,8 +12,17 @@ import {
   withHeld,
 } from './tension.ts';
 import type { Held } from './tension.ts';
-import { APPROACH, CERTAINTY, HALF_LIFE_S, decay, noEmotions, queue, rise } from './emotions.ts';
-import type { Clock, Emotions, Pad, Pending } from './emotions.ts';
+import {
+  APPROACH,
+  CERTAINTY,
+  HALF_LIFE_S,
+  decay,
+  ease,
+  noEmotions,
+  queue,
+  rise,
+} from './emotions.ts';
+import type { Clock, Emotion, Emotions, Pad, Pending } from './emotions.ts';
 import { GAME_MOOD, octantOf, stepAxis, stepMood } from './mood.ts';
 import type { MoodConfig } from './mood.ts';
 import { traitsOf } from './personality.ts';
@@ -105,7 +114,9 @@ class EmotionEngine implements Engine {
     });
     const impulses = a === null ? [] : impulsesOf(a, this.felt(), this.traits);
     for (const i of impulses) {
-      if (a?.realized === false && i.emotion === 'anger') {
+      if (i.amount < 0) {
+        this.ease(i.emotion, -i.amount);
+      } else if (a?.realized === false && i.emotion === 'anger') {
         this.held = holdOf(this.held, i.amount);
       } else {
         this.pending = queue(this.pending, i.emotion, i.amount);
@@ -113,6 +124,17 @@ class EmotionEngine implements Engine {
     }
     this.remember(e);
     return impulses;
+  }
+
+  private ease(emotion: Emotion, amount: number): void {
+    const felt = this.felt()[emotion];
+    const keep = felt > 0 ? Math.max(0, 1 - amount / felt) : 1;
+    const eased = ease(this.emotions, this.pending, emotion, keep);
+    this.emotions = eased.emotions;
+    this.pending = eased.pending;
+    if (emotion === 'anger') {
+      this.held = { value: this.held.value * keep, pending: this.held.pending * keep };
+    }
   }
 
   private completed(e: TableEvent): TableEvent {

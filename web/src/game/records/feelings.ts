@@ -80,6 +80,8 @@ const QUIET: ReadonlySet<TableEvent['kind']> = new Set([
   'opponentCall',
 ]);
 
+const signed = (v: number): string => `${v >= 0 ? '+' : ''}${v.toFixed(2)}`;
+
 export function worthALine(felt: RecordedFeeling): boolean {
   return felt.impulses.length > 0 || !QUIET.has(felt.event.kind);
 }
@@ -88,7 +90,7 @@ export function feelingLine(felt: RecordedFeeling, said: Said): string {
   const impulses =
     felt.impulses.length === 0
       ? 'no impulse'
-      : felt.impulses.map((i) => `${i.emotion} +${i.amount.toFixed(2)} ${i.reason}`).join(', ');
+      : felt.impulses.map((i) => `${i.emotion} ${signed(i.amount)} ${i.reason}`).join(', ');
   const words = felt.words.length === 0 ? 'none' : felt.words.join(', ');
   const line = said(felt.journalId);
   const says = line === null ? '' : ` | says "${line}"`;

@@ -1,7 +1,7 @@
 import { formatCard } from '../../game/index.ts';
 import type { TraceEntry } from '../../game/index.ts';
 import { TALK } from './conversationCopy.ts';
-import { f2 } from './format.ts';
+import { f2, signed } from './format.ts';
 
 const seconds = (ms: number): string => `${(ms / 1000).toFixed(1)} s`;
 
@@ -27,7 +27,7 @@ function Impulses({ entry }: { entry: TraceEntry }) {
   return (
     <>
       {entry.verdict.occasion.impulses.map((i, n) => (
-        <span class="debug-impulse" key={n}>{`${i.emotion} +${f2(i.amount)}`}</span>
+        <span class="debug-impulse" key={n}>{`${i.emotion} ${signed(i.amount)}`}</span>
       ))}
     </>
   );

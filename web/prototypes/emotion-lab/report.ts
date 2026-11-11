@@ -14,6 +14,7 @@ import { EMOTION_LABEL } from './ui/labels.ts';
 
 const OUT = new URL('../../../docs/emotion/generated.md', import.meta.url);
 const f2 = (v: number) => v.toFixed(2);
+const signed = (v: number) => `${v >= 0 ? '+' : ''}${f2(v)}`;
 const pad = (p: readonly number[]) => p.map(f2).join(', ');
 
 function traitsTable(): string[] {
@@ -72,7 +73,7 @@ const silentHooks = (log: string[], start: () => number): RunnerHooks => ({
   log: (label, impulses) => {
     log.push(`- ${start().toFixed(1)} с: ${label}`);
     for (const i of impulses) {
-      log.push(`  - ${EMOTION_LABEL[i.emotion]} +${f2(i.amount)}: ${i.reason}`);
+      log.push(`  - ${EMOTION_LABEL[i.emotion]} ${signed(i.amount)}: ${i.reason}`);
     }
   },
   impulses: () => {},

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { JournalEntry, Moment } from '../../persona/index.ts';
-import { feelingsOf } from './feelings.ts';
+import { feelingLine, feelingsOf } from './feelings.ts';
 
 const entry = (id: number): JournalEntry => ({
   id,
@@ -23,5 +23,24 @@ describe('feelingsOf', () => {
   it('points an entry between events at the event before it and drops one before the hand', () => {
     expect(feelingsOf([entry(7)], [moment([])], 6).map((f) => f.eventIndex)).toEqual([5]);
     expect(feelingsOf([entry(7)], [moment([])], 0)).toEqual([]);
+  });
+});
+
+describe('feelingLine', () => {
+  it('writes an eased emotion with a minus and a felt one with a plus', () => {
+    const line = feelingLine(
+      {
+        eventIndex: 0,
+        journalId: 1,
+        event: { kind: 'chat', signal: 'tease' },
+        impulses: [
+          { emotion: 'joy', amount: 0.5, reason: 'won' },
+          { emotion: 'distress', amount: -0.32, reason: 'won' },
+        ],
+        words: [],
+      },
+      () => null,
+    );
+    expect(line).toContain('joy +0.50 won, distress -0.32 won');
   });
 });

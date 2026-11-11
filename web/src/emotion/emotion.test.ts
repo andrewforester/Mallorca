@@ -340,6 +340,79 @@ describe('engine', () => {
     expect(s.load.overload).toBe(0);
   });
 
+  describe('a result resolves the feelings of the other sign', () => {
+    const lostToHisBet = () => {
+      const engine = createEngine(PERSONALITIES.vera);
+      engine.event({ kind: 'deal', equity: 0.8, potBb: 40, investedBb: 20, streetsLeft: 0 });
+      engine.event({ kind: 'opponentBet', sizeBb: 30, equity: 0.8 });
+      engine.event({ kind: 'opponentCall' });
+      engine.event({ kind: 'street', equity: 0, potBb: 100, investedBb: 50, streetsLeft: 0 });
+      engine.event({ kind: 'result', netBb: -50, decided: 'showdown', aggressor: 'him' });
+      engine.step(6);
+      return engine;
+    };
+    const after = (netBb: number | null) => {
+      const engine = lostToHisBet();
+      const impulses =
+        netBb === null
+          ? []
+          : engine.event({ kind: 'result', netBb, decided: 'heFolded', lastEquity: 0.6 });
+      engine.step(2);
+      return { s: engine.snapshot().emotions, impulses };
+    };
+
+    it('lets a big win wash out the distress and the injustice of a loss', () => {
+      const calm = after(null).s;
+      const won = after(100).s;
+      expect(calm.distress).toBeGreaterThan(0.2);
+      expect(calm.injustice).toBeGreaterThan(0.05);
+      expect(won.distress).toBeLessThan(0.3 * calm.distress);
+      expect(won.injustice).toBeLessThan(0.3 * calm.injustice);
+      expect(won.disappointment).toBeLessThan(0.3 * calm.disappointment);
+    });
+
+    it('eases the anger at him less than the feelings about the outcome', () => {
+      const calm = after(null).s;
+      const won = after(100).s;
+      expect(calm.anger).toBeGreaterThan(0.05);
+      expect(won.anger).toBeLessThan(calm.anger);
+      expect(won.anger / calm.anger).toBeGreaterThan(won.distress / calm.distress);
+    });
+
+    it('barely eases them after a small pot', () => {
+      const calm = after(null).s;
+      const won = after(1).s;
+      expect(won.distress).toBeGreaterThan(0.9 * calm.distress);
+      expect(won.injustice).toBeGreaterThan(0.9 * calm.injustice);
+    });
+
+    it('shows the easing as impulses below zero', () => {
+      const { impulses } = after(100);
+      const distress = impulses.find((i) => i.emotion === 'distress');
+      expect(distress?.amount).toBeLessThan(-0.1);
+    });
+
+    it('lets a big loss take the joy and the pride of a win before it', () => {
+      const play = (lose: boolean) => {
+        const engine = createEngine(PERSONALITIES.vera);
+        engine.event({ kind: 'result', netBb: 60, decided: 'heFolded', lastEquity: 0.6 });
+        engine.step(6);
+        if (lose) {
+          engine.event({ kind: 'deal', equity: 0.5, potBb: 200, investedBb: 100, streetsLeft: 0 });
+          engine.event({ kind: 'ownMove', move: 'bet', amountBb: 100, potBb: 100, equity: 0.5 });
+          engine.event({ kind: 'opponentCall' });
+          engine.event({ kind: 'result', netBb: -100, decided: 'showdown', lastEquity: 0.5 });
+        }
+        engine.step(2);
+        return engine.snapshot().emotions;
+      };
+      const kept = play(false);
+      const lost = play(true);
+      expect(lost.joy).toBeLessThan(0.3 * kept.joy);
+      expect(lost.pride).toBeLessThan(kept.pride);
+    });
+  });
+
   it('remembers raises against her and angers more with each one', () => {
     const engine = createEngine({
       ...average,

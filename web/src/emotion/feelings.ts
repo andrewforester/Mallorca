@@ -18,10 +18,12 @@ export interface Appraisal {
   expected: number;
   unexpected: number;
   control: number;
+  settles?: boolean;
   reason: string;
 }
 
 const FELT = 0.005;
+export const ANGER_EASING = 0.5;
 
 type Amounts = Partial<Record<Emotion, number>>;
 
@@ -58,9 +60,36 @@ function amountsOf(a: Appraisal, now: Emotions): Amounts {
   return bad ? badProspective(a, m, now) : { hope: m, relief: now.fear * a.spared };
 }
 
+function easingOf(a: Appraisal): Amounts {
+  const m = Math.abs(a.value);
+  if (a.settles !== true || m === 0) {
+    return {};
+  }
+  return a.value > 0
+    ? {
+        distress: m,
+        disappointment: m,
+        injustice: m,
+        shame: m * a.self,
+        anger: m * ANGER_EASING,
+      }
+    : { joy: m, pride: m * a.self };
+}
+
+function easedOf(a: Appraisal, now: Emotions): Impulse[] {
+  const list: Impulse[] = [];
+  for (const [emotion, share] of Object.entries(easingOf(a)) as [Emotion, number][]) {
+    const amount = now[emotion] * clamp01(share);
+    if (amount > FELT) {
+      list.push({ emotion, amount: -amount, reason: a.reason });
+    }
+  }
+  return list;
+}
+
 export function impulsesOf(a: Appraisal, now: Emotions, traits: Traits): Impulse[] {
   const amounts: Amounts = { ...amountsOf(a, now), surprise: a.unexpected };
-  const list: Impulse[] = [];
+  const list = easedOf(a, now);
   for (const [emotion, raw] of Object.entries(amounts) as [Emotion, number][]) {
     const amount = clamp01(raw * traits.gains[emotion]);
     if (amount > FELT) {

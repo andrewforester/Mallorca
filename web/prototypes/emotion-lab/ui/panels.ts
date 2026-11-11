@@ -279,7 +279,11 @@ export function logEntry(
   const li = el('li', '', `${time.toFixed(1)} с  ${label}`);
   for (const i of impulses) {
     li.append(
-      el('span', 'imp', `${EMOTION_LABEL[i.emotion]} +${i.amount.toFixed(2)}  ${i.reason}`),
+      el(
+        'span',
+        'imp',
+        `${EMOTION_LABEL[i.emotion]} ${i.amount >= 0 ? '+' : ''}${i.amount.toFixed(2)}  ${i.reason}`,
+      ),
     );
   }
   list.prepend(li);

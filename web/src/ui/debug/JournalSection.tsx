@@ -1,6 +1,6 @@
 import type { DebugView, HandStore, Session } from '../../game/index.ts';
 import { COPY } from './copy.ts';
-import { f2 } from './format.ts';
+import { signed } from './format.ts';
 import { describeEvent } from './events.ts';
 import { TALK } from './conversationCopy.ts';
 import { copyHistory } from './history.ts';
@@ -34,7 +34,7 @@ export function JournalSection({ view, store, session }: JournalProps) {
             </span>
             {entry.impulses.map((i, n) => (
               <span class="debug-impulse" key={n}>
-                {`${COPY.emotion[i.emotion]} +${f2(i.amount)} ${i.reason}`}
+                {`${COPY.emotion[i.emotion]} ${signed(i.amount)} ${i.reason}`}
               </span>
             ))}
             <span class="debug-note">

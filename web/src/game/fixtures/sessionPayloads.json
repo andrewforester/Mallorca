@@ -459,7 +459,7 @@
         "occasion": "the player raised on the turn",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.43
+          "intensity": 0.42
         },
         "words": {
           "min": 1,
@@ -574,7 +574,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.33
+          "intensity": 0.23
         },
         "words": {
           "min": 2,
@@ -689,7 +689,7 @@
         "occasion": "you bet on the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.34
+          "intensity": 0.32
         },
         "words": {
           "min": 2,
@@ -807,7 +807,7 @@
         "occasion": "the player raised before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.34
+          "intensity": 0.27
         },
         "words": {
           "min": 2,
@@ -928,7 +928,7 @@
         "occasion": "the player raised on the river",
         "voice": {
           "emotion": "pride",
-          "intensity": 0.24
+          "intensity": 0.26
         },
         "words": {
           "min": 2,
@@ -1059,7 +1059,7 @@
         "occasion": "you stayed in before the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.4
+          "intensity": 0.36
         },
         "words": {
           "min": 2,
@@ -1187,7 +1187,7 @@
         "occasion": "the player raised on the turn",
         "voice": {
           "emotion": "anger",
-          "intensity": 0.21
+          "intensity": 0.2
         },
         "words": {
           "min": 1,
@@ -1318,7 +1318,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.32
+          "intensity": 0.24
         },
         "words": {
           "min": 2,
@@ -1449,12 +1449,12 @@
         "act": "claim",
         "occasion": "the player raised before the flop",
         "voice": {
-          "emotion": "anger",
-          "intensity": 0.16
+          "emotion": "joy",
+          "intensity": 0.18
         },
         "words": {
           "min": 2,
-          "max": 4
+          "max": 7
         },
         "humour": null,
         "claim": {
@@ -1574,13 +1574,18 @@
         "occasion": "you won a 18 bb pot",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.51
+          "intensity": 0.46
         },
         "words": {
           "min": 2,
           "max": 8
         },
-        "humour": null,
+        "humour": {
+          "style": "affiliative",
+          "target": "situation",
+          "intensity": "sharp",
+          "softened": false
+        },
         "claim": null,
         "facts": {
           "street": "complete",
@@ -1717,10 +1722,10 @@
       "plan": {
         "version": 2,
         "act": "claim",
-        "occasion": "the player raised on the flop",
+        "occasion": "you stayed in before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.41
+          "intensity": 0.38
         },
         "words": {
           "min": 2,
@@ -1732,21 +1737,14 @@
           "honest": true
         },
         "facts": {
-          "street": "flop",
-          "board": ["Jd", "6s", "7c"],
-          "potBb": 6,
+          "street": "preflop",
+          "board": [],
+          "potBb": 2,
           "stacksBb": {
             "her": 155,
-            "player": 95
+            "player": 99
           },
-          "actions": [
-            "Mallorca posts 10",
-            "player posts 20",
-            "Mallorca calls 10",
-            "player checks",
-            "flop Jd 6s 7c",
-            "player raises to 80"
-          ],
+          "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
           "card": null,
           "result": null,
           "shown": null
@@ -1793,8 +1791,8 @@
           ]
         },
         "handNumber": 15,
-        "street": "flop",
-        "actionStreet": "flop",
+        "street": "preflop",
+        "actionStreet": "preflop",
         "endsHand": false
       },
       "recent": [
@@ -1847,27 +1845,177 @@
       },
       "plan": {
         "version": 2,
-        "act": "react",
-        "occasion": "the player raised before the flop",
+        "act": "concede",
+        "occasion": "you lost a 18 bb pot",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.39
+          "intensity": 0.34
         },
         "words": {
-          "min": 1,
-          "max": 3
+          "min": 2,
+          "max": 6
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": ["Jd", "6s", "7c", "5h", "Jc"],
+          "potBb": 18,
+          "stacksBb": {
+            "her": 147,
+            "player": 109
+          },
+          "actions": [
+            "Mallorca posts 10",
+            "player posts 20",
+            "Mallorca calls 10",
+            "player checks",
+            "flop Jd 6s 7c",
+            "player raises to 80",
+            "Mallorca raises to 160",
+            "player calls 80",
+            "turn 5h",
+            "player checks",
+            "Mallorca checks",
+            "river Jc",
+            "player checks",
+            "Mallorca checks",
+            "Mallorca shows Td Ah",
+            "player shows 5s 8c",
+            "player wins 360"
+          ],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 18
+          },
+          "shown": {
+            "her": ["Td", "Ah"],
+            "player": ["5s", "8c"]
+          }
+        },
+        "heard": null,
+        "session": {
+          "hands": 15,
+          "netBb": 41,
+          "playerBluffsShown": 1,
+          "playerAllIns": 0,
+          "signals": {
+            "tease": 2,
+            "mockBluff": 1
+          },
+          "notable": [
+            {
+              "kind": "bigWin",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            },
+            {
+              "kind": "bigLoss",
+              "handNumber": 8,
+              "potBb": 42,
+              "won": false,
+              "bets": 4
+            },
+            {
+              "kind": "bluffCaught",
+              "handNumber": 10,
+              "potBb": 18,
+              "won": false,
+              "bets": 3
+            },
+            {
+              "kind": "fought",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            }
+          ]
+        },
+        "handNumber": 15,
+        "street": "complete",
+        "actionStreet": "showdown",
+        "endsHand": true
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Bluffing?"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Nice hand"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        }
+      ],
+      "debug": false
+    },
+    {
+      "kind": "line",
+      "version": 2,
+      "sessionId": "seed-11",
+      "locale": "en",
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "press",
+        "occasion": "you bet before the flop",
+        "voice": {
+          "emotion": "distress",
+          "intensity": 0.32
+        },
+        "words": {
+          "min": 2,
+          "max": 7
         },
         "humour": null,
         "claim": null,
         "facts": {
           "street": "preflop",
           "board": [],
-          "potBb": 4.5,
+          "potBb": 9.5,
           "stacksBb": {
-            "her": 146,
+            "her": 141,
             "player": 105.5
           },
-          "actions": ["player posts 10", "Mallorca posts 20", "player raises to 70"],
+          "actions": [
+            "player posts 10",
+            "Mallorca posts 20",
+            "player raises to 70",
+            "Mallorca raises to 120"
+          ],
           "card": null,
           "result": null,
           "shown": null
@@ -1920,10 +2068,6 @@
       },
       "recent": [
         {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
           "speaker": "player",
           "text": "Bluffing?"
         },
@@ -1950,6 +2094,10 @@
         {
           "speaker": "mallorca",
           "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
         }
       ],
       "debug": false
@@ -1968,25 +2116,25 @@
       },
       "plan": {
         "version": 2,
-        "act": "concede",
-        "occasion": "you lost a 16 bb pot",
+        "act": "react",
+        "occasion": "the player raised on the turn",
         "voice": {
-          "emotion": "distress",
-          "intensity": 0.39
+          "emotion": "joy",
+          "intensity": 0.46
         },
         "words": {
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         "humour": null,
         "claim": null,
         "facts": {
-          "street": "complete",
-          "board": ["Td", "Qh", "Kc", "4d", "Jd"],
-          "potBb": 16,
+          "street": "turn",
+          "board": ["Td", "Qh", "Kc", "4d"],
+          "potBb": 10,
           "stacksBb": {
-            "her": 160,
-            "player": 108
+            "her": 166,
+            "player": 92
           },
           "actions": [
             "Mallorca posts 10",
@@ -1998,29 +2146,16 @@
             "Mallorca raises to 20",
             "player calls 20",
             "turn 4d",
-            "player raises to 120",
-            "Mallorca calls 120",
-            "river Jd",
-            "player checks",
-            "Mallorca checks",
-            "Mallorca shows 7c 2s",
-            "player shows 6s 8d",
-            "player wins 320"
+            "player raises to 120"
           ],
           "card": null,
-          "result": {
-            "won": false,
-            "potBb": 16
-          },
-          "shown": {
-            "her": ["7c", "2s"],
-            "player": ["6s", "8d"]
-          }
+          "result": null,
+          "shown": null
         },
         "heard": null,
         "session": {
-          "hands": 17,
-          "netBb": 54,
+          "hands": 16,
+          "netBb": 62,
           "playerBluffsShown": 2,
           "playerAllIns": 0,
           "signals": {
@@ -2059,147 +2194,8 @@
           ]
         },
         "handNumber": 17,
-        "street": "complete",
-        "actionStreet": "showdown",
-        "endsHand": true
-      },
-      "recent": [
-        {
-          "speaker": "player",
-          "text": "Bluffing?"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Sure"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "player",
-          "text": "Nice hand"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Sure"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        }
-      ],
-      "debug": false
-    },
-    {
-      "kind": "line",
-      "version": 2,
-      "sessionId": "seed-11",
-      "locale": "en",
-      "personality": {
-        "openness": 0.4,
-        "conscientiousness": 0.2,
-        "extraversion": 0.4,
-        "agreeableness": 0.5,
-        "neuroticism": 0.1
-      },
-      "plan": {
-        "version": 2,
-        "act": "claim",
-        "occasion": "you stayed in on the flop",
-        "voice": {
-          "emotion": "joy",
-          "intensity": 0.28
-        },
-        "words": {
-          "min": 2,
-          "max": 7
-        },
-        "humour": {
-          "style": "aggressive",
-          "target": "play",
-          "intensity": "soft",
-          "softened": true
-        },
-        "claim": {
-          "about": "medium",
-          "honest": true
-        },
-        "facts": {
-          "street": "flop",
-          "board": ["2h", "3s", "Tc"],
-          "potBb": 16,
-          "stacksBb": {
-            "her": 152,
-            "player": 100
-          },
-          "actions": [
-            "player posts 10",
-            "Mallorca posts 20",
-            "player calls 10",
-            "Mallorca raises to 40",
-            "player calls 20",
-            "flop 2h 3s Tc",
-            "Mallorca checks",
-            "player raises to 120",
-            "Mallorca calls 120"
-          ],
-          "card": null,
-          "result": null,
-          "shown": null
-        },
-        "heard": null,
-        "session": {
-          "hands": 17,
-          "netBb": 54,
-          "playerBluffsShown": 2,
-          "playerAllIns": 0,
-          "signals": {
-            "tease": 2,
-            "mockBluff": 1
-          },
-          "notable": [
-            {
-              "kind": "bigWin",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            },
-            {
-              "kind": "bigLoss",
-              "handNumber": 8,
-              "potBb": 42,
-              "won": false,
-              "bets": 4
-            },
-            {
-              "kind": "bluffCaught",
-              "handNumber": 10,
-              "potBb": 18,
-              "won": false,
-              "bets": 3
-            },
-            {
-              "kind": "fought",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            }
-          ]
-        },
-        "handNumber": 18,
         "street": "turn",
-        "actionStreet": "flop",
+        "actionStreet": "turn",
         "endsHand": false
       },
       "recent": [
@@ -2252,11 +2248,149 @@
       },
       "plan": {
         "version": 2,
+        "act": "claim",
+        "occasion": "the player raised on the flop",
+        "voice": {
+          "emotion": "joy",
+          "intensity": 0.25
+        },
+        "words": {
+          "min": 2,
+          "max": 7
+        },
+        "humour": {
+          "style": "affiliative",
+          "target": "play",
+          "intensity": "clear",
+          "softened": false
+        },
+        "claim": {
+          "about": "medium",
+          "honest": true
+        },
+        "facts": {
+          "street": "flop",
+          "board": ["2h", "3s", "Tc"],
+          "potBb": 10,
+          "stacksBb": {
+            "her": 158,
+            "player": 100
+          },
+          "actions": [
+            "player posts 10",
+            "Mallorca posts 20",
+            "player calls 10",
+            "Mallorca raises to 40",
+            "player calls 20",
+            "flop 2h 3s Tc",
+            "Mallorca checks",
+            "player raises to 120"
+          ],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 17,
+          "netBb": 54,
+          "playerBluffsShown": 2,
+          "playerAllIns": 0,
+          "signals": {
+            "tease": 2,
+            "mockBluff": 1
+          },
+          "notable": [
+            {
+              "kind": "bigWin",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            },
+            {
+              "kind": "bigLoss",
+              "handNumber": 8,
+              "potBb": 42,
+              "won": false,
+              "bets": 4
+            },
+            {
+              "kind": "bluffCaught",
+              "handNumber": 10,
+              "potBb": 18,
+              "won": false,
+              "bets": 3
+            },
+            {
+              "kind": "fought",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            }
+          ]
+        },
+        "handNumber": 18,
+        "street": "flop",
+        "actionStreet": "flop",
+        "endsHand": false
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Nice hand"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        }
+      ],
+      "debug": false
+    },
+    {
+      "kind": "line",
+      "version": 2,
+      "sessionId": "seed-11",
+      "locale": "en",
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
         "act": "react",
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.39
+          "intensity": 0.31
         },
         "words": {
           "min": 1,
@@ -2332,10 +2466,6 @@
       },
       "recent": [
         {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
           "speaker": "player",
           "text": "Nice hand"
         },
@@ -2346,6 +2476,10 @@
         {
           "speaker": "mallorca",
           "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -2384,11 +2518,11 @@
         "occasion": "you lost a 18 bb pot",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.44
+          "intensity": 0.34
         },
         "words": {
           "min": 2,
-          "max": 4
+          "max": 6
         },
         "humour": null,
         "claim": null,
@@ -2477,16 +2611,16 @@
       },
       "recent": [
         {
-          "speaker": "player",
-          "text": "Nice hand"
-        },
-        {
           "speaker": "mallorca",
           "text": "Here we go"
         },
         {
           "speaker": "mallorca",
           "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -2529,7 +2663,7 @@
         "occasion": "you stayed in on the turn",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.44
+          "intensity": 0.38
         },
         "words": {
           "min": 1,
@@ -2611,11 +2745,11 @@
       "recent": [
         {
           "speaker": "mallorca",
-          "text": "Here we go"
+          "text": "Sure"
         },
         {
           "speaker": "mallorca",
-          "text": "Sure"
+          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -2661,7 +2795,7 @@
         "act": "claim",
         "occasion": "you bet before the flop",
         "voice": {
-          "emotion": "joy",
+          "emotion": "pride",
           "intensity": 0.31
         },
         "words": {
@@ -2796,11 +2930,11 @@
         "occasion": "the player called your bet and you lost a 18 bb pot",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.43
+          "intensity": 0.31
         },
         "words": {
           "min": 1,
-          "max": 4
+          "max": 6
         },
         "humour": null,
         "claim": null,
@@ -2942,11 +3076,11 @@
         "occasion": "you bet on the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.32
+          "intensity": 0.25
         },
         "words": {
           "min": 2,
-          "max": 4
+          "max": 7
         },
         "humour": null,
         "claim": {
@@ -3073,17 +3207,17 @@
         "act": "claim",
         "occasion": "you bet on the river",
         "voice": {
-          "emotion": "joy",
-          "intensity": 0.29
+          "emotion": "pride",
+          "intensity": 0.27
         },
         "words": {
           "min": 2,
-          "max": 4
+          "max": 7
         },
         "humour": null,
         "claim": {
-          "about": "weak",
-          "honest": true
+          "about": "strong",
+          "honest": false
         },
         "facts": {
           "street": "river",
@@ -3212,7 +3346,7 @@
         "occasion": "the player raised on the turn",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.47
+          "intensity": 0.41
         },
         "words": {
           "min": 1,
@@ -3349,7 +3483,7 @@
         "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.49
+          "intensity": 0.46
         },
         "words": {
           "min": 1,
@@ -3479,7 +3613,7 @@
         "occasion": "you won a 18 bb pot",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.52
+          "intensity": 0.43
         },
         "words": {
           "min": 1,
@@ -3624,7 +3758,7 @@
         "occasion": "you bet before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.44
+          "intensity": 0.38
         },
         "words": {
           "min": 2,
@@ -3753,13 +3887,18 @@
         "occasion": "you stayed in on the river",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.44
+          "intensity": 0.4
         },
         "words": {
           "min": 2,
-          "max": 4
+          "max": 7
         },
-        "humour": null,
+        "humour": {
+          "style": "affiliative",
+          "target": "situation",
+          "intensity": "sharp",
+          "softened": false
+        },
         "claim": {
           "about": "weak",
           "honest": true
@@ -3889,14 +4028,14 @@
       "plan": {
         "version": 2,
         "act": "claim",
-        "occasion": "the player raised on the flop",
+        "occasion": "you stayed in before the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.38
+          "intensity": 0.29
         },
         "words": {
           "min": 2,
-          "max": 4
+          "max": 7
         },
         "humour": null,
         "claim": {
@@ -3904,21 +4043,14 @@
           "honest": true
         },
         "facts": {
-          "street": "flop",
-          "board": ["Ac", "6c", "Ah"],
-          "potBb": 6,
+          "street": "preflop",
+          "board": [],
+          "potBb": 2,
           "stacksBb": {
             "her": 197,
-            "player": 104
+            "player": 108
           },
-          "actions": [
-            "Mallorca posts 10",
-            "player posts 20",
-            "Mallorca calls 10",
-            "player checks",
-            "flop Ac 6c Ah",
-            "player raises to 80"
-          ],
+          "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
           "card": null,
           "result": null,
           "shown": null
@@ -3965,8 +4097,8 @@
           ]
         },
         "handNumber": 31,
-        "street": "flop",
-        "actionStreet": "flop",
+        "street": "preflop",
+        "actionStreet": "preflop",
         "endsHand": false
       },
       "recent": [
@@ -4019,11 +4151,11 @@
       },
       "plan": {
         "version": 2,
-        "act": "complain",
+        "act": "concede",
         "occasion": "you lost a 18 bb pot",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.52
+          "intensity": 0.46
         },
         "words": {
           "min": 2,
@@ -4164,24 +4296,24 @@
       },
       "plan": {
         "version": 2,
-        "act": "tease",
-        "occasion": "the player bet the river and showed a bluff; you won a 42 bb pot",
+        "act": "react",
+        "occasion": "the player raised on the river",
         "voice": {
-          "emotion": "joy",
-          "intensity": 0.54
+          "emotion": "anger",
+          "intensity": 0.17
         },
         "words": {
-          "min": 3,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         "humour": null,
         "claim": null,
         "facts": {
-          "street": "complete",
+          "street": "river",
           "board": ["5h", "Js", "6c", "Th", "4c"],
-          "potBb": 42,
+          "potBb": 28,
           "stacksBb": {
-            "her": 210,
+            "her": 182,
             "player": 97
           },
           "actions": [
@@ -4198,27 +4330,17 @@
             "player checks",
             "river 4c",
             "Mallorca raises to 20",
-            "player raises to 300",
-            "Mallorca calls 280",
-            "Mallorca shows 9d Jc",
-            "player shows Ac 9c",
-            "Mallorca wins 840"
+            "player raises to 300"
           ],
           "card": null,
-          "result": {
-            "won": true,
-            "potBb": 42
-          },
-          "shown": {
-            "her": ["9d", "Jc"],
-            "player": ["Ac", "9c"]
-          }
+          "result": null,
+          "shown": null
         },
         "heard": null,
         "session": {
-          "hands": 32,
-          "netBb": 104,
-          "playerBluffsShown": 3,
+          "hands": 31,
+          "netBb": 83,
+          "playerBluffsShown": 2,
           "playerAllIns": 0,
           "signals": {
             "tease": 4,
@@ -4256,9 +4378,9 @@
           ]
         },
         "handNumber": 32,
-        "street": "complete",
-        "actionStreet": "showdown",
-        "endsHand": true
+        "street": "river",
+        "actionStreet": "river",
+        "endsHand": false
       },
       "recent": [
         {
@@ -4311,27 +4433,153 @@
       "plan": {
         "version": 2,
         "act": "claim",
-        "occasion": "you bet on the flop",
+        "occasion": "you stayed in before the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.33
+          "intensity": 0.38
         },
         "words": {
           "min": 2,
-          "max": 4
+          "max": 7
         },
-        "humour": null,
+        "humour": {
+          "style": "affiliative",
+          "target": "situation",
+          "intensity": "sharp",
+          "softened": false
+        },
         "claim": {
-          "about": "weak",
-          "honest": false
+          "about": "medium",
+          "honest": true
         },
         "facts": {
-          "street": "flop",
-          "board": ["5c", "9c", "9s"],
-          "potBb": 3,
+          "street": "preflop",
+          "board": [],
+          "potBb": 2,
           "stacksBb": {
-            "her": 208,
+            "her": 209,
             "player": 99
+          },
+          "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 32,
+          "netBb": 104,
+          "playerBluffsShown": 3,
+          "playerAllIns": 0,
+          "signals": {
+            "tease": 4,
+            "mockBluff": 2
+          },
+          "notable": [
+            {
+              "kind": "bigWin",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            },
+            {
+              "kind": "bigLoss",
+              "handNumber": 8,
+              "potBb": 42,
+              "won": false,
+              "bets": 4
+            },
+            {
+              "kind": "bluffCaught",
+              "handNumber": 30,
+              "potBb": 18,
+              "won": false,
+              "bets": 3
+            },
+            {
+              "kind": "fought",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            }
+          ]
+        },
+        "handNumber": 33,
+        "street": "preflop",
+        "actionStreet": "preflop",
+        "endsHand": false
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Nice hand"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        }
+      ],
+      "debug": false
+    },
+    {
+      "kind": "line",
+      "version": 2,
+      "sessionId": "seed-11",
+      "locale": "en",
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "react",
+        "occasion": "you stayed in on the turn",
+        "voice": {
+          "emotion": "joy",
+          "intensity": 0.23
+        },
+        "words": {
+          "min": 1,
+          "max": 3
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "turn",
+          "board": ["5c", "9c", "9s", "8c"],
+          "potBb": 16,
+          "stacksBb": {
+            "her": 202,
+            "player": 92
           },
           "actions": [
             "Mallorca posts 10",
@@ -4340,7 +4588,11 @@
             "player checks",
             "flop 5c 9c 9s",
             "player checks",
-            "Mallorca raises to 20"
+            "Mallorca raises to 20",
+            "player calls 20",
+            "turn 8c",
+            "player raises to 120",
+            "Mallorca calls 120"
           ],
           "card": null,
           "result": null,
@@ -4388,157 +4640,12 @@
           ]
         },
         "handNumber": 33,
-        "street": "flop",
-        "actionStreet": "flop",
+        "street": "river",
+        "actionStreet": "turn",
         "endsHand": false
       },
       "recent": [
         {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "player",
-          "text": "Nice hand"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Sure"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        }
-      ],
-      "debug": false
-    },
-    {
-      "kind": "line",
-      "version": 2,
-      "sessionId": "seed-11",
-      "locale": "en",
-      "personality": {
-        "openness": 0.4,
-        "conscientiousness": 0.2,
-        "extraversion": 0.4,
-        "agreeableness": 0.5,
-        "neuroticism": 0.1
-      },
-      "plan": {
-        "version": 2,
-        "act": "enjoy",
-        "occasion": "you won a 16 bb pot",
-        "voice": {
-          "emotion": "joy",
-          "intensity": 0.53
-        },
-        "words": {
-          "min": 2,
-          "max": 4
-        },
-        "humour": null,
-        "claim": null,
-        "facts": {
-          "street": "complete",
-          "board": ["5c", "9c", "9s", "8c", "Kh"],
-          "potBb": 16,
-          "stacksBb": {
-            "her": 218,
-            "player": 92
-          },
-          "actions": [
-            "Mallorca posts 10",
-            "player posts 20",
-            "Mallorca calls 10",
-            "player checks",
-            "flop 5c 9c 9s",
-            "player checks",
-            "Mallorca raises to 20",
-            "player calls 20",
-            "turn 8c",
-            "player raises to 120",
-            "Mallorca calls 120",
-            "river Kh",
-            "player checks",
-            "Mallorca checks",
-            "Mallorca shows 9d Jc",
-            "player shows Js 3h",
-            "Mallorca wins 320"
-          ],
-          "card": null,
-          "result": {
-            "won": true,
-            "potBb": 16
-          },
-          "shown": {
-            "her": ["9d", "Jc"],
-            "player": ["Js", "3h"]
-          }
-        },
-        "heard": null,
-        "session": {
-          "hands": 33,
-          "netBb": 112,
-          "playerBluffsShown": 3,
-          "playerAllIns": 0,
-          "signals": {
-            "tease": 4,
-            "mockBluff": 2
-          },
-          "notable": [
-            {
-              "kind": "bigWin",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            },
-            {
-              "kind": "bigLoss",
-              "handNumber": 8,
-              "potBb": 42,
-              "won": false,
-              "bets": 4
-            },
-            {
-              "kind": "bluffCaught",
-              "handNumber": 30,
-              "potBb": 18,
-              "won": false,
-              "bets": 3
-            },
-            {
-              "kind": "fought",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            }
-          ]
-        },
-        "handNumber": 33,
-        "street": "complete",
-        "actionStreet": "showdown",
-        "endsHand": true
-      },
-      "recent": [
-        {
           "speaker": "player",
           "text": "Nice hand"
         },
@@ -4587,31 +4694,35 @@
       },
       "plan": {
         "version": 2,
-        "act": "press",
-        "occasion": "you bet before the flop",
+        "act": "react",
+        "occasion": "the player raised on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.32
+          "intensity": 0.38
         },
         "words": {
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         "humour": null,
         "claim": null,
         "facts": {
-          "street": "preflop",
-          "board": [],
-          "potBb": 3,
+          "street": "flop",
+          "board": ["5d", "Qd", "6h"],
+          "potBb": 10,
           "stacksBb": {
             "her": 216,
-            "player": 99
+            "player": 92
           },
           "actions": [
             "player posts 10",
             "Mallorca posts 20",
             "player calls 10",
-            "Mallorca raises to 40"
+            "Mallorca raises to 40",
+            "player calls 20",
+            "flop 5d Qd 6h",
+            "Mallorca checks",
+            "player raises to 120"
           ],
           "card": null,
           "result": null,
@@ -4659,8 +4770,8 @@
           ]
         },
         "handNumber": 34,
-        "street": "preflop",
-        "actionStreet": "preflop",
+        "street": "flop",
+        "actionStreet": "flop",
         "endsHand": false
       },
       "recent": [
@@ -4713,60 +4824,38 @@
       },
       "plan": {
         "version": 2,
-        "act": "react",
-        "occasion": "you won a 18 bb pot",
+        "act": "press",
+        "occasion": "you bet on the flop",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.61
+          "intensity": 0.43
         },
         "words": {
-          "min": 1,
-          "max": 3
+          "min": 2,
+          "max": 7
         },
-        "humour": {
-          "style": "affiliative",
-          "target": "situation",
-          "intensity": "sharp",
-          "softened": false
-        },
+        "humour": null,
         "claim": null,
         "facts": {
-          "street": "complete",
-          "board": ["5d", "Qd", "6h", "7d", "Th"],
-          "potBb": 18,
+          "street": "flop",
+          "board": ["Qh", "Tc", "Kc"],
+          "potBb": 14,
           "stacksBb": {
-            "her": 227,
-            "player": 91
+            "her": 218,
+            "player": 95
           },
           "actions": [
-            "player posts 10",
-            "Mallorca posts 20",
-            "player calls 10",
-            "Mallorca raises to 40",
-            "player calls 20",
-            "flop 5d Qd 6h",
-            "Mallorca checks",
-            "player raises to 120",
-            "Mallorca calls 120",
-            "turn 7d",
-            "Mallorca raises to 20",
-            "player calls 20",
-            "river Th",
-            "Mallorca checks",
+            "Mallorca posts 10",
+            "player posts 20",
+            "Mallorca calls 10",
             "player checks",
-            "Mallorca shows Kd Ac",
-            "player shows Jd 3c",
-            "Mallorca wins 360"
+            "flop Qh Tc Kc",
+            "player raises to 80",
+            "Mallorca raises to 160"
           ],
           "card": null,
-          "result": {
-            "won": true,
-            "potBb": 18
-          },
-          "shown": {
-            "her": ["Kd", "Ac"],
-            "player": ["Jd", "3c"]
-          }
+          "result": null,
+          "shown": null
         },
         "heard": null,
         "session": {
@@ -4809,10 +4898,10 @@
             }
           ]
         },
-        "handNumber": 34,
-        "street": "complete",
-        "actionStreet": "showdown",
-        "endsHand": true
+        "handNumber": 35,
+        "street": "flop",
+        "actionStreet": "flop",
+        "endsHand": false
       },
       "recent": [
         {
@@ -4868,13 +4957,18 @@
         "occasion": "you won a 18 bb pot",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.56
+          "intensity": 0.48
         },
         "words": {
           "min": 1,
           "max": 3
         },
-        "humour": null,
+        "humour": {
+          "style": "affiliative",
+          "target": "situation",
+          "intensity": "sharp",
+          "softened": false
+        },
         "claim": null,
         "facts": {
           "street": "complete",
@@ -5009,21 +5103,18 @@
       },
       "plan": {
         "version": 2,
-        "act": "claim",
+        "act": "press",
         "occasion": "you bet before the flop",
         "voice": {
-          "emotion": "joy",
-          "intensity": 0.32
+          "emotion": "pride",
+          "intensity": 0.3
         },
         "words": {
           "min": 2,
-          "max": 4
+          "max": 7
         },
         "humour": null,
-        "claim": {
-          "about": "weak",
-          "honest": true
-        },
+        "claim": null,
         "facts": {
           "street": "preflop",
           "board": [],
@@ -5138,147 +5229,11 @@
       },
       "plan": {
         "version": 2,
-        "act": "react",
-        "occasion": "the player raised on the river",
-        "voice": {
-          "emotion": "anger",
-          "intensity": 0.32
-        },
-        "words": {
-          "min": 1,
-          "max": 3
-        },
-        "humour": null,
-        "claim": null,
-        "facts": {
-          "street": "river",
-          "board": ["Kd", "Qc", "5d", "2s", "5s"],
-          "potBb": 28,
-          "stacksBb": {
-            "her": 229,
-            "player": 79
-          },
-          "actions": [
-            "player posts 10",
-            "Mallorca posts 20",
-            "player raises to 70",
-            "Mallorca raises to 120",
-            "player calls 50",
-            "flop Kd Qc 5d",
-            "Mallorca checks",
-            "player checks",
-            "turn 2s",
-            "Mallorca checks",
-            "player checks",
-            "river 5s",
-            "Mallorca raises to 20",
-            "player raises to 300"
-          ],
-          "card": null,
-          "result": null,
-          "shown": null
-        },
-        "heard": null,
-        "session": {
-          "hands": 35,
-          "netBb": 130,
-          "playerBluffsShown": 3,
-          "playerAllIns": 0,
-          "signals": {
-            "tease": 5,
-            "mockBluff": 3
-          },
-          "notable": [
-            {
-              "kind": "bigWin",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            },
-            {
-              "kind": "bigLoss",
-              "handNumber": 8,
-              "potBb": 42,
-              "won": false,
-              "bets": 4
-            },
-            {
-              "kind": "bluffCaught",
-              "handNumber": 30,
-              "potBb": 18,
-              "won": false,
-              "bets": 3
-            },
-            {
-              "kind": "fought",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            }
-          ]
-        },
-        "handNumber": 36,
-        "street": "river",
-        "actionStreet": "river",
-        "endsHand": false
-      },
-      "recent": [
-        {
-          "speaker": "player",
-          "text": "Bluffing?"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Sure"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "player",
-          "text": "Nice hand"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Sure"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        }
-      ],
-      "debug": false
-    },
-    {
-      "kind": "line",
-      "version": 2,
-      "sessionId": "seed-11",
-      "locale": "en",
-      "personality": {
-        "openness": 0.4,
-        "conscientiousness": 0.2,
-        "extraversion": 0.4,
-        "agreeableness": 0.5,
-        "neuroticism": 0.1
-      },
-      "plan": {
-        "version": 2,
         "act": "claim",
         "occasion": "you bet on the flop",
         "voice": {
-          "emotion": "joy",
-          "intensity": 0.33
+          "emotion": "pride",
+          "intensity": 0.34
         },
         "words": {
           "min": 2,
@@ -5358,6 +5313,138 @@
       },
       "recent": [
         {
+          "speaker": "player",
+          "text": "Bluffing?"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Nice hand"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        }
+      ],
+      "debug": false
+    },
+    {
+      "kind": "line",
+      "version": 2,
+      "sessionId": "seed-11",
+      "locale": "en",
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "claim",
+        "occasion": "you stayed in on the flop",
+        "voice": {
+          "emotion": "calm",
+          "intensity": 0
+        },
+        "words": {
+          "min": 2,
+          "max": 7
+        },
+        "humour": null,
+        "claim": {
+          "about": "strong",
+          "honest": true
+        },
+        "facts": {
+          "street": "flop",
+          "board": ["5h", "9h", "8s"],
+          "potBb": 4,
+          "stacksBb": {
+            "her": 247,
+            "player": 106
+          },
+          "actions": [
+            "player posts 10",
+            "Mallorca posts 20",
+            "player calls 10",
+            "Mallorca raises to 40",
+            "player calls 20",
+            "flop 5h 9h 8s",
+            "Mallorca checks"
+          ],
+          "card": null,
+          "result": null,
+          "shown": null
+        },
+        "heard": null,
+        "session": {
+          "hands": 37,
+          "netBb": 143,
+          "playerBluffsShown": 4,
+          "playerAllIns": 0,
+          "signals": {
+            "tease": 5,
+            "mockBluff": 3
+          },
+          "notable": [
+            {
+              "kind": "bigWin",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            },
+            {
+              "kind": "bigLoss",
+              "handNumber": 8,
+              "potBb": 42,
+              "won": false,
+              "bets": 4
+            },
+            {
+              "kind": "bluffCaught",
+              "handNumber": 30,
+              "potBb": 18,
+              "won": false,
+              "bets": 3
+            },
+            {
+              "kind": "fought",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            }
+          ]
+        },
+        "handNumber": 38,
+        "street": "flop",
+        "actionStreet": "flop",
+        "endsHand": false
+      },
+      "recent": [
+        {
           "speaker": "mallorca",
           "text": "Sure"
         },
@@ -5406,59 +5493,60 @@
       },
       "plan": {
         "version": 2,
-        "act": "concede",
-        "occasion": "you lost a 16 bb pot",
+        "act": "enjoy",
+        "occasion": "you won a 18 bb pot",
         "voice": {
-          "emotion": "distress",
-          "intensity": 0.32
+          "emotion": "joy",
+          "intensity": 0.37
         },
         "words": {
           "min": 2,
-          "max": 4
+          "max": 8
         },
         "humour": null,
         "claim": null,
         "facts": {
           "street": "complete",
-          "board": ["7d", "8h", "Qh", "4h", "3c"],
-          "potBb": 16,
+          "board": ["5h", "9h", "8s", "8h", "8c"],
+          "potBb": 18,
           "stacksBb": {
-            "her": 249,
-            "player": 108
+            "her": 258,
+            "player": 99
           },
           "actions": [
-            "Mallorca posts 10",
-            "player posts 20",
-            "Mallorca calls 10",
-            "player checks",
-            "flop 7d 8h Qh",
-            "player checks",
-            "Mallorca raises to 20",
+            "player posts 10",
+            "Mallorca posts 20",
+            "player calls 10",
+            "Mallorca raises to 40",
             "player calls 20",
-            "turn 4h",
+            "flop 5h 9h 8s",
+            "Mallorca checks",
             "player raises to 120",
             "Mallorca calls 120",
-            "river 3c",
-            "player checks",
+            "turn 8h",
+            "Mallorca raises to 20",
+            "player calls 20",
+            "river 8c",
             "Mallorca checks",
-            "Mallorca shows 2c Th",
-            "player shows 9h 4c",
-            "player wins 320"
+            "player checks",
+            "Mallorca shows 9s Jh",
+            "player shows Ts Qh",
+            "Mallorca wins 360"
           ],
           "card": null,
           "result": {
-            "won": false,
-            "potBb": 16
+            "won": true,
+            "potBb": 18
           },
           "shown": {
-            "her": ["2c", "Th"],
-            "player": ["9h", "4c"]
+            "her": ["9s", "Jh"],
+            "player": ["Ts", "Qh"]
           }
         },
         "heard": null,
         "session": {
-          "hands": 37,
-          "netBb": 143,
+          "hands": 38,
+          "netBb": 152,
           "playerBluffsShown": 4,
           "playerAllIns": 0,
           "signals": {
@@ -5496,7 +5584,7 @@
             }
           ]
         },
-        "handNumber": 37,
+        "handNumber": 38,
         "street": "complete",
         "actionStreet": "showdown",
         "endsHand": true
@@ -5552,154 +5640,16 @@
       "plan": {
         "version": 2,
         "act": "claim",
-        "occasion": "the player raised on the flop",
-        "voice": {
-          "emotion": "anger",
-          "intensity": 0.16
-        },
-        "words": {
-          "min": 2,
-          "max": 4
-        },
-        "humour": null,
-        "claim": {
-          "about": "strong",
-          "honest": true
-        },
-        "facts": {
-          "street": "flop",
-          "board": ["5h", "9h", "8s"],
-          "potBb": 10,
-          "stacksBb": {
-            "her": 247,
-            "player": 100
-          },
-          "actions": [
-            "player posts 10",
-            "Mallorca posts 20",
-            "player calls 10",
-            "Mallorca raises to 40",
-            "player calls 20",
-            "flop 5h 9h 8s",
-            "Mallorca checks",
-            "player raises to 120"
-          ],
-          "card": null,
-          "result": null,
-          "shown": null
-        },
-        "heard": null,
-        "session": {
-          "hands": 37,
-          "netBb": 143,
-          "playerBluffsShown": 4,
-          "playerAllIns": 0,
-          "signals": {
-            "tease": 5,
-            "mockBluff": 3
-          },
-          "notable": [
-            {
-              "kind": "bigWin",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            },
-            {
-              "kind": "bigLoss",
-              "handNumber": 8,
-              "potBb": 42,
-              "won": false,
-              "bets": 4
-            },
-            {
-              "kind": "bluffCaught",
-              "handNumber": 30,
-              "potBb": 18,
-              "won": false,
-              "bets": 3
-            },
-            {
-              "kind": "fought",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            }
-          ]
-        },
-        "handNumber": 38,
-        "street": "flop",
-        "actionStreet": "flop",
-        "endsHand": false
-      },
-      "recent": [
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "player",
-          "text": "Nice hand"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Sure"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        }
-      ],
-      "debug": false
-    },
-    {
-      "kind": "line",
-      "version": 2,
-      "sessionId": "seed-11",
-      "locale": "en",
-      "personality": {
-        "openness": 0.4,
-        "conscientiousness": 0.2,
-        "extraversion": 0.4,
-        "agreeableness": 0.5,
-        "neuroticism": 0.1
-      },
-      "plan": {
-        "version": 2,
-        "act": "claim",
         "occasion": "you bet on the flop",
         "voice": {
-          "emotion": "joy",
-          "intensity": 0.27
+          "emotion": "pride",
+          "intensity": 0.31
         },
         "words": {
           "min": 2,
-          "max": 4
+          "max": 7
         },
-        "humour": {
-          "style": "aggressive",
-          "target": "play",
-          "intensity": "soft",
-          "softened": true
-        },
+        "humour": null,
         "claim": {
           "about": "strong",
           "honest": false
@@ -5777,6 +5727,151 @@
           "text": "Here we go"
         },
         {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "player",
+          "text": "Nice hand"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Sure"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        }
+      ],
+      "debug": false
+    },
+    {
+      "kind": "line",
+      "version": 2,
+      "sessionId": "seed-11",
+      "locale": "en",
+      "personality": {
+        "openness": 0.4,
+        "conscientiousness": 0.2,
+        "extraversion": 0.4,
+        "agreeableness": 0.5,
+        "neuroticism": 0.1
+      },
+      "plan": {
+        "version": 2,
+        "act": "concede",
+        "occasion": "you lost a 18 bb pot",
+        "voice": {
+          "emotion": "distress",
+          "intensity": 0.3
+        },
+        "words": {
+          "min": 2,
+          "max": 6
+        },
+        "humour": null,
+        "claim": null,
+        "facts": {
+          "street": "complete",
+          "board": ["3d", "Ks", "3c", "7h", "Js"],
+          "potBb": 18,
+          "stacksBb": {
+            "her": 249,
+            "player": 109
+          },
+          "actions": [
+            "Mallorca posts 10",
+            "player posts 20",
+            "Mallorca calls 10",
+            "player checks",
+            "flop 3d Ks 3c",
+            "player raises to 80",
+            "Mallorca raises to 160",
+            "player calls 80",
+            "turn 7h",
+            "player checks",
+            "Mallorca checks",
+            "river Js",
+            "player checks",
+            "Mallorca checks",
+            "Mallorca shows Th 5s",
+            "player shows 7d Kc",
+            "player wins 360"
+          ],
+          "card": null,
+          "result": {
+            "won": false,
+            "potBb": 18
+          },
+          "shown": {
+            "her": ["Th", "5s"],
+            "player": ["7d", "Kc"]
+          }
+        },
+        "heard": null,
+        "session": {
+          "hands": 39,
+          "netBb": 143,
+          "playerBluffsShown": 4,
+          "playerAllIns": 0,
+          "signals": {
+            "tease": 5,
+            "mockBluff": 3
+          },
+          "notable": [
+            {
+              "kind": "bigWin",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            },
+            {
+              "kind": "bigLoss",
+              "handNumber": 8,
+              "potBb": 42,
+              "won": false,
+              "bets": 4
+            },
+            {
+              "kind": "bluffCaught",
+              "handNumber": 30,
+              "potBb": 18,
+              "won": false,
+              "bets": 3
+            },
+            {
+              "kind": "fought",
+              "handNumber": 4,
+              "potBb": 42,
+              "won": true,
+              "bets": 4
+            }
+          ]
+        },
+        "handNumber": 39,
+        "street": "complete",
+        "actionStreet": "showdown",
+        "endsHand": true
+      },
+      "recent": [
+        {
+          "speaker": "mallorca",
+          "text": "Here we go"
+        },
+        {
           "speaker": "player",
           "text": "Nice hand"
         },
@@ -5821,34 +5916,34 @@
       },
       "plan": {
         "version": 2,
-        "act": "claim",
-        "occasion": "you bet before the flop",
+        "act": "react",
+        "occasion": "you stayed in on the flop",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.27
+          "intensity": 0.28
         },
         "words": {
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         "humour": null,
-        "claim": {
-          "about": "weak",
-          "honest": false
-        },
+        "claim": null,
         "facts": {
-          "street": "preflop",
-          "board": [],
-          "potBb": 9.5,
+          "street": "flop",
+          "board": ["Ts", "8h", "7d"],
+          "potBb": 12,
           "stacksBb": {
             "her": 243,
-            "player": 105.5
+            "player": 103
           },
           "actions": [
             "player posts 10",
             "Mallorca posts 20",
             "player raises to 70",
-            "Mallorca raises to 120"
+            "Mallorca raises to 120",
+            "player calls 50",
+            "flop Ts 8h 7d",
+            "Mallorca checks"
           ],
           "card": null,
           "result": null,
@@ -5896,8 +5991,8 @@
           ]
         },
         "handNumber": 40,
-        "street": "preflop",
-        "actionStreet": "preflop",
+        "street": "flop",
+        "actionStreet": "flop",
         "endsHand": false
       },
       "recent": [
@@ -5950,14 +6045,14 @@
       },
       "plan": {
         "version": 2,
-        "act": "press",
-        "occasion": "you bet on the river",
+        "act": "stall",
+        "occasion": "the player raised on the river",
         "voice": {
-          "emotion": "distress",
-          "intensity": 0.26
+          "emotion": "fear",
+          "intensity": 0.19
         },
         "words": {
-          "min": 2,
+          "min": 1,
           "max": 4
         },
         "humour": null,
@@ -5965,10 +6060,10 @@
         "facts": {
           "street": "river",
           "board": ["Ts", "8h", "7d", "8c", "Kh"],
-          "potBb": 13,
+          "potBb": 28,
           "stacksBb": {
             "her": 242,
-            "player": 103
+            "player": 88
           },
           "actions": [
             "player posts 10",
@@ -5983,7 +6078,8 @@
             "Mallorca checks",
             "player checks",
             "river Kh",
-            "Mallorca raises to 20"
+            "Mallorca raises to 20",
+            "player raises to 300"
           ],
           "card": null,
           "result": null,
@@ -6070,127 +6166,6 @@
         }
       ],
       "debug": false
-    },
-    {
-      "kind": "line",
-      "version": 2,
-      "sessionId": "seed-11",
-      "locale": "en",
-      "personality": {
-        "openness": 0.4,
-        "conscientiousness": 0.2,
-        "extraversion": 0.4,
-        "agreeableness": 0.5,
-        "neuroticism": 0.1
-      },
-      "plan": {
-        "version": 2,
-        "act": "react",
-        "occasion": "you stayed in before the flop",
-        "voice": {
-          "emotion": "joy",
-          "intensity": 0.37
-        },
-        "words": {
-          "min": 1,
-          "max": 3
-        },
-        "humour": null,
-        "claim": null,
-        "facts": {
-          "street": "preflop",
-          "board": [],
-          "potBb": 2,
-          "stacksBb": {
-            "her": 269,
-            "player": 99
-          },
-          "actions": ["Mallorca posts 10", "player posts 20", "Mallorca calls 10"],
-          "card": null,
-          "result": null,
-          "shown": null
-        },
-        "heard": null,
-        "session": {
-          "hands": 40,
-          "netBb": 164,
-          "playerBluffsShown": 5,
-          "playerAllIns": 0,
-          "signals": {
-            "tease": 5,
-            "mockBluff": 3
-          },
-          "notable": [
-            {
-              "kind": "bigWin",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            },
-            {
-              "kind": "bigLoss",
-              "handNumber": 8,
-              "potBb": 42,
-              "won": false,
-              "bets": 4
-            },
-            {
-              "kind": "bluffCaught",
-              "handNumber": 30,
-              "potBb": 18,
-              "won": false,
-              "bets": 3
-            },
-            {
-              "kind": "fought",
-              "handNumber": 4,
-              "potBb": 42,
-              "won": true,
-              "bets": 4
-            }
-          ]
-        },
-        "handNumber": 41,
-        "street": "preflop",
-        "actionStreet": "preflop",
-        "endsHand": false
-      },
-      "recent": [
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        },
-        {
-          "speaker": "mallorca",
-          "text": "Here we go"
-        }
-      ],
-      "debug": false
     }
   ],
   "replies": [
@@ -6212,7 +6187,7 @@
         "occasion": "the player said something",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.4
+          "intensity": 0.3
         },
         "words": {
           "min": 3,
@@ -6346,11 +6321,11 @@
         "occasion": "the player said something",
         "voice": {
           "emotion": "distress",
-          "intensity": 0.45
+          "intensity": 0.3
         },
         "words": {
           "min": 3,
-          "max": 4
+          "max": 13
         },
         "humour": null,
         "claim": null,
@@ -6490,7 +6465,7 @@
         "occasion": "the player said something",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.51
+          "intensity": 0.46
         },
         "words": {
           "min": 3,
@@ -6635,11 +6610,11 @@
         "occasion": "the player said something",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.6
+          "intensity": 0.54
         },
         "words": {
           "min": 3,
-          "max": 4
+          "max": 13
         },
         "humour": null,
         "claim": null,
@@ -6726,7 +6701,7 @@
       "recent": [
         {
           "speaker": "mallorca",
-          "text": "Sure"
+          "text": "Here we go"
         },
         {
           "speaker": "mallorca",
@@ -6778,8 +6753,8 @@
         "act": "answer",
         "occasion": "the player said something",
         "voice": {
-          "emotion": "joy",
-          "intensity": 0.49
+          "emotion": "distress",
+          "intensity": 0.38
         },
         "words": {
           "min": 3,
@@ -6924,11 +6899,11 @@
         "occasion": "the player said something",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.6
+          "intensity": 0.52
         },
         "words": {
           "min": 3,
-          "max": 4
+          "max": 13
         },
         "humour": null,
         "claim": null,
@@ -7069,11 +7044,11 @@
         "occasion": "the player said something",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.53
+          "intensity": 0.46
         },
         "words": {
           "min": 3,
-          "max": 4
+          "max": 13
         },
         "humour": null,
         "claim": null,
@@ -7213,11 +7188,11 @@
         "occasion": "the player said something",
         "voice": {
           "emotion": "joy",
-          "intensity": 0.56
+          "intensity": 0.48
         },
         "words": {
           "min": 3,
-          "max": 4
+          "max": 13
         },
         "humour": null,
         "claim": null,
@@ -7429,1208 +7404,1208 @@
       "stickiness": 0.805383203
     },
     {
-      "aggression": 1.358875218,
-      "bluff": 0.830958613,
-      "tightness": 0.699155574,
-      "sizing": 1.001112949,
-      "stickiness": 0.971534092
+      "aggression": 1.383682747,
+      "bluff": 0.849559745,
+      "tightness": 0.698029126,
+      "sizing": 1.022190026,
+      "stickiness": 0.994174844
     },
     {
-      "aggression": 1.360246419,
-      "bluff": 0.824229633,
-      "tightness": 0.705720528,
-      "sizing": 1.001919475,
-      "stickiness": 0.966579729
+      "aggression": 1.383606769,
+      "bluff": 0.840182412,
+      "tightness": 0.705440949,
+      "sizing": 1.020788397,
+      "stickiness": 0.98735451
     },
     {
-      "aggression": 1.345604808,
-      "bluff": 0.801842228,
-      "tightness": 0.725636083,
-      "sizing": 0.990725246,
-      "stickiness": 0.948923464
+      "aggression": 1.365803386,
+      "bluff": 0.812171893,
+      "tightness": 0.727166522,
+      "sizing": 1.003565403,
+      "stickiness": 0.966337568
     },
     {
-      "aggression": 1.346102508,
-      "bluff": 0.803676889,
-      "tightness": 0.722282729,
-      "sizing": 0.990332463,
-      "stickiness": 0.949914658
+      "aggression": 1.366286765,
+      "bluff": 0.814393311,
+      "tightness": 0.723615205,
+      "sizing": 1.003635489,
+      "stickiness": 0.967331744
     },
     {
-      "aggression": 1.474568018,
-      "bluff": 0.967036714,
-      "tightness": 0.67760789,
-      "sizing": 1.154091735,
-      "stickiness": 1.08075532
+      "aggression": 1.514056829,
+      "bluff": 1.001047758,
+      "tightness": 0.676391132,
+      "sizing": 1.187091472,
+      "stickiness": 1.122494167
     },
     {
-      "aggression": 1.435185274,
-      "bluff": 0.90131718,
-      "tightness": 0.704655184,
-      "sizing": 1.107544095,
-      "stickiness": 1.031371384
+      "aggression": 1.475327703,
+      "bluff": 0.931644027,
+      "tightness": 0.703748347,
+      "sizing": 1.139703037,
+      "stickiness": 1.070732286
     },
     {
-      "aggression": 1.431295324,
-      "bluff": 0.900730563,
-      "tightness": 0.700773227,
-      "sizing": 1.105010369,
-      "stickiness": 1.026799496
+      "aggression": 1.471839939,
+      "bluff": 0.931848448,
+      "tightness": 0.699600424,
+      "sizing": 1.138082056,
+      "stickiness": 1.066243026
     },
     {
-      "aggression": 1.489805655,
-      "bluff": 0.888117227,
-      "tightness": 0.767375913,
-      "sizing": 1.119783391,
-      "stickiness": 1.087644571
+      "aggression": 1.523128029,
+      "bluff": 0.91078813,
+      "tightness": 0.767020317,
+      "sizing": 1.143232744,
+      "stickiness": 1.123233753
     },
     {
-      "aggression": 1.528678258,
-      "bluff": 0.930873665,
-      "tightness": 0.744762793,
-      "sizing": 1.180488073,
-      "stickiness": 1.104562145
+      "aggression": 1.559669021,
+      "bluff": 0.954209676,
+      "tightness": 0.744154355,
+      "sizing": 1.203269287,
+      "stickiness": 1.13938735
     },
     {
-      "aggression": 1.516411975,
-      "bluff": 1.035669876,
-      "tightness": 0.667236565,
-      "sizing": 1.216682179,
-      "stickiness": 1.133226971
+      "aggression": 1.567597769,
+      "bluff": 1.079951425,
+      "tightness": 0.666324542,
+      "sizing": 1.255271285,
+      "stickiness": 1.191886261
     },
     {
-      "aggression": 1.501204282,
-      "bluff": 1.012451277,
-      "tightness": 0.672259945,
-      "sizing": 1.198713442,
-      "stickiness": 1.113962679
+      "aggression": 1.555613266,
+      "bluff": 1.060306632,
+      "tightness": 0.670595143,
+      "sizing": 1.24145145,
+      "stickiness": 1.174988788
     },
     {
-      "aggression": 1.494033642,
-      "bluff": 0.98345945,
-      "tightness": 0.685839336,
-      "sizing": 1.188195529,
-      "stickiness": 1.094000525
+      "aggression": 1.550264607,
+      "bluff": 1.032591037,
+      "tightness": 0.683573037,
+      "sizing": 1.233596052,
+      "stickiness": 1.155894082
     },
     {
-      "aggression": 1.500605954,
-      "bluff": 0.999700471,
-      "tightness": 0.67571572,
-      "sizing": 1.198973818,
-      "stickiness": 1.099813878
+      "aggression": 1.556964075,
+      "bluff": 1.050855255,
+      "tightness": 0.673240545,
+      "sizing": 1.245662302,
+      "stickiness": 1.162432912
     },
     {
-      "aggression": 1.346652167,
-      "bluff": 0.848644205,
-      "tightness": 0.689366026,
-      "sizing": 1.026628293,
-      "stickiness": 0.960468427
+      "aggression": 1.359113044,
+      "bluff": 0.837430931,
+      "tightness": 0.691513587,
+      "sizing": 1.009067052,
+      "stickiness": 0.967606844
     },
     {
-      "aggression": 1.337183973,
-      "bluff": 0.835707365,
-      "tightness": 0.695643609,
-      "sizing": 1.016220232,
-      "stickiness": 0.950664109
+      "aggression": 1.348286486,
+      "bluff": 0.822882753,
+      "tightness": 0.698325262,
+      "sizing": 0.996272686,
+      "stickiness": 0.956663747
     },
     {
-      "aggression": 1.341306446,
-      "bluff": 0.83627777,
-      "tightness": 0.6990893,
-      "sizing": 1.029403082,
-      "stickiness": 0.945183976
+      "aggression": 1.353324012,
+      "bluff": 0.823083576,
+      "tightness": 0.701588849,
+      "sizing": 1.007723472,
+      "stickiness": 0.952203651
     },
     {
-      "aggression": 1.336521373,
-      "bluff": 0.830272531,
-      "tightness": 0.704613926,
-      "sizing": 1.027946185,
-      "stickiness": 0.939536247
+      "aggression": 1.349673057,
+      "bluff": 0.81777415,
+      "tightness": 0.706745549,
+      "sizing": 1.006479618,
+      "stickiness": 0.947390909
     },
     {
-      "aggression": 1.333229781,
-      "bluff": 0.826835573,
-      "tightness": 0.707109252,
-      "sizing": 1.02852015,
-      "stickiness": 0.934175403
+      "aggression": 1.3478215,
+      "bluff": 0.815477545,
+      "tightness": 0.708867963,
+      "sizing": 1.008098986,
+      "stickiness": 0.943116427
     },
     {
-      "aggression": 1.173311337,
-      "bluff": 0.75381684,
-      "tightness": 0.690167237,
-      "sizing": 0.917822913,
-      "stickiness": 0.826207349
+      "aggression": 1.150067444,
+      "bluff": 0.727610573,
+      "tightness": 0.693636413,
+      "sizing": 0.879438153,
+      "stickiness": 0.808856449
     },
     {
-      "aggression": 1.162504289,
-      "bluff": 0.751131003,
-      "tightness": 0.693705416,
-      "sizing": 0.925310308,
-      "stickiness": 0.814304622
+      "aggression": 1.138620037,
+      "bluff": 0.721913585,
+      "tightness": 0.698544966,
+      "sizing": 0.881461111,
+      "stickiness": 0.796811604
     },
     {
-      "aggression": 1.173149754,
-      "bluff": 0.753836856,
-      "tightness": 0.696418909,
-      "sizing": 0.928128947,
-      "stickiness": 0.82254286
+      "aggression": 1.150581942,
+      "bluff": 0.725181504,
+      "tightness": 0.70145853,
+      "sizing": 0.885233513,
+      "stickiness": 0.805777597
     },
     {
-      "aggression": 1.180500455,
-      "bluff": 0.757691944,
-      "tightness": 0.691968371,
-      "sizing": 0.929300156,
-      "stickiness": 0.827348491
+      "aggression": 1.158080089,
+      "bluff": 0.729940397,
+      "tightness": 0.696497787,
+      "sizing": 0.888330887,
+      "stickiness": 0.810610035
     },
     {
-      "aggression": 1.259450005,
-      "bluff": 0.824602758,
-      "tightness": 0.675885937,
-      "sizing": 1.021052813,
-      "stickiness": 0.87467081
+      "aggression": 1.302214462,
+      "bluff": 0.823578839,
+      "tightness": 0.688363593,
+      "sizing": 1.014383623,
+      "stickiness": 0.909724746
     },
     {
-      "aggression": 1.226006652,
-      "bluff": 0.798796607,
-      "tightness": 0.689559216,
-      "sizing": 1.011262045,
-      "stickiness": 0.842273484
+      "aggression": 1.276404368,
+      "bluff": 0.803857867,
+      "tightness": 0.70172784,
+      "sizing": 1.011964183,
+      "stickiness": 0.881032427
     },
     {
-      "aggression": 1.232457999,
-      "bluff": 0.805434252,
-      "tightness": 0.684610269,
-      "sizing": 1.014913045,
-      "stickiness": 0.847760269
+      "aggression": 1.281327338,
+      "bluff": 0.809139874,
+      "tightness": 0.696872897,
+      "sizing": 1.013684987,
+      "stickiness": 0.885946047
     },
     {
-      "aggression": 1.247424527,
-      "bluff": 0.818083864,
-      "tightness": 0.67637848,
-      "sizing": 1.019611449,
-      "stickiness": 0.861654921
+      "aggression": 1.292138253,
+      "bluff": 0.818110469,
+      "tightness": 0.689039674,
+      "sizing": 1.013766816,
+      "stickiness": 0.89780773
     },
     {
-      "aggression": 1.243096307,
-      "bluff": 0.815580376,
-      "tightness": 0.677731478,
-      "sizing": 1.026320841,
-      "stickiness": 0.852330971
+      "aggression": 1.290798088,
+      "bluff": 0.819002501,
+      "tightness": 0.689747046,
+      "sizing": 1.024783176,
+      "stickiness": 0.890137145
     },
     {
-      "aggression": 1.173041911,
-      "bluff": 0.788905007,
-      "tightness": 0.659976816,
-      "sizing": 0.974397948,
-      "stickiness": 0.809946886
+      "aggression": 1.163413023,
+      "bluff": 0.75404296,
+      "tightness": 0.672188832,
+      "sizing": 0.9241623,
+      "stickiness": 0.804014022
     },
     {
-      "aggression": 1.17126205,
-      "bluff": 0.784692574,
-      "tightness": 0.663609556,
-      "sizing": 0.970998662,
-      "stickiness": 0.808988184
+      "aggression": 1.16193379,
+      "bluff": 0.750612668,
+      "tightness": 0.67597399,
+      "sizing": 0.921445277,
+      "stickiness": 0.803311268
     },
     {
-      "aggression": 1.163124439,
-      "bluff": 0.775201404,
-      "tightness": 0.669728791,
-      "sizing": 0.974905664,
-      "stickiness": 0.795041604
+      "aggression": 1.152085331,
+      "bluff": 0.741584853,
+      "tightness": 0.682016738,
+      "sizing": 0.924513605,
+      "stickiness": 0.788310918
     },
     {
-      "aggression": 1.187327818,
-      "bluff": 0.795335938,
-      "tightness": 0.660616042,
-      "sizing": 0.990697308,
-      "stickiness": 0.813184524
+      "aggression": 1.177434271,
+      "bluff": 0.760317049,
+      "tightness": 0.672610058,
+      "sizing": 0.940060969,
+      "stickiness": 0.807141647
     },
     {
-      "aggression": 1.237735052,
-      "bluff": 0.807232701,
-      "tightness": 0.671383346,
-      "sizing": 0.992659741,
-      "stickiness": 0.858641179
+      "aggression": 1.270170227,
+      "bluff": 0.786190134,
+      "tightness": 0.694626168,
+      "sizing": 0.959608009,
+      "stickiness": 0.88855826
     },
     {
-      "aggression": 1.230542106,
-      "bluff": 0.803596711,
-      "tightness": 0.673600825,
-      "sizing": 0.992810099,
-      "stickiness": 0.852097663
+      "aggression": 1.265490349,
+      "bluff": 0.785403577,
+      "tightness": 0.696186315,
+      "sizing": 0.962702876,
+      "stickiness": 0.88376194
     },
     {
-      "aggression": 1.227610163,
-      "bluff": 0.80515807,
-      "tightness": 0.673878693,
-      "sizing": 1.01009813,
-      "stickiness": 0.840166238
+      "aggression": 1.26740642,
+      "bluff": 0.793902823,
+      "tightness": 0.694422424,
+      "sizing": 0.988487703,
+      "stickiness": 0.87500179
     },
     {
-      "aggression": 1.214575533,
-      "bluff": 0.792770682,
-      "tightness": 0.680051592,
-      "sizing": 1.002226126,
-      "stickiness": 0.828300055
+      "aggression": 1.256113398,
+      "bluff": 0.784802426,
+      "tightness": 0.700150601,
+      "sizing": 0.985057718,
+      "stickiness": 0.863313364
     },
     {
-      "aggression": 1.206319526,
-      "bluff": 0.785396062,
-      "tightness": 0.682145652,
-      "sizing": 0.997913869,
-      "stickiness": 0.819403587
+      "aggression": 1.248251417,
+      "bluff": 0.779387931,
+      "tightness": 0.701712675,
+      "sizing": 0.983841721,
+      "stickiness": 0.85374757
     },
     {
-      "aggression": 1.092582454,
-      "bluff": 0.745320837,
-      "tightness": 0.664345442,
-      "sizing": 0.920170147,
-      "stickiness": 0.761846857
+      "aggression": 1.079996829,
+      "bluff": 0.711073966,
+      "tightness": 0.683866904,
+      "sizing": 0.868362481,
+      "stickiness": 0.758161843
     },
     {
-      "aggression": 1.103887372,
-      "bluff": 0.737783214,
-      "tightness": 0.680753206,
-      "sizing": 0.919428763,
-      "stickiness": 0.767474992
+      "aggression": 1.091093257,
+      "bluff": 0.704735337,
+      "tightness": 0.701610499,
+      "sizing": 0.868060315,
+      "stickiness": 0.763662618
     },
     {
-      "aggression": 1.096578252,
-      "bluff": 0.73240035,
-      "tightness": 0.683487191,
-      "sizing": 0.914280765,
-      "stickiness": 0.762574621
+      "aggression": 1.083424948,
+      "bluff": 0.700239878,
+      "tightness": 0.704411065,
+      "sizing": 0.863824902,
+      "stickiness": 0.758577496
     },
     {
-      "aggression": 1.10503577,
-      "bluff": 0.742869787,
-      "tightness": 0.673032476,
-      "sizing": 0.921984699,
-      "stickiness": 0.767955425
+      "aggression": 1.092955739,
+      "bluff": 0.709893987,
+      "tightness": 0.693033238,
+      "sizing": 0.871488548,
+      "stickiness": 0.764591617
     },
     {
-      "aggression": 1.213804777,
-      "bluff": 0.82744442,
-      "tightness": 0.656853316,
-      "sizing": 1.039861846,
-      "stickiness": 0.827808389
+      "aggression": 1.270519468,
+      "bluff": 0.819968317,
+      "tightness": 0.679055585,
+      "sizing": 1.02060646,
+      "stickiness": 0.876294344
     },
     {
-      "aggression": 1.199500017,
-      "bluff": 0.807138708,
-      "tightness": 0.66954568,
-      "sizing": 1.026080194,
-      "stickiness": 0.816118956
+      "aggression": 1.257819283,
+      "bluff": 0.80627195,
+      "tightness": 0.690388827,
+      "sizing": 1.016077697,
+      "stickiness": 0.863872073
     },
     {
-      "aggression": 1.202529707,
-      "bluff": 0.811099124,
-      "tightness": 0.666075641,
-      "sizing": 1.028692876,
-      "stickiness": 0.817858145
+      "aggression": 1.260448269,
+      "bluff": 0.809313828,
+      "tightness": 0.686922767,
+      "sizing": 1.017335019,
+      "stickiness": 0.865648498
     },
     {
-      "aggression": 1.209924351,
-      "bluff": 0.820525108,
-      "tightness": 0.659628537,
-      "sizing": 1.03481301,
-      "stickiness": 0.823331615
+      "aggression": 1.266818423,
+      "bluff": 0.815814765,
+      "tightness": 0.680965823,
+      "sizing": 1.019349069,
+      "stickiness": 0.871302648
     },
     {
-      "aggression": 1.242241503,
-      "bluff": 0.837716754,
-      "tightness": 0.655137085,
-      "sizing": 1.075701789,
-      "stickiness": 0.826200488
+      "aggression": 1.302613122,
+      "bluff": 0.845908462,
+      "tightness": 0.67054335,
+      "sizing": 1.079686116,
+      "stickiness": 0.874069042
     },
     {
-      "aggression": 1.300786367,
-      "bluff": 0.903548082,
-      "tightness": 0.647914324,
-      "sizing": 1.113128218,
-      "stickiness": 0.900594615
+      "aggression": 1.408069638,
+      "bluff": 0.940373682,
+      "tightness": 0.672497528,
+      "sizing": 1.143994919,
+      "stickiness": 1.006748593
     },
     {
-      "aggression": 1.297519689,
-      "bluff": 0.898625254,
-      "tightness": 0.649642881,
-      "sizing": 1.109055154,
-      "stickiness": 0.897757707
+      "aggression": 1.403314067,
+      "bluff": 0.93248511,
+      "tightness": 0.675023507,
+      "sizing": 1.136802127,
+      "stickiness": 1.002088419
     },
     {
-      "aggression": 1.290843835,
-      "bluff": 0.890910566,
-      "tightness": 0.65456728,
-      "sizing": 1.120766182,
-      "stickiness": 0.881093328
+      "aggression": 1.400261517,
+      "bluff": 0.917813548,
+      "tightness": 0.684340322,
+      "sizing": 1.139688177,
+      "stickiness": 0.987043211
     },
     {
-      "aggression": 1.284819864,
-      "bluff": 0.877593149,
-      "tightness": 0.662866705,
-      "sizing": 1.113924523,
-      "stickiness": 0.874649851
+      "aggression": 1.396385389,
+      "bluff": 0.906278097,
+      "tightness": 0.693645559,
+      "sizing": 1.135608463,
+      "stickiness": 0.981197969
     },
     {
-      "aggression": 1.352347008,
-      "bluff": 0.915038679,
-      "tightness": 0.654885115,
-      "sizing": 1.119572543,
-      "stickiness": 0.943683618
+      "aggression": 1.448059471,
+      "bluff": 0.964067037,
+      "tightness": 0.676610753,
+      "sizing": 1.164104873,
+      "stickiness": 1.049795773
     },
     {
-      "aggression": 1.34932275,
-      "bluff": 0.910813274,
-      "tightness": 0.657659367,
-      "sizing": 1.118219311,
-      "stickiness": 0.940620414
+      "aggression": 1.442929857,
+      "bluff": 0.954199776,
+      "tightness": 0.681336367,
+      "sizing": 1.156932506,
+      "stickiness": 1.044447486
     },
     {
-      "aggression": 1.350408288,
-      "bluff": 0.912092817,
-      "tightness": 0.659845732,
-      "sizing": 1.137132262,
-      "stickiness": 0.929942508
+      "aggression": 1.440064857,
+      "bluff": 0.939048125,
+      "tightness": 0.689023281,
+      "sizing": 1.156729847,
+      "stickiness": 1.029634972
     },
     {
-      "aggression": 1.38053171,
-      "bluff": 0.922628503,
-      "tightness": 0.672358357,
-      "sizing": 1.152383213,
-      "stickiness": 0.960141291
+      "aggression": 1.471630073,
+      "bluff": 0.953295443,
+      "tightness": 0.703701314,
+      "sizing": 1.175889537,
+      "stickiness": 1.066535476
     },
     {
-      "aggression": 1.387362376,
-      "bluff": 0.937031684,
-      "tightness": 0.661081378,
-      "sizing": 1.159273817,
-      "stickiness": 0.965443292
+      "aggression": 1.479211415,
+      "bluff": 0.972961722,
+      "tightness": 0.688874168,
+      "sizing": 1.188284118,
+      "stickiness": 1.072882688
     },
     {
-      "aggression": 1.41516028,
-      "bluff": 0.988153323,
-      "tightness": 0.641551368,
-      "sizing": 1.199793129,
-      "stickiness": 0.990512722
+      "aggression": 1.500274576,
+      "bluff": 1.03515405,
+      "tightness": 0.660532204,
+      "sizing": 1.236572184,
+      "stickiness": 1.095212451
     },
     {
-      "aggression": 1.416365434,
-      "bluff": 0.984967651,
-      "tightness": 0.643862032,
-      "sizing": 1.207422914,
-      "stickiness": 0.983605518
+      "aggression": 1.497278439,
+      "bluff": 1.020933903,
+      "tightness": 0.66550913,
+      "sizing": 1.232966275,
+      "stickiness": 1.083573532
     },
     {
-      "aggression": 1.379232016,
-      "bluff": 0.92324356,
-      "tightness": 0.667305907,
-      "sizing": 1.171184382,
-      "stickiness": 0.939899286
+      "aggression": 1.459064668,
+      "bluff": 0.948984486,
+      "tightness": 0.694388489,
+      "sizing": 1.187514037,
+      "stickiness": 1.03321605
     },
     {
-      "aggression": 1.388721536,
-      "bluff": 0.935836168,
-      "tightness": 0.663539855,
-      "sizing": 1.179506072,
-      "stickiness": 0.950699513
+      "aggression": 1.467391961,
+      "bluff": 0.961663163,
+      "tightness": 0.689944739,
+      "sizing": 1.195497647,
+      "stickiness": 1.044416045
     },
     {
-      "aggression": 1.219869175,
-      "bluff": 0.847839361,
-      "tightness": 0.642552661,
-      "sizing": 1.063827507,
-      "stickiness": 0.825848544
+      "aggression": 1.209903705,
+      "bluff": 0.786199696,
+      "tightness": 0.674802242,
+      "sizing": 0.97415374,
+      "stickiness": 0.833770756
     },
     {
-      "aggression": 1.181206172,
-      "bluff": 0.796861137,
-      "tightness": 0.664551908,
-      "sizing": 1.023013074,
-      "stickiness": 0.793844132
+      "aggression": 1.165976154,
+      "bluff": 0.749848666,
+      "tightness": 0.694719492,
+      "sizing": 0.950216733,
+      "stickiness": 0.795995935
     },
     {
-      "aggression": 1.19826677,
-      "bluff": 0.810022754,
-      "tightness": 0.662402774,
-      "sizing": 1.036419608,
-      "stickiness": 0.80650393
+      "aggression": 1.184542237,
+      "bluff": 0.760437365,
+      "tightness": 0.693148369,
+      "sizing": 0.960479647,
+      "stickiness": 0.81025168
     },
     {
-      "aggression": 1.199274684,
-      "bluff": 0.814081055,
-      "tightness": 0.658236007,
-      "sizing": 1.039099999,
-      "stickiness": 0.806766649
+      "aggression": 1.185931733,
+      "bluff": 0.763847482,
+      "tightness": 0.688497768,
+      "sizing": 0.96261368,
+      "stickiness": 0.810882
     },
     {
-      "aggression": 1.207316189,
-      "bluff": 0.798071026,
-      "tightness": 0.666609608,
-      "sizing": 1.038761162,
-      "stickiness": 0.7967572
+      "aggression": 1.194901576,
+      "bluff": 0.758535813,
+      "tightness": 0.691903199,
+      "sizing": 0.979332607,
+      "stickiness": 0.797347837
     },
     {
-      "aggression": 1.35921857,
-      "bluff": 0.974958282,
-      "tightness": 0.632514254,
-      "sizing": 1.188705855,
-      "stickiness": 0.941387501
+      "aggression": 1.415598332,
+      "bluff": 0.961639827,
+      "tightness": 0.668009173,
+      "sizing": 1.160952937,
+      "stickiness": 1.020398336
     },
     {
-      "aggression": 1.350635716,
-      "bluff": 0.965153376,
-      "tightness": 0.634161381,
-      "sizing": 1.181363624,
-      "stickiness": 0.932866221
+      "aggression": 1.403903887,
+      "bluff": 0.945750131,
+      "tightness": 0.671395625,
+      "sizing": 1.146698998,
+      "stickiness": 1.00817256
     },
     {
-      "aggression": 1.338333562,
-      "bluff": 0.950725597,
-      "tightness": 0.637947692,
-      "sizing": 1.178377255,
-      "stickiness": 0.915980531
+      "aggression": 1.389475081,
+      "bluff": 0.922029238,
+      "tightness": 0.679363693,
+      "sizing": 1.131775844,
+      "stickiness": 0.988639481
     },
     {
-      "aggression": 1.341871953,
-      "bluff": 0.95473023,
-      "tightness": 0.636375548,
-      "sizing": 1.179248908,
-      "stickiness": 0.920077712
+      "aggression": 1.392394678,
+      "bluff": 0.926600338,
+      "tightness": 0.676749511,
+      "sizing": 1.133738769,
+      "stickiness": 0.992229366
     },
     {
-      "aggression": 1.268062147,
-      "bluff": 0.881470551,
-      "tightness": 0.63903369,
-      "sizing": 1.088457598,
-      "stickiness": 0.866813175
+      "aggression": 1.269262144,
+      "bluff": 0.79274967,
+      "tightness": 0.691532511,
+      "sizing": 0.967459049,
+      "stickiness": 0.889179355
     },
     {
-      "aggression": 1.26171206,
-      "bluff": 0.873533982,
-      "tightness": 0.643655293,
-      "sizing": 1.085379336,
-      "stickiness": 0.861211394
+      "aggression": 1.264728238,
+      "bluff": 0.792325166,
+      "tightness": 0.694364655,
+      "sizing": 0.971920406,
+      "stickiness": 0.884964317
     },
     {
-      "aggression": 1.260409036,
-      "bluff": 0.868591129,
-      "tightness": 0.647182604,
-      "sizing": 1.096328746,
-      "stickiness": 0.850198692
+      "aggression": 1.265862938,
+      "bluff": 0.800714715,
+      "tightness": 0.693779416,
+      "sizing": 0.998857353,
+      "stickiness": 0.875658556
     },
     {
-      "aggression": 1.280227653,
-      "bluff": 0.890113514,
-      "tightness": 0.64081478,
-      "sizing": 1.10941793,
-      "stickiness": 0.869485341
+      "aggression": 1.281955324,
+      "bluff": 0.809643069,
+      "tightness": 0.689082745,
+      "sizing": 0.998381287,
+      "stickiness": 0.89303412
     },
     {
-      "aggression": 1.285236763,
-      "bluff": 0.895747588,
-      "tightness": 0.638004905,
-      "sizing": 1.11434394,
-      "stickiness": 0.872036774
+      "aggression": 1.286145027,
+      "bluff": 0.813226271,
+      "tightness": 0.686121189,
+      "sizing": 1.001570528,
+      "stickiness": 0.895222114
     },
     {
-      "aggression": 1.352311387,
-      "bluff": 0.943920788,
-      "tightness": 0.640593849,
-      "sizing": 1.155873516,
-      "stickiness": 0.935395152
+      "aggression": 1.399134735,
+      "bluff": 0.918099698,
+      "tightness": 0.679806994,
+      "sizing": 1.115827072,
+      "stickiness": 1.002882883
     },
     {
-      "aggression": 1.352257708,
-      "bluff": 0.942561195,
-      "tightness": 0.64278218,
-      "sizing": 1.16828044,
-      "stickiness": 0.926409452
+      "aggression": 1.397273969,
+      "bluff": 0.907509258,
+      "tightness": 0.686249166,
+      "sizing": 1.11621806,
+      "stickiness": 0.992975302
     },
     {
-      "aggression": 1.319419195,
-      "bluff": 0.890029567,
-      "tightness": 0.664605005,
-      "sizing": 1.136177127,
-      "stickiness": 0.891701812
+      "aggression": 1.370406551,
+      "bluff": 0.863491504,
+      "tightness": 0.713251953,
+      "sizing": 1.091706444,
+      "stickiness": 0.96015983
     },
     {
-      "aggression": 1.322080183,
-      "bluff": 0.896285157,
-      "tightness": 0.660806514,
-      "sizing": 1.139909039,
-      "stickiness": 0.894431262
+      "aggression": 1.372002892,
+      "bluff": 0.868034641,
+      "tightness": 0.708706178,
+      "sizing": 1.09343602,
+      "stickiness": 0.962359976
     },
     {
-      "aggression": 1.174358003,
-      "bluff": 0.824415726,
-      "tightness": 0.64303763,
-      "sizing": 1.037671125,
-      "stickiness": 0.797399183
+      "aggression": 1.154395637,
+      "bluff": 0.747294931,
+      "tightness": 0.691249222,
+      "sizing": 0.925095794,
+      "stickiness": 0.803696017
     },
     {
-      "aggression": 1.155003174,
-      "bluff": 0.793595187,
-      "tightness": 0.659735187,
-      "sizing": 1.013226582,
-      "stickiness": 0.782391355
+      "aggression": 1.128545872,
+      "bluff": 0.725578849,
+      "tightness": 0.70891194,
+      "sizing": 0.90998718,
+      "stickiness": 0.783570334
     },
     {
-      "aggression": 1.157247769,
-      "bluff": 0.795847663,
-      "tightness": 0.658277965,
-      "sizing": 1.015080991,
-      "stickiness": 0.783683274
+      "aggression": 1.131384097,
+      "bluff": 0.727530724,
+      "tightness": 0.707144474,
+      "sizing": 0.911699488,
+      "stickiness": 0.78529289
     },
     {
-      "aggression": 1.182115899,
-      "bluff": 0.818141931,
-      "tightness": 0.651031491,
-      "sizing": 1.035380942,
-      "stickiness": 0.801377453
+      "aggression": 1.16057495,
+      "bluff": 0.743856411,
+      "tightness": 0.699994897,
+      "sizing": 0.925668854,
+      "stickiness": 0.806566546
     },
     {
-      "aggression": 1.22583808,
-      "bluff": 0.846599524,
-      "tightness": 0.643985954,
-      "sizing": 1.081674311,
-      "stickiness": 0.816108296
+      "aggression": 1.202889325,
+      "bluff": 0.773221578,
+      "tightness": 0.686670232,
+      "sizing": 0.978027476,
+      "stickiness": 0.818641198
     },
     {
-      "aggression": 1.281545581,
-      "bluff": 0.913577597,
-      "tightness": 0.638487767,
-      "sizing": 1.128478031,
-      "stickiness": 0.882073427
+      "aggression": 1.342575246,
+      "bluff": 0.872808432,
+      "tightness": 0.691163229,
+      "sizing": 1.068373251,
+      "stickiness": 0.959370403
     },
     {
-      "aggression": 1.271557512,
-      "bluff": 0.903085688,
-      "tightness": 0.641556126,
-      "sizing": 1.122734239,
-      "stickiness": 0.872357696
+      "aggression": 1.33272305,
+      "bluff": 0.859745697,
+      "tightness": 0.696910476,
+      "sizing": 1.0581333,
+      "stickiness": 0.949161445
     },
     {
-      "aggression": 1.256174538,
-      "bluff": 0.880121323,
-      "tightness": 0.650099006,
-      "sizing": 1.115624952,
-      "stickiness": 0.851557879
+      "aggression": 1.322066966,
+      "bluff": 0.842951016,
+      "tightness": 0.70853253,
+      "sizing": 1.05605073,
+      "stickiness": 0.930708271
     },
     {
-      "aggression": 1.254565092,
-      "bluff": 0.875656104,
-      "tightness": 0.652046353,
-      "sizing": 1.112875981,
-      "stickiness": 0.849267494
+      "aggression": 1.320682695,
+      "bluff": 0.8402172,
+      "tightness": 0.710654882,
+      "sizing": 1.055442242,
+      "stickiness": 0.928214369
     },
     {
-      "aggression": 1.365658631,
-      "bluff": 0.983693353,
-      "tightness": 0.629014466,
-      "sizing": 1.201262609,
-      "stickiness": 0.940905971
+      "aggression": 1.42530113,
+      "bluff": 0.961184332,
+      "tightness": 0.672674598,
+      "sizing": 1.16460848,
+      "stickiness": 1.027395814
     },
     {
-      "aggression": 1.354984479,
-      "bluff": 0.970533894,
-      "tightness": 0.632750372,
-      "sizing": 1.19516183,
-      "stickiness": 0.929041489
+      "aggression": 1.412487781,
+      "bluff": 0.941141994,
+      "tightness": 0.679825351,
+      "sizing": 1.150038608,
+      "stickiness": 1.012777851
     },
     {
-      "aggression": 1.345058488,
-      "bluff": 0.951749228,
-      "tightness": 0.638982572,
-      "sizing": 1.193919489,
-      "stickiness": 0.909854581
+      "aggression": 1.404769206,
+      "bluff": 0.921996294,
+      "tightness": 0.689323148,
+      "sizing": 1.146884679,
+      "stickiness": 0.994102264
     },
     {
-      "aggression": 1.333883164,
-      "bluff": 0.933959965,
-      "tightness": 0.644358383,
-      "sizing": 1.181583904,
-      "stickiness": 0.898340212
+      "aggression": 1.395263997,
+      "bluff": 0.907407577,
+      "tightness": 0.695857179,
+      "sizing": 1.137797236,
+      "stickiness": 0.982361862
     },
     {
-      "aggression": 1.342978112,
-      "bluff": 0.954008259,
-      "tightness": 0.634994606,
-      "sizing": 1.19526293,
-      "stickiness": 0.905881886
+      "aggression": 1.401963821,
+      "bluff": 0.922864527,
+      "tightness": 0.68428726,
+      "sizing": 1.146678605,
+      "stickiness": 0.988971671
     },
     {
-      "aggression": 1.214398004,
-      "bluff": 0.886408657,
-      "tightness": 0.622011368,
-      "sizing": 1.105474704,
-      "stickiness": 0.819323088
+      "aggression": 1.198192289,
+      "bluff": 0.788181557,
+      "tightness": 0.672678815,
+      "sizing": 0.970743593,
+      "stickiness": 0.832497818
     },
     {
-      "aggression": 1.209382642,
-      "bluff": 0.871045713,
-      "tightness": 0.628789589,
-      "sizing": 1.099020314,
-      "stickiness": 0.811513416
+      "aggression": 1.189126048,
+      "bluff": 0.784221408,
+      "tightness": 0.676123868,
+      "sizing": 0.977346535,
+      "stickiness": 0.820984161
     },
     {
-      "aggression": 1.197600512,
-      "bluff": 0.845689413,
-      "tightness": 0.641045619,
-      "sizing": 1.079255624,
-      "stickiness": 0.802637011
+      "aggression": 1.174579467,
+      "bluff": 0.768746343,
+      "tightness": 0.688437997,
+      "sizing": 0.968455601,
+      "stickiness": 0.809038539
     },
     {
-      "aggression": 1.194484339,
-      "bluff": 0.844440925,
-      "tightness": 0.639520541,
-      "sizing": 1.077231832,
-      "stickiness": 0.799880696
+      "aggression": 1.171337063,
+      "bluff": 0.768243112,
+      "tightness": 0.686155464,
+      "sizing": 0.967531142,
+      "stickiness": 0.806053638
     },
     {
-      "aggression": 1.329014853,
-      "bluff": 0.971020907,
-      "tightness": 0.623877742,
-      "sizing": 1.204647249,
-      "stickiness": 0.898445956
+      "aggression": 1.377724474,
+      "bluff": 0.917225256,
+      "tightness": 0.673549726,
+      "sizing": 1.129784739,
+      "stickiness": 0.971352127
     },
     {
-      "aggression": 1.309666651,
-      "bluff": 0.93569225,
-      "tightness": 0.636177933,
-      "sizing": 1.181892679,
-      "stickiness": 0.879674177
+      "aggression": 1.363771921,
+      "bluff": 0.894534511,
+      "tightness": 0.687476037,
+      "sizing": 1.119938197,
+      "stickiness": 0.954482015
     },
     {
-      "aggression": 1.306615182,
-      "bluff": 0.933172076,
-      "tightness": 0.635682127,
-      "sizing": 1.179316043,
-      "stickiness": 0.876641254
+      "aggression": 1.360593576,
+      "bluff": 0.892282309,
+      "tightness": 0.686725324,
+      "sizing": 1.117631821,
+      "stickiness": 0.950889807
     },
     {
-      "aggression": 1.305015444,
-      "bluff": 0.931483234,
-      "tightness": 0.635392756,
-      "sizing": 1.17728641,
-      "stickiness": 0.875083175
+      "aggression": 1.35872316,
+      "bluff": 0.890543007,
+      "tightness": 0.686327134,
+      "sizing": 1.115503779,
+      "stickiness": 0.948881949
     },
     {
-      "aggression": 1.308673014,
-      "bluff": 0.901863874,
-      "tightness": 0.644686408,
-      "sizing": 1.16918749,
-      "stickiness": 0.857737131
+      "aggression": 1.372777974,
+      "bluff": 0.891207227,
+      "tightness": 0.687136027,
+      "sizing": 1.150019461,
+      "stickiness": 0.929963193
     },
     {
-      "aggression": 1.203350712,
-      "bluff": 0.898609239,
-      "tightness": 0.607654392,
-      "sizing": 1.129083384,
-      "stickiness": 0.796790403
+      "aggression": 1.178842962,
+      "bluff": 0.80076493,
+      "tightness": 0.647351504,
+      "sizing": 0.998862157,
+      "stickiness": 0.7998383
     },
     {
-      "aggression": 1.197542434,
-      "bluff": 0.886759421,
-      "tightness": 0.610982026,
-      "sizing": 1.118374673,
-      "stickiness": 0.792665206
+      "aggression": 1.172775469,
+      "bluff": 0.79338127,
+      "tightness": 0.650564815,
+      "sizing": 0.992704637,
+      "stickiness": 0.795031953
     },
     {
-      "aggression": 1.187141294,
-      "bluff": 0.849666863,
-      "tightness": 0.624608275,
-      "sizing": 1.088779849,
-      "stickiness": 0.781640086
+      "aggression": 1.16023266,
+      "bluff": 0.770632698,
+      "tightness": 0.663051861,
+      "sizing": 0.979337601,
+      "stickiness": 0.779842895
     },
     {
-      "aggression": 1.20409786,
-      "bluff": 0.84728434,
-      "tightness": 0.635836996,
-      "sizing": 1.092270985,
-      "stickiness": 0.793933035
+      "aggression": 1.178683901,
+      "bluff": 0.768657682,
+      "tightness": 0.678470398,
+      "sizing": 0.982824017,
+      "stickiness": 0.793272534
     },
     {
-      "aggression": 1.184912187,
-      "bluff": 0.857959585,
-      "tightness": 0.609019543,
-      "sizing": 1.091142645,
-      "stickiness": 0.77231123
+      "aggression": 1.157233833,
+      "bluff": 0.781108089,
+      "tightness": 0.638397527,
+      "sizing": 0.988661557,
+      "stickiness": 0.766287802
     },
     {
-      "aggression": 1.183489402,
-      "bluff": 0.853878684,
-      "tightness": 0.610932502,
-      "sizing": 1.087419558,
-      "stickiness": 0.771776824
+      "aggression": 1.156046438,
+      "bluff": 0.778028305,
+      "tightness": 0.64077543,
+      "sizing": 0.985838356,
+      "stickiness": 0.765861236
     },
     {
-      "aggression": 1.185918249,
-      "bluff": 0.836895553,
-      "tightness": 0.618908623,
-      "sizing": 1.07486532,
-      "stickiness": 0.770194086
+      "aggression": 1.160008298,
+      "bluff": 0.767908608,
+      "tightness": 0.648459018,
+      "sizing": 0.981401316,
+      "stickiness": 0.763714751
     },
     {
-      "aggression": 1.177003423,
-      "bluff": 0.817332947,
-      "tightness": 0.627873835,
-      "sizing": 1.055871805,
-      "stickiness": 0.765327543
+      "aggression": 1.150674785,
+      "bluff": 0.752280484,
+      "tightness": 0.658938526,
+      "sizing": 0.965818091,
+      "stickiness": 0.758196064
     },
     {
-      "aggression": 1.178214914,
-      "bluff": 0.815161894,
-      "tightness": 0.62958111,
-      "sizing": 1.054338467,
-      "stickiness": 0.765790743
+      "aggression": 1.152527874,
+      "bluff": 0.75116923,
+      "tightness": 0.660793975,
+      "sizing": 0.965638216,
+      "stickiness": 0.758858662
     },
     {
-      "aggression": 1.355045024,
-      "bluff": 1.052606823,
-      "tightness": 0.589272625,
-      "sizing": 1.286717749,
-      "stickiness": 0.88973795
+      "aggression": 1.402495952,
+      "bluff": 0.973981523,
+      "tightness": 0.639102178,
+      "sizing": 1.193266627,
+      "stickiness": 0.967849243
     },
     {
-      "aggression": 1.349538747,
-      "bluff": 1.028531268,
-      "tightness": 0.594170006,
-      "sizing": 1.272002331,
-      "stickiness": 0.880507665
+      "aggression": 1.403219696,
+      "bluff": 0.970294505,
+      "tightness": 0.640904009,
+      "sizing": 1.20077465,
+      "stickiness": 0.959676784
     },
     {
-      "aggression": 1.312468357,
-      "bluff": 0.94655315,
-      "tightness": 0.615314507,
-      "sizing": 1.206861808,
-      "stickiness": 0.851199035
+      "aggression": 1.371035546,
+      "bluff": 0.912766095,
+      "tightness": 0.663429338,
+      "sizing": 1.163840107,
+      "stickiness": 0.923957292
     },
     {
-      "aggression": 1.365936532,
-      "bluff": 1.016118272,
-      "tightness": 0.604251473,
-      "sizing": 1.267442096,
-      "stickiness": 0.893671736
+      "aggression": 1.421532983,
+      "bluff": 0.965098177,
+      "tightness": 0.653722104,
+      "sizing": 1.204593222,
+      "stickiness": 0.975161424
     },
     {
-      "aggression": 1.450919456,
-      "bluff": 1.128981885,
-      "tightness": 0.591368185,
-      "sizing": 1.359664087,
-      "stickiness": 0.969100417
+      "aggression": 1.508436588,
+      "bluff": 1.062433618,
+      "tightness": 0.648445687,
+      "sizing": 1.281367892,
+      "stickiness": 1.0803399
     },
     {
-      "aggression": 1.444093473,
-      "bluff": 1.100525151,
-      "tightness": 0.601344862,
-      "sizing": 1.342807929,
-      "stickiness": 0.964657375
+      "aggression": 1.50388072,
+      "bluff": 1.040681836,
+      "tightness": 0.662543671,
+      "sizing": 1.270450885,
+      "stickiness": 1.076508292
     },
     {
-      "aggression": 1.448904465,
-      "bluff": 1.113007393,
-      "tightness": 0.59748364,
-      "sizing": 1.350277321,
-      "stickiness": 0.968735097
+      "aggression": 1.507071815,
+      "bluff": 1.050041365,
+      "tightness": 0.657082664,
+      "sizing": 1.275198258,
+      "stickiness": 1.079899125
     },
     {
-      "aggression": 1.453249336,
-      "bluff": 1.125719489,
-      "tightness": 0.59349054,
-      "sizing": 1.357393193,
-      "stickiness": 0.972539489
+      "aggression": 1.509585946,
+      "bluff": 1.059184271,
+      "tightness": 0.651457675,
+      "sizing": 1.279209018,
+      "stickiness": 1.082736365
     },
     {
-      "aggression": 1.476625991,
-      "bluff": 1.133771518,
-      "tightness": 0.593572597,
-      "sizing": 1.377008205,
-      "stickiness": 0.978697737
+      "aggression": 1.544127417,
+      "bluff": 1.096025055,
+      "tightness": 0.643848233,
+      "sizing": 1.330399238,
+      "stickiness": 1.09658915
     },
     {
-      "aggression": 1.502353501,
-      "bluff": 1.204574668,
-      "tightness": 0.584859973,
-      "sizing": 1.422367121,
-      "stickiness": 1.018195625
+      "aggression": 1.536398568,
+      "bluff": 1.113966078,
+      "tightness": 0.645909722,
+      "sizing": 1.322783864,
+      "stickiness": 1.123884526
     },
     {
-      "aggression": 1.505490504,
-      "bluff": 1.171872477,
-      "tightness": 0.597358247,
-      "sizing": 1.404580308,
-      "stickiness": 1.022732078
+      "aggression": 1.540035182,
+      "bluff": 1.086344232,
+      "tightness": 0.665040688,
+      "sizing": 1.308736188,
+      "stickiness": 1.128359491
     },
     {
-      "aggression": 1.502319908,
-      "bluff": 1.168626485,
-      "tightness": 0.596364061,
-      "sizing": 1.403136039,
-      "stickiness": 1.016435862
+      "aggression": 1.538357061,
+      "bluff": 1.087350829,
+      "tightness": 0.662005558,
+      "sizing": 1.311772968,
+      "stickiness": 1.121964295
     },
     {
-      "aggression": 1.503566006,
-      "bluff": 1.175714149,
-      "tightness": 0.593994882,
-      "sizing": 1.407122983,
-      "stickiness": 1.017446753
+      "aggression": 1.538899527,
+      "bluff": 1.093143037,
+      "tightness": 0.658304844,
+      "sizing": 1.314843195,
+      "stickiness": 1.122394371
     },
     {
-      "aggression": 1.500028919,
-      "bluff": 1.159686016,
-      "tightness": 0.596702694,
-      "sizing": 1.384452233,
-      "stickiness": 1.022018578
+      "aggression": 1.518671194,
+      "bluff": 1.055748803,
+      "tightness": 0.668689964,
+      "sizing": 1.269146562,
+      "stickiness": 1.114638663
     },
     {
-      "aggression": 1.492217122,
-      "bluff": 1.142658731,
-      "tightness": 0.600015049,
-      "sizing": 1.37327164,
-      "stickiness": 1.013158722
+      "aggression": 1.511112622,
+      "bluff": 1.04083112,
+      "tightness": 0.673709226,
+      "sizing": 1.258968708,
+      "stickiness": 1.104968728
     },
     {
-      "aggression": 1.487865509,
-      "bluff": 1.118856178,
-      "tightness": 0.605181624,
-      "sizing": 1.362919913,
-      "stickiness": 1.000648694
+      "aggression": 1.512645963,
+      "bluff": 1.030866876,
+      "tightness": 0.678350078,
+      "sizing": 1.262356961,
+      "stickiness": 1.09488331
     },
     {
-      "aggression": 1.466981544,
-      "bluff": 1.074438239,
-      "tightness": 0.614558542,
-      "sizing": 1.331745481,
-      "stickiness": 0.977878262
+      "aggression": 1.495663699,
+      "bluff": 0.99743017,
+      "tightness": 0.690808635,
+      "sizing": 1.240819055,
+      "stickiness": 1.071647363
     },
     {
-      "aggression": 1.465468351,
-      "bluff": 1.067836671,
-      "tightness": 0.616520464,
-      "sizing": 1.327404952,
-      "stickiness": 0.97584163
+      "aggression": 1.495003548,
+      "bluff": 0.993403409,
+      "tightness": 0.69307934,
+      "sizing": 1.239270378,
+      "stickiness": 1.069480561
     },
     {
-      "aggression": 1.282662227,
-      "bluff": 0.968045904,
-      "tightness": 0.600190658,
-      "sizing": 1.206302048,
-      "stickiness": 0.841780858
+      "aggression": 1.224631939,
+      "bluff": 0.802588324,
+      "tightness": 0.678051832,
+      "sizing": 0.996800999,
+      "stickiness": 0.848747338
     },
     {
-      "aggression": 1.268590726,
-      "bluff": 0.928462201,
-      "tightness": 0.610768801,
-      "sizing": 1.176573536,
-      "stickiness": 0.827682052
+      "aggression": 1.209594979,
+      "bluff": 0.790311746,
+      "tightness": 0.685116858,
+      "sizing": 0.997580553,
+      "stickiness": 0.830105609
     },
     {
-      "aggression": 1.239741888,
-      "bluff": 0.866601567,
-      "tightness": 0.631407421,
-      "sizing": 1.121250528,
-      "stickiness": 0.806983369
+      "aggression": 1.178182669,
+      "bluff": 0.753444121,
+      "tightness": 0.709488961,
+      "sizing": 0.968439694,
+      "stickiness": 0.802795041
     },
     {
-      "aggression": 1.251645925,
-      "bluff": 0.88720107,
-      "tightness": 0.624814036,
-      "sizing": 1.14070718,
-      "stickiness": 0.815394149
+      "aggression": 1.191823512,
+      "bluff": 0.76688111,
+      "tightness": 0.701751216,
+      "sizing": 0.980499563,
+      "stickiness": 0.813981482
     },
     {
-      "aggression": 1.15904362,
-      "bluff": 0.851857407,
-      "tightness": 0.61088581,
-      "sizing": 1.080981261,
-      "stickiness": 0.764594218
+      "aggression": 1.067181168,
+      "bluff": 0.717403446,
+      "tightness": 0.680929001,
+      "sizing": 0.895603745,
+      "stickiness": 0.742062753
     },
     {
-      "aggression": 1.156092162,
-      "bluff": 0.826157786,
-      "tightness": 0.627126774,
-      "sizing": 1.060767024,
-      "stickiness": 0.763954576
+      "aggression": 1.063484614,
+      "bluff": 0.70149134,
+      "tightness": 0.704793539,
+      "sizing": 0.883311103,
+      "stickiness": 0.739978765
     },
     {
-      "aggression": 1.161439746,
-      "bluff": 0.836110068,
-      "tightness": 0.622046482,
-      "sizing": 1.069783323,
-      "stickiness": 0.766552129
+      "aggression": 1.06983213,
+      "bluff": 0.708111758,
+      "tightness": 0.697498919,
+      "sizing": 0.889830988,
+      "stickiness": 0.743428146
     },
     {
-      "aggression": 1.166677211,
-      "bluff": 0.848149631,
-      "tightness": 0.615934927,
-      "sizing": 1.080069059,
-      "stickiness": 0.769157839
+      "aggression": 1.076326272,
+      "bluff": 0.715971823,
+      "tightness": 0.688809542,
+      "sizing": 0.896919624,
+      "stickiness": 0.747160251
     },
     {
-      "aggression": 1.209601723,
-      "bluff": 0.862175048,
-      "tightness": 0.61650708,
-      "sizing": 1.107767742,
-      "stickiness": 0.783821619
+      "aggression": 1.125912247,
+      "bluff": 0.739272996,
+      "tightness": 0.678916308,
+      "sizing": 0.94390288,
+      "stickiness": 0.759951321
     },
     {
-      "aggression": 1.263660466,
-      "bluff": 0.986703673,
-      "tightness": 0.597376634,
-      "sizing": 1.222726874,
-      "stickiness": 0.837863963
+      "aggression": 1.298241458,
+      "bluff": 0.853917263,
+      "tightness": 0.690206134,
+      "sizing": 1.059680988,
+      "stickiness": 0.916105762
     },
     {
-      "aggression": 1.269325429,
-      "bluff": 0.977979205,
-      "tightness": 0.602922234,
-      "sizing": 1.21774872,
-      "stickiness": 0.842335152
+      "aggression": 1.304125746,
+      "bluff": 0.85191895,
+      "tightness": 0.698160551,
+      "sizing": 1.06199407,
+      "stickiness": 0.921147778
     },
     {
-      "aggression": 1.270924003,
-      "bluff": 0.970093441,
-      "tightness": 0.605711216,
-      "sizing": 1.214747045,
-      "stickiness": 0.840595763
+      "aggression": 1.30737839,
+      "bluff": 0.852750233,
+      "tightness": 0.700113523,
+      "sizing": 1.069390657,
+      "stickiness": 0.919567565
     },
     {
-      "aggression": 1.274328496,
-      "bluff": 0.977296991,
-      "tightness": 0.603260032,
-      "sizing": 1.22002127,
-      "stickiness": 0.842713518
+      "aggression": 1.31019411,
+      "bluff": 0.85661967,
+      "tightness": 0.69644633,
+      "sizing": 1.071512532,
+      "stickiness": 0.92162577
     },
     {
-      "aggression": 1.294194162,
-      "bluff": 1.001815555,
-      "tightness": 0.595577472,
-      "sizing": 1.240894107,
-      "stickiness": 0.851594363
+      "aggression": 1.339417683,
+      "bluff": 0.889010053,
+      "tightness": 0.682573216,
+      "sizing": 1.108743837,
+      "stickiness": 0.938769974
     },
     {
-      "aggression": 1.287126619,
-      "bluff": 0.987343267,
-      "tightness": 0.598570387,
-      "sizing": 1.229491813,
-      "stickiness": 0.84574684
+      "aggression": 1.333288823,
+      "bluff": 0.88091191,
+      "tightness": 0.686204576,
+      "sizing": 1.103539538,
+      "stickiness": 0.932106146
     },
     {
-      "aggression": 1.286652819,
-      "bluff": 0.965057088,
-      "tightness": 0.604963228,
-      "sizing": 1.21687437,
-      "stickiness": 0.839721765
+      "aggression": 1.337286529,
+      "bluff": 0.878588417,
+      "tightness": 0.69015283,
+      "sizing": 1.115225132,
+      "stickiness": 0.925094179
     },
     {
-      "aggression": 1.275111477,
-      "bluff": 0.940594465,
-      "tightness": 0.611438137,
-      "sizing": 1.196393518,
-      "stickiness": 0.831027438
+      "aggression": 1.325976602,
+      "bluff": 0.862580917,
+      "tightness": 0.698236891,
+      "sizing": 1.104076484,
+      "stickiness": 0.913241303
     },
     {
-      "aggression": 1.265892508,
-      "bluff": 0.921363083,
-      "tightness": 0.615975904,
-      "sizing": 1.179475317,
-      "stickiness": 0.823303323
+      "aggression": 1.31623748,
+      "bluff": 0.850380891,
+      "tightness": 0.702542683,
+      "sizing": 1.095781154,
+      "stickiness": 0.901590874
     },
     {
-      "aggression": 1.446728025,
-      "bluff": 1.172814622,
-      "tightness": 0.583890669,
-      "sizing": 1.386751113,
-      "stickiness": 0.97833308
+      "aggression": 1.511154043,
+      "bluff": 1.070111114,
+      "tightness": 0.662399881,
+      "sizing": 1.28118218,
+      "stickiness": 1.109703336
     },
     {
-      "aggression": 1.441522286,
-      "bluff": 1.153775527,
-      "tightness": 0.587156906,
-      "sizing": 1.379415886,
-      "stickiness": 0.966856372
+      "aggression": 1.507038944,
+      "bluff": 1.055200444,
+      "tightness": 0.667132683,
+      "sizing": 1.277151748,
+      "stickiness": 1.096856626
     },
     {
-      "aggression": 1.443827925,
-      "bluff": 1.132528025,
-      "tightness": 0.596553579,
-      "sizing": 1.368708834,
-      "stickiness": 0.97070548
+      "aggression": 1.508844778,
+      "bluff": 1.036845217,
+      "tightness": 0.683108644,
+      "sizing": 1.268236036,
+      "stickiness": 1.100088397
     },
     {
-      "aggression": 1.451526077,
-      "bluff": 1.156519633,
-      "tightness": 0.589487699,
-      "sizing": 1.38218572,
-      "stickiness": 0.977699163
+      "aggression": 1.514999198,
+      "bluff": 1.057040377,
+      "tightness": 0.671101569,
+      "sizing": 1.279467162,
+      "stickiness": 1.107119769
     },
     {
-      "aggression": 1.486650327,
-      "bluff": 1.199373165,
-      "tightness": 0.584253004,
-      "sizing": 1.420563815,
-      "stickiness": 1.002876197
+      "aggression": 1.546868624,
+      "bluff": 1.105322347,
+      "tightness": 0.658154805,
+      "sizing": 1.325356251,
+      "stickiness": 1.13368412
     },
     {
-      "aggression": 1.470886826,
-      "bluff": 1.142182822,
-      "tightness": 0.599927361,
-      "sizing": 1.386055115,
-      "stickiness": 0.988296928
+      "aggression": 1.533302703,
+      "bluff": 1.056895352,
+      "tightness": 0.683235909,
+      "sizing": 1.296722072,
+      "stickiness": 1.117188558
     },
     {
-      "aggression": 1.477032831,
-      "bluff": 1.157572683,
-      "tightness": 0.596041731,
-      "sizing": 1.395611779,
-      "stickiness": 0.994305491
+      "aggression": 1.53816947,
+      "bluff": 1.069172353,
+      "tightness": 0.677217107,
+      "sizing": 1.303968675,
+      "stickiness": 1.123296728
     },
     {
-      "aggression": 1.48220706,
-      "bluff": 1.17366033,
-      "tightness": 0.591566432,
-      "sizing": 1.404949881,
-      "stickiness": 0.999260107
+      "aggression": 1.542186391,
+      "bluff": 1.08228326,
+      "tightness": 0.670081407,
+      "sizing": 1.311205919,
+      "stickiness": 1.128280483
     },
     {
-      "aggression": 1.494293268,
-      "bluff": 1.155211815,
-      "tightness": 0.595069246,
-      "sizing": 1.405750686,
-      "stickiness": 0.991331787
+      "aggression": 1.566894022,
+      "bluff": 1.101919729,
+      "tightness": 0.663223399,
+      "sizing": 1.352107161,
+      "stickiness": 1.124774073
     },
     {
-      "aggression": 1.527565475,
-      "bluff": 1.259496312,
-      "tightness": 0.582054918,
-      "sizing": 1.462898165,
-      "stickiness": 1.054592581
+      "aggression": 1.580231778,
+      "bluff": 1.142758834,
+      "tightness": 0.662783999,
+      "sizing": 1.348123637,
+      "stickiness": 1.190568723
     },
     {
-      "aggression": 1.517420574,
-      "bluff": 1.237821314,
-      "tightness": 0.585193574,
-      "sizing": 1.448865485,
-      "stickiness": 1.042558158
+      "aggression": 1.571501973,
+      "bluff": 1.12475871,
+      "tightness": 0.667786399,
+      "sizing": 1.336261842,
+      "stickiness": 1.178283382
     },
     {
-      "aggression": 1.494416434,
-      "bluff": 1.176783345,
-      "tightness": 0.595471927,
-      "sizing": 1.413441011,
-      "stickiness": 1.009997671
+      "aggression": 1.555814078,
+      "bluff": 1.082474594,
+      "tightness": 0.681614088,
+      "sizing": 1.316062913,
+      "stickiness": 1.146917716
     },
     {
-      "aggression": 1.507008518,
-      "bluff": 1.206736598,
-      "tightness": 0.589011307,
-      "sizing": 1.432231219,
-      "stickiness": 1.022984305
+      "aggression": 1.5661544,
+      "bluff": 1.107189304,
+      "tightness": 0.671144776,
+      "sizing": 1.331457054,
+      "stickiness": 1.16013346
     },
     {
-      "aggression": 1.419547062,
-      "bluff": 1.112411933,
-      "tightness": 0.590402601,
-      "sizing": 1.340483093,
-      "stickiness": 0.947337312
+      "aggression": 1.412994149,
+      "bluff": 0.933320025,
+      "tightness": 0.678604803,
+      "sizing": 1.147218289,
+      "stickiness": 1.003482507
     },
     {
-      "aggression": 1.41236333,
-      "bluff": 1.092191887,
-      "tightness": 0.596062251,
-      "sizing": 1.327729645,
-      "stickiness": 0.941371771
+      "aggression": 1.408465279,
+      "bluff": 0.922101425,
+      "tightness": 0.687388163,
+      "sizing": 1.141475706,
+      "stickiness": 0.99911727
     },
     {
-      "aggression": 1.408427204,
-      "bluff": 1.066718785,
-      "tightness": 0.602812356,
-      "sizing": 1.315878711,
-      "stickiness": 0.931544995
+      "aggression": 1.412816345,
+      "bluff": 0.917470625,
+      "tightness": 0.694149764,
+      "sizing": 1.151070641,
+      "stickiness": 0.993411811
     },
     {
-      "aggression": 1.405212702,
-      "bluff": 1.059094385,
-      "tightness": 0.604859978,
-      "sizing": 1.310554413,
-      "stickiness": 0.928772804
+      "aggression": 1.410398919,
+      "bluff": 0.912818079,
+      "tightness": 0.697185821,
+      "sizing": 1.148250349,
+      "stickiness": 0.990788009
     },
     {
-      "aggression": 1.423055672,
-      "bluff": 1.094522555,
-      "tightness": 0.596535803,
-      "sizing": 1.335699987,
-      "stickiness": 0.944086424
+      "aggression": 1.425221016,
+      "bluff": 0.936197767,
+      "tightness": 0.684464087,
+      "sizing": 1.164349418,
+      "stickiness": 1.005675994
     },
     {
-      "aggression": 1.484278613,
-      "bluff": 1.17881336,
-      "tightness": 0.591960563,
-      "sizing": 1.398852693,
-      "stickiness": 1.01264857
+      "aggression": 1.51436751,
+      "bluff": 1.041795308,
+      "tightness": 0.678560969,
+      "sizing": 1.259793176,
+      "stickiness": 1.113160038
     },
     {
-      "aggression": 1.467214896,
-      "bluff": 1.133439356,
-      "tightness": 0.600439052,
-      "sizing": 1.372884124,
-      "stickiness": 0.988441227
+      "aggression": 1.501032108,
+      "bluff": 1.008526779,
+      "tightness": 0.69098003,
+      "sizing": 1.242687362,
+      "stickiness": 1.088652083
     },
     {
-      "aggression": 1.428450296,
-      "bluff": 1.050121235,
-      "tightness": 0.618314186,
-      "sizing": 1.313885741,
-      "stickiness": 0.948164169
+      "aggression": 1.467906176,
+      "bluff": 0.947112021,
+      "tightness": 0.716735143,
+      "sizing": 1.200940842,
+      "stickiness": 1.045243236
     },
     {
-      "aggression": 1.443001389,
-      "bluff": 1.081380349,
-      "tightness": 0.610906588,
-      "sizing": 1.336413841,
-      "stickiness": 0.962748774
+      "aggression": 1.479900852,
+      "bluff": 0.96957743,
+      "tightness": 0.706155938,
+      "sizing": 1.216050558,
+      "stickiness": 1.060835358
     },
     {
-      "aggression": 1.261120574,
-      "bluff": 0.957805241,
-      "tightness": 0.60542856,
-      "sizing": 1.202327308,
-      "stickiness": 0.831634961
+      "aggression": 1.214930718,
+      "bluff": 0.789569612,
+      "tightness": 0.701617661,
+      "sizing": 0.993659564,
+      "stickiness": 0.846643057
     },
     {
-      "aggression": 1.243288513,
-      "bluff": 0.915208058,
-      "tightness": 0.61908074,
-      "sizing": 1.168171016,
-      "stickiness": 0.818324387
+      "aggression": 1.194955572,
+      "bluff": 0.767752065,
+      "tightness": 0.719805373,
+      "sizing": 0.979754401,
+      "stickiness": 0.829217136
     },
     {
-      "aggression": 1.245624608,
-      "bluff": 0.919188139,
-      "tightness": 0.617665858,
-      "sizing": 1.1713937,
-      "stickiness": 0.819827202
+      "aggression": 1.197846371,
+      "bluff": 0.770333267,
+      "tightness": 0.717693462,
+      "sizing": 0.981823438,
+      "stickiness": 0.831320342
     },
     {
-      "aggression": 1.240208627,
-      "bluff": 0.912774942,
-      "tightness": 0.61791777,
-      "sizing": 1.164845969,
-      "stickiness": 0.815340165
+      "aggression": 1.192067629,
+      "bluff": 0.767128575,
+      "tightness": 0.716942199,
+      "sizing": 0.978709746,
+      "stickiness": 0.8259719
     },
     {
-      "aggression": 1.255337644,
-      "bluff": 0.88093052,
-      "tightness": 0.630007173,
-      "sizing": 1.14709646,
-      "stickiness": 0.811255609
+      "aggression": 1.215273483,
+      "bluff": 0.767949155,
+      "tightness": 0.716511774,
+      "sizing": 1.00710274,
+      "stickiness": 0.815918096
     },
     {
-      "aggression": 1.39075765,
-      "bluff": 1.12791391,
-      "tightness": 0.59294398,
-      "sizing": 1.357030268,
-      "stickiness": 0.939952044
+      "aggression": 1.432292815,
+      "bluff": 0.991789752,
+      "tightness": 0.687470425,
+      "sizing": 1.213896079,
+      "stickiness": 1.044929729
     }
   ]
 }

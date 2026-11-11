@@ -177,11 +177,15 @@ function showdown(e: Extract<TableEvent, { kind: 'result' }>, traits: Traits): A
   };
 }
 
-function result(e: Extract<TableEvent, { kind: 'result' }>, traits: Traits): Axes {
+function decided(e: Extract<TableEvent, { kind: 'result' }>, traits: Traits): Axes {
   if (e.decided === 'heFolded') {
     return heFolded(e.netBb, traits);
   }
   return e.decided === 'sheFolded' ? sheFolded(e, traits) : showdown(e, traits);
+}
+
+function result(e: Extract<TableEvent, { kind: 'result' }>, traits: Traits): Axes {
+  return { ...decided(e, traits), settles: true };
 }
 
 const CHAT: Readonly<Record<ChatSignal, readonly [number, boolean]>> = {
