@@ -25,7 +25,6 @@ export const PERSONALITIES = {
   rita: character([0.41, -0.3, 0.36, -0.35, -0.27], 0.2),
   vera: character([-0.38, 0.61, 0.43, -0.56, 0.5], 0.5),
   greta: character([-0.38, 0.35, -0.43, 0.14, 0.13], 0.6),
-  boldSchemer: character([0.43, -0.29, 0.34, -0.35, -0.34], 0.05),
   nervousCareerist: character([0.49, 0.67, 0.54, -0.63, 0.63], 0.35),
   lifeOfTheParty: character([0.4, -0.45, 0.45, 0.71, -0.54], 0.05),
   caringActivist: character([0.46, 0.5, 0.65, 0.43, 0.43], 0.35),
@@ -40,7 +39,6 @@ export const PERSONALITIES = {
   unshakableLoner: character([-0.46, -0.5, -0.65, -0.43, -0.43], 0.35),
   suspiciousGrump: character([-0.4, 0.45, -0.45, -0.71, 0.54], 0.83),
   easygoingHomebody: character([-0.49, -0.67, -0.54, 0.63, -0.63], 0.35),
-  timidStickler: character([-0.43, 0.29, -0.34, 0.35, 0.34], 0.83),
   nervousPragmatist: character([-0.52, -0.32, 0.24, -0.3, 0.52], 0.18),
   curiousOptimist: character([0.47, -0.07, 0.27, -0.22, -0.23], 0.24),
   noisyBully: character([0.36, -0.33, 0.45, -0.39, 0.1], 0.05),
@@ -48,7 +46,6 @@ export const PERSONALITIES = {
   quietTidy: character([-0.22, 0.29, -0.48, 0.43, -0.2], 0.59),
   softMiddle: character([0.17, 0.21, -0.17, 0.16, -0.24], 0.46),
   calmCurious: character([0.58, 0.12, -0.03, 0.11, -0.45], 0.39),
-  reservedConservative: character([-0.4, 0.25, -0.4, 0.32, 0.05], 0.54),
   neutral: character([0, 0, 0, 0, 0], 0.3),
 } satisfies Record<string, Personality>;
 

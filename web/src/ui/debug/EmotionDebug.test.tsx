@@ -97,7 +97,7 @@ describe('EmotionDebug', () => {
     const boss = screen.getByTestId('debug-personality-toughBoss');
     expect(boss.textContent).toBe(CHARACTER_SHEETS.toughBoss.name);
     expect(boss.getAttribute('title')).toBe(CHARACTER_SHEETS.toughBoss.short);
-    expect(screen.getAllByTestId(/^debug-personality-/)).toHaveLength(34);
+    expect(screen.getAllByTestId(/^debug-personality-/)).toHaveLength(31);
   });
 
   it('turns a Big Five slider into a custom personality', async () => {

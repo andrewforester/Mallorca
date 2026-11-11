@@ -13,7 +13,6 @@ export const HAIR: Readonly<Record<PersonalityKey, HairKey>> = {
   rita: 'straight-bangs',
   vera: 'updo-buns',
   greta: 'updo-buns',
-  boldSchemer: 'side-swept',
   nervousCareerist: 'updo-buns',
   lifeOfTheParty: 'curly-bob',
   caringActivist: 'updo-buns',
@@ -28,7 +27,6 @@ export const HAIR: Readonly<Record<PersonalityKey, HairKey>> = {
   unshakableLoner: 'straight-bangs',
   suspiciousGrump: 'updo-buns',
   easygoingHomebody: 'side-swept',
-  timidStickler: 'straight-bangs',
   nervousPragmatist: 'straight-bangs',
   curiousOptimist: 'curly-bob',
   noisyBully: 'side-swept',
@@ -36,7 +34,6 @@ export const HAIR: Readonly<Record<PersonalityKey, HairKey>> = {
   quietTidy: 'updo-buns',
   softMiddle: 'side-swept',
   calmCurious: 'curly-bob',
-  reservedConservative: 'updo-buns',
   neutral: 'side-swept',
 };
 
