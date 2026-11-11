@@ -139,7 +139,7 @@ describe('setPersonality', () => {
       raise: true,
     });
     engine.step(20);
-    engine.event({ kind: 'result', netBb: -40, lastEquity: 0.3, decided: 'showdown' });
+    engine.event({ kind: 'result', netBb: -200, lastEquity: 0.3, decided: 'showdown' });
     const before = engine.snapshot();
     engine.setPersonality(PERSONALITIES.lola);
     const after = engine.snapshot();

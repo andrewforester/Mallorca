@@ -44,6 +44,8 @@ export const PRESSURE_SCALE = 3;
 
 export const scaled = (bb: number): number => saturate(Math.abs(bb) / STAKE_BB);
 
+export const settled = (bb: number): number => Math.abs(bb) / (Math.abs(bb) + STAKE_BB);
+
 const pct = (x: number): string => `${Math.round(x * 100)}%`;
 
 const BLANK = {
@@ -108,7 +110,7 @@ function heFolded(netBb: number, traits: Traits): Axes {
   const mine = shareOf(traits.coping, 'her');
   return {
     ...BLANK,
-    value: scaled(netBb),
+    value: settled(netBb),
     resolved: 1,
     self: mine,
     opponent: 1 - mine,
@@ -122,7 +124,7 @@ function sheFolded(netBb: number, belief: number): Axes {
     opponent: 1,
     resolved: 1,
     expected: belief,
-    value: -0.35 * scaled(netBb) * smoothstep(0.35, 0.75, belief),
+    value: -0.35 * settled(netBb) * smoothstep(0.35, 0.75, belief),
     reason: `she folded, ${Math.abs(netBb)} bb gone, belief ${pct(belief)}`,
   };
 }
@@ -135,7 +137,7 @@ function showdown(e: Extract<TableEvent, { kind: 'result' }>, traits: Traits): A
   const mine = shareOf(lost ? traits.selfBlame : traits.coping, e.aggressor);
   return {
     ...BLANK,
-    value: lost ? -scaled(netBb) : scaled(netBb),
+    value: lost ? -settled(netBb) : settled(netBb),
     resolved: 1,
     expected,
     luck,
