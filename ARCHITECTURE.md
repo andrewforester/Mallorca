@@ -7,28 +7,28 @@ cash game or tournament against a TypeScript port of the Mallorca math bot or th
 
 ## Repository layout
 
-| Path                                                                | Owns                                                                               |
-| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `MallorcaBrains/`, `MallorcaCore/`, `MallorcaEquilator/`, `Tools/`  | Java bot, game model and equilator; the source of the golden fixtures              |
-| Other Gradle modules (`MallorcaUI/`, `PokerRobot/`, `HHParser/`, …) | Java archive, not used by `web/`                                                   |
-| `web/src/`                                                          | The game, in layers (see "Layers")                                                 |
-| `web/src/locales/en.json`                                           | Every string the UI shows                                                          |
-| `web/e2e/`                                                          | Playwright tests and the contact sheet script                                      |
-| `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                                |
-| `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`                   |
-| `web/tools/evaluator-golden/`                                       | Writes the evaluator fixture of `solver/crates/core`, see its `README.md`          |
-| `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena"              |
-| `web/tools/arena/external/`                                         | Matches against external bots over their APIs, see "arena"                         |
-| `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                              |
-| `web/prototypes/emotion-lab/`                                       | Emotion sandbox: the `emotion` engine with a face and a voice, see `docs/emotion`  |
+| Path                                                                | Owns                                                                                                                                                                                         |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MallorcaBrains/`, `MallorcaCore/`, `MallorcaEquilator/`, `Tools/`  | Java bot, game model and equilator; the source of the golden fixtures                                                                                                                        |
+| Other Gradle modules (`MallorcaUI/`, `PokerRobot/`, `HHParser/`, …) | Java archive, not used by `web/`                                                                                                                                                             |
+| `web/src/`                                                          | The game, in layers (see "Layers")                                                                                                                                                           |
+| `web/src/locales/en.json`                                           | Every string the UI shows                                                                                                                                                                    |
+| `web/e2e/`                                                          | Playwright tests and the contact sheet script                                                                                                                                                |
+| `web/scripts/preflop-table.ts`                                      | Regenerates `src/brains/data/preflop-strength.json`                                                                                                                                          |
+| `web/tools/golden/`                                                 | JVM harness that writes the golden fixtures, see its `README.md`                                                                                                                             |
+| `web/tools/evaluator-golden/`                                       | Writes the evaluator fixture of `solver/crates/core`, see its `README.md`                                                                                                                    |
+| `web/tools/arena/`                                                  | Node duplicate matches between two bots and their viewer, see "arena"                                                                                                                        |
+| `web/tools/arena/external/`                                         | Matches against external bots over their APIs, see "arena"                                                                                                                                   |
+| `web/arena-results/`                                                | Published arena runs served at `/arena/`, see "arena"                                                                                                                                        |
+| `web/prototypes/emotion-lab/`                                       | Emotion sandbox: the `emotion` engine with a face and a voice, see `docs/emotion`                                                                                                            |
 | `web/public/avatar/`                                                | Her MetaHuman face and upper body `her/` with a folder per hairstyle `her/hair/<key>/` (cards, scalp mask), a still per hairstyle in `portraits/`, the fallback `mallorca.glb`, `LICENSE.md` |
-| `web/tools/avatar/`                                                 | Blender script that converts the Rocketbox source into `mallorca.glb`, see README  |
-| `web/tools/avatar/metahuman/`                                       | Workstation, Unreal scripts, export to `public/avatar/her/` and the RigLogic wasm, see README |
-| `docs/emotion/`                                                     | Emotion model document, its screenshots and generated tables                       |
-| `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`               |
-| `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`               |
-| `supabase/`                                                         | Table talk server: schema, limits and the `talk` Edge Function                     |
-| `.github/workflows/`                                                | `web-ci.yml`, `talk-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master` |
+| `web/tools/avatar/`                                                 | Blender script that converts the Rocketbox source into `mallorca.glb`, see README                                                                                                            |
+| `web/tools/avatar/metahuman/`                                       | Workstation, Unreal scripts, export to `public/avatar/her/` and the RigLogic wasm, see README                                                                                                |
+| `docs/emotion/`                                                     | Emotion model document, its screenshots and generated tables                                                                                                                                 |
+| `web/scripts/wasm.ts`                                               | Builds `solver/crates/wasm` and copies it to `src/cfr/mallorca.wasm`                                                                                                                         |
+| `solver/`                                                           | Rust CFR trainer and the `mallorca-wasm` module, see its `README.md`                                                                                                                         |
+| `supabase/`                                                         | Table talk server: schema, limits and the `talk` Edge Function                                                                                                                               |
+| `.github/workflows/`                                                | `web-ci.yml`, `talk-ci.yml` on PRs; `web-deploy.yml`, `web-vercel.yml` on `master`                                                                                                           |
 
 Generated and never committed: `web/dist`, `web/test-results`, `web/playwright-report`, `web/e2e/contact/`,
 `web/tools/golden/build`, `web/arena-out/` (the arena results, see "arena") and `web/src/cfr/mallorca.wasm`, which
@@ -326,15 +326,16 @@ coloured. This layer is the model, with no session and no table; her live state 
 screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contract.
 
 - `createEngine(personality, config = GAME_MOOD)` returns an `Engine`. `event(e)` appraises one `TableEvent` and
-  returns the `Impulse`s it gave (emotion, amount, an English reason) and queues them; `step(dt)` advances time
-  in seconds and lands them; she acts on what she feels `REACTION_S = 1` s after a moment, so her lines and the
+  returns the `Impulse`s it gave (emotion, amount, an English reason) and queues them; a `deal` event first counts
+  one new hand: it lands what is still rising and fades every emotion and the mood by one hand; `step(dt)` advances
+  time in seconds and lands them; she acts on what she feels `REACTION_S = 1` s after a moment, so her lines and the
   bias of a decision read her view that much later;
   `snapshot()` reads the state; `ahead(dt)` is the snapshot `dt` seconds later without changing the engine;
   `reset()` starts a session over. The engine holds no clock and no randomness.
 - `Personality` is the Big Five in [-1, 1] plus `suppression` (habitual poker face) in [0, 1]. `traitsOf` derives
   the default mood (Mehrabian's weights, as in ALMA), the gain and the half-life factor of every emotion,
   `composure = clamp(0.55 - 0.35 N + 0.1 C, 0.15, 1.1)` (emotional stability), `discipline = clamp(0.45 + 0.3 C -
-  0.25 N, 0, 0.95)` (conscientiousness and calm), `expressiveness`, `mask`, `talkativeness`, three stances (logistic, in (0, 1),
+0.25 N, 0, 0.95)` (conscientiousness and calm), `expressiveness`, `mask`, `talkativeness`, three stances (logistic, in (0, 1),
   and one clamp): `selfBlame` (whom she blames for a loss), `coping` (`σ(-1.2 N + 0.6 E - 0.5 A)`, whether pressure
   is a challenge or a threat) and `urgency` (negative urgency of UPPS, `clamp01(0.5 N - 0.5 C)`), her `nature` per
   axis and `baseline`, her natural style (`style.ts`): every axis has one leading trait in `STYLE_WEIGHTS`
@@ -353,7 +354,10 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
 - Eleven emotions in [0, 1] (`EMOTIONS`): ten OCC types with their PAD point from ALMA and `injustice` and
   `surprise` of our own; every emotion also has an `APPROACH`, its dominance except anger 0.6 and injustice 0.4.
   An impulse is queued (`queue`) as `-ln(1 - amount)` and lands in `step` with a half-life of `ATTACK_S = 0.5` s
-  (`rise`), so its steps add up to exactly one saturated impulse; every emotion decays with its own half-life.
+  (`rise`), so its steps add up to exactly one saturated impulse. Every emotion decays on two clocks, a half-life
+  in seconds `HALF_LIFE_S` and one in hands `HALF_LIFE_HANDS` (infinite for hope, fear, relief and surprise), as
+  `0.5 ^ ((seconds / T + hands / H) / halfLifeFactor)` (`decay` with a `Clock`); at `REFERENCE_HAND_S = 20` s per
+  hand both give half.
 - Appraisal (`appraisal.ts`, `feelings.ts`): `appraisalOf(event, { prospect, pressure, traits })` maps every
   `TableEvent` to the same axes (`Appraisal`: `value` signed, `realized`, `resolved`, the shares `self`, `opponent`
   and `luck`, `expected`, `unexpected`, `control`), sizes of bets and equity changes in bb through
@@ -378,17 +382,19 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   equity in the tension, the leaning and the expectation of a result; `Snapshot.belief` is the belief now (null
   between hands).
 - Tension (`tension.ts`): while a hand runs hope and fear track `tensionTargets`, the tension `sat(atStake / 20) *
-  4 eq (1 - eq)` split by the leaning `σ(logit coping + 0.5 logit eq)`, where `atStake = pot / 2 + future |2 eq -
-  1| / 2`; hope rises with a half-life of 0.8 s, fear of 0.25 s, and both fade with `RELEASE_S = 1.5` s once the
+4 eq (1 - eq)` split by the leaning `σ(logit coping + 0.5 logit eq)`, where `atStake = pot / 2 + future |2 eq -
+1| / 2`; hope rises with a half-life of 0.8 s, fear of 0.25 s, and both fade with `RELEASE_S = 1.5` s once the
   hand ends. The anger of a prospect, a bet against her, is held for the hand the same way (`Held`, `stepHeld`):
   it decays with the half-life of anger while the hand runs and with `RELEASE_S` after it, and `Snapshot.emotions`
   reads it combined with the anger of what happened.
 - Mood is a PAD point moved by ALMA's pull and push toward the intensity weighted centre of the active emotions and
-  back to the default mood when none is active (`GAME_MOOD`: 600 s to change, 1200 s to return). Every emotion has
+  back to the default mood when none is active, on the same two clocks (`GAME_MOOD`: 2400 s and 40 hands to change,
+  4800 s and 80 hands to return; `stepMood` and `stepAxis` take a `Clock`). Every emotion has
   an `APPROACH` and a `CERTAINTY`; the mood holds both beside PAD with a rest of 0 (`Snapshot.approach`,
-  `Snapshot.certainty`), and `stepAxis` moves them every step toward the centre of the active emotions at
-  `strength / changeTimeS` (`strength` the mean intensity of the active emotions) and back toward 0 at
-  `(1 - min(1, 3 strength)) √3 / returnTimeS`: strong emotions switch the pull off, small ones lose to it.
+  `Snapshot.certainty`), and `stepAxis` moves them every step toward the centre of the active emotions by
+  `strength · change` (`strength` the mean intensity of the active emotions, `change = seconds / changeTimeS +
+hands / changeHands`) and back toward 0 by `(1 - min(1, 3 strength)) √3 · return`: strong emotions switch the
+  pull off, small ones lose to it.
 - Play (`play.ts`): `affectOf(emotions, { shift, approach, certainty }, urgency)` is the `Affect` of four numbers,
   the sum of every emotion's (P, A, approach, certainty) plus `MOOD_WEIGHT = 2` times the mood shift, approach and
   certainty, with `URGENCY_PUSH * urgency * max(0, arousal)` added to approach. `playOf(affect, traits)` gives
@@ -397,7 +403,7 @@ screenshots from the sandbox `web/prototypes/emotion-lab`; the code is the contr
   with four weights per axis. `strainOf(emotions, mood)` is the length of the negative emotions' (P, A, approach)
   plus the mood's part times how unpleasant its shift is, and `overloadOf(strain, composure)` the same threshold on
   it: joy and pride reach the play but never put her on tilt. `Snapshot.load` is `{
-  intensity, strain, overload, reach, composure, discipline, parts }` (`partsOf`: the length of each emotion's contribution
+intensity, strain, overload, reach, composure, discipline, parts }` (`partsOf`: the length of each emotion's contribution
   and the mood's), `Snapshot.affect` the affect and `Snapshot.bias` the `PlayBias` of five multipliers
   (`aggression`, `looseness`, `bluff`, `sizing`, `stickiness`) that tilt the blueprint's action probabilities at one
   decision; with no feeling it is `Traits.baseline`. The session result has no direct term. The bot's `BotBias`
@@ -629,7 +635,7 @@ class, mask)` moves a per-class chance toward the mean of its classes by her mas
   it, or null for the math brain. A `warm` request (`{ opponent }`, no reply, never queued behind a `select`) starts
   loading a cfr opponent's model, so the start screen can begin the download as soon as the player picks the
   solver (`prepare(opponent)` of the session). While a model downloads the worker posts `{ progress: { opponent,
-  received, total } }` (`readWithProgress` in `progressRead.ts`, at most one notice per percent); `onProgress` of the
+received, total } }` (`readWithProgress` in `progressRead.ts`, at most one notice per percent); `onProgress` of the
   client hands it to the session, whose `loading` holds it until the download is complete (`loadingOf`), and the
   start screen shows "Bringing the solver to the table · N%" over a thin amber bar (`start-loading`, a
   `progressbar`; without a known size the line has no number and the bar sweeps). A shared worker's client stops its
