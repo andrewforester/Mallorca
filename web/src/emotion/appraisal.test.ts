@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { appraisalOf, appraise } from './appraisal.ts';
-import type { Appraisal, AppraisalContext, TableEvent } from './appraisal.ts';
+import type { Appraisal, AppraisalContext, Cause, TableEvent } from './appraisal.ts';
 import { noEmotions, smoothstep } from './emotions.ts';
 import type { Emotion, Emotions } from './emotions.ts';
 import { impulsesOf } from './feelings.ts';
@@ -159,10 +159,11 @@ describe('a bet against her', () => {
 });
 
 describe('a new card', () => {
-  const street = (previousEquity: number, equity: number): TableEvent => ({
+  const street = (previousEquity: number, equity: number, cause?: Cause): TableEvent => ({
     kind: 'street',
     equity,
     previousEquity,
+    ...(cause === undefined ? {} : { cause }),
     potBb: 6,
     investedBb: 3,
     stackBb: 97,
@@ -188,6 +189,18 @@ describe('a new card', () => {
     const flopped = felt(street(0.46, 0.85), traitsOf(MALLORCA));
     expect(flopped.joy).toBeGreaterThan(0.2);
     expect(flopped.surprise).toBeGreaterThan(0.4);
+  });
+
+  it('blames the opponent, not the cards, when his action narrows his range', () => {
+    const narrowed = street(0.8, 0.3, 'opponent');
+    const a = axes(narrowed);
+    expect(a.luck).toBe(0);
+    expect(a.opponent).toBe(1);
+    expect(a.value).toBeCloseTo(axes(street(0.8, 0.3)).value, 12);
+    const f = felt(narrowed, traitsOf(MALLORCA));
+    expect(f.injustice).toBe(0);
+    expect(f.anger).toBeGreaterThan(0.05);
+    expect(felt(street(0.8, 0.3), traitsOf(MALLORCA)).injustice).toBeGreaterThan(0.05);
   });
 
   it('is unknown without the equity before it', () => {

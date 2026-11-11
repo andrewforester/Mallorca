@@ -15,12 +15,14 @@ export type ChatSignal =
 
 export type TableEvent =
   | ({ kind: 'deal'; equity: number } & Money)
-  | ({ kind: 'street'; equity: number; previousEquity?: number } & Money)
+  | ({ kind: 'street'; equity: number; previousEquity?: number; cause?: Cause } & Money)
   | { kind: 'opponentBet'; sizeBb: number; equity: number; raise?: boolean; pressure?: number }
   | { kind: 'opponentCall' }
   | { kind: 'result'; netBb: number; decided: Decided; lastEquity?: number }
   | { kind: 'ownMove'; move: 'bet'; amountBb: number; potBb: number; equity: number }
   | { kind: 'chat'; signal: ChatSignal };
+
+export type Cause = 'cards' | 'opponent';
 
 export type Decided = 'showdown' | 'heFolded' | 'sheFolded';
 
@@ -63,7 +65,7 @@ function street(e: Extract<TableEvent, { kind: 'street' }>): Axes | null {
   return {
     ...BLANK,
     value: delta * (0.3 + 0.7 * scaled(atStakeOf(e))),
-    luck: 1,
+    ...(e.cause === 'opponent' ? { opponent: 1 } : { luck: 1 }),
     resolved: swing,
     expected: before,
     unexpected: saturate(3 * (swing - 0.15)),

@@ -1,4 +1,12 @@
-export type { ChatSignal, Decided, Impulse, Money, Prospect, TableEvent } from './appraisal.ts';
+export type {
+  Cause,
+  ChatSignal,
+  Decided,
+  Impulse,
+  Money,
+  Prospect,
+  TableEvent,
+} from './appraisal.ts';
 export { APPROACH, CERTAINTY, EMOTIONS, EMOTION_PAD, REACTION_S } from './emotions.ts';
 export type { Emotion, Emotions, Pad } from './emotions.ts';
 export { createEngine } from './engine.ts';
