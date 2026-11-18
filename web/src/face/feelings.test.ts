@@ -136,7 +136,7 @@ describe('every emotion has a face', () => {
     expect(x.weights.cheekSquintLeft).toBeGreaterThan(0.4);
     expect(x.weights.mouthUpperLipRaiseL).toBeGreaterThan(0.35);
     expect(x.weights.jawOpen).toBeGreaterThan(0.25);
-    expect(x.head[0]).toBeLessThan(-0.05);
+    expect(x.head[0]).toBe(0);
   });
 
   it('lowers her head and gaze in shame and lifts her head in pride', () => {

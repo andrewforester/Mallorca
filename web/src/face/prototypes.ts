@@ -107,7 +107,7 @@ const FACES: Readonly<Record<Emotion, FacePrototype>> = {
       ...sides('mouthLowerLipDepress', 0.4, 0.6),
       ...sides('mouthStretch', 0.2, 0.8),
     },
-    [-0.07, 0, 0.04],
+    [0, 0, 0.04],
   ),
   pride: face(
     {
