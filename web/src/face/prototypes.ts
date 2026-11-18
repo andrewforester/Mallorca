@@ -100,13 +100,12 @@ const FACES: Readonly<Record<Emotion, FacePrototype>> = {
   joy: face(
     {
       ...both('mouthSmile', 1),
-      ...both('cheekSquint', 0.45, 0.15),
+      ...both('cheekSquint', 0.6, 0.1),
       ...both('mouthDimple', 0.45, 0.2),
-      ...sides('mouthUpperLipRaise', 0.5, 0.45),
-      ...sides('mouthLowerLipDepress', 0.3, 0.55),
-      jawOpen: [0.3, 0.6],
-      ...both('browOuterUp', 0.15, 0.5),
-      ...both('eyeSquint', 0.3, 0.5),
+      ...sides('mouthUpperLipRaise', 0.5, 0.3),
+      jawOpen: [0.45, 0.5],
+      ...sides('mouthLowerLipDepress', 0.4, 0.6),
+      ...sides('mouthStretch', 0.2, 0.8),
     },
     [-0.07, 0, 0.04],
   ),

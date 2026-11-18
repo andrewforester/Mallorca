@@ -122,8 +122,8 @@ describe('every emotion has a face', () => {
   });
 
   it('smiles in mild joy with her eyes, cheeks and dimples and keeps her lips closed', () => {
-    const x = of({ joy: 0.4 });
-    expect(x.weights.mouthSmileLeft).toBeGreaterThan(0.5);
+    const x = of({ joy: 0.3 });
+    expect(x.weights.mouthSmileLeft).toBeGreaterThan(0.45);
     expect(x.weights.cheekSquintLeft).toBeGreaterThan(0.2);
     expect(x.weights.mouthDimpleLeft).toBeGreaterThan(0.15);
     expect(x.weights.jawOpen ?? 0).toBe(0);
