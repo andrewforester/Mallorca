@@ -101,7 +101,7 @@ const FACES: Readonly<Record<Emotion, FacePrototype>> = {
     {
       ...both('mouthSmile', 1),
       ...both('cheekSquint', 0.6, 0.1),
-      ...both('mouthDimple', 0.45, 0.2),
+      ...both('mouthDimple', 0.45, 0.1),
       ...sides('mouthUpperLipRaise', 0.5, 0.3),
       jawOpen: [0.45, 0.5],
       ...sides('mouthLowerLipDepress', 0.4, 0.6),
