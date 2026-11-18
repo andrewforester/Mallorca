@@ -121,13 +121,22 @@ describe('every emotion has a face', () => {
     expect(of({ shame: 1 }).weights.mouthSmileLeft ?? 0).toBe(0);
   });
 
-  it('smiles in joy with her eyes, cheeks and dimples and only parts her lips', () => {
+  it('smiles in mild joy with her eyes, cheeks and dimples and keeps her lips closed', () => {
+    const x = of({ joy: 0.4 });
+    expect(x.weights.mouthSmileLeft).toBeGreaterThan(0.5);
+    expect(x.weights.cheekSquintLeft).toBeGreaterThan(0.2);
+    expect(x.weights.mouthDimpleLeft).toBeGreaterThan(0.15);
+    expect(x.weights.jawOpen ?? 0).toBe(0);
+    expect(x.weights.mouthUpperLipRaiseL ?? 0).toBe(0);
+  });
+
+  it('laughs in strong joy with her teeth showing and her mouth open', () => {
     const x = of({ joy: 1 });
-    expect(x.weights.mouthSmileLeft).toBeGreaterThan(0.7);
+    expect(x.weights.mouthSmileLeft).toBeGreaterThan(0.8);
     expect(x.weights.cheekSquintLeft).toBeGreaterThan(0.4);
-    expect(x.weights.mouthDimpleLeft).toBeGreaterThan(0.3);
-    expect(x.weights.jawOpen ?? 0).toBeLessThanOrEqual(0.1);
-    expect(x.weights.mouthUpperUpLeft ?? 0).toBeLessThanOrEqual(0.1);
+    expect(x.weights.mouthUpperLipRaiseL).toBeGreaterThan(0.35);
+    expect(x.weights.jawOpen).toBeGreaterThan(0.25);
+    expect(x.head[0]).toBeLessThan(-0.05);
   });
 
   it('lowers her head and gaze in shame and lifts her head in pride', () => {
