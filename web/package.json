@@ -21,6 +21,7 @@
     "arena:publish": "node tools/arena/publishCli.ts",
     "arena:paired": "node tools/arena/pairedCli.ts",
     "lab": "vite --open /prototypes/emotion-lab/",
+    "face": "vite --open /prototypes/face-sandbox/",
     "lab:shots": "node prototypes/emotion-lab/capture.ts",
     "lab:report": "node prototypes/emotion-lab/report.ts",
     "lab:talk-cases": "node prototypes/emotion-lab/talkCases.ts",

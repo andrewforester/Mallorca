@@ -4,7 +4,7 @@ import { createSession } from './session.ts';
 import type { Session } from './session.ts';
 import { shovingBot } from './testBot.ts';
 import { toViewModel } from './viewModel.ts';
-import { initialFace, sessionFace } from './sessionFace.ts';
+import { initialFace, restingFaceOf, sessionFace } from './sessionFace.ts';
 import { createPersona } from '../persona/index.ts';
 import { mulberry32 } from '../cards/index.ts';
 
@@ -136,5 +136,18 @@ describe('her face in the session', () => {
     table.session.getState().faceNow();
     table.tick(-60_000);
     expect(table.session.getState().faceNow()).toEqual(first);
+  });
+});
+
+describe('restingFaceOf', () => {
+  it('shows the temperament of the chosen character before a game', () => {
+    const hothead = restingFaceOf('hotheadBraggart').weights;
+    const party = restingFaceOf('lifeOfTheParty').weights;
+    expect(party.mouthSmileLeft ?? 0).toBeGreaterThan(hothead.mouthSmileLeft ?? 0);
+    expect(hothead.mouthFrownLeft ?? 0).toBeGreaterThan(party.mouthFrownLeft ?? 0);
+  });
+
+  it('gives the same frame for the same character', () => {
+    expect(restingFaceOf('toughBoss')).toBe(restingFaceOf('toughBoss'));
   });
 });

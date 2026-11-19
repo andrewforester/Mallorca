@@ -16,6 +16,7 @@ export interface Pose {
   neck: Angles;
   spine: Angles;
   shoulder: number;
+  shine: number;
 }
 
 export interface MotionOptions {
@@ -97,6 +98,7 @@ export class Motion {
   private offset: [number, number] = [0, 0];
   private eyes: [number, number] = [0, 0];
   private head: Angles = [0, 0, 0];
+  private shine = 1;
   private breathPhase = 0;
   private nextBlink = 1.5;
   private nextSaccade = 0;
@@ -157,7 +159,8 @@ export class Motion {
     for (const name of Object.keys(weights)) {
       weights[name] = clamp(weights[name] ?? 0, 0, 1);
     }
-    return { weights, eyes, ...this.body(dt) };
+    this.shine = ease(this.shine, this.frame?.shine ?? 1, 1.5, dt);
+    return { weights, eyes, ...this.body(dt), shine: this.shine };
   }
 
   private expression(dt: number): Weights {
@@ -234,8 +237,9 @@ export class Motion {
 
   private look(dt: number, w: Weights): [number, number] {
     const target = this.thinking ? this.thinkAt : GAZE[this.glance?.target ?? this.gaze];
-    this.eyes[0] = ease(this.eyes[0], target[0] + this.offset[0], 18, dt);
-    this.eyes[1] = ease(this.eyes[1], target[1] + this.offset[1], 18, dt);
+    const [gx, gy] = this.frame?.gaze ?? [0, 0];
+    this.eyes[0] = ease(this.eyes[0], target[0] + gx + this.offset[0], 18, dt);
+    this.eyes[1] = ease(this.eyes[1], target[1] + gy + this.offset[1], 18, dt);
     const yaw = clamp(this.eyes[0] * 0.75, -0.45, 0.45);
     const pitch = clamp(this.eyes[1] * 0.7, -0.3, 0.35);
     for (const side of ['Left', 'Right']) {
@@ -245,14 +249,14 @@ export class Motion {
     return [yaw, pitch];
   }
 
-  private body(dt: number): Omit<Pose, 'weights' | 'eyes'> {
-    const [v, a, d] = this.frame?.shown ?? [0, 0, 0];
+  private body(dt: number): Omit<Pose, 'weights' | 'eyes' | 'shine'> {
+    const d = this.frame?.shown[2] ?? 0;
+    const [pitch, yaw, roll] = this.frame?.head ?? [0, 0, 0];
     const nervous = this.frame?.idle.nervous ?? 0;
     const t = this.time;
-    const moodPitch = -0.08 * d - 0.03 * a + 0.07 * Math.max(0, -v);
-    this.head[0] = ease(this.head[0], this.eyes[0] * 0.35, 4, dt);
-    this.head[1] = ease(this.head[1], this.eyes[1] * 0.3 + moodPitch, 3, dt);
-    this.head[2] = ease(this.head[2], 0.04 * d, 2, dt);
+    this.head[0] = ease(this.head[0], this.eyes[0] * 0.35 + yaw, 4, dt);
+    this.head[1] = ease(this.head[1], this.eyes[1] * 0.3 + pitch, 3, dt);
+    this.head[2] = ease(this.head[2], roll, 2, dt);
     const s = this.calm ? 0 : 1;
     const sway = [
       s * (Math.sin(t * 0.37) * 0.025 + Math.sin(t * 0.91) * 0.01),

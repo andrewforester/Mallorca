@@ -13,11 +13,20 @@ function run(motion: Motion, seconds: number): Pose[] {
   return poses;
 }
 
-const frame = (weights: Record<string, number>, nervous = 0): FaceFrame => ({
+const frame = (
+  weights: Record<string, number>,
+  nervous = 0,
+  head: [number, number, number] = [0, 0, 0],
+  gaze: [number, number] = [0, 0],
+  shine = 1,
+): FaceFrame => ({
   felt: [0, 0, 0],
   shown: [0, 0, 0],
   mask: 0,
   weights,
+  head,
+  gaze,
+  shine,
   idle: { nervous, arousal: 0, blinkRate: 1 },
   prosody: { rate: 1, pitch: 1, volume: 1 },
 });
@@ -87,6 +96,26 @@ describe('motion', () => {
     const poses = run(motion, 2);
     expect(poses[30]!.eyes[0]).toBeLessThan(-0.15);
     expect(Math.abs(poses.at(-1)!.eyes[0])).toBeLessThan(0.05);
+  });
+
+  it('lowers her head and looks up from under her brows when the face asks', () => {
+    const still = new Motion({ random: half, calm: true });
+    const angry = new Motion({ random: half, calm: true });
+    angry.setFrame(frame({}, 0, [0.12, 0, 0], [0, -0.08]));
+    const base = run(still, 3).at(-1)!;
+    const pose = run(angry, 3).at(-1)!;
+    expect(pose.head[0] + pose.neck[0] - base.head[0] - base.neck[0]).toBeGreaterThan(0.08);
+    expect(pose.eyes[1]).toBeLessThan(base.eyes[1]);
+  });
+
+  it('eases the shine of her eyes toward the frame', () => {
+    const motion = new Motion({ random: half, calm: true });
+    expect(motion.tick(STEP).shine).toBe(1);
+    motion.setFrame(frame({}, 0, [0, 0, 0], [0, 0], 0.5));
+    const early = motion.tick(0.1).shine;
+    expect(early).toBeLessThan(1);
+    expect(early).toBeGreaterThan(0.8);
+    expect(run(motion, 5).at(-1)!.shine).toBeCloseTo(0.5, 2);
   });
 
   it('looks away from the player while thinking', () => {

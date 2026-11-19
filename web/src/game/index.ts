@@ -48,6 +48,7 @@ export type { ConversationConfig } from './conversationLoader.ts';
 export { loadConversationClient, conversationConnector } from './conversationLoader.ts';
 export { onPageExit } from './pageExit.ts';
 export type { FaceCue, FaceState } from './sessionFace.ts';
+export { restingFaceOf } from './sessionFace.ts';
 export type { FaceFrame, GazeTarget, Pulse, VisemeCue, Weights } from '../face/index.ts';
 export { speechOf } from '../face/index.ts';
 export type {

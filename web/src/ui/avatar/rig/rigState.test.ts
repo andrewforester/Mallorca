@@ -16,6 +16,7 @@ const pose = (over: Partial<Pose> = {}): Pose => ({
   neck: [0, 0, 0],
   spine: [0, 0, 0],
   shoulder: 0,
+  shine: 1,
   ...over,
 });
 

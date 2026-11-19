@@ -7,6 +7,7 @@ import { mouthMaterial, plain, skinMaterial } from './skin.ts';
 export interface Materials {
   byMesh: Record<string, THREE.Material>;
   cardsSoft: THREE.Material;
+  eye: THREE.MeshPhysicalMaterial;
 }
 
 const ORDER: Readonly<Record<string, number>> = {
@@ -149,5 +150,5 @@ export async function loadMaterials(
     ...dressed,
     ...hair,
   };
-  return { byMesh, cardsSoft: soft };
+  return { byMesh, cardsSoft: soft, eye };
 }
